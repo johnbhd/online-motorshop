@@ -17,7 +17,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->rememberToken();
-            $table->foreignId('branch_id')->nullable();
+            $table->foreignId('branch_id')    
+                ->nullable()
+                ->constrained('branches');
             $table->string('status')->default('active');
             $table->string('role');
             $table->timestamps();
