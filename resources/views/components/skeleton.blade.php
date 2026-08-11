@@ -2,6 +2,7 @@
     'type' => 'text',
     'rows' => 3,
     'lines' => 2,
+    'columns' => 6,
 ])
 
 @php
@@ -9,6 +10,7 @@
     $type = in_array($type, $supportedTypes, true) ? $type : 'text';
     $rows = max(1, min((int) $rows, 10));
     $lines = max(1, min((int) $lines, 6));
+    $columns = max(1, min((int) $columns, 12));
 @endphp
 
 @switch($type)
@@ -74,27 +76,47 @@
             {{ $attributes->class('border-b border-slate-100 last:border-b-0') }}
             aria-hidden="true"
         >
-            <td class="px-6 py-4">
-                <div class="h-3 w-32 rounded bg-slate-200 motion-safe:animate-pulse"></div>
-            </td>
-            <td class="px-6 py-4">
-                <div class="h-3 w-24 rounded bg-slate-200 motion-safe:animate-pulse"></div>
-            </td>
-            <td class="px-6 py-4">
-                <div class="space-y-2 motion-safe:animate-pulse">
-                    <div class="h-3 w-44 rounded bg-slate-200"></div>
-                    <div class="h-2.5 w-28 rounded bg-slate-200"></div>
-                </div>
-            </td>
-            <td class="px-6 py-4">
-                <div class="h-6 w-28 rounded-full bg-slate-200 motion-safe:animate-pulse"></div>
-            </td>
-            <td class="px-6 py-4">
-                <div class="h-3 w-16 rounded bg-slate-200 motion-safe:animate-pulse"></div>
-            </td>
-            <td class="px-6 py-4">
-                <div class="h-3 w-20 rounded bg-slate-200 motion-safe:animate-pulse"></div>
-            </td>
+            @if ($columns === 6)
+                <td class="px-6 py-4">
+                    <div class="h-3 w-32 rounded bg-slate-200 motion-safe:animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-3 w-24 rounded bg-slate-200 motion-safe:animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="space-y-2 motion-safe:animate-pulse">
+                        <div class="h-3 w-44 rounded bg-slate-200"></div>
+                        <div class="h-2.5 w-28 rounded bg-slate-200"></div>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-6 w-28 rounded-full bg-slate-200 motion-safe:animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-3 w-16 rounded bg-slate-200 motion-safe:animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="h-3 w-20 rounded bg-slate-200 motion-safe:animate-pulse"></div>
+                </td>
+            @else
+                @for ($columnIndex = 0; $columnIndex < $columns; $columnIndex++)
+                    <td class="px-5 py-4">
+                        <div
+                            @class([
+                                'rounded bg-slate-200 motion-safe:animate-pulse',
+                                'h-3 w-32' => $columnIndex === 0,
+                                'h-3 w-24' => $columnIndex === 1,
+                                'h-3 w-20' => $columnIndex === 2,
+                                'h-3 w-16' => $columnIndex === 3,
+                                'h-3 w-28' => $columnIndex === 4,
+                                'h-6 w-24 rounded-full' => in_array($columnIndex, [5, 6], true),
+                                'h-8 w-24 rounded-lg' => $columnIndex === 7,
+                                'size-8 rounded-lg' => $columnIndex >= 8,
+                            ])
+                        ></div>
+                    </td>
+                @endfor
+            @endif
         </tr>
         @break
 
