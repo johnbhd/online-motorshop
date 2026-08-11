@@ -2,6 +2,7 @@ import './bootstrap';
 import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
 import '@fortawesome/fontawesome-free/css/regular.min.css';
 import '@fortawesome/fontawesome-free/css/solid.min.css';
+import './staff/dashboard';
 
 const initializeStaffSidebar = () => {
     const staffSidebar = document.querySelector('[data-staff-sidebar]');
