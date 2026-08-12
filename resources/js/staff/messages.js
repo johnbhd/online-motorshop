@@ -32,7 +32,6 @@ const initializeStaffMessages = () => {
     const conversationsTarget = page.querySelector('[data-conversations]');
     const noConversations = page.querySelector('[data-messages-no-conversations]');
     const messagePanel = page.querySelector('[data-message-panel]');
-    const noSelection = page.querySelector('[data-no-selection]');
     const error = page.querySelector('[data-messages-error]');
     const retry = page.querySelector('[data-messages-retry]');
     const search = page.querySelector('[data-messages-search]');
@@ -47,7 +46,7 @@ const initializeStaffMessages = () => {
     const input = page.querySelector('[data-reply-input]');
     const back = page.querySelector('[data-messages-back]');
 
-    if (!endpoint || !panel || !loading || !conversationsTarget || !noConversations || !messagePanel || !noSelection || !error || !retry || !search || !filter || !total || !unread || !selectedInitials || !selectedName || !selectedStatus || !history || !form || !input || !back) {
+    if (!endpoint || !panel || !loading || !conversationsTarget || !noConversations || !messagePanel || !error || !retry || !search || !filter || !total || !unread || !selectedInitials || !selectedName || !selectedStatus || !history || !form || !input || !back) {
         return;
     }
 
@@ -104,7 +103,6 @@ const initializeStaffMessages = () => {
 
         messagePanel.classList.remove('hidden');
         messagePanel.classList.add('flex');
-        noSelection.classList.add('hidden');
         page.dataset.mobileView = 'conversation';
         page.querySelector('[data-conversation-list-panel]')?.classList.add('hidden', 'lg:flex');
     };
@@ -173,7 +171,6 @@ const initializeStaffMessages = () => {
         conversationsTarget.classList.add('hidden');
         noConversations.classList.add('hidden');
         messagePanel.classList.add('hidden');
-        noSelection.classList.remove('hidden');
         page.querySelector('[data-conversation-list-panel]')?.classList.remove('hidden');
         retry.disabled = true;
 
