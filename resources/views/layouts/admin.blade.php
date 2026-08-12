@@ -14,18 +14,20 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body
-    class="min-h-screen bg-slate-100 text-slate-900 antialiased"
+    class="min-h-screen overflow-x-hidden bg-slate-100 text-slate-900 antialiased"
 >
-    <div
-        class="min-h-screen lg:grid lg:grid-cols-[16rem_1fr]"
-    >
+    <div class="min-h-screen">
         @include('partials.admin-sidebar')
 
-        <div class="min-w-0">
-            @include('partials.admin-header')
+        <div class="min-w-0 lg:pl-72">
+            @include('partials.admin-navbar')
 
-            <main class="p-4 sm:p-6 lg:p-8">
-                @yield('content')
+            <main class="w-full min-w-0">
+                <div
+                    class="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6"
+                >
+                    @yield('content')
+                </div>
             </main>
         </div>
     </div>

@@ -11,11 +11,22 @@ use App\Http\Controllers\Staff\StaffPickupRequestsController;
 use App\Http\Controllers\Staff\StaffProductsController;
 use App\Http\Controllers\Staff\StaffReportsController;
 use App\Http\Controllers\Staff\StaffReviewsController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('public.home');
 })->name('home');
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'index'])
+            ->name('dashboard');
+
+        Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
+            ->name('dashboard.data');
+    });
 
 Route::prefix('staff')
     ->name('staff.')
