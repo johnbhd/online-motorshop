@@ -8,6 +8,7 @@ import './staff/payments';
 import './staff/pickups';
 import './staff/deliveries';
 import './staff/products';
+import './staff/messages';
 
 const initializeStaffSidebar = () => {
     const staffSidebar = document.querySelector('[data-staff-sidebar]');

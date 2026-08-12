@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffDeliveryRequestsController;
+use App\Http\Controllers\Staff\StaffMessagesController;
 use App\Http\Controllers\Staff\StaffOrdersController;
 use App\Http\Controllers\Staff\StaffPaymentsController;
 use App\Http\Controllers\Staff\StaffPickupRequestsController;
@@ -50,4 +51,10 @@ Route::prefix('staff')
 
         Route::get('/products/data', [StaffProductsController::class, 'data'])
             ->name('products.data');
+
+        Route::get('/messages', [StaffMessagesController::class, 'index'])
+            ->name('messages.index');
+
+        Route::get('/messages/data', [StaffMessagesController::class, 'data'])
+            ->name('messages.data');
     });
