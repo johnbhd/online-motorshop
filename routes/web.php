@@ -9,6 +9,7 @@ use App\Http\Controllers\Staff\StaffPaymentsController;
 use App\Http\Controllers\Staff\StaffPickupRequestsController;
 use App\Http\Controllers\Staff\StaffProductsController;
 use App\Http\Controllers\Staff\StaffReportsController;
+use App\Http\Controllers\Staff\StaffReviewsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -71,4 +72,10 @@ Route::prefix('staff')
 
         Route::get('/reports/data', [StaffReportsController::class, 'data'])
             ->name('reports.data');
+
+        Route::get('/reviews', [StaffReviewsController::class, 'index'])
+            ->name('reviews.index');
+
+        Route::get('/reviews/data', [StaffReviewsController::class, 'data'])
+            ->name('reviews.data');
     });

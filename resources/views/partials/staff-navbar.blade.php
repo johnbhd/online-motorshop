@@ -176,10 +176,11 @@
 
                     <a
                         href="{{ route('home') }}"
-                        class="group flex min-h-11 w-full items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-left text-sm font-medium text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500"
+                        class="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#0B1930] focus:bg-slate-50 focus:outline-none"
+                        role="menuitem"
                     >
                         <i
-                            class="fa-solid fa-right-from-bracket w-5 shrink-0 text-center text-slate-500 transition-colors"
+                            class="fa-solid fa-right-from-bracket w-4 text-center text-slate-400"
                             aria-hidden="true"
                         ></i>
 
