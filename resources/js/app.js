@@ -5,6 +5,9 @@ import '@fortawesome/fontawesome-free/css/solid.min.css';
 import './staff/dashboard';
 import './staff/orders';
 import './staff/payments';
+import './staff/pickups';
+import './staff/deliveries';
+import './staff/products';
 
 const initializeStaffSidebar = () => {
     const staffSidebar = document.querySelector('[data-staff-sidebar]');

@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Staff\StaffDashboardController;
+use App\Http\Controllers\Staff\StaffDeliveryRequestsController;
 use App\Http\Controllers\Staff\StaffOrdersController;
 use App\Http\Controllers\Staff\StaffPaymentsController;
+use App\Http\Controllers\Staff\StaffPickupRequestsController;
+use App\Http\Controllers\Staff\StaffProductsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,4 +32,22 @@ Route::prefix('staff')
 
         Route::get('/payments/data', [StaffPaymentsController::class, 'data'])
             ->name('payments.data');
+
+        Route::get('/pickup-requests', [StaffPickupRequestsController::class, 'index'])
+            ->name('pickup-requests.index');
+
+        Route::get('/pickup-requests/data', [StaffPickupRequestsController::class, 'data'])
+            ->name('pickup-requests.data');
+
+        Route::get('/delivery-requests', [StaffDeliveryRequestsController::class, 'index'])
+            ->name('delivery-requests.index');
+
+        Route::get('/delivery-requests/data', [StaffDeliveryRequestsController::class, 'data'])
+            ->name('delivery-requests.data');
+
+        Route::get('/products', [StaffProductsController::class, 'index'])
+            ->name('products.index');
+
+        Route::get('/products/data', [StaffProductsController::class, 'data'])
+            ->name('products.data');
     });
