@@ -12,6 +12,8 @@ use App\Http\Controllers\Staff\StaffProductsController;
 use App\Http\Controllers\Staff\StaffReportsController;
 use App\Http\Controllers\Staff\StaffReviewsController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminOrdersController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +28,18 @@ Route::prefix('admin')
 
         Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
             ->name('dashboard.data');
+
+        Route::get('/products', [AdminProductController::class, 'index'])
+            ->name('products.index');
+
+        Route::get('/products/data', [AdminProductController::class, 'data'])
+            ->name('products.data');
+
+        Route::get('/orders', [AdminOrdersController::class, 'index'])
+            ->name('orders.index');
+
+        Route::get('/orders/data', [AdminOrdersController::class, 'data'])
+            ->name('orders.data');
     });
 
 Route::prefix('staff')

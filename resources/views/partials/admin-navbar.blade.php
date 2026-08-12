@@ -1,6 +1,8 @@
 @php
     $adminPageTitles = [
         'admin.dashboard' => 'Dashboard',
+        'admin.orders.*' => 'Orders',
+        'admin.products.*' => 'Products',
     ];
     $adminPageTitle = 'Dashboard';
 
