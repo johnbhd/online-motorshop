@@ -4,6 +4,7 @@ use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDeliveryRequestsController;
 use App\Http\Controllers\Staff\StaffMessagesController;
+use App\Http\Controllers\Staff\StaffNotificationsController;
 use App\Http\Controllers\Staff\StaffOrdersController;
 use App\Http\Controllers\Staff\StaffPaymentsController;
 use App\Http\Controllers\Staff\StaffPickupRequestsController;
@@ -60,6 +61,12 @@ Route::prefix('staff')
 
         Route::get('/messages/data', [StaffMessagesController::class, 'data'])
             ->name('messages.data');
+
+        Route::get('/notifications', [StaffNotificationsController::class, 'index'])
+            ->name('notifications.index');
+
+        Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
+            ->name('notifications.data');
 
         Route::get('/customers', [StaffCustomersController::class, 'index'])
             ->name('customers.index');

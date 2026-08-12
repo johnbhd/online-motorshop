@@ -9,6 +9,7 @@ import './staff/pickups';
 import './staff/deliveries';
 import './staff/products';
 import './staff/messages';
+import './staff/notifications';
 import './staff/customers';
 import './staff/reports';
 import './staff/reviews';
@@ -95,12 +96,43 @@ if (document.readyState === 'loading') {
     initializeStaffSidebar();
 }
 
-const staffProfileDropdown = document.querySelector('[data-staff-profile-dropdown]');
+const initializeStaffNavbarDropdowns = () => {
+    const staffProfileDropdown = document.querySelector('[data-staff-profile-dropdown]');
+    const staffNotificationDropdown = document.querySelector('[data-staff-notification-dropdown]');
 
-if (staffProfileDropdown) {
-    const profileTrigger = staffProfileDropdown.querySelector('[data-staff-profile-trigger]');
-    const profileMenu = staffProfileDropdown.querySelector('[data-staff-profile-menu]');
-    const profileChevron = staffProfileDropdown.querySelector('[data-staff-profile-chevron]');
+    if (!staffProfileDropdown && !staffNotificationDropdown) {
+        return;
+    }
+
+    const profileTrigger = staffProfileDropdown?.querySelector('[data-staff-profile-trigger]');
+    const profileMenu = staffProfileDropdown?.querySelector('[data-staff-profile-menu]');
+    const profileChevron = staffProfileDropdown?.querySelector('[data-staff-profile-chevron]');
+    const notificationTrigger = staffNotificationDropdown?.querySelector('[data-staff-notification-trigger]');
+    const notificationMenu = staffNotificationDropdown?.querySelector('[data-staff-notification-menu]');
+    const notificationBadge = staffNotificationDropdown?.querySelector('[data-staff-notification-badge]');
+    const notificationUnreadLabel = staffNotificationDropdown?.querySelector('[data-staff-notification-unread-label]');
+
+    const updateNotificationBadge = (unreadCount) => {
+        const safeUnreadCount = Math.max(0, Number(unreadCount) || 0);
+        const badgeLabel = safeUnreadCount > 9 ? '9+' : String(safeUnreadCount);
+
+        notificationBadge?.classList.toggle('hidden', safeUnreadCount === 0);
+
+        if (notificationBadge) {
+            notificationBadge.textContent = badgeLabel;
+        }
+
+        if (notificationUnreadLabel) {
+            notificationUnreadLabel.textContent = `${safeUnreadCount} unread`;
+        }
+
+        notificationTrigger?.setAttribute(
+            'aria-label',
+            safeUnreadCount > 0
+                ? `Notifications, ${safeUnreadCount} unread`
+                : 'Notifications',
+        );
+    };
 
     const closeProfileMenu = () => {
         profileMenu?.classList.add('hidden');
@@ -108,10 +140,22 @@ if (staffProfileDropdown) {
         profileTrigger?.setAttribute('aria-expanded', 'false');
     };
 
+    const closeNotificationMenu = () => {
+        notificationMenu?.classList.add('hidden');
+        notificationTrigger?.setAttribute('aria-expanded', 'false');
+    };
+
     const openProfileMenu = () => {
+        closeNotificationMenu();
         profileMenu?.classList.remove('hidden');
         profileChevron?.classList.add('rotate-180');
         profileTrigger?.setAttribute('aria-expanded', 'true');
+    };
+
+    const openNotificationMenu = () => {
+        closeProfileMenu();
+        notificationMenu?.classList.remove('hidden');
+        notificationTrigger?.setAttribute('aria-expanded', 'true');
     };
 
     profileTrigger?.addEventListener('click', () => {
@@ -125,18 +169,52 @@ if (staffProfileDropdown) {
         openProfileMenu();
     });
 
+    notificationTrigger?.addEventListener('click', () => {
+        const isOpen = notificationTrigger.getAttribute('aria-expanded') === 'true';
+
+        if (isOpen) {
+            closeNotificationMenu();
+            return;
+        }
+
+        openNotificationMenu();
+    });
+
     document.addEventListener('click', (event) => {
-        if (!staffProfileDropdown.contains(event.target)) {
+        if (!staffProfileDropdown?.contains(event.target)) {
             closeProfileMenu();
+        }
+
+        if (!staffNotificationDropdown?.contains(event.target)) {
+            closeNotificationMenu();
         }
     });
 
     document.addEventListener('keydown', (event) => {
-        const isOpen = profileTrigger?.getAttribute('aria-expanded') === 'true';
+        if (event.key !== 'Escape') {
+            return;
+        }
 
-        if (event.key === 'Escape' && isOpen) {
-            closeProfileMenu();
+        const profileIsOpen = profileTrigger?.getAttribute('aria-expanded') === 'true';
+        const notificationsAreOpen = notificationTrigger?.getAttribute('aria-expanded') === 'true';
+
+        closeProfileMenu();
+        closeNotificationMenu();
+
+        if (notificationsAreOpen) {
+            notificationTrigger?.focus();
+        } else if (profileIsOpen) {
             profileTrigger?.focus();
         }
     });
+
+    document.addEventListener('staff-notifications-updated', (event) => {
+        updateNotificationBadge(event.detail?.unread);
+    });
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeStaffNavbarDropdowns);
+} else {
+    initializeStaffNavbarDropdowns();
 }
