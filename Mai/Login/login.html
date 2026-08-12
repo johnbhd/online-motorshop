@@ -1,11 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+<meta charset="UTF-8">
+<title>ALD Motorshop - Sign In</title>
+<link rel="stylesheet" href="login.css">
 </head>
 <body>
-    
+
+<header>
+  <div class="brand">
+    <img src="ALD logo.png" alt="ALD Motorshop logo" class="logo-img">
+    <div class="brand-text">
+      <h1>ALD Motorshop</h1>
+      <p>Motorcycle Parts Trading</p>
+    </div>
+  </div>
+
+  <nav>
+    <a href="#">HOME</a>
+    <a href="#">PRODUCT</a>
+    <a href="#">CATEGORIES</a>
+    <a href="#">BRANCHES</a>
+    <a href="#">ABOUT US</a>
+    <a href="#">CONTACT</a>
+  </nav>
+
+  <div class="header-right">
+    <span class="track-order">TRACK ORDER</span>
+    <span class="cart-icon">🛒</span>
+    <button class="guest-btn">SIGN IN OR CONTINUE AS A GUEST</button>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-brand">HONDA &nbsp; YAMAHA &nbsp; SUZUKI</div>
+    <h2>RIDE READY.<span>ORDER EASY.</span></h2>
+    <p class="tagline">Browse genuine motorcycle parts and place your order online for store pickup or Lalamove delivery.</p>
+
+    <div class="features">
+      <div class="feature"><div class="icon">✔</div><span>Genuine Motorcycle Parts</span></div>
+      <div class="feature"><div class="icon">🏍</div><span>Honda, Yamaha and Suzuki</span></div>
+      <div class="feature"><div class="icon">🏬</div><span>Store Pickup Available</span></div>
+      <div class="feature"><div class="icon">🚚</div><span>Lalamove Delivery Request</span></div>
+    </div>
+
+    <div class="trust-banner"><span>TRUSTED PARTS. RELIABLE SERVICE.</span></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="login-panel">
+    <img src="ALD logo.png" alt="ALD Motorshop logo" class="login-logo-img">
+    <h3>Welcome to ALD Motorshop</h3>
+    <p class="sub">Sign in for a faster experience or continue as a guest to browse products and place an order.</p>
+
+    <form style="width:100%;" onsubmit="return false;">
+      <div class="field">
+        <span class="icon-left">✉</span>
+        <input type="email" placeholder="Email Address" required>
+      </div>
+      <div class="field">
+        <span class="icon-left">🔒</span>
+        <input type="password" id="pwd" placeholder="Password" required>
+        <button type="button" class="icon-right" onclick="togglePwd()">👁</button>
+      </div>
+
+      <button type="submit" class="signin-btn">SIGN IN</button>
+    </form>
+
+    <button class="google-btn"><span class="google-g"></span> Continue with Google</button>
+
+    <div class="divider"><hr><span>OR</span><hr></div>
+
+    <button class="guest-btn-full">👤 Continue as a Guest</button>
+
+    <p class="footnote">No account needed. Browse products, add items to your cart,<br>and submit an order request immediately.</p>
+  </div>
+
+</div>
+
+<script>
+function togglePwd(){
+  const pwd = document.getElementById('pwd');
+  pwd.type = pwd.type === 'password' ? 'text' : 'password';
+}
+</script>
+
 </body>
 </html>
