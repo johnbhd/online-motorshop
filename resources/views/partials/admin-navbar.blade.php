@@ -2,7 +2,15 @@
     $adminPageTitles = [
         'admin.dashboard' => 'Dashboard',
         'admin.orders.*' => 'Orders',
+        'admin.payments.*' => 'Payments',
+        'admin.pickups.*' => 'Pickup Requests',
+        'admin.deliveries.*' => 'Delivery Requests',
         'admin.products.*' => 'Products',
+        'admin.customers.*' => 'Customers',
+        'admin.messages.*' => 'Messages',
+        'admin.branches.*' => 'Branches',
+        'admin.staff.*' => 'Staff Management',
+        'admin.website-content.*' => 'Website Content',
     ];
     $adminPageTitle = 'Dashboard';
 

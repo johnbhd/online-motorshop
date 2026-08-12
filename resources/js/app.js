@@ -16,6 +16,14 @@ import './staff/reviews';
 import './admin/dashboard';
 import './admin/products';
 import './admin/orders';
+import './admin/payments';
+import './admin/pickups';
+import './admin/deliveries';
+import './admin/customers';
+import './admin/messages';
+import './admin/branches';
+import './admin/staff';
+import './admin/website-content';
 
 const initializeStaffSidebar = () => {
     const staffSidebar = document.querySelector('[data-staff-sidebar]');

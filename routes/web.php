@@ -14,6 +14,14 @@ use App\Http\Controllers\Staff\StaffReviewsController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminOrdersController;
+use App\Http\Controllers\Admin\AdminPaymentsController;
+use App\Http\Controllers\Admin\AdminPickupRequestsController;
+use App\Http\Controllers\Admin\AdminDeliveryRequestsController;
+use App\Http\Controllers\Admin\AdminCustomersController;
+use App\Http\Controllers\Admin\AdminMessagesController;
+use App\Http\Controllers\Admin\AdminBranchesController;
+use App\Http\Controllers\Admin\AdminStaffController;
+use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -40,6 +48,50 @@ Route::prefix('admin')
 
         Route::get('/orders/data', [AdminOrdersController::class, 'data'])
             ->name('orders.data');
+
+        Route::get('/payments', [AdminPaymentsController::class, 'index'])
+            ->name('payments.index');
+
+        Route::get('/payments/data', [AdminPaymentsController::class, 'data'])
+            ->name('payments.data');
+
+        Route::get('/pickup-requests', [AdminPickupRequestsController::class, 'index'])
+            ->name('pickups.index');
+
+        Route::get('/pickup-requests/data', [AdminPickupRequestsController::class, 'data'])
+            ->name('pickups.data');
+        Route::get('/delivery-requests', [AdminDeliveryRequestsController::class, 'index'])->name('deliveries.index');
+        Route::get('/delivery-requests/data', [AdminDeliveryRequestsController::class, 'data'])->name('deliveries.data');
+
+        Route::get('/customers', [AdminCustomersController::class, 'index'])
+            ->name('customers.index');
+
+        Route::get('/customers/data', [AdminCustomersController::class, 'data'])
+            ->name('customers.data');
+
+        Route::get('/messages', [AdminMessagesController::class, 'index'])
+            ->name('messages.index');
+
+        Route::get('/messages/data', [AdminMessagesController::class, 'data'])
+            ->name('messages.data');
+
+        Route::get('/branches', [AdminBranchesController::class, 'index'])
+            ->name('branches.index');
+
+        Route::get('/branches/data', [AdminBranchesController::class, 'data'])
+            ->name('branches.data');
+
+        Route::get('/staff-management', [AdminStaffController::class, 'index'])
+            ->name('staff.index');
+
+        Route::get('/staff-management/data', [AdminStaffController::class, 'data'])
+            ->name('staff.data');
+
+        Route::get('/website-content', [AdminWebsiteContentController::class, 'index'])
+            ->name('website-content.index');
+
+        Route::get('/website-content/data', [AdminWebsiteContentController::class, 'data'])
+            ->name('website-content.data');
     });
 
 Route::prefix('staff')
