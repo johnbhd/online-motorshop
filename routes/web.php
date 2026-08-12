@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Staff\StaffDashboardController;
+use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDeliveryRequestsController;
 use App\Http\Controllers\Staff\StaffMessagesController;
 use App\Http\Controllers\Staff\StaffOrdersController;
 use App\Http\Controllers\Staff\StaffPaymentsController;
 use App\Http\Controllers\Staff\StaffPickupRequestsController;
 use App\Http\Controllers\Staff\StaffProductsController;
+use App\Http\Controllers\Staff\StaffReportsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -57,4 +59,16 @@ Route::prefix('staff')
 
         Route::get('/messages/data', [StaffMessagesController::class, 'data'])
             ->name('messages.data');
+
+        Route::get('/customers', [StaffCustomersController::class, 'index'])
+            ->name('customers.index');
+
+        Route::get('/customers/data', [StaffCustomersController::class, 'data'])
+            ->name('customers.data');
+
+        Route::get('/reports', [StaffReportsController::class, 'index'])
+            ->name('reports.index');
+
+        Route::get('/reports/data', [StaffReportsController::class, 'data'])
+            ->name('reports.data');
     });

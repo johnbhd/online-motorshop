@@ -293,6 +293,33 @@
             </div>
         </section>
 
+        <section
+            class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"
+            role="status"
+            aria-live="polite"
+            data-dashboard-overview-loading
+        >
+            <span class="sr-only">Loading dashboard operational overview.</span>
+
+            @for ($cardIndex = 0; $cardIndex < 6; $cardIndex++)
+                <x-skeleton
+                    type="list"
+                    :rows="4"
+                />
+            @endfor
+        </section>
+
+        <section
+            class="hidden grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3"
+            aria-label="Staff dashboard operational overview"
+            data-dashboard-overview-content
+            data-pickup-requests-url="{{ route('staff.pickup-requests.index') }}"
+            data-delivery-requests-url="{{ route('staff.delivery-requests.index') }}"
+            data-payments-url="{{ route('staff.payments.index') }}"
+            data-products-url="{{ route('staff.products.index') }}"
+            data-messages-url="{{ route('staff.messages.index') }}"
+        ></section>
+
         @php
             $pickupRequestsUrl = \Illuminate\Support\Facades\Route::has('staff.pickup-requests.index')
                 ? route('staff.pickup-requests.index')
@@ -459,7 +486,7 @@
         @endphp
 
         <section
-            class="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3"
+            class="hidden"
             aria-label="Staff dashboard operational overview"
         >
             <article

@@ -15,6 +15,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
-        "@fortawesome/fontawesome-free": "^7.3.1"
+        "@fortawesome/fontawesome-free": "^7.3.1",
+        "chart.js": "^4.5.1"
     }
 }

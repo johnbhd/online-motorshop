@@ -189,37 +189,16 @@
     </nav>
 
     <div class="mt-auto border-t border-white/10 p-3">
-        @if (\Illuminate\Support\Facades\Route::has('logout'))
-            <form
-                method="POST"
-                action="{{ route('logout') }}"
-            >
-                @csrf
+       <a
+            href="{{ route('home') }}"
+            class="group flex min-h-11 w-full items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-left text-sm font-medium text-slate-300 transition hover:bg-white/[0.06] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500"
+        >
+            <i
+                class="fa-solid fa-right-from-bracket w-5 shrink-0 text-center text-slate-400 transition-colors group-hover:text-orange-400"
+                aria-hidden="true"
+            ></i>
 
-                <button
-                    type="submit"
-                    class="group flex min-h-11 w-full items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-left text-sm font-medium text-slate-300 transition hover:bg-white/[0.06] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500"
-                >
-                    <i
-                        class="fa-solid fa-right-from-bracket w-5 shrink-0 text-center text-slate-400 transition-colors group-hover:text-orange-400"
-                        aria-hidden="true"
-                    ></i>
-
-                    <span>Logout</span>
-                </button>
-            </form>
-        @else
-            <button
-                type="button"
-                class="group flex min-h-11 w-full items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-left text-sm font-medium text-slate-300 transition hover:bg-white/[0.06] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-500"
-            >
-                <i
-                    class="fa-solid fa-right-from-bracket w-5 shrink-0 text-center text-slate-400 transition-colors group-hover:text-orange-400"
-                    aria-hidden="true"
-                ></i>
-
-                <span>Logout</span>
-            </button>
-        @endif
+            <span>Logout</span>
+        </a>
     </div>
 </aside>
