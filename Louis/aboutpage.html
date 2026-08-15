@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About ALD Motorshop</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #ffffff;
+    color: #1a2540;
+    padding: 60px 40px;
+  }
+  .about-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+  }
+  .about-image-wrap {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  }
+  .about-image-wrap img {
+    width: 100%;
+    display: block;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .badges {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(2px);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 6px 14px 6px 8px;
+    border-radius: 30px;
+    width: fit-content;
+  }
+  .badge .check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f7941d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .badge .check svg { width: 12px; height: 12px; }
+
+  .about-content .eyebrow {
+    color: #f7941d;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .about-content h2 {
+    font-size: 34px;
+    font-weight: 800;
+    color: #16234a;
+    margin-bottom: 18px;
+    line-height: 1.2;
+  }
+
+  .description-box {
+    border: 2px solid #e4e7ee;
+    border-radius: 10px;
+    padding: 20px 22px;
+    background: #fbfbfd;
+    margin-bottom: 16px;
+  }
+  .description-box p {
+    color: #5a6478;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .description-box p + p {
+    margin-top: 14px;
+  }
+
+  .stats-grid {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .stat-card {
+    border: 2px solid #e4e7ee;
+    border-radius: 10px;
+    padding: 18px 10px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  }
+  .stat-card .icon {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 10px;
+    color: #f7941d;
+  }
+  .stat-card .icon svg { width: 100%; height: 100%; }
+  .stat-card .label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #16234a;
+    line-height: 1.3;
+  }
+
+  @media (max-width: 800px) {
+    .about-section { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<section class="about-section">
+  <div class="about-image-wrap">
+    <img src="https://scontent.fcrk1-2.fna.fbcdn.net/v/t39.30808-6/634750503_1214210287534275_6205258320724220230_n.jpg?stp=dst-jpg_tt6&cstp=mx1537x2048&ctp=p526x296&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFmD84e8RxZvWgAcJKyZW4eZ1_6ws2wcTxnX_rCzbBxPGPTRfdYG7ks6vL2Drx498HfT2Q-Kk9efxtEzmJ8WMEN&_nc_ohc=lCMUxqr1SQEQ7kNvwF9yVLn&_nc_oc=Adpmx06CiU-Cd2meGu7R2gZhGx3HusObhZh5wU8n4cGz0uQjif1rfwzTPM60xQNKBNg&_nc_zt=23&_nc_ht=scontent.fcrk1-2.fna&_nc_gid=rK1-BxIdC_4xzfwdG-zBqg&_nc_ss=7a2a8&oh=00_AQEjYJ-XyUuahYTvkdUF9b3pfM3I4XzUWlZ3APOrgDcvSw&oe=6A83A0C1" alt="ALD Motorshop storefront">
+    <div class="badges">
+      <span class="badge"><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>Genuine Motorcycle Parts</span>
+      <span class="badge"><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>Trusted Local Service</span>
+      <span class="badge"><span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>Multiple Branches</span>
+    </div>
+  </div>
+
+  <div class="about-content">
+    <div class="eyebrow">Who We Are</div>
+    <h2>About ALD Motorshop</h2>
+
+    <div class="description-box">
+      <p>ALD Motorshop is a motorcycle-parts business offering genuine and compatible parts for Honda, Yamaha, and Suzuki motorcycles. The business also supports riders through motorcycle maintenance, repair services, store pickup, and convenient Lalamove delivery requests.</p>
+      <p>The goal of ALD Motorshop is to make dependable motorcycle parts easier to find while giving customers helpful service and convenient ways to receive their orders.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2l1.5 4M18 2l-1.5 4M3 8h18l-1.5 12h-15L3 8z"/></svg></div>
+        <div class="label">4 Years<br>In Business</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l1-5h16l1 5M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9M9 21v-6h6v6"/></svg></div>
+        <div class="label">3 Verified<br>Branches</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h3l2 5m-9 6.5L12 9H8l-3 4"/></svg></div>
+        <div class="label">Honda, Yamaha<br>and Suzuki Parts</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM6 20a2 2 0 100-4 2 2 0 000 4zM17 20a2 2 0 100-4 2 2 0 000 4z"/></svg></div>
+        <div class="label">Pickup and<br>Delivery Available</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
