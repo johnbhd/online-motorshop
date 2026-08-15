@@ -1,5 +1,5 @@
 :root{
-    --ald-red:#e07a08;
+    --ald-red:#e2231a;
     --ald-gold:#fdb813;
     --dark:#111318;
     --gray-bg:#eef0f2;
@@ -13,7 +13,7 @@
     display:flex;align-items:stretch;justify-content:center;
   }
 
-
+  /* ---------- HEADER ---------- */
   header{
     display:flex;align-items:center;justify-content:space-between;
     background:#fff;padding:14px 32px;border-bottom:1px solid #e5e7eb;
@@ -47,14 +47,14 @@
   }
   .guest-btn:hover{background:#000;}
 
-  
+  /* ---------- MAIN LAYOUT ---------- */
   .page{
     display:grid;grid-template-columns:1.4fr 1fr;gap:0;
     width:100%;height:100vh;margin:0;
     background:#fff;overflow:hidden;
   }
 
-
+  /* ---------- HERO PANEL ---------- */
   .hero{
     position:relative;overflow:hidden;height:100%;
     background-image:url('HERO.jpg');
@@ -66,7 +66,7 @@
   .features{display:none;}
   .trust-banner{display:none;}
 
- 
+  /* ---------- LOGIN PANEL ---------- */
   .login-panel{
     background:#e3e5e8;
     display:flex;align-items:center;justify-content:center;
@@ -107,7 +107,7 @@
   }
 
   .register-line{
-    width:100%;text-align:center;font-size:11.5px;color:var(--text-muted);margin-bottom:16px;
+    width:100%;text-align:center;font-size:11.5px;color:var(--text-muted);margin:14px 0 4px;
   }
   .register-link{color:var(--ald-red);font-weight:700;text-decoration:none;}
   .register-link:hover{text-decoration:underline;}
@@ -147,7 +147,7 @@
     margin-top:14px;font-size:10.5px;color:var(--text-muted);text-align:center;line-height:1.5;
   }
 
-  
+  /* ---------- RESPONSIVE ---------- */
   @media (max-width:900px){
     .page{grid-template-columns:1fr;}
     .hero{min-height:420px;}
