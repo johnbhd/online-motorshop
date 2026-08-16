@@ -21,27 +21,29 @@
                     <p class="sub">Sign in for a faster experience or continue as a guest to browse products and place an order.</p>
 
                     <form class="login-form" onsubmit="return false;">
-                    <div class="field">
-                        <label class="sr-only" for="email">Email address</label>
-                        <i class="fa-solid fa-envelope icon-left" aria-hidden="true"></i>
-                        <input id="email" name="email" type="email" placeholder="Email Address" autocomplete="email" required>
-                    </div>
+                        <div class="field">
+                            <label class="sr-only" for="email">Email address</label>
+                            <i class="fa-solid fa-envelope icon-left" aria-hidden="true"></i>
+                            <input id="email" name="email" type="email" placeholder="Email Address" autocomplete="email" required>
+                        </div>
 
-                    <div class="field">
-                        <label class="sr-only" for="password">Password</label>
-                        <i class="fa-solid fa-lock icon-left" aria-hidden="true"></i>
-                        <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
-                        <button type="button" class="icon-right" onclick="togglePwd()" aria-label="Show password">
-                            <i class="fa-solid fa-eye" aria-hidden="true"></i>
-                        </button>
-                    </div>
+                        <div class="field">
+                            <label class="sr-only" for="password">Password</label>
+                            <i class="fa-solid fa-lock icon-left" aria-hidden="true"></i>
+                            <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required>
+                            <button type="button" class="icon-right" onclick="togglePwd()" aria-label="Show password">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
 
-                    <p class="register-line">
-                        Don't have an account?
-                        <a href="{{ route('auth.register') }}" class="register-link">Register here</a>
-                    </p>
+                        <p class="register-line">
+                            Don't have an account?
+                            <a href="{{ route('auth.register') }}" class="register-link">Register here</a>
+                        </p>
 
-                    <button type="submit" class="signin-btn">Sign In</button>
+                        <a href="{{ route('home') }}" class="signin-btn">
+                            Sign In
+                        </a>
                     </form>
 
                     <button type="button" class="google-btn">

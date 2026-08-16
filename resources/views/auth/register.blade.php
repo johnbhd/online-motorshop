@@ -57,7 +57,9 @@
                             </button>
                         </div>
 
-                        <button type="submit" class="signin-btn">Create Account</button>
+                        <a href="{{ route('home') }}" class="signin-btn">
+                            Create Account
+                        </a>
                     </form>
 
                     <button type="button" class="google-btn">
