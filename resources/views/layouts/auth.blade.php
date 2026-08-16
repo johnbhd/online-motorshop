@@ -17,12 +17,10 @@
 <body
     class="min-h-screen bg-slate-50 text-slate-900 antialiased"
 >
-    @include('partials.public-navbar')
 
     <main>
         @yield('content')
     </main>
 
-    @include('partials.public-footer')
 </body>
 </html>
