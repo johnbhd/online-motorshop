@@ -22,11 +22,26 @@ use App\Http\Controllers\Admin\AdminMessagesController;
 use App\Http\Controllers\Admin\AdminBranchesController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
+use App\Http\Controllers\Auth\AuthPageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('public.home');
 })->name('home');
+
+Route::get('/about', function () {
+    return view('public.about');
+})->name('about');
+
+Route::prefix('auth')
+    ->name('auth.')
+    ->group(function () {
+        Route::get('/login', [AuthPageController::class, 'login'])
+            ->name('login');
+        
+        Route::get('register', [AuthPageController::class, 'register'])
+            ->name('register');
+    });
 
 Route::prefix('admin')
     ->name('admin.')
