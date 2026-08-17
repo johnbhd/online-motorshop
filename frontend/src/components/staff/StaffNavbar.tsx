@@ -84,8 +84,7 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
               onClick={() => setMenu(menu === "profile" ? null : "profile")}
               className="flex items-center gap-3 rounded-xl p-1.5 text-left hover:bg-slate-100"
             >
-              <span className="grid size-9 place-items-center rounded-full bg-slate-100 text-slate-500">
-                ◉
+              <span className="grid size-9 place-items-center rounded-full bg-slate-100 text-slate-500"><FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />
               </span>
               <span className="hidden sm:block">
                 <span className="block text-sm font-semibold text-[#0B1930]">
