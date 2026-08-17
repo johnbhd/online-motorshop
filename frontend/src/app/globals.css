@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root {
+  --ald-orange: #e07a08;
+  --ald-orange-dark: #b95f00;
+  --ald-navy: #111827;
+  --ald-surface: #f8fafc;
+  --ald-muted: #64748b;
+}
+
+body {
+  margin: 0;
+  background: var(--ald-surface);
+  color: var(--ald-navy);
+  font-family: Arial, Helvetica, sans-serif;
+}
