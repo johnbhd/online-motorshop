@@ -1,3 +1,7 @@
+import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBuilding, faCheck, faMotorcycle, faStore, faTruck } from "@fortawesome/free-solid-svg-icons";
+
 const highlights = [
   "Genuine Motorcycle Parts",
   "Trusted Local Service",
@@ -26,7 +30,7 @@ export default function AboutPage() {
         <div className="about-badges" aria-label="ALD Motorshop highlights">
           {highlights.map((highlight) => (
             <span key={highlight} className="about-badge">
-              <span aria-hidden="true">✓</span>
+              <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
               {highlight}
             </span>
           ))}
@@ -45,7 +49,7 @@ export default function AboutPage() {
         <div className="about-stats">
           {statistics.map((statistic) => (
             <article key={statistic.lines.join(" ")} className="about-stat-card">
-              <span className="about-stat-icon" aria-hidden="true">{statistic.icon}</span>
+              <span className="about-stat-icon" aria-hidden="true"><FontAwesomeIcon icon={statistic.lines[0] === "4 Years" ? faBuilding : statistic.lines[0] === "3 Verified" ? faStore : statistic.lines[0] === "Honda, Yamaha" ? faMotorcycle : faTruck} /></span>
               <p>{statistic.lines[0]}<br />{statistic.lines[1]}</p>
             </article>
           ))}
@@ -54,4 +58,3 @@ export default function AboutPage() {
     </section>
   );
 }
-import Image from "next/image";

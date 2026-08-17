@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClipboardCheck, faClipboardList, faCreditCard, faStore, faTruck } from "@fortawesome/free-solid-svg-icons";
+import { faCalendarDays, faClipboardCheck, faClipboardList, faCreditCard, faStore, faTruck } from "@fortawesome/free-solid-svg-icons";
 
 import { Badge } from "@/components/staff/PortalTable";
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
@@ -24,9 +24,7 @@ export default function Dashboard() {
         description="Here's what needs your attention at ALD Motorshop today."
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <p className="text-sm font-medium text-slate-500">
-            â—· Sunday, August 16, 2026
-          </p>
+            <p className="text-sm font-medium text-slate-500"><FontAwesomeIcon icon={faCalendarDays} aria-hidden="true" /> Sunday, August 16, 2026</p>
           <Link
             href="/staff/orders"
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-600"

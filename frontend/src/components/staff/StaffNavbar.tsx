@@ -41,11 +41,8 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
               className="relative grid size-10 place-items-center rounded-lg text-lg text-slate-600 hover:bg-slate-100"
               aria-label="Notifications"
             >
-              ♧
-              <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-orange-500 text-[9px] font-bold text-white">
-                {unread}
-              </span>
-            </button>
+              <FontAwesomeIcon icon={faBell} aria-hidden="true" />
+              </button>
             {menu === "notifications" && (
               <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
                 <p className="px-4 py-3 text-sm font-bold text-[#0B1930]">
@@ -99,15 +96,11 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
                 <a
                   href="#"
                   className="block px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  ◉ &nbsp; Profile
-                </a>
+                ><FontAwesomeIcon icon={faCircleUser} aria-hidden="true" /> &nbsp; Profile</a>
                 <Link
                   href="/"
                   className="block border-t border-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  ↪ &nbsp; Logout
-                </Link>
+                ><FontAwesomeIcon icon={faRightFromBracket} aria-hidden="true" /> &nbsp; Logout</Link>
               </div>
             )}
           </div>
