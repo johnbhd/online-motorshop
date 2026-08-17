@@ -1,1 +1,5 @@
-import {ProductsPage} from "@/components/admin/AdminPages";export default ProductsPage;
+import ProductsPage from "@/components/admin/products/ProductsPage";
+
+export default function Page() {
+  return <ProductsPage />;
+}

@@ -1,0 +1,98 @@
+"use client";
+import AdminDataTable, { AdminBadge } from "@/components/admin/AdminDataTable";
+import type { Column } from "@/components/staff/PortalTable";
+import { adminStaff, type AdminStaff } from "@/lib/mock/admin";
+const cols: Column<AdminStaff>[] = [
+  {
+    label: "Staff",
+    render: (r) => (
+      <span className="flex items-center gap-3">
+        <i className="grid size-9 place-items-center rounded-full bg-slate-100 not-italic text-slate-500">
+          ◉
+        </i>
+        <b className="text-[#0B1930]">{r.name}</b>
+      </span>
+    ),
+    search: (r) => r.name,
+  },
+  { label: "Email", render: (r) => r.email, search: (r) => r.email },
+  { label: "Role", render: (r) => r.role, search: (r) => r.role },
+  { label: "Branch", render: (r) => r.branch, search: (r) => r.branch },
+  {
+    label: "Status",
+    render: (r) => <AdminBadge>{r.status}</AdminBadge>,
+    search: (r) => r.status,
+  },
+  { label: "Last Active", render: (r) => r.lastActive },
+  {
+    label: "Action",
+    render: () => (
+      <button className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600">
+        Manage
+      </button>
+    ),
+  },
+];
+export default function StaffManagement() {
+  return (
+    <div className="space-y-5">
+      <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[.18em] text-orange-600">
+            Staff Management
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#0B1930] sm:text-3xl">
+            Staff Accounts
+          </h2>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
+            Manage staff accounts and their assigned branch responsibilities.
+          </p>
+        </div>
+        <button className="min-h-11 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white">
+          + Add Staff Account
+        </button>
+      </section>
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {[
+          ["9", "Total Staff Accounts", "All staff records"],
+          ["8", "Active Accounts", "Currently active"],
+          ["1", "Inactive Accounts", "Requires attention"],
+        ].map(([value, label, desc]) => (
+          <article
+            key={label}
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <p className="text-3xl font-bold text-[#0B1930]">{value}</p>
+            <h3 className="mt-1 font-semibold text-[#0B1930]">{label}</h3>
+            <p className="mt-1 text-sm text-slate-500">{desc}</p>
+          </article>
+        ))}
+      </section>
+      <AdminDataTable
+        title="Staff Accounts"
+        description="9 staff account records"
+        rows={adminStaff}
+        columns={cols}
+        tabs={["All", "Active", "Inactive"]}
+        matchTab={(r, t) => r.status === t}
+        filters={[
+          {
+            label: "Branch",
+            value: (r) => r.branch,
+            options: ["Manila Branch", "Makati Branch", "Imus Branch"],
+          },
+          {
+            label: "Role",
+            value: (r) => r.role,
+            options: ["Order Processing Staff", "Branch Staff"],
+          },
+          {
+            label: "Status",
+            value: (r) => r.status,
+            options: ["Active", "Inactive"],
+          },
+        ]}
+      />
+    </div>
+  );
+}

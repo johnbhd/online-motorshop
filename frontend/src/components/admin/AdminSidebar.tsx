@@ -1,6 +1,151 @@
 "use client";
-import Image from "next/image";import Link from "next/link";import {usePathname} from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBoxOpen, faChartColumn, faClipboardList, faComments, faCreditCard, faGaugeHigh, faGear, faGlobe, faLocationDot, faStar, faStore, faTruck, faUser, faUserGear, faUsers } from "@fortawesome/free-solid-svg-icons";
-const adminIcons = { Dashboard: faGaugeHigh, Orders: faClipboardList, Payments: faCreditCard, "Pickup Requests": faStore, "Delivery Requests": faTruck, Products: faBoxOpen, Customers: faUsers, Messages: faComments, Reviews: faStar, Branches: faLocationDot, "Staff Management": faUserGear, "Website Content": faGlobe, Reports: faChartColumn, "Activity Logs": faChartColumn, Settings: faGear, Profile: faUser } as const; const links=[["Dashboard","/admin","▦"],["Orders","/admin/orders","▤"],["Payments","/admin/payments","▣"],["Pickup Requests","/admin/pickup-requests","⌂"],["Delivery Requests","/admin/delivery-requests","♞"],["Products","/admin/products","□"],["Customers","/admin/customers","♧"],["Messages","/admin/messages","✉"],["Reviews","#","☆"],["Branches","/admin/branches","▧"],["Staff Management","/admin/staff-management","♙"],["Website Content","/admin/website-content","▤"],["Reports","#","▥"],["Activity Logs","#","◷"],["Settings","#","⚙"],["Profile","#","◉"]] as const;
-export default function AdminSidebar({open,onClose}:{open:boolean;onClose:()=>void}){const path=usePathname();return <><button onClick={onClose} aria-label="Close admin navigation" className={`fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-[1px] lg:hidden ${open?"block":"hidden"}`}/><aside id="admin-sidebar" className={`fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col overflow-y-auto border-r border-white/10 bg-[#0B1930] text-slate-200 shadow-2xl transition-transform duration-300 lg:translate-x-0 lg:shadow-none ${open?"translate-x-0":""}`}><div className="relative border-b border-white/10 px-6 pb-6 pt-7"><button onClick={onClose} className="absolute right-4 top-4 grid size-9 place-items-center rounded-lg text-xl text-slate-300 hover:bg-white/10 lg:hidden" aria-label="Close admin navigation">×</button><Link href="/admin" onClick={onClose} className="flex flex-col items-center text-center"><Image src="/branding/logo.png" alt="ALD Motorshop logo" width={80} height={80} className="size-20 rounded-full object-cover shadow-lg"/><span className="mt-3 text-lg font-bold tracking-wide text-white">ALD Motorshop</span><span className="mt-.5 text-xs font-medium uppercase tracking-[.22em] text-slate-400">Admin Portal</span></Link></div><nav className="flex-1 px-3 py-5" aria-label="Admin navigation"><ul className="space-y-1">{links.map(([name,href,icon])=>{const active=href!=="#"&&(path===href||(href!=="/admin"&&path.startsWith(`${href}/`)));return <li key={name}><Link href={href} onClick={onClose} aria-current={active?"page":undefined} className={`group flex min-h-11 items-center gap-3 rounded-r-lg border-l-4 px-3 py-2.5 text-sm font-medium transition ${active?"border-orange-500 bg-[#152B4B] text-white":"border-transparent text-slate-300 hover:bg-white/[.06] hover:text-white"}`}><span className={active?"text-orange-400":"text-slate-400 group-hover:text-orange-400"}><FontAwesomeIcon icon={adminIcons[name]} className="w-4" /></span><span className="min-w-0 flex-1 truncate">{name}</span></Link></li>})}</ul></nav><div className="mt-auto border-t border-white/10 p-3"><Link href="/" className="flex min-h-11 items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/[.06] hover:text-white">↪ <span>Logout</span></Link></div></aside></>}
+import {
+  faBoxOpen,
+  faChartColumn,
+  faClipboardList,
+  faComments,
+  faCreditCard,
+  faGaugeHigh,
+  faGear,
+  faGlobe,
+  faLocationDot,
+  faStar,
+  faStore,
+  faTruck,
+  faUser,
+  faUserGear,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
+const adminIcons = {
+  Dashboard: faGaugeHigh,
+  Orders: faClipboardList,
+  Payments: faCreditCard,
+  "Pickup Requests": faStore,
+  "Delivery Requests": faTruck,
+  Products: faBoxOpen,
+  Customers: faUsers,
+  Messages: faComments,
+  Reviews: faStar,
+  Branches: faLocationDot,
+  "Staff Management": faUserGear,
+  "Website Content": faGlobe,
+  Reports: faChartColumn,
+  "Activity Logs": faChartColumn,
+  Settings: faGear,
+  Profile: faUser,
+} as const;
+const links = [
+  ["Dashboard", "/admin", "▦"],
+  ["Orders", "/admin/orders", "▤"],
+  ["Payments", "/admin/payments", "▣"],
+  ["Pickup Requests", "/admin/pickup-requests", "⌂"],
+  ["Delivery Requests", "/admin/delivery-requests", "♞"],
+  ["Products", "/admin/products", "□"],
+  ["Customers", "/admin/customers", "♧"],
+  ["Messages", "/admin/messages", "✉"],
+  ["Reviews", "#", "☆"],
+  ["Branches", "/admin/branches", "▧"],
+  ["Staff Management", "/admin/staff-management", "♙"],
+  ["Website Content", "/admin/website-content", "▤"],
+  ["Reports", "#", "▥"],
+  ["Activity Logs", "#", "◷"],
+  ["Settings", "#", "⚙"],
+  ["Profile", "#", "◉"],
+] as const;
+export default function AdminSidebar({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const path = usePathname();
+  return (
+    <>
+      <button
+        onClick={onClose}
+        aria-label="Close admin navigation"
+        className={`fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-[1px] lg:hidden ${open ? "block" : "hidden"}`}
+      />
+      <aside
+        id="admin-sidebar"
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 -translate-x-full flex-col overflow-y-auto border-r border-white/10 bg-[#0B1930] text-slate-200 shadow-2xl transition-transform duration-300 lg:translate-x-0 lg:shadow-none ${open ? "translate-x-0" : ""}`}
+      >
+        <div className="relative border-b border-white/10 px-6 pb-6 pt-7">
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 grid size-9 place-items-center rounded-lg text-xl text-slate-300 hover:bg-white/10 lg:hidden"
+            aria-label="Close admin navigation"
+          >
+            ×
+          </button>
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className="flex flex-col items-center text-center"
+          >
+            <Image
+              src="/branding/logo.png"
+              alt="ALD Motorshop logo"
+              width={80}
+              height={80}
+              className="size-20 rounded-full object-cover shadow-lg"
+            />
+            <span className="mt-3 text-lg font-bold tracking-wide text-white">
+              ALD Motorshop
+            </span>
+            <span className="mt-.5 text-xs font-medium uppercase tracking-[.22em] text-slate-400">
+              Admin Portal
+            </span>
+          </Link>
+        </div>
+        <nav className="flex-1 px-3 py-5" aria-label="Admin navigation">
+          <ul className="space-y-1">
+            {links.map(([name, href, icon]) => {
+              const active =
+                href !== "#" &&
+                (path === href ||
+                  (href !== "/admin" && path.startsWith(`${href}/`)));
+              return (
+                <li key={name}>
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    aria-current={active ? "page" : undefined}
+                    className={`group flex min-h-11 items-center gap-3 rounded-r-lg border-l-4 px-3 py-2.5 text-sm font-medium transition ${active ? "border-orange-500 bg-[#152B4B] text-white" : "border-transparent text-slate-300 hover:bg-white/[.06] hover:text-white"}`}
+                  >
+                    <span
+                      className={
+                        active
+                          ? "text-orange-400"
+                          : "text-slate-400 group-hover:text-orange-400"
+                      }
+                    >
+                      <FontAwesomeIcon
+                        icon={adminIcons[name]}
+                        className="w-4"
+                      />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{name}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className="mt-auto border-t border-white/10 p-3">
+          <Link
+            href="/"
+            className="flex min-h-11 items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/[.06] hover:text-white"
+          >
+            ↪ <span>Logout</span>
+          </Link>
+        </div>
+      </aside>
+    </>
+  );
+}

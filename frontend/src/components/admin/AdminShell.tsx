@@ -1,3 +1,29 @@
 "use client";
-import {useEffect,useState} from "react"; import AdminSidebar from "./AdminSidebar"; import AdminNavbar from "./AdminNavbar";
-export default function AdminShell({children}:{children:React.ReactNode}){const [open,setOpen]=useState(false);useEffect(()=>{const close=(e:KeyboardEvent)=>e.key==="Escape"&&setOpen(false);window.addEventListener("keydown",close);return()=>window.removeEventListener("keydown",close)},[]);return <div className="min-h-screen bg-slate-100"><AdminSidebar open={open} onClose={()=>setOpen(false)}/><div className="min-w-0 lg:pl-72"><AdminNavbar onMenu={()=>setOpen(true)} open={open}/><main className="w-full min-w-0"><div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">{children}</div></main></div></div>}
+import { useEffect, useState } from "react";
+import AdminSidebar from "./AdminSidebar";
+import AdminNavbar from "./AdminNavbar";
+export default function AdminShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const close = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, []);
+  return (
+    <div className="min-h-screen bg-slate-100">
+      <AdminSidebar open={open} onClose={() => setOpen(false)} />
+      <div className="min-w-0 lg:pl-72">
+        <AdminNavbar onMenu={() => setOpen(true)} open={open} />
+        <main className="w-full min-w-0">
+          <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

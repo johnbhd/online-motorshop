@@ -1,1 +1,5 @@
-import {PaymentsPage} from "@/components/admin/AdminPages";export default PaymentsPage;
+import PaymentsPage from "@/components/admin/payments/PaymentsPage";
+
+export default function Page() {
+  return <PaymentsPage />;
+}

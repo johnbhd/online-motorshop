@@ -1,26 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import {
-  Chart,
-  ArcElement,
-  BarElement,
-  CategoryScale,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Tooltip,
-} from "chart.js";
-Chart.register(
-  ArcElement,
-  BarElement,
-  CategoryScale,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Tooltip,
-);
+import Chart from "chart.js/auto";
 export function LineChart() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {

@@ -1,22 +1,3 @@
-# -------------------------
-# Frontend build stage
-# -------------------------
-FROM node:20-alpine AS frontend
-
-WORKDIR /app
-
-COPY package*.json ./
-
-RUN npm ci
-
-COPY . .
-
-RUN npm run build
-
-
-# -------------------------
-# Laravel / PHP stage
-# -------------------------
 FROM php:8.2-cli
 
 WORKDIR /var/www/html
@@ -38,9 +19,6 @@ RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader
-
-# Copy compiled Vite assets
-COPY --from=frontend /app/public/build ./public/build
 
 EXPOSE 8000
 
