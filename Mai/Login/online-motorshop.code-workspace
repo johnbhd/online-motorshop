@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../online-motorshop 1"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "online-motorshop"
+	}
+}
