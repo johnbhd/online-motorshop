@@ -4,15 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 
 class AdminStaffController extends Controller
 {
-    public function index(): View
-    {
-        return view('admin.staff.index');
-    }
-
     public function data(): JsonResponse
     {
         return response()->json([

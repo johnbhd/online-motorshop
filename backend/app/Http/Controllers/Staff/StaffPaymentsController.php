@@ -4,15 +4,9 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 
 class StaffPaymentsController extends Controller
 {
-    public function index(): View
-    {
-        return view('staff.payments.index');
-    }
-
     public function data(): JsonResponse
     {
         return response()->json([

@@ -5,15 +5,9 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class StaffReportsController extends Controller
 {
-    public function index(): View
-    {
-        return view('staff.reports.index');
-    }
-
     public function data(Request $request): JsonResponse
     {
         $period = $request->string('period', 'month')->value();

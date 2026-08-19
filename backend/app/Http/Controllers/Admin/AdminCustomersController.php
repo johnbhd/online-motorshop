@@ -4,15 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 
 class AdminCustomersController extends Controller
 {
-    public function index(): View
-    {
-        return view('admin.customers.index');
-    }
-
     public function data(): JsonResponse
     {
         return response()->json([

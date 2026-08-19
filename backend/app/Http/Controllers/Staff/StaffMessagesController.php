@@ -4,15 +4,9 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\View\View;
 
 class StaffMessagesController extends Controller
 {
-    public function index(): View
-    {
-        return view('staff.messages.index');
-    }
-
     public function data(): JsonResponse
     {
         return response()->json([
