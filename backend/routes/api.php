@@ -97,3 +97,10 @@ Route::prefix('staff')
         Route::get('/reviews/data', [StaffReviewsController::class, 'data'])
             ->name('reviews.data');
     });
+    
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'ALD Motorshop API is connected',
+    ]);
+});
