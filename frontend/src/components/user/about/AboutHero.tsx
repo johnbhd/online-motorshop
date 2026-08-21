@@ -7,7 +7,7 @@ export default function AboutHero() {
     <>
       <div className="about-image-wrap">
         <Image
-          src="https://scontent.fcrk1-2.fna.fbcdn.net/v/t39.30808-6/634750503_1214210287534275_6205258320724220230_n.jpg?stp=dst-jpg_tt6&cstp=mx1537x2048&ctp=p526x296&_nc_cat=108&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=127cfc&_nc_eui2=AeFmD84e8RxZvWgAcJKyZW4eZ1_6ws2wcTxnX_rCzbBxPGPTRfdYG7ks6vL2Drx498HfT2Q-Kk9efxtEzmJ8WMEN&_nc_ohc=lCMUxqr1SQEQ7kNvwF9yVLn&_nc_oc=Adpmx06CiU-Cd2meGu7R2gZhGx3HusObhZh5wU8n4cGz0uQjif1rfwzTPM60xQNKBNg&_nc_zt=23&_nc_ht=scontent.fcrk1-2.fna&_nc_gid=rK1-BxIdC_4xzfwdG-zBqg&_nc_ss=7a2a8&oh=00_AQEjYJ-XyUuahYTvkdUF9b3pfM3I4XzUWlZ3APOrgDcvSw&oe=6A83A0C1"
+          src="/images/aldbg.png"
           alt="ALD Motorshop storefront"
           className="about-image"
           fill
