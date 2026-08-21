@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import "../styles/about.css";
+import "../styles/about/about.css";
+import "../styles/about/about2.css";
 
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
