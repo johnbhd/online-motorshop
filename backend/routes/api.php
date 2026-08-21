@@ -35,8 +35,20 @@ Route::get('/health', function () {
 });
 
 // Auth
-Route::post('/login', [LoginController::class, 'store']);
-Route::post('/register', [RegisterController::class, 'store']);
+Route::prefix('auth')->group(function () {    
+    Route::post('/login', [LoginController::class, 'store'])
+        ->name('auth.login');
+    Route::post('/register', [RegisterController::class, 'store'])
+        ->name('auth.register');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [LoginController::class, 'show'])
+            ->name('auth.me');
+        Route::post('/logout', [LoginController::class, 'destroy'])
+            ->name('auth.logout');
+    });
+    
+});
 
 // Admin
 Route::prefix('admin')
