@@ -1,3 +1,5 @@
+export { default } from "./AboutBranchesNext";
+/* Legacy implementation retained for reference.
 "use client"
 
 export default function AboutBranches() {
@@ -112,3 +114,4 @@ export default function AboutBranches() {
 
   );
 }
+*/

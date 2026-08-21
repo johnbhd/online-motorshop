@@ -170,6 +170,7 @@
     height: 100%;
   }
   .branch-photo {
+    position: relative;
     height: 150px;
     overflow: hidden;
   }

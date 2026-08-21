@@ -2,11 +2,11 @@
 import AboutHero from "./AboutHero";
 import AboutJourney from "./AboutJourney"
 import AboutOffers from "./AboutOffers"
-import AboutBranches from "./AboutBranches"
+import AboutBranches from "./AboutBranchesNext"
 
 export default function AboutPage() {
   return (
-    <section >
+    <section>
       <div className="about-section">
         <AboutHero />
       </div>

@@ -1,27 +1,6 @@
-"use client"
-
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faBuilding,
-  faCheck,
-  faMotorcycle,
-  faStore,
-  faTruck,
-} from "@fortawesome/free-solid-svg-icons";
-
-const highlights = [
-  "Genuine Motorcycle Parts",
-  "Trusted Local Service",
-  "Multiple Branches",
-];
-
-const statistics = [
-  ["4 Years", "In Business"],
-  ["3 Verified", "Branches"],
-  ["Honda, Yamaha", "and Suzuki Parts"],
-  ["Pickup and", "Delivery Available"],
-];
+import { aboutHighlights, aboutStatistics } from "./aboutData";
 
 export default function AboutHero() {
     return (
@@ -36,12 +15,12 @@ export default function AboutHero() {
                 />
 
                 <div className="about-badges" aria-label="ALD Motorshop highlights">
-                {highlights.map((highlight) => (
-                    <span key={highlight} className="about-badge">
+                {aboutHighlights.map(({ label, icon }) => (
+                    <span key={label} className="about-badge">
                     <span className="about-badge-icon" aria-hidden="true">
-                        <FontAwesomeIcon icon={faCheck} />
+                        <FontAwesomeIcon icon={icon} />
                     </span>
-                    {highlight}
+                    {label}
                     </span>
                 ))}
                 </div>
@@ -67,25 +46,15 @@ export default function AboutHero() {
                 </div>
 
                 <div className="about-stats">
-                {statistics.map((statistic) => (
-                    <article key={statistic.join(" ")} className="about-stat-card">
+                {aboutStatistics.map(({ value, detail, icon }) => (
+                    <article key={`${value}-${detail}`} className="about-stat-card">
                     <span className="about-stat-icon" aria-hidden="true">
-                        <FontAwesomeIcon
-                        icon={
-                            statistic[0] === "4 Years"
-                            ? faBuilding
-                            : statistic[0] === "3 Verified"
-                                ? faStore
-                                : statistic[0] === "Honda, Yamaha"
-                                ? faMotorcycle
-                                : faTruck
-                        }
-                        />
+                        <FontAwesomeIcon icon={icon} />
                     </span>
                     <p>
-                        {statistic[0]}
+                        {value}
                         <br />
-                        {statistic[1]}
+                        {detail}
                     </p>
                     </article>
                 ))}

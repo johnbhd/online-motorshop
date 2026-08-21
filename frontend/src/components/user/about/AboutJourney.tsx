@@ -1,5 +1,4 @@
-"use client"
-
+import { aboutJourney } from "./aboutData";
 
 export default function AboutJourney() {
   return (
@@ -12,30 +11,14 @@ export default function AboutJourney() {
             </div>
 
             <div className="timeline">
-            <div className="t-item">
-                <div className="t-dot"></div>
-                <h4>The Beginning</h4>
-                <h4 className="line2">Starting the Business</h4>
-                <p>ALD Motorshop began as a local motorcycle-parts shop focused on serving riders with dependable products and helpful assistance.</p>
-            </div>
-            <div className="t-item">
-                <div className="t-dot"></div>
-                <h4>Growing Trust</h4>
-                <h4 className="line2">Building Customer Relationships</h4>
-                <p>The shop continued serving customers looking for parts, motorcycle maintenance, and repair assistance.</p>
-            </div>
-            <div className="t-item">
-                <div className="t-dot"></div>
-                <h4>Business Expansion</h4>
-                <h4 className="line2">Opening More Branches</h4>
-                <p>ALD Motorshop expanded from one shop into multiple branches to make products and services more accessible.</p>
-            </div>
-            <div className="t-item">
-                <div className="t-dot"></div>
-                <h4>Today</h4>
-                <h4 className="line2">Four Years of Service</h4>
-                <p>After four years of operation, ALD continues improving how customers browse, request, pick up, and receive motorcycle parts.</p>
-            </div>
+            {aboutJourney.map(({ title, subtitle, description }) => (
+              <article className="t-item" key={title}>
+                <div className="t-dot" />
+                <h4>{title}</h4>
+                <h4 className="line2">{subtitle}</h4>
+                <p>{description}</p>
+              </article>
+            ))}
             </div>
         </div>
     </section>
