@@ -352,13 +352,15 @@ img {
 }
 
 .branch-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: stretch;
   gap: 10px;
   margin-top: auto;
   padding-top: 6px;
 }
 .btn {
-  flex: 1;
+  min-width: 0;
   text-align: center;
   font-size: 12.8px;
   font-weight: 700;
@@ -378,9 +380,12 @@ img {
     box-shadow 0.15s ease,
     background 0.15s ease,
     color 0.15s ease;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
 }
 .btn svg {
+  flex: 0 0 auto;
   width: 14px;
   height: 14px;
 }
@@ -458,8 +463,14 @@ img {
     border-right: none !important;
     border-bottom: 1px solid #e7e9f0 !important;
   }
+  .branch-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .offer-cell:last-child {
     border-bottom: none !important;
+  }
+  .branch-actions {
+    grid-template-columns: 1fr;
   }
   .section-title {
     font-size: 24px;
