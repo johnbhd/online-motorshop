@@ -1,8 +1,8 @@
-"use client"
+"use client";
 import AboutHero from "./AboutHero";
-import AboutJourney from "./AboutJourney"
-import AboutOffers from "./AboutOffers"
-import AboutBranches from "./AboutBranchesNext"
+import AboutJourney from "./AboutJourney";
+import AboutOffers from "./AboutOffers";
+import AboutBranches from "./AboutBranchesNext";
 
 export default function AboutPage() {
   return (
@@ -10,9 +10,9 @@ export default function AboutPage() {
       <div className="about-section">
         <AboutHero />
       </div>
-      <AboutJourney/>
-      <AboutOffers/>
-      <AboutBranches/>
+      <AboutJourney />
+      <AboutOffers />
+      <AboutBranches />
     </section>
   );
 }
