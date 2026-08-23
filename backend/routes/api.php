@@ -1,4 +1,6 @@
 <?php
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 
 use App\Http\Controllers\Admin\AdminBranchesController;
 use App\Http\Controllers\Admin\AdminCustomersController;
@@ -24,6 +26,31 @@ use App\Http\Controllers\Staff\StaffReportsController;
 use App\Http\Controllers\Staff\StaffReviewsController;
 use Illuminate\Support\Facades\Route;
 
+// Connection
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'Ilabas mo!!!',
+    ]);
+});
+
+// Auth
+Route::prefix('auth')->group(function () {    
+    Route::post('/login', [LoginController::class, 'store'])
+        ->name('auth.login');
+    Route::post('/register', [RegisterController::class, 'store'])
+        ->name('auth.register');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [LoginController::class, 'show'])
+            ->name('auth.me');
+        Route::post('/logout', [LoginController::class, 'destroy'])
+            ->name('auth.logout');
+    });
+    
+});
+
+// Admin
 Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -61,6 +88,7 @@ Route::prefix('admin')
             ->name('website-content.data');
     });
 
+// Staff
 Route::prefix('staff')
     ->name('staff.')
     ->group(function () {
@@ -98,9 +126,3 @@ Route::prefix('staff')
             ->name('reviews.data');
     });
     
-Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'message' => 'ALD Motorshop API is connected',
-    ]);
-});
