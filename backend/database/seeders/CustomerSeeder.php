@@ -22,7 +22,7 @@ class CustomerSeeder extends Seeder
                 'full_name' => 'User',
                 'contact_number' => '09323289211',
                 'email' => 'user@gmail.com',
-                'address' => 'Pasig, Philippines'
+                'address' => 'Manila, Philippines'
             ]
         );
     }
