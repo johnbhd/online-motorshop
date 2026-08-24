@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('address');
             $table->string("contact_number");
             $table->string("pickup_available")->default(true);
             $table->string("status")->default('active');

@@ -8,6 +8,7 @@ class Branch extends Model
 {
     protected $fillable = [
         'name',
+        'address',
         'contact_number',
         'pickup_available',
         'status'
