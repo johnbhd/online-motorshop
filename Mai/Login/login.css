@@ -2,9 +2,9 @@
     --ald-red:#e2231a;
     --ald-gold:#fdb813;
     --dark:#111318;
-    --gray-bg:#eef0f2;
+    --gray-bg:#fcfdff;
     --text-dark:#1b1c1f;
-    --text-muted:#6b7280;
+    --text-muted:#79798f;
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
   html,body{height:100%;overflow:hidden;}
@@ -16,7 +16,7 @@
   /* ---------- HEADER ---------- */
   header{
     display:flex;align-items:center;justify-content:space-between;
-    background:#fff;padding:14px 32px;border-bottom:1px solid #e5e7eb;
+    background:#fff;padding:14px 32px;border-bottom:1px solid   #ffffff;
     flex-wrap:wrap;gap:12px;
   }
   .brand{display:flex;align-items:center;gap:12px;}
