@@ -1,11 +1,473 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<title>ALD Motorshop - Home</title>
+<link rel="stylesheet" href="landing.css">
 </head>
 <body>
-    
+
+<header>
+  <div class="brand">
+    <img src="ALD logo.png" alt="ALD Motorshop logo" class="logo-img">
+    <div class="brand-text">
+      <h1>ALD Motorshop</h1>
+      <p>Motorcycle Parts Trading</p>
+    </div>
+  </div>
+
+  <nav>
+    <a href="#" class="active">Home</a>
+    <a href="#">Products</a>
+    <a href="#">Categories</a>
+    <a href="#">Branches</a>
+    <a href="#">About Us</a>
+    <a href="#">Contact</a>
+  </nav>
+
+  <div class="header-right">
+    <span class="track-order">Track Order</span>
+    <span class="divider-line"></span>
+    <span class="cart-wrap">
+      <span class="cart-icon">🛒</span>
+      <span class="cart-badge">0</span>
+    </span>
+    <button class="guest-btn" onclick="window.location.href='login.html'">Sign In or Continue as Guest</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-content">
+    <p class="eyebrow">GENUINE MOTORCYCLE PARTS</p>
+    <h2>RIDE READY WITH THE<span>RIGHT PARTS</span></h2>
+    <p class="hero-desc">Browse genuine Honda, Yamaha, and Suzuki motorcycle parts. Submit your order online and choose store pickup or Lalamove delivery.</p>
+
+    <div class="hero-actions">
+      <button class="btn-primary">🛍 Shop Motorcycle Parts</button>
+      <button class="btn-outline">📦 Track Your Order</button>
+    </div>
+
+    <div class="features">
+      <div class="feature"><div class="icon">✔</div><span>Genuine Parts</span></div>
+      <div class="feature"><div class="icon">🏍</div><span>Honda, Yamaha<br>and Suzuki</span></div>
+      <div class="feature"><div class="icon">🏬</div><span>Store Pickup</span></div>
+      <div class="feature"><div class="icon">🚚</div><span>Lalamove<br>Delivery</span></div>
+    </div>
+
+    <p class="footnote">🛡 No account required. Guest ordering is available.</p>
+  </div>
+
+  <div class="hero-badges">
+    <div class="badge-card">
+      <div class="badge-icon">🏅</div>
+      <div class="badge-text">
+        <strong>Trusted Parts.<br>Reliable Service.</strong>
+        <span>Serving riders for <em>4 years</em></span>
+      </div>
+    </div>
+    <div class="badge-card">
+      <div class="badge-icon">🛵</div>
+      <div class="badge-text">
+        <strong>Pickup and Lalamove<br>Delivery Available</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BRAND SECTION ================= -->
+<section class="brands-section">
+  <p class="eyebrow-center">SHOP BY MOTORCYCLE BRAND</p>
+  <h2 class="section-title">Find Parts for Your Motorcycle</h2>
+  <p class="section-sub">Browse compatible motorcycle parts for Honda, Yamaha, and Suzuki models.</p>
+
+  <div class="brand-grid">
+    <div class="brand-card">
+      <div class="brand-img-wrap"><img src="honda.png" alt="Honda motorcycle"></div>
+      <h3 class="brand-name honda-name">HONDA</h3>
+      <p class="brand-desc">Browse genuine and compatible parts for Honda motorcycles. Engine, brakes, electrical, maintenance and more.</p>
+      <button class="brand-btn honda-btn">Browse Honda Parts <span>→</span></button>
+    </div>
+
+    <div class="brand-card">
+      <div class="brand-img-wrap"><img src="yamaha.png" alt="Yamaha motorcycle"></div>
+      <h3 class="brand-name yamaha-name">YAMAHA</h3>
+      <p class="brand-desc">Explore parts and maintenance products for Yamaha motorcycles. Performance, electrical, body parts and more.</p>
+      <button class="brand-btn yamaha-btn">Browse Yamaha Parts <span>→</span></button>
+    </div>
+
+    <div class="brand-card">
+      <div class="brand-img-wrap"><img src="suzuki.png" alt="Suzuki motorcycle"></div>
+      <h3 class="brand-name suzuki-name">SUZUKI</h3>
+      <p class="brand-desc">Find compatible motorcycle parts for Suzuki models. Brakes, engine components, filters and more.</p>
+      <button class="brand-btn suzuki-btn">Browse Suzuki Parts <span>→</span></button>
+    </div>
+  </div>
+
+  <button class="view-all-btn">View All Compatible Parts</button>
+</section>
+
+<!-- ================= CATEGORY SECTION ================= --> 
+<section class="categories-section">
+  <p class="eyebrow-center">EXPLORE OUR PRODUCTS</p>
+  <h2 class="section-title">Shop Motorcycle Parts by Category</h2>
+  <p class="section-sub">Find essential replacement parts, maintenance products, and accessories for your motorcycle.</p>
+
+  <div class="category-grid">
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="oilfilter.png" alt="Engine Parts"></div>
+      <h4>Engine Parts</h4>
+      <p>Pistons, cylinders, gaskets, and engine components</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>42 Items</span></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="brakelever.png" alt="Brake Parts"></div>
+      <h4>Brake Parts</h4>
+      <p>Brake pads, discs, cables and related components</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>36 Items</span></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="usbcharger.png" alt="Electrical Parts"></div>
+      <h4>Electrical Parts</h4>
+      <p>Lighting, spark plugs, wiring and electrical related</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>50 Items</span></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="battery.png" alt="Batteries"></div>
+      <h4>Batteries</h4>
+      <p>Reliable batteries for different motorcycle models</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>18 Items</span></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="wheelrim.png" alt="Tires"></div>
+      <h4>Tires</h4>
+      <p>Road and off-road tires for daily rides and replacements</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>26 Items</span></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="engineoil.webp" alt="Oils and Lubricants"></div>
+      <h4>Oils and Lubricants</h4>
+      <p>Engine oil, lubricants, and maintenance fluids</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>23 Items</span></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="frontcoverpipe.png" alt="Fairings"></div>
+      <h4>Fairings</h4>
+      <p>Body panels, covers and exterior replacement parts</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>24 Items</span></div>
+    </div>
+
+    <div class="category-card">
+      <div class="category-img-wrap"><img src="trunk.png" alt="Accessories"></div>
+      <h4>Accessories</h4>
+      <p>Useful accessories for comfort, safety and style</p>
+      <div class="category-foot"><a href="#">Browse Parts</a><span>40 Items</span></div>
+    </div>
+  </div>
+
+  <button class="view-all-btn">View All Product Categories</button>
+</section>
+
+<!-- ================= FEATURED PRODUCTS SECTION ================= -->
+<section class="featured-section">
+  <p class="eyebrow-center">FEATURED PRODUCTS</p>
+  <h2 class="section-title">Popular Motorcycle Parts</h2>
+  <p class="section-sub">Browse selected motorcycle parts and maintenance products available from ALD Motorshop.</p>
+
+  <div class="product-grid">
+
+    <div class="product-card">
+      <span class="product-tag">Brakes &amp; Suspension</span>
+      <div class="product-img-wrap"><img src="airfilter.png" alt="Genuine Honda Air Filter"></div>
+      <h4>Honda Air Filter</h4>
+      <p class="product-brand">Honda</p>
+      <p class="product-price">₱850</p>
+      <span class="stock stock-available">● Available</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Electrical</span>
+            <div class="product-img-wrap"><img src="battery.png" alt="Genuine Honda battery"></div>
+      <h4>Honda Motorcycle Battery</h4>
+      <p class="product-brand">Honda</p>
+      <p class="product-price">₱1,650</p>
+      <span class="stock stock-available">● Available</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Engine Parts</span>
+      <div class="product-img-wrap"><img src="shockabsorber.png" alt=" Shock Absorber"></div>
+        <h4>Honda Shock Absorber</h4>
+        <p class="product-brand">Honda</p>
+      <p class="product-price">₱420</p>
+      <span class="stock stock-low">● Low Stock</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Oils &amp; Lubricants</span>
+      <div class="product-img-wrap"><img src="brakeshoe.png" alt="Suzuki Brake Shoe"></div>
+      <h4>Suzuki Brake Shoe</h4>
+      <p class="product-brand">Suzuki</p>
+      <p class="product-price">₱380</p>
+      <span class="stock stock-available">● Available</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Brakes &amp; Suspension</span>
+      <div class="product-img-wrap"><img src="tire.png" alt="Suzuki Tire"></div>
+      <h4>Suzuki Tire</h4>
+      <p class="product-brand">Suzuki</p>
+      <p class="product-price">₱1,200</p>
+      <span class="stock stock-confirm">● Subject to Confirmation</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Electrical</span>
+      <div class="product-img-wrap"><img src="chainkit.png" alt="Suzuki Drive Chain kit"></div>
+      <h4>Suzuki Drive Chain kit</h4>
+      <p class="product-brand">Suzuki</p>
+      <p class="product-price">₱180</p>
+      <span class="stock stock-available">● Available</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Tires &amp; Wheels</span>
+      <div class="product-img-wrap"><img src="brakepad.png" alt="Yamaha Brake Pad Kit"></div>
+      <h4>Yamaha Brake Pad Kit</h4>
+      <p class="product-brand">Yamaha</p>
+      <p class="product-price">₱1,450</p>
+      <span class="stock stock-available">● Available</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Electrical</span>
+      <div class="product-img-wrap"><img src="sparkplug.png" alt="Yamaha Spark Plug"></div>
+      <h4>Yamaha Spark Plug</h4>
+      <p class="product-brand">Yamaha</p>
+      <p class="product-price">₱950</p>
+      <span class="stock stock-low">● Low Stock</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+    <div class="product-card">
+      <span class="product-tag">Body &amp; Accessories</span>
+      <div class="product-img-wrap"><img src="vbelt.png" alt="Yamaha V-Belt"></div>
+      <h4>Yamaha V-Belt</h4>
+      <p class="product-brand">Yamaha</p>
+      <p class="product-price">₱350</p>
+      <span class="stock stock-available">● Available</span>
+      <button class="add-cart-btn">🛒 Add to Cart</button>
+      <a href="#" class="view-details">View Details →</a>
+    </div>
+
+  </div>
+
+  <button class="view-all-btn">View All Products</button>
+</section>
+
+<!-- ================= HOW ORDERING WORKS SECTION ================= -->
+<section class="steps-section">
+  <p class="eyebrow-center">SIMPLE GUEST ORDERING</p>
+  <h2 class="section-title">How Ordering Works</h2>
+  <p class="section-sub">Order motorcycle parts online without creating an account. Submit your request and wait for confirmation from the ALD Motorshop staff.</p>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-icon">🔍</div>
+      <h4>Browse Products</h4>
+      <p>Search motorcycle parts by product name, category, brand, or compatible motorcycle model.</p>
+    </div>
+    <span class="step-arrow">›</span>
+
+    <div class="step-card">
+      <div class="step-icon step-num">🛒<span>1</span></div>
+      <h4>Add Items to Cart</h4>
+      <p>Choose the products and quantities you need, then review your estimated order total.</p>
+    </div>
+    <span class="step-arrow">›</span>
+
+    <div class="step-card">
+      <div class="step-icon step-num">📋<span>3</span></div>
+      <h4>Submit Order Request</h4>
+      <p>Enter your contact details and choose store pickup or Lalamove delivery.</p>
+    </div>
+    <span class="step-arrow">›</span>
+
+    <div class="step-card">
+      <div class="step-icon step-num">✅<span>4</span></div>
+      <h4>Receive Staff Confirmation</h4>
+      <p>ALD staff will verify product availability, final price, payment, and fulfillment details.</p>
+    </div>
+  </div>
+
+  <div class="info-banner">ℹ️ No customer account is required. Every submitted order receives a unique reference number for tracking.</div>
+
+  <button class="primary-cta">🛒 Browse Motorcycle Parts</button>
+</section>
+
+<!-- ================= PICKUP OR DELIVERY SECTION ================= -->
+<section class="fulfillment-section">
+  <p class="eyebrow-center">CHOOSE YOUR FULFILLMENT OPTION</p>
+  <h2 class="section-title">Pickup or Delivery—You Decide</h2>
+  <p class="section-sub">Choose the most convenient way to receive your motorcycle parts after your order has been confirmed.</p>
+
+  <div class="fulfillment-grid">
+    <div class="fulfillment-card">
+      <div class="fulfillment-img-wrap"><img src="ALD.png" alt="ALD Motorshop storefront"></div>
+      <div class="fulfillment-content">
+        <p class="fulfillment-label pickup-label">📍 STORE PICKUP</p>
+        <h4>Pick Up at an ALD Branch</h4>
+        <p class="fulfillment-desc">Choose your preferred branch during checkout. ALD staff will notify you once your order is ready for collection.</p>
+        <ul class="fulfillment-list">
+          <li>✔ Select your preferred pickup branch</li>
+          <li>✔ Receive a ready-for-pickup update</li>
+          <li>✔ Present your order reference at the branch</li>
+        </ul>
+        <button class="outline-cta pickup-cta">View Pickup Branches</button>
+      </div>
+    </div>
+
+    <div class="fulfillment-card">
+      <div class="fulfillment-img-wrap"><img src="LALA.png" alt="Lalamove delivery rider"></div>
+      <div class="fulfillment-content">
+        <p class="fulfillment-label delivery-label">🛵 LALAMOVE DELIVERY</p>
+        <h4>Request Lalamove Delivery</h4>
+        <p class="fulfillment-desc">ALD staff will arrange the Lalamove booking after confirming your order, payment, address, and delivery fee.</p>
+        <ul class="fulfillment-list">
+          <li>✔ Delivery request recorded with your order</li>
+          <li>✔ Booking details provided after confirmation</li>
+          <li>✔ Delivery status available through order tracking</li>
+        </ul>
+        <button class="filled-cta">Learn About Delivery</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-banner">ℹ️ Delivery requests are subject to product availability, payment confirmation, delivery fee, and Lalamove booking availability.</div>
+</section>
+
+<!-- ================= FINAL CTA SECTION ================= -->
+<section class="final-cta-section">
+  <div class="final-cta-left">
+    <p class="eyebrow-left">NEED HELP FINDING A PART?</p>
+    <h2 class="final-cta-title">Find the Right<br>Motorcycle Part with ALD</h2>
+    <p class="final-cta-desc">Browse our motorcycle-parts catalog or contact ALD Motorshop for help with product availability, compatibility, pickup, and delivery.</p>
+
+    <div class="final-cta-actions">
+      <button class="primary-cta small-cta">🛍 Browse Motorcycle Parts</button>
+      <button class="outline-cta-dark">💬 Message Us on Messenger</button>
+    </div>
+
+    <p class="final-cta-note">For faster assistance, prepare your motorcycle brand, model, year, and the part you are looking for.</p>
+  </div>
+
+  <div class="final-cta-right">
+    <div class="mini-info-card">
+      <span class="mini-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <div>
+        <strong>Guest Ordering Available</strong>
+        <span>No customer account is required.</span>
+      </div>
+    </div>
+    <div class="mini-info-card">
+      <span class="mini-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span>
+      <div><strong>Honda · Yamaha · Suzuki Parts</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="footer-brand-head">
+        <img src="ALD logo.png" alt="ALD Motorshop logo" class="footer-logo">
+        <div>
+          <h4>ALD Motorshop</h4>
+          <p>Motorcycle Parts Trading</p>
+        </div>
+      </div>
+      <p class="footer-desc">Your trusted source for genuine and compatible motorcycle parts, with convenient store pickup and Lalamove delivery requests.</p>
+      <div class="footer-socials">
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.15 2 11.26c0 2.91 1.44 5.5 3.7 7.2V22l3.38-1.86c.9.25 1.87.38 2.92.38 5.52 0 10-4.15 10-9.26S17.52 2 12 2zm1.01 12.47l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h5>Shop</h5>
+      <a href="#">All Products</a>
+      <a href="#">Product Categories</a>
+      <a href="#">Featured Products</a>
+      <a href="#">Honda Parts</a>
+      <a href="#">Yamaha Parts</a>
+      <a href="#">Suzuki Parts</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Customer Support</h5>
+      <a href="#">Track Order</a>
+      <a href="#">How to Order</a>
+      <a href="#">Store Pickup</a>
+      <a href="#">Lalamove Delivery</a>
+      <a href="#">Frequently Asked Questions</a>
+      <a href="#">Contact Us</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Company</h5>
+      <a href="#">About ALD Motorshop</a>
+      <a href="#">Branch Locations</a>
+      <a href="#">Business Information</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms and Conditions</a>
+      <a href="#">Staff Login</a>
+    </div>
+  </div>
+
+  <div class="footer-contact-row">
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+      <div><strong>Contact ALD Motorshop</strong><span>Contact details available upon request</span></div>
+    </div>
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+      <div><strong>Business Hours</strong><span>View branch hours</span></div>
+    </div>
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+      <div><strong>Visit Our Branches</strong><span>View branch locations</span></div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 ALD Motorcycle Parts Trading. All rights reserved.</span>
+    <span class="footer-legal">
+      <a href="#">Privacy Policy</a> · <a href="#">Terms and Conditions</a> · <a href="#">Accessibility</a>
+    </span>
+  </div>
+</footer>
+
 </body>
 </html>
