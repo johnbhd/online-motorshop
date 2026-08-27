@@ -34,17 +34,7 @@
 }
 
 .home-brands {
-  background: var(--home-navy);
-}
-
-.home-brands .home-section-heading h2,
-.home-products .home-section-heading h2 {
-  color: var(--home-white);
-}
-
-.home-brands .home-section-heading p:last-child,
-.home-products .home-section-heading p:last-child {
-  color: #b6c1d1;
+  background: var(--home-section-gray);
 }
 
 .home-brand-grid,
@@ -203,14 +193,14 @@
 }
 
 .home-secondary-cta {
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  color: var(--home-white);
+  border: 1px solid #c9cbd0;
+  color: var(--home-navy);
 }
 
 .home-secondary-cta:hover {
-  border-color: var(--home-orange-bright);
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--home-white);
+  border-color: var(--home-orange);
+  background: var(--home-white);
+  color: var(--home-orange);
 }
 
 .home-categories {
@@ -252,7 +242,7 @@
 }
 
 .home-products {
-  background: var(--home-navy);
+  background: var(--home-section-gray);
 }
 
 .home-product-grid {
@@ -552,8 +542,10 @@
 }
 
 .home-final-cta {
-  background: var(--home-navy-deep);
-  color: var(--home-white);
+  background: var(--home-white);
+  color: var(--home-navy);
+  padding: 56px 0 10px;
+  padding-bottom: 4rem;
 }
 
 .home-final-cta-shell {
@@ -566,7 +558,7 @@
 .home-final-cta-copy h2 {
   max-width: 590px;
   margin: 0;
-  color: var(--home-white);
+  color: var(--home-navy);
   font-size: 2.1rem;
   font-weight: 850;
   line-height: 1.18;
@@ -575,7 +567,7 @@
 .home-final-cta-copy > p:not(.home-eyebrow):not(.home-final-cta-note) {
   max-width: 570px;
   margin: 1rem 0 0;
-  color: #b6c1d1;
+  color: var(--home-muted);
   font-size: 0.92rem;
   line-height: 1.65;
 }
@@ -583,7 +575,7 @@
 .home-final-cta-note {
   max-width: 570px;
   margin: 1rem 0 0;
-  color: #8391a5;
+  color: var(--home-muted);
   font-size: 0.76rem;
   line-height: 1.55;
 }
@@ -598,9 +590,7 @@
   align-items: center;
   gap: 0.8rem;
   padding: 1rem;
-  border-color: #27364b;
-  background: #121d2d;
-  box-shadow: none;
+  background: var(--home-white);
 }
 
 .home-info-card-icon {
@@ -610,19 +600,19 @@
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
-  background: rgba(245, 158, 11, 0.14);
-  color: var(--home-orange-bright);
+  background: var(--home-navy);
+  color: var(--home-white);
   font-size: 0.95rem;
 }
 
 .home-info-card h3 {
-  color: var(--home-white);
+  color: var(--home-navy);
   font-size: 0.82rem;
 }
 
 .home-info-card p {
   margin: 0.25rem 0 0;
-  color: #9caabd;
+  color: var(--home-muted);
   font-size: 0.72rem;
 }
 
@@ -694,6 +684,10 @@
 
   .home-final-cta-copy h2 {
     font-size: 1.8rem;
+  }
+
+  .home-final-cta {
+    padding: 40px 0 10px;
   }
 }
 

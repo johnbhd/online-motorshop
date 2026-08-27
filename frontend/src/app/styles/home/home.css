@@ -4,6 +4,7 @@
   --home-orange: #e07a08;
   --home-orange-bright: #f59e0b;
   --home-surface: #f8fafc;
+  --home-section-gray: #eef0f2;
   --home-muted: #64748b;
   --home-border: #e2e8f0;
   --home-white: #ffffff;
@@ -27,6 +28,15 @@
 .home-page a,
 .home-page button {
   font: inherit;
+}
+
+.home-page .svg-inline--fa {
+  display: inline-block;
+  width: var(--fa-width, 1.25em);
+  max-width: none;
+  height: 1em;
+  overflow: visible;
+  vertical-align: -0.125em;
 }
 
 .home-page a:focus-visible,
@@ -192,22 +202,22 @@
 }
 
 .home-button--dark-outline {
-  border-color: #334155;
+  border-color: var(--home-navy);
   background: transparent;
-  color: var(--home-white);
+  color: var(--home-navy);
 }
 
 .home-button--dark-outline:hover {
-  border-color: var(--home-orange-bright);
-  background: rgba(245, 158, 11, 0.12);
+  border-color: var(--home-navy);
+  background: var(--home-navy);
   color: var(--home-white);
 }
 
 .home-highlight-list {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  max-width: 630px;
+  gap: 10px;
+  max-width: 430px;
   margin-top: 2.5rem;
 }
 
@@ -273,6 +283,8 @@
   display: grid;
   width: 2.5rem;
   height: 2.5rem;
+  text-align: center;
+  align-items: center;
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
