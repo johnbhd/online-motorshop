@@ -285,9 +285,10 @@
   display: block;
   min-height: 1.1rem;
   color: var(--home-muted);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.03em;
+  line-height: 1.4;
 }
 
 .home-product-image {
@@ -311,6 +312,13 @@
 
 .home-product-brand {
   margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.home-product-content h3 {
+  font-size: 1.05rem;
+  line-height: 1.35;
 }
 
 .home-cart-button {
@@ -327,7 +335,7 @@
   background: var(--home-orange);
   color: var(--home-white);
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.3;
   transition:
@@ -345,6 +353,7 @@
 .home-product-details {
   align-self: center;
   margin-top: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .home-ordering {
