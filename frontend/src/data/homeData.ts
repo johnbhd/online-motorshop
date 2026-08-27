@@ -2,22 +2,17 @@ import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
   faArrowRight,
   faAward,
-  faBatteryFull,
-  faBolt,
   faBoxOpen,
   faCartShopping,
   faCheck,
   faCircleInfo,
   faCircleUser,
   faClock,
-  faGears,
   faLocationDot,
   faMagnifyingGlass,
-  faMapLocationDot,
   faMotorcycle,
   faPhone,
   faShieldHalved,
-  faScrewdriverWrench,
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
@@ -48,7 +43,8 @@ export type HomeCategory = {
   id: string;
   name: string;
   description: string;
-  icon: IconDefinition;
+  image: string;
+  alt: string;
   href: string;
 };
 
@@ -59,8 +55,6 @@ export type HomeProduct = {
   category: string;
   image: string;
   alt: string;
-  price: string;
-  stockStatus: string;
   href: string;
 };
 
@@ -136,7 +130,7 @@ export const homeBrands: HomeBrand[] = [
     name: "Honda",
     description:
       "Browse genuine and compatible parts for Honda motorcycles, including engine, brake, electrical, and maintenance parts.",
-    image: "/images/hero-section.jpg",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787814541/honda.png",
     alt: "ALD Motorshop motorcycle parts display for Honda customers",
     href: "/#home-products",
   },
@@ -165,61 +159,67 @@ export const homeCategories: HomeCategory[] = [
     id: "engine-parts",
     name: "Engine Parts",
     description: "Pistons, cylinders, gaskets, and engine components.",
-    icon: faGears,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561337/Honda-Filter-Set.png",
+    alt: "Honda engine filter set",
     href: "/#home-products",
   },
   {
     id: "brake-parts",
     name: "Brake Parts",
     description: "Brake pads, discs, cables, and related components.",
-    icon: faScrewdriverWrench,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561477/Honda-Brake-Pad.png",
+    alt: "Honda motorcycle brake pad",
     href: "/#home-products",
   },
   {
     id: "electrical-parts",
     name: "Electrical Parts",
     description: "Lighting, spark plugs, wiring, and electrical parts.",
-    icon: faBolt,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560931/Honda-Spark-Plug.png",
+    alt: "Honda motorcycle spark plug",
     href: "/#home-products",
   },
   {
     id: "suspension-parts",
     name: "Suspension Parts",
     description: "Shock absorbers and parts for a controlled, comfortable ride.",
-    icon: faMotorcycle,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560947/Honda-Shock-Absorber.png",
+    alt: "Honda motorcycle shock absorber",
     href: "/#home-products",
   },
   {
     id: "transmission-parts",
     name: "Transmission Parts",
     description: "Drive-chain and transmission components for daily riding.",
-    icon: faGears,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561477/Honda-Chain-Kit.png",
+    alt: "Honda motorcycle chain kit",
     href: "/#home-products",
   },
   {
     id: "body-exterior",
     name: "Body & Exterior",
     description: "Covers, fairings, panels, and exterior replacement parts.",
-    icon: faBoxOpen,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561351/Honda-Front-Cover-Pipe.png",
+    alt: "Honda motorcycle front cover pipe",
     href: "/#home-products",
   },
   {
     id: "tires-wheels",
     name: "Tires & Wheels",
     description: "Road-ready tires, wheels, and related replacement parts.",
-    icon: faMapLocationDot,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560944/Honda-Front-Tire.png",
+    alt: "Honda motorcycle front tire",
     href: "/#home-products",
   },
   {
     id: "accessories-maintenance",
     name: "Accessories & Maintenance",
     description: "Practical accessories and products for routine maintenance.",
-    icon: faBatteryFull,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561449/Honda-Oil-Filter.png",
+    alt: "Honda motorcycle oil filter",
     href: "/#home-products",
   },
 ];
-
-const homeProductImage = "/images/hero-section.jpg";
 
 export const featuredProducts: HomeProduct[] = [
   {
@@ -227,10 +227,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Honda Air Filter",
     brand: "Honda",
     category: "Engine Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561452/Honda-Air-Filter.png",
     alt: "Motorcycle parts display for Honda air filter customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -238,10 +236,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Honda Motorcycle Battery",
     brand: "Honda",
     category: "Electrical Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561463/Honda-Battery.png",
     alt: "Motorcycle parts display for Honda battery customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -249,10 +245,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Honda Shock Absorber",
     brand: "Honda",
     category: "Suspension Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560947/Honda-Shock-Absorber.png",
     alt: "Motorcycle parts display for Honda suspension customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -260,10 +254,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Suzuki Brake Shoe",
     brand: "Suzuki",
     category: "Brake Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561079/Suzuki-Brake-Shoe.png",
     alt: "Motorcycle parts display for Suzuki brake customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -271,10 +263,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Suzuki Tire",
     brand: "Suzuki",
     category: "Tires & Wheels",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561038/Suzuki-Tire.png",
     alt: "Motorcycle parts display for Suzuki tire customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -282,10 +272,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Suzuki Drive Chain Kit",
     brand: "Suzuki",
     category: "Transmission Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561052/Suzuki-Chain-Kit.png",
     alt: "Motorcycle parts display for Suzuki transmission customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -293,10 +281,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Yamaha Brake Pad Kit",
     brand: "Yamaha",
     category: "Brake Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561155/Yamaha-Brake-Pad.png",
     alt: "Motorcycle parts display for Yamaha brake customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -304,10 +290,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Yamaha Spark Plug",
     brand: "Yamaha",
     category: "Electrical Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561151/Yamaha-Spark-Plug.png",
     alt: "Motorcycle parts display for Yamaha electrical customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
   {
@@ -315,10 +299,8 @@ export const featuredProducts: HomeProduct[] = [
     name: "Yamaha V-Belt",
     brand: "Yamaha",
     category: "Transmission Parts",
-    image: homeProductImage,
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561168/Yamaha-V-Belt.png",
     alt: "Motorcycle parts display for Yamaha transmission customers",
-    price: "Price on confirmation",
-    stockStatus: "Subject to Confirmation",
     href: "/#home-products",
   },
 ];
@@ -365,7 +347,7 @@ export const fulfillmentOptions: FulfillmentOption[] = [
     title: "Pick Up at an ALD Branch",
     description:
       "Choose your preferred branch during checkout. ALD staff will notify you once your confirmed order is ready for collection.",
-    image: "/branches/manila.png",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787814770/imus.png",
     alt: "ALD Motorshop branch storefront for store pickup",
     items: [
       "Select your preferred pickup branch",
@@ -383,7 +365,7 @@ export const fulfillmentOptions: FulfillmentOption[] = [
     title: "Request Lalamove Delivery",
     description:
       "ALD staff arranges the booking after confirming your order, payment, address, and delivery fee.",
-    image: "/images/hero-section.jpg",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787820813/lalamove.png",
     alt: "Motorcycle parts prepared for a delivery request",
     items: [
       "Delivery request recorded with your order",

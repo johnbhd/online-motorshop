@@ -32,7 +32,6 @@ export default function HomeBrands() {
                   fill
                   sizes="(max-width: 760px) 100vw, 33vw"
                 />
-                <span className="home-brand-name">{brand.name}</span>
               </div>
               <div className="home-brand-content">
                 <h3>{brand.name}</h3>

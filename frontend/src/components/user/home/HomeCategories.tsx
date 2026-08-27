@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { homeCategories, homeUtilityIcons } from "../../../data/homeData";
@@ -22,8 +23,13 @@ export default function HomeCategories() {
         <div className="home-category-grid">
           {homeCategories.map((category) => (
             <article className="home-category-card" key={category.id}>
-              <div className="home-category-icon" aria-hidden="true">
-                <FontAwesomeIcon icon={category.icon} />
+              <div className="home-category-image">
+                <Image
+                  src={category.image}
+                  alt={category.alt}
+                  fill
+                  sizes="(max-width: 760px) 100vw, (max-width: 1040px) 50vw, 25vw"
+                />
               </div>
               <div className="home-category-content">
                 <h3>{category.name}</h3>

@@ -12,7 +12,7 @@ export default function HomeHero() {
     <section className="home-hero" aria-labelledby="home-hero-title">
       <div className="home-hero-media" aria-hidden="true">
         <Image
-          src="/images/aldbg.png"
+          src="https://res.cloudinary.com/ykkjo51n/image/upload/v1787814776/manila.png"
           alt=""
           fill
           priority
@@ -25,7 +25,7 @@ export default function HomeHero() {
         <div className="home-hero-copy">
           <p className="home-eyebrow">Genuine Motorcycle Parts</p>
           <h1 id="home-hero-title">
-            Ride ready with the
+            Ride ready <br/> with the
             <span>right parts.</span>
           </h1>
           <p className="home-hero-description">

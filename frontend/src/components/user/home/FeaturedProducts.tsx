@@ -37,11 +37,6 @@ export default function FeaturedProducts() {
               <div className="home-product-content">
                 <h3>{product.name}</h3>
                 <p className="home-product-brand">{product.brand}</p>
-                <p className="home-product-price">{product.price}</p>
-                <span className="home-stock-badge">
-                  <span aria-hidden="true" />
-                  {product.stockStatus}
-                </span>
               </div>
               <button className="home-cart-button" type="button">
                 <FontAwesomeIcon
