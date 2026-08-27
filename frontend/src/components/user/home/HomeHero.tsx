@@ -3,7 +3,6 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
 import {
-  homeBadges,
   homeHighlights,
   homeUtilityIcons,
 } from "../../../data/homeData";
@@ -69,39 +68,6 @@ export default function HomeHero() {
           </p>
         </div>
 
-        <aside
-          className="home-hero-trust-panel"
-          aria-label="Why choose ALD Motorshop"
-        >
-          <div className="home-hero-trust-heading">
-            <span className="home-hero-trust-icon" aria-hidden="true">
-              <FontAwesomeIcon icon={homeBadges[0].icon} />
-            </span>
-            <div>
-              <p className="home-hero-trust-kicker">Trusted by riders</p>
-              <h2>{homeBadges[0].title}</h2>
-              {homeBadges[0].detail ? (
-                <p className="home-hero-trust-years">{homeBadges[0].detail}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="home-hero-trust-divider" aria-hidden="true" />
-
-          <ul className="home-hero-trust-list">
-            {homeHighlights.map((highlight) => (
-              <li className="home-hero-trust-item" key={highlight.id}>
-                <span
-                  className="home-hero-trust-item-icon"
-                  aria-hidden="true"
-                >
-                  <FontAwesomeIcon icon={highlight.icon} />
-                </span>
-                <span>{highlight.label}</span>
-              </li>
-            ))}
-          </ul>
-        </aside>
       </div>
     </section>
   );
