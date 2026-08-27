@@ -5,10 +5,9 @@ import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
 
 const navigationItems = [
   { href: "/", label: "Home" },
-  { href: "/#home-products", label: "Products" },
-  { href: "/#home-categories", label: "Categories" },
-  { href: "/about", label: "Branches" },
-  { href: "/about", label: "About Us" },
+  { href: "/about", label: "About" },
+  { href: "/staff", label: "Staff" },
+  { href: "/admin", label: "Admin" },
 ];
 
 export function Navbar() {
@@ -39,9 +38,6 @@ export function Navbar() {
               {item.label}
             </Link>
           ))}
-          <a className="site-header-nav-link" href="tel:+639958691174">
-            Contact
-          </a>
         </nav>
 
         <div className="site-header-actions">

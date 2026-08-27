@@ -61,7 +61,7 @@
 
 .site-header-nav-link {
   position: relative;
-  padding: 0.25rem 0 0.45rem;
+  padding: 0.25rem 0.45rem;
   border-bottom: 2px solid transparent;
   color: #1b1c1f;
   font-size: 0.86rem;
@@ -162,7 +162,9 @@
   background: #111318;
   color: #ffffff;
 }
-
+.site-header-nav {
+  margin-left: 10rem;
+}
 @media (max-width: 1180px) {
   .site-header-inner {
     gap: 1rem;
