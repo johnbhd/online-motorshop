@@ -25,7 +25,6 @@ export default function OrderingSteps() {
               <article className="home-step-card">
                 <div className="home-step-icon" aria-hidden="true">
                   <FontAwesomeIcon icon={step.icon} />
-                  <span>{step.number}</span>
                 </div>
                 <h3>{step.title}</h3>
                 <p>{step.description}</p>

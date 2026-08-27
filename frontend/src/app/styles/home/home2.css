@@ -369,14 +369,15 @@
 .home-step-group {
   display: flex;
   min-width: 0;
-  align-items: center;
+  align-items: stretch;
   gap: 0.65rem;
 }
 
 .home-step-card {
   flex: 1 1 auto;
+  height: 100%;
   min-width: 0;
-  padding: 1.35rem 1rem;
+  padding: 1.5rem 1.1rem;
   border: 1px solid var(--home-border);
   border-radius: 0.6rem;
   background: var(--home-white);
@@ -386,35 +387,20 @@
 .home-step-icon {
   position: relative;
   display: grid;
-  width: 3.25rem;
-  height: 3.25rem;
-  margin: 0 auto 1rem;
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1.2rem;
   place-items: center;
   border-radius: 50%;
   background: #fff4e5;
   color: var(--home-orange);
-  font-size: 1.2rem;
-}
-
-.home-step-icon span {
-  position: absolute;
-  top: -0.25rem;
-  right: -0.25rem;
-  display: grid;
-  width: 1.15rem;
-  height: 1.15rem;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--home-orange);
-  color: var(--home-white);
-  font-size: 0.62rem;
-  font-weight: 800;
+  font-size: 1.45rem;
 }
 
 .home-step-card h3 {
   margin: 0;
   color: var(--home-navy);
-  font-size: 0.88rem;
+  font-size: 1rem;
   font-weight: 800;
   line-height: 1.35;
 }
@@ -422,14 +408,15 @@
 .home-step-card p {
   margin: 0.65rem 0 0;
   color: var(--home-muted);
-  font-size: 0.74rem;
-  line-height: 1.55;
+  font-size: 0.88rem;
+  line-height: 1.6;
 }
 
 .home-step-arrow {
+  align-self: center;
   flex: 0 0 auto;
   color: #a9b4c2;
-  font-size: 1rem;
+  font-size: 1.15rem;
 }
 
 .home-info-banner {
@@ -444,7 +431,7 @@
   border-radius: 0.5rem;
   background: #eff6ff;
   color: #36577b;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   line-height: 1.55;
   text-align: center;
 }

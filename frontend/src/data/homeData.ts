@@ -60,7 +60,6 @@ export type HomeProduct = {
 
 export type OrderingStep = {
   id: string;
-  number: number;
   title: string;
   description: string;
   icon: IconDefinition;
@@ -130,7 +129,7 @@ export const homeBrands: HomeBrand[] = [
     name: "Honda",
     description:
       "Browse genuine and compatible parts for Honda motorcycles, including engine, brake, electrical, and maintenance parts.",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787814541/honda.png",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787821966/honda.png",
     alt: "ALD Motorshop motorcycle parts display for Honda customers",
     href: "/#home-products",
   },
@@ -139,7 +138,7 @@ export const homeBrands: HomeBrand[] = [
     name: "Yamaha",
     description:
       "Explore parts and maintenance products for Yamaha motorcycles, from performance components to electrical parts.",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787814544/yamaha.png",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787821967/yamaha.png",
     alt: "ALD Motorshop storefront for Yamaha customers",
     href: "/#home-products",
   },
@@ -148,7 +147,7 @@ export const homeBrands: HomeBrand[] = [
     name: "Suzuki",
     description:
       "Find compatible parts for Suzuki models, including brakes, engine components, filters, and accessories.",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787814544/suzuki.png",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787821967/suzuki.png",
     alt: "ALD Motorshop branch for Suzuki customers",
     href: "/#home-products",
   },
@@ -308,7 +307,6 @@ export const featuredProducts: HomeProduct[] = [
 export const orderingSteps: OrderingStep[] = [
   {
     id: "browse-products",
-    number: 1,
     title: "Browse Products",
     description:
       "Search motorcycle parts by product name, category, brand, or compatible model.",
@@ -316,7 +314,6 @@ export const orderingSteps: OrderingStep[] = [
   },
   {
     id: "add-items",
-    number: 2,
     title: "Add Items to Cart",
     description:
       "Choose the products and quantities you need, then review your request.",
@@ -324,7 +321,6 @@ export const orderingSteps: OrderingStep[] = [
   },
   {
     id: "submit-request",
-    number: 3,
     title: "Submit Order Request",
     description:
       "Enter your contact details and choose store pickup or Lalamove delivery.",
@@ -332,7 +328,6 @@ export const orderingSteps: OrderingStep[] = [
   },
   {
     id: "staff-confirmation",
-    number: 4,
     title: "Receive Staff Confirmation",
     description:
       "ALD staff verifies availability, final price, payment, and fulfillment details.",
