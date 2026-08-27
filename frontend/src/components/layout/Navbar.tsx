@@ -1,7 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBars,
+  faCartShopping,
+  faClipboardList,
+  faUser,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 
 const navigationItems = [
   { href: "/", label: "Home" },
@@ -11,6 +20,41 @@ const navigationItems = [
 ];
 
 export function Navbar() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      return;
+    }
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    const closeOnDesktopResize = () => {
+      if (window.innerWidth > 900) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("resize", closeOnDesktopResize);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("resize", closeOnDesktopResize);
+    };
+  }, [isMobileMenuOpen]);
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <header className="site-header">
       <div className="site-header-inner">
@@ -59,7 +103,87 @@ export function Navbar() {
             Sign In or Continue as Guest
           </Link>
         </div>
+
+        <button
+          className="site-header-menu-toggle"
+          type="button"
+          aria-label="Open navigation menu"
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="site-mobile-nav"
+          onClick={() => setIsMobileMenuOpen(true)}
+        >
+          <FontAwesomeIcon icon={faBars} aria-hidden="true" />
+        </button>
       </div>
+
+      {isMobileMenuOpen ? (
+        <>
+          <button
+            className="site-mobile-nav-overlay"
+            type="button"
+            aria-label="Close navigation menu"
+            onClick={closeMobileMenu}
+          />
+          <aside
+            className="site-mobile-nav"
+            id="site-mobile-nav"
+            aria-label="Mobile navigation"
+          >
+            <div className="site-mobile-nav-header">
+              <strong>Menu</strong>
+              <button
+                className="site-mobile-nav-close"
+                type="button"
+                aria-label="Close navigation menu"
+                onClick={closeMobileMenu}
+              >
+                <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+              </button>
+            </div>
+
+            <nav className="site-mobile-nav-links" aria-label="Main navigation">
+              {navigationItems.map((item, index) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`site-mobile-nav-link${index === 0 ? " is-active" : ""}`}
+                  onClick={closeMobileMenu}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="site-mobile-nav-actions">
+              <Link
+                className="site-mobile-nav-action"
+                href="/#home-ordering"
+                onClick={closeMobileMenu}
+              >
+                <FontAwesomeIcon icon={faClipboardList} aria-hidden="true" />
+                <span>Track Order</span>
+              </Link>
+              <Link
+                className="site-mobile-nav-action"
+                href="/#home-products"
+                onClick={closeMobileMenu}
+              >
+                <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
+                <span>Cart</span>
+                <span className="site-mobile-nav-cart-badge">0</span>
+              </Link>
+              <Link
+                className="site-mobile-nav-action"
+                href="/auth/login"
+                onClick={closeMobileMenu}
+              >
+                <FontAwesomeIcon icon={faUser} aria-hidden="true" />
+                <span>Sign In or Continue as Guest</span>
+              </Link>
+            </div>
+          </aside>
+        </>
+      ) : null}
     </header>
   );
 }
