@@ -35,7 +35,11 @@ export default function HomeCategories() {
                 <h3>{category.name}</h3>
                 <p>{category.description}</p>
               </div>
-              <Link className="home-card-link" href={category.href}>
+              <Link
+                className="home-card-link"
+                href={category.href}
+                aria-label={`Browse ${category.name}`}
+              >
                 Browse Parts
                 <FontAwesomeIcon
                   icon={homeUtilityIcons.arrow}
