@@ -1,0 +1,233 @@
+.site-header {
+  position: relative;
+  z-index: 20;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.site-header-inner {
+  display: flex;
+  width: 100%;
+  min-height: 73px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 0.875rem 2rem;
+}
+
+.site-header-brand {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: center;
+  gap: 0.75rem;
+  color: #1b1c1f;
+  text-decoration: none;
+}
+
+.site-header-logo {
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.site-header-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header-brand-text strong {
+  color: #1b1c1f;
+  font-size: 1.06rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.site-header-brand-text small {
+  margin-top: 0.2rem;
+  color: #6b7280;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.site-header-nav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.8rem, 1.8vw, 1.6rem);
+}
+
+.site-header-nav-link {
+  position: relative;
+  padding: 0.25rem 0 0.45rem;
+  border-bottom: 2px solid transparent;
+  color: #1b1c1f;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.site-header-nav-link:hover,
+.site-header-nav-link.is-active {
+  border-bottom-color: #fdb813;
+  color: #e2231a;
+}
+
+.site-header-actions {
+  display: flex;
+  min-width: max-content;
+  align-items: center;
+  gap: 1.05rem;
+}
+
+.site-header-track {
+  color: #1b1c1f;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-header-track:hover {
+  color: #e2231a;
+}
+
+.site-header-divider {
+  width: 1px;
+  height: 1.35rem;
+  background: #e0e2e6;
+}
+
+.site-header-cart {
+  position: relative;
+  display: inline-grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  color: #1b1c1f;
+  font-size: 1.2rem;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.site-header-cart:hover {
+  color: #e2231a;
+}
+
+.site-header-cart .svg-inline--fa {
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
+.site-header-cart-badge {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.55rem;
+  display: grid;
+  width: 1.1rem;
+  height: 1.1rem;
+  place-items: center;
+  border-radius: 50%;
+  background: #fdb813;
+  color: #111318;
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.site-header-guest {
+  padding: 0.65rem 1.1rem;
+  border: 1.5px solid #1b1c1f;
+  border-radius: 0.4rem;
+  background: #ffffff;
+  color: #1b1c1f;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.site-header-guest:hover {
+  background: #111318;
+  color: #ffffff;
+}
+
+@media (max-width: 1180px) {
+  .site-header-inner {
+    gap: 1rem;
+    padding-inline: 1.5rem;
+  }
+
+  .site-header-nav {
+    gap: 0.8rem;
+  }
+
+  .site-header-nav-link,
+  .site-header-track {
+    font-size: 0.78rem;
+  }
+
+  .site-header-actions {
+    gap: 0.75rem;
+  }
+
+  .site-header-guest {
+    padding-inline: 0.8rem;
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .site-header-inner {
+    min-height: 68px;
+  }
+
+  .site-header-nav {
+    display: none;
+  }
+
+  .site-header-actions {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .site-header-inner {
+    min-height: 0;
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+  }
+
+  .site-header-brand-text strong {
+    font-size: 0.98rem;
+  }
+
+  .site-header-brand-text small {
+    font-size: 0.66rem;
+  }
+
+  .site-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .site-header-track {
+    font-size: 0.78rem;
+  }
+
+  .site-header-guest {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.72rem;
+  }
+}

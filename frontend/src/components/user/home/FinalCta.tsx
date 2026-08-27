@@ -39,11 +39,6 @@ export default function FinalCta() {
               Contact ALD Motorshop
             </a>
           </div>
-
-          <p className="home-final-cta-note">
-            For faster assistance, prepare your motorcycle brand, model, year,
-            and the part you are looking for.
-          </p>
         </div>
 
         <div className="home-info-card-grid">

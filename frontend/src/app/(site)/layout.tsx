@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import "../styles/about/about.css";
 import "../styles/about/about2.css";
 import "../styles/footer.css";
+import "../styles/header.css";
 import "../styles/home/home.css";
 import "../styles/home/home2.css";
 
