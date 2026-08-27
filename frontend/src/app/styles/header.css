@@ -78,7 +78,7 @@
 .site-header-nav-link:hover,
 .site-header-nav-link.is-active {
   border-bottom-color: #fdb813;
-  color: #e2231a;
+  color: #e07a08;
 }
 
 .site-header-actions {
@@ -98,7 +98,7 @@
 }
 
 .site-header-track:hover {
-  color: #e2231a;
+  color: #e07a08;
 }
 
 .site-header-divider {
@@ -120,7 +120,7 @@
 }
 
 .site-header-cart:hover {
-  color: #e2231a;
+  color: #e07a08;
 }
 
 .site-header-cart .svg-inline--fa {
@@ -227,7 +227,7 @@
 
   .site-header-menu-toggle:hover {
     border-color: #fdb813;
-    color: #e2231a;
+    color: #e07a08;
   }
 
   .site-mobile-nav-overlay {

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
 import {
   homeBadges,
   homeHighlights,
@@ -23,10 +24,12 @@ export default function HomeHero() {
 
       <div className="home-shell home-hero-shell">
         <div className="home-hero-copy">
-          <p className="home-eyebrow">Genuine Motorcycle Parts</p>
+          <p className="home-eyebrow home-hero-eyebrow">
+            Genuine Motorcycle Parts
+          </p>
           <h1 id="home-hero-title">
-            Ride ready <br/> with the
-            <span>right parts.</span>
+            Ride ready
+            <span>with the right parts.</span>
           </h1>
           <p className="home-hero-description">
             Browse genuine and compatible Honda, Yamaha, and Suzuki motorcycle
@@ -50,49 +53,55 @@ export default function HomeHero() {
               href="/#home-ordering"
             >
               <FontAwesomeIcon
-                icon={homeHighlights[2].icon}
+                icon={faClipboardList}
                 aria-hidden="true"
               />
               View Ordering Steps
             </Link>
           </div>
 
-          <div
-            className="home-highlight-list"
-            aria-label="ALD Motorshop services"
-          >
-            {homeHighlights.map((highlight) => (
-              <div className="home-highlight" key={highlight.id}>
-                <span className="home-highlight-icon" aria-hidden="true">
-                  <FontAwesomeIcon icon={highlight.icon} />
-                </span>
-                <span>{highlight.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className="home-hero-note">
+          <p className="home-hero-reassurance">
             <FontAwesomeIcon
               icon={homeHighlights[0].icon}
               aria-hidden="true"
             />
-            No account required. Guest ordering is available.
+            <span>No account required. Guest ordering is available.</span>
           </p>
         </div>
 
-        <div className="home-hero-badges">
-          {homeBadges.map((badge) => (
-            <article className="home-hero-badge" key={badge.id}>
-              <span className="home-hero-badge-icon" aria-hidden="true">
-                <FontAwesomeIcon icon={badge.icon} />
-              </span>
-              <div>
-                <strong>{badge.title}</strong>
-                {badge.detail ? <span>{badge.detail}</span> : null}
-              </div>
-            </article>
-          ))}
-        </div>
+        <aside
+          className="home-hero-trust-panel"
+          aria-label="Why choose ALD Motorshop"
+        >
+          <div className="home-hero-trust-heading">
+            <span className="home-hero-trust-icon" aria-hidden="true">
+              <FontAwesomeIcon icon={homeBadges[0].icon} />
+            </span>
+            <div>
+              <p className="home-hero-trust-kicker">Trusted by riders</p>
+              <h2>{homeBadges[0].title}</h2>
+              {homeBadges[0].detail ? (
+                <p className="home-hero-trust-years">{homeBadges[0].detail}</p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="home-hero-trust-divider" aria-hidden="true" />
+
+          <ul className="home-hero-trust-list">
+            {homeHighlights.map((highlight) => (
+              <li className="home-hero-trust-item" key={highlight.id}>
+                <span
+                  className="home-hero-trust-item-icon"
+                  aria-hidden="true"
+                >
+                  <FontAwesomeIcon icon={highlight.icon} />
+                </span>
+                <span>{highlight.label}</span>
+              </li>
+            ))}
+          </ul>
+        </aside>
       </div>
     </section>
   );
