@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
@@ -19,8 +19,53 @@ const navigationItems = [
   { href: "/admin", label: "Admin" },
 ];
 
+const FLOAT_THRESHOLD = 64;
+const SCROLL_DIRECTION_TOLERANCE = 8;
+
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const previousScrollY = lastScrollY.current;
+      const scrollDelta = currentScrollY - previousScrollY;
+      const crossedFloatThreshold =
+        previousScrollY <= FLOAT_THRESHOLD && currentScrollY > FLOAT_THRESHOLD;
+
+      if (currentScrollY <= FLOAT_THRESHOLD) {
+        setIsScrolled(false);
+        setIsVisible(true);
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+
+      setIsScrolled(true);
+
+      if (isMobileMenuOpen) {
+        setIsVisible(true);
+      } else if (crossedFloatThreshold) {
+        setIsVisible(true);
+      } else if (scrollDelta > SCROLL_DIRECTION_TOLERANCE) {
+        setIsVisible(false);
+      } else if (scrollDelta < -SCROLL_DIRECTION_TOLERANCE) {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    lastScrollY.current = window.scrollY;
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     if (!isMobileMenuOpen) {
@@ -55,8 +100,16 @@ export function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
+  const openMobileMenu = () => {
+    setIsVisible(true);
+    setIsMobileMenuOpen(true);
+  };
+
   return (
-    <header className="site-header">
+    <>
+      <header
+        className={`site-header ${isScrolled ? "site-header--scrolled" : ""} ${isVisible ? "site-header--visible" : "site-header--hidden"} ${isMobileMenuOpen ? "site-header--menu-open" : ""}`}
+      >
       <div className="site-header-inner">
         <Link href="/" className="site-header-brand">
           <Image
@@ -110,11 +163,12 @@ export function Navbar() {
           aria-label="Open navigation menu"
           aria-expanded={isMobileMenuOpen}
           aria-controls="site-mobile-nav"
-          onClick={() => setIsMobileMenuOpen(true)}
+          onClick={openMobileMenu}
         >
           <FontAwesomeIcon icon={faBars} aria-hidden="true" />
         </button>
       </div>
+      </header>
 
       {isMobileMenuOpen ? (
         <>
@@ -184,6 +238,6 @@ export function Navbar() {
           </aside>
         </>
       ) : null}
-    </header>
+    </>
   );
 }

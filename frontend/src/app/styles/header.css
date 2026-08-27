@@ -1,8 +1,78 @@
 .site-header {
-  position: relative;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
   z-index: 20;
+  width: 100%;
   border-bottom: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.96);
+  transition:
+    top 300ms ease-out,
+    width 300ms ease-out,
+    transform 300ms ease-out,
+    background-color 300ms ease-out,
+    border-color 300ms ease-out,
+    border-radius 300ms ease-out,
+    box-shadow 300ms ease-out,
+    backdrop-filter 300ms ease-out;
+}
+
+.site-header--visible,
+.site-header--menu-open {
+  transform: translateY(0);
+}
+
+.site-header--hidden {
+  transform: translateY(-120%);
+}
+
+.site-header--hidden.site-header--menu-open {
+  transform: translateY(0);
+}
+
+.site-header--scrolled {
+  top: 14px;
+  width: min(calc(100% - 32px), 1440px);
+  margin-inline: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1rem;
+  background: rgba(8, 16, 29, 0.84);
+  box-shadow: 0 0.7rem 2rem rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(14px);
+}
+
+.site-header--scrolled .site-header-brand-text strong,
+.site-header--scrolled .site-header-nav-link,
+.site-header--scrolled .site-header-track,
+.site-header--scrolled .site-header-cart {
+  color: #ffffff;
+}
+
+.site-header--scrolled .site-header-brand-text small {
+  color: #cbd5e1;
+}
+
+.site-header--scrolled .site-header-nav-link:hover,
+.site-header--scrolled .site-header-nav-link.is-active,
+.site-header--scrolled .site-header-track:hover,
+.site-header--scrolled .site-header-cart:hover {
+  color: #fdb813;
+}
+
+.site-header--scrolled .site-header-divider {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.site-header--scrolled .site-header-guest {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: transparent;
+  color: #ffffff;
+}
+
+.site-header--scrolled .site-header-guest:hover {
   background: #ffffff;
+  color: #111318;
 }
 
 .site-header-inner {
@@ -230,6 +300,12 @@
     color: #e07a08;
   }
 
+  .site-header--scrolled {
+    top: 8px;
+    width: calc(100% - 16px);
+    border-radius: 0.75rem;
+  }
+
   .site-mobile-nav-overlay {
     position: fixed;
     inset: 0;
@@ -415,5 +491,14 @@
   .site-header-guest {
     padding: 0.6rem 0.8rem;
     font-size: 0.72rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header,
+  .site-mobile-nav,
+  .site-mobile-nav-overlay {
+    animation: none;
+    transition: none;
   }
 }
