@@ -81,9 +81,9 @@
 
 .home-brand-image {
   position: relative;
-  height: 150px;
+  height: 190px;
   overflow: hidden;
-  background: #f4f5f6;
+  background: #1e293b;
 }
 
 .home-brand-image img,
@@ -92,14 +92,28 @@
   object-fit: cover;
 }
 
-.home-brand-image img {
-  object-fit: contain;
-  padding: 0.75rem;
+.home-brand-image::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(180deg, rgba(8, 16, 29, 0.12), rgba(8, 16, 29, 0.78));
+}
+
+.home-brand-name {
+  position: absolute;
+  right: 1.2rem;
+  bottom: 1rem;
+  z-index: 1;
+  color: var(--home-white);
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .home-brand-content {
   display: flex;
-  min-height: 0;
+  min-height: 225px;
   flex-direction: column;
   padding: 1.4rem;
 }
@@ -127,9 +141,7 @@
 }
 
 .home-brand-content p {
-  margin: 0.5rem 0 0.75rem;
-  font-size: 0.9rem;
-  line-height: 1.55;
+  margin: 0.7rem 0 1.2rem;
 }
 
 .home-card-link,
@@ -143,7 +155,7 @@
 }
 
 .home-brand-content .home-card-link {
-  margin-top: 0.25rem;
+  margin-top: auto;
 }
 
 .home-card-link svg,
