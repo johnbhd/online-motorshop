@@ -50,7 +50,7 @@
   display: flex;
   min-height: 620px;
   overflow: hidden;
-  padding-top: 40px;
+  padding-top: 50px;
   isolation: isolate;
   background: var(--home-navy-deep);
   color: var(--home-white);

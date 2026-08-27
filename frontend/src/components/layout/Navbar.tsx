@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -23,6 +24,7 @@ const FLOAT_THRESHOLD = 64;
 const SCROLL_DIRECTION_TOLERANCE = 8;
 
 export function Navbar() {
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -105,6 +107,14 @@ export function Navbar() {
     setIsMobileMenuOpen(true);
   };
 
+  const isActiveNavigationItem = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
   return (
     <>
       <header
@@ -126,11 +136,11 @@ export function Navbar() {
         </Link>
 
         <nav className="site-header-nav" aria-label="Main navigation">
-          {navigationItems.map((item, index) => (
+          {navigationItems.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className={`site-header-nav-link${index === 0 ? " is-active" : ""}`}
+              className={`site-header-nav-link${isActiveNavigationItem(item.href) ? " is-active" : ""}`}
             >
               {item.label}
             </Link>
@@ -196,11 +206,11 @@ export function Navbar() {
             </div>
 
             <nav className="site-mobile-nav-links" aria-label="Main navigation">
-              {navigationItems.map((item, index) => (
+              {navigationItems.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`site-mobile-nav-link${index === 0 ? " is-active" : ""}`}
+                  className={`site-mobile-nav-link${isActiveNavigationItem(item.href) ? " is-active" : ""}`}
                   onClick={closeMobileMenu}
                 >
                   {item.label}
