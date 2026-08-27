@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { featuredProducts, homeUtilityIcons } from "./homeData";
+import { featuredProducts, homeUtilityIcons } from "../../../data/homeData";
 
 export default function FeaturedProducts() {
   return (

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { fulfillmentOptions, homeUtilityIcons } from "./homeData";
+import { fulfillmentOptions, homeUtilityIcons } from "../../../data/homeData";
 
 export default function FulfillmentSection() {
   return (
@@ -66,13 +66,6 @@ export default function FulfillmentSection() {
           ))}
         </div>
 
-        <div className="home-info-banner" role="note">
-          <FontAwesomeIcon icon={homeUtilityIcons.info} aria-hidden="true" />
-          <span>
-            Delivery requests depend on product availability, payment
-            confirmation, delivery fee, and Lalamove booking availability.
-          </span>
-        </div>
       </div>
     </section>
   );

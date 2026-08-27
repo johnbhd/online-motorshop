@@ -145,7 +145,7 @@ export const homeBrands: HomeBrand[] = [
     name: "Yamaha",
     description:
       "Explore parts and maintenance products for Yamaha motorcycles, from performance components to electrical parts.",
-    image: "/images/aldbg.png",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787814544/yamaha.png",
     alt: "ALD Motorshop storefront for Yamaha customers",
     href: "/#home-products",
   },
@@ -154,7 +154,7 @@ export const homeBrands: HomeBrand[] = [
     name: "Suzuki",
     description:
       "Find compatible parts for Suzuki models, including brakes, engine components, filters, and accessories.",
-    image: "/branches/manila.png",
+    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787814544/suzuki.png",
     alt: "ALD Motorshop branch for Suzuki customers",
     href: "/#home-products",
   },

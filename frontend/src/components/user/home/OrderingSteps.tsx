@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { homeUtilityIcons, orderingSteps } from "./homeData";
+import { homeUtilityIcons, orderingSteps } from "../../../data/homeData";
 
 export default function OrderingSteps() {
   return (
@@ -37,14 +37,6 @@ export default function OrderingSteps() {
               ) : null}
             </div>
           ))}
-        </div>
-
-        <div className="home-info-banner" role="note">
-          <FontAwesomeIcon icon={homeUtilityIcons.info} aria-hidden="true" />
-          <span>
-            No customer account is required. Every submitted order receives a
-            unique reference number for tracking.
-          </span>
         </div>
 
         <Link className="home-primary-cta" href="/#home-products">

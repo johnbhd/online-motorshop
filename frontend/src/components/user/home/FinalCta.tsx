@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { homeInfoCards, homeUtilityIcons } from "./homeData";
+import { homeInfoCards, homeUtilityIcons } from "../../../data/homeData";
 
 export default function FinalCta() {
   return (

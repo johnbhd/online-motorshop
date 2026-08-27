@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { homeCategories, homeUtilityIcons } from "./homeData";
+import { homeCategories, homeUtilityIcons } from "../../../data/homeData";
 
 export default function HomeCategories() {
   return (

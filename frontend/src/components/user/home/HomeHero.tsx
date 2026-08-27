@@ -5,7 +5,7 @@ import {
   homeBadges,
   homeHighlights,
   homeUtilityIcons,
-} from "./homeData";
+} from "../../../data/homeData";
 
 export default function HomeHero() {
   return (
