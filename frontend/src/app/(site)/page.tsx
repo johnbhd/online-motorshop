@@ -1,24 +1,5 @@
-export default function Home() {
-  return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-500">
-        ALD Motorshop
-      </p>
+import HomePage from "@/components/user/home/HomePage";
 
-      <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">
-        Motorcycle parts you can rely on.
-      </h1>
-
-      <p className="mt-4 max-w-2xl text-lg text-slate-600">
-        Find quality motorcycle parts and accessories for your next ride.
-      </p>
-
-      <a
-        href="#"
-        className="mt-8 inline-flex rounded-lg bg-amber-500 px-5 py-3 font-semibold text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
-      >
-        Browse products
-      </a>
-    </section>
-  );
+export default function HomeRoute() {
+  return <HomePage />;
 }

@@ -45,8 +45,69 @@ class UserSeeder extends Seeder
                 'password' => 'user123',
                 'branch_id' => null,
                 'status' => 'active',
-                'role' => 'user',
+                'role' => 'customer',
             ]
         );
+
+        $customers = [
+            [
+                'name' => 'JB',
+                'email' => 'jb@gmail.com',
+                'password' => 'jb123',
+            ],
+            [
+                'name' => 'Mai',
+                'email' => 'mai@gmail.com',
+                'password' => 'mai123',
+            ],
+            [
+                'name' => 'Francis',
+                'email' => 'francis@gmail.com',
+                'password' => 'francis123',
+            ],
+            [
+                'name' => 'Jerzel',
+                'email' => 'jerzel@gmail.com',
+                'password' => 'jerzel123',
+            ],
+            [
+                'name' => 'Jadrien',
+                'email' => 'jadrien@gmail.com',
+                'password' => 'jadrien123',
+            ],
+            [
+                'name' => 'Kurt',
+                'email' => 'kurt@gmail.com',
+                'password' => 'kurt123',
+            ],
+            [
+                'name' => 'Mark',
+                'email' => 'mark@gmail.com',
+                'password' => 'mark123',
+            ],
+            [
+                'name' => 'Earl',
+                'email' => 'earl@gmail.com',
+                'password' => 'earl123',
+            ],
+            [
+                'name' => 'Jonifer',
+                'email' => 'jonifer@gmail.com',
+                'password' => 'jonifer123',
+            ],
+        ];
+
+        foreach ($customers as $customer) {
+            User::updateOrCreate(
+                ['email' => $customer['email']],
+                [
+                    'name' => $customer['name'],
+                    'password' => $customer['password'],
+                    'branch_id' => null,
+                    'status' => 'active',
+                    'role' => 'customer',
+                ]
+            );
+        }
     }
 }

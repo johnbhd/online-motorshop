@@ -15,15 +15,24 @@ class BranchSeeder extends Seeder
     {
         $branches = [
             [
-                'name' => 'Main Branch',
-                'contact_number' => '09123456789',
-                'pickup_available' => '1',
+                'name' => 'Manila Branch',
+                'address' => '3333 New Panaderos, Sta. Ana, Manila, 1016 Metro Manila',
+                'contact_number' => '+63 995 869 1174',
+                'pickup_available' => true,
                 'status' => 'active',
             ],
             [
-                'name' => 'Quezon City Branch',
-                'contact_number' => '09987654321',
-                'pickup_available' => '1',
+                'name' => 'Makati Branch',
+                'address' => '3678 Bautista Street, Makati City',
+                'contact_number' => '+63 995 869 1174',
+                'pickup_available' => true,
+                'status' => 'active',
+            ],
+            [
+                'name' => 'Imus Branch',
+                'address' => 'LYS Building, General Aguinaldo Highway, Imus, 4103 Cavite',
+                'contact_number' => '+63 995 869 1174',
+                'pickup_available' => true,
                 'status' => 'active',
             ],
         ];

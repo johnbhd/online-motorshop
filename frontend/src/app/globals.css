@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@fortawesome/fontawesome-svg-core/styles.css";
 
 :root {
   --ald-orange: #e07a08;
