@@ -456,7 +456,7 @@
 
 .home-fulfillment-card {
   display: grid;
-  grid-template-columns: 38% minmax(0, 1fr);
+  grid-template-columns: 50% minmax(0, 1fr);
   min-width: 0;
   overflow: hidden;
   transition:

@@ -43,7 +43,7 @@
 .footer-brand-head p {
   margin: 0.2rem 0 0;
   color: #94a3b8;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   letter-spacing: 0.04em;
 }
 
@@ -51,7 +51,7 @@
   max-width: 290px;
   margin: 1rem 0 1.15rem;
   color: #9eacbd;
-  font-size: 0.77rem;
+  font-size: 0.92rem;
   line-height: 1.65;
 }
 
@@ -74,7 +74,7 @@
 
 .footer-column h3 {
   margin-bottom: 1rem;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
 }
 
 .footer-column ul {
@@ -88,8 +88,8 @@
 .footer-column a,
 .footer-link-placeholder {
   color: #9eacbd;
-  font-size: 0.76rem;
-  line-height: 1.35;
+  font-size: 0.9rem;
+  line-height: 1.45;
   text-decoration: none;
 }
 
@@ -142,14 +142,14 @@
 }
 
 .footer-contact-item strong {
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   line-height: 1.35;
 }
 
 .footer-contact-item small {
   margin-top: 0.15rem;
   color: #94a3b8;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   line-height: 1.4;
 }
 
@@ -161,7 +161,7 @@
   gap: 0.75rem 1.5rem;
   padding: 1.25rem 0;
   color: #718096;
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   line-height: 1.45;
 }
 
