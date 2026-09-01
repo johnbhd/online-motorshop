@@ -36,8 +36,8 @@
     grid-template-columns: 1fr;
   }
 
-  .contact-hero-panel {
-    max-width: 32rem;
+  .contact-hero-image {
+    min-height: 18rem;
   }
 
   .contact-needs-panel,

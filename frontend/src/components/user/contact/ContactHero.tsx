@@ -1,7 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPhone } from "@fortawesome/free-solid-svg-icons";
-import { contactHeroIcon } from "./contactData";
+import {
+  contactBranches,
+  contactHeroIcon,
+} from "./contactData";
+
+const featuredBranch = contactBranches[0];
 
 export default function ContactHero() {
   return (
@@ -33,16 +39,19 @@ export default function ContactHero() {
           </div>
         </div>
 
-        <div className="contact-hero-panel" aria-label="Contact support topics">
-          <span className="contact-hero-panel-icon" aria-hidden="true">
-            <FontAwesomeIcon icon={contactHeroIcon} />
-          </span>
-          <p className="contact-hero-panel-label">We can help with</p>
-          <ul>
-            <li>Parts availability questions</li>
-            <li>Store pickup requests</li>
-            <li>Lalamove delivery requests</li>
-          </ul>
+        <div className="contact-hero-image">
+          <Image
+            src={featuredBranch.image}
+            alt={`ALD Motorshop ${featuredBranch.name}`}
+            fill
+            priority
+            sizes="(max-width: 760px) 100vw, 38vw"
+          />
+          <div className="contact-hero-image-caption">
+            <span>Featured branch</span>
+            <strong>{featuredBranch.name}</strong>
+            <small>{featuredBranch.address}</small>
+          </div>
         </div>
       </div>
     </section>

@@ -37,6 +37,7 @@ export type ContactNeed = {
 export type ContactBranch = {
   id: string;
   name: string;
+  image: string;
   address: string;
   services: string[];
 };
@@ -128,18 +129,21 @@ export const contactBranches: ContactBranch[] = [
   {
     id: "manila",
     name: "Manila Branch",
+    image: "/branches/manila.png",
     address: "3333 New Panaderos, Sta. Ana, Manila, 1016 Metro Manila",
     services: ["Motorcycle parts", "Maintenance and repair", "Store pickup"],
   },
   {
     id: "makati",
     name: "Makati Branch",
+    image: "/branches/makati.png",
     address: "3678 Bautista Street, Makati City",
     services: ["Motorcycle parts", "Maintenance and repair", "Store pickup"],
   },
   {
     id: "imus",
     name: "Imus Branch",
+    image: "/branches/imus.png",
     address: "LYS Building, General Aguinaldo Highway, Imus, 4103 Cavite",
     services: ["Motorcycle parts", "Maintenance and repair", "Store pickup"],
   },
