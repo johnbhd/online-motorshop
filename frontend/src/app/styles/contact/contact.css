@@ -131,19 +131,38 @@
 .contact-hero-image::after {
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: rgba(9, 16, 29, 0.42);
   content: "";
   pointer-events: none;
 }
 
-.contact-hero-image img {
+.contact-hero-image-track {
+  position: absolute;
+  inset: 0;
+}
+
+.contact-hero-image-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.025);
+  transition: opacity 700ms ease, transform 3000ms ease;
+}
+
+.contact-hero-image-slide.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.contact-hero-image-slide img {
   object-fit: cover;
 }
 
 .contact-hero-image-caption {
   position: absolute;
   right: 1.25rem;
-  bottom: 1.25rem;
+  bottom: 3.15rem;
   left: 1.25rem;
   z-index: 1;
   display: grid;
@@ -168,6 +187,40 @@
   color: #d8e0ec;
   font-size: 0.82rem;
   line-height: 1.45;
+}
+
+.contact-hero-image-dots {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  transform: translateX(-50%);
+}
+
+.contact-hero-image-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.42);
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.contact-hero-image-dot:hover,
+.contact-hero-image-dot:focus-visible,
+.contact-hero-image-dot.is-active {
+  background: var(--contact-orange-bright);
+  transform: scale(1.25);
+}
+
+.contact-hero-image-dot:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
 }
 
 .contact-section {

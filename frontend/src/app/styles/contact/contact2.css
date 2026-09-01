@@ -89,7 +89,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .contact-button,
-  .contact-info-card {
+  .contact-info-card,
+  .contact-hero-image-slide,
+  .contact-hero-image-dot {
     transition: none;
   }
 }
