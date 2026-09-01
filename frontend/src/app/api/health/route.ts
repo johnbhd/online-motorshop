@@ -1,3 +1,7 @@
+// frontend/src/app/api/health/route.ts
+
+import { NextResponse } from "next/server";
+
 export async function GET() {
     try {
         const response = await fetch(
@@ -9,17 +13,14 @@ export async function GET() {
 
         const data = await response.json();
 
-        return Response.json(
-            data,
-            {
-                status: response.status,
-            }
-        );
+        return NextResponse.json(data, {
+            status: response.status,
+        });
     } catch {
-        return Response.json(
+        return NextResponse.json(
             {
                 status: "error",
-                message: "Unable to connect to Laravel API.",
+                message: "Laravel API is unavailable.",
             },
             {
                 status: 502,
