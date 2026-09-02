@@ -1,0 +1,478 @@
+.admin-order-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.admin-order-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(11, 25, 48, 0.68);
+  cursor: default;
+}
+
+.admin-order-modal {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(900px, 100%);
+  max-height: 90vh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid #dbe3ee;
+  border-radius: 0.875rem;
+  background: #ffffff;
+  box-shadow: 0 1.5rem 4rem rgba(11, 25, 48, 0.28);
+}
+
+.admin-order-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1.25rem 1.5rem;
+}
+
+.admin-order-modal-heading {
+  min-width: 0;
+}
+
+.admin-order-modal-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-order-modal-heading h2 {
+  margin: 0.35rem 0 0;
+  color: #0b1930;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.admin-order-modal-heading span {
+  display: block;
+  margin-top: 0.25rem;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.admin-order-modal-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.admin-order-modal-close {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.admin-order-modal-close:hover {
+  background: #f1f5f9;
+  color: #0b1930;
+}
+
+.admin-order-modal-close:focus-visible,
+.admin-order-modal-button:focus-visible,
+.admin-order-modal-field select:focus-visible,
+.admin-order-modal-field input:focus-visible,
+.admin-order-modal-field textarea:focus-visible {
+  outline: 3px solid rgba(245, 158, 11, 0.28);
+  outline-offset: 2px;
+}
+
+.admin-order-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1.5rem;
+}
+
+.admin-order-modal-section {
+  border-bottom: 1px solid #eef2f7;
+  padding: 1.25rem 0;
+}
+
+.admin-order-modal-section:last-child {
+  border-bottom: 0;
+}
+
+.admin-order-modal-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+  color: #0b1930;
+}
+
+.admin-order-modal-section-title svg {
+  width: 1rem;
+  color: #e07a08;
+}
+
+.admin-order-modal-section-title h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.admin-order-modal-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.admin-order-modal-order-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-order-modal-detail-grid div {
+  min-width: 0;
+}
+
+.admin-order-modal-detail-grid dt {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-order-modal-detail-grid dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+  color: #0b1930;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.admin-order-modal-detail-grid .admin-order-modal-total {
+  color: #e07a08;
+}
+
+.admin-order-items-table-wrap {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+}
+
+.admin-order-items-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: #475569;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.admin-order-items-table th,
+.admin-order-items-table td {
+  overflow-wrap: anywhere;
+  padding: 0.75rem 0.8rem;
+}
+
+.admin-order-items-table thead {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-order-items-table th:first-child,
+.admin-order-items-table td:first-child {
+  width: 48%;
+}
+
+.admin-order-items-table th:nth-child(2),
+.admin-order-items-table td:nth-child(2) {
+  width: 12%;
+  text-align: center;
+}
+
+.admin-order-items-table th:nth-child(3),
+.admin-order-items-table td:nth-child(3),
+.admin-order-items-table th:nth-child(4),
+.admin-order-items-table td:nth-child(4) {
+  width: 20%;
+  text-align: right;
+}
+
+.admin-order-items-table tbody tr + tr {
+  border-top: 1px solid #eef2f7;
+}
+
+.admin-order-items-table tbody td:first-child {
+  color: #0b1930;
+  font-weight: 700;
+}
+
+.admin-order-items-table tfoot {
+  border-top: 1px solid #dbe3ee;
+  color: #0b1930;
+}
+
+.admin-order-items-table tfoot th {
+  text-align: right;
+}
+
+.admin-order-items-table tfoot td {
+  color: #e07a08;
+  font-weight: 800;
+  text-align: right;
+}
+
+.admin-order-modal-control-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-order-modal-field {
+  display: grid;
+  min-width: 0;
+  gap: 0.4rem;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.admin-order-modal-field-full {
+  margin-top: 1rem;
+}
+
+.admin-order-modal-field select,
+.admin-order-modal-field input,
+.admin-order-modal-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  background: #ffffff;
+  color: #0b1930;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.admin-order-modal-field textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.admin-order-modal-field select:disabled,
+.admin-order-modal-field input:disabled,
+.admin-order-modal-field textarea:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.admin-order-modal-field small {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-align: right;
+}
+
+.admin-order-review-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  border: 1px solid #fed7aa;
+  border-radius: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.admin-order-review-notice > svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.admin-order-review-notice p {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.admin-order-review-notice span {
+  color: #9a3412;
+}
+
+.admin-order-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  background: #ffffff;
+}
+
+.admin-order-modal-footer > span {
+  min-width: 1px;
+}
+
+.admin-order-modal-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.admin-order-modal-button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.admin-order-modal-button-secondary {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+}
+
+.admin-order-modal-button-secondary:hover {
+  background: #f8fafc;
+  color: #0b1930;
+}
+
+.admin-order-modal-button-primary {
+  background: #e07a08;
+  color: #ffffff;
+}
+
+.admin-order-modal-button-primary:hover {
+  background: #b95f00;
+}
+
+.admin-order-modal-button-danger {
+  border-color: #fca5a5;
+  background: #ffffff;
+  color: #b91c1c;
+}
+
+.admin-order-modal-button-danger:hover {
+  background: #fef2f2;
+}
+
+@media (max-width: 760px) {
+  .admin-order-modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .admin-order-modal {
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .admin-order-modal-header,
+  .admin-order-modal-footer {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .admin-order-modal-body {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .admin-order-modal-header-meta {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .admin-order-modal-detail-grid,
+  .admin-order-modal-order-grid,
+  .admin-order-modal-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-order-items-table th,
+  .admin-order-items-table td {
+    padding: 0.65rem 0.5rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .admin-order-modal-header {
+    align-items: flex-start;
+  }
+
+  .admin-order-modal-header-meta > span {
+    display: none;
+  }
+
+  .admin-order-modal-detail-grid,
+  .admin-order-modal-order-grid,
+  .admin-order-modal-control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-order-modal-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-order-modal-footer-actions {
+    width: 100%;
+  }
+
+  .admin-order-modal-footer-actions .admin-order-modal-button {
+    flex: 1;
+  }
+
+  .admin-order-modal-footer > span {
+    display: none;
+  }
+
+  .admin-order-modal-button-danger {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-order-modal * {
+    scroll-behavior: auto;
+  }
+}

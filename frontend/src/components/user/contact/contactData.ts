@@ -63,6 +63,7 @@ export const contactInfoItems: ContactInfoItem[] = [
     label: "Facebook and Messenger",
     value: "ALD Motorshop - Main",
     ctaLabel: "Open Messenger",
+    ctaHref: "https://www.facebook.com/profile.php?id=100068359460813",
     icon: faFacebookMessenger,
   },
   {
@@ -70,6 +71,7 @@ export const contactInfoItems: ContactInfoItem[] = [
     label: "Instagram",
     value: "@aldmotorshop",
     ctaLabel: "View Instagram",
+    ctaHref: "https://www.instagram.com/aldmotorshop/",
     icon: faInstagram,
   },
   {
