@@ -46,6 +46,7 @@ export type ContactSocial = {
   id: string;
   label: string;
   account: string;
+  href: string;
   icon: IconDefinition;
 };
 
@@ -156,12 +157,14 @@ export const contactSocials: ContactSocial[] = [
     id: "facebook",
     label: "Facebook",
     account: "ALD Motorshop - Main",
+    href: "https://www.facebook.com/profile.php?id=100068359460813",
     icon: faFacebookF,
   },
   {
     id: "instagram",
     label: "Instagram",
     account: "@aldmotorshop",
+    href: "https://www.instagram.com/aldmotorshop/",
     icon: faInstagram,
   },
 ];

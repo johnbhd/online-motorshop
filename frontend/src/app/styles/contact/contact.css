@@ -839,6 +839,21 @@
   border-radius: 0.6rem;
   padding: 0.8rem 0.9rem;
   background: var(--contact-navy-light);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.contact-social-card:hover {
+  border-color: rgba(247, 148, 29, 0.7);
+  background: #223653;
+  transform: translateY(-2px);
+}
+
+.contact-social-card:focus-visible {
+  outline: 3px solid rgba(247, 148, 29, 0.55);
+  outline-offset: 3px;
 }
 
 .contact-social-icon {

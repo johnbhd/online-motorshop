@@ -12,14 +12,20 @@ export default function ContactSocials() {
           <p className="contact-eyebrow">Social accounts</p>
           <h2 id="contact-socials-title">Find ALD Motorshop online</h2>
           <p>
-            Search these verified account names on their respective platforms.
-            Exact social URLs are not listed until they are confirmed.
+            Visit the verified ALD Motorshop account pages on their respective
+            platforms.
           </p>
         </div>
 
         <div className="contact-social-list">
           {contactSocials.map((social) => (
-            <div className="contact-social-card" key={social.id}>
+            <a
+              className="contact-social-card"
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              key={social.id}
+            >
               <span className="contact-social-icon" aria-hidden="true">
                 <FontAwesomeIcon icon={social.icon} />
               </span>
@@ -27,7 +33,7 @@ export default function ContactSocials() {
                 <strong>{social.label}</strong>
                 <small>{social.account}</small>
               </span>
-            </div>
+            </a>
           ))}
         </div>
       </div>

@@ -29,7 +29,12 @@ export default function ContactInfo() {
                 <h3 className="contact-card-label">{item.label}</h3>
                 <p className="contact-info-detail">{item.value}</p>
                 {item.ctaHref ? (
-                  <a className="contact-info-cta" href={item.ctaHref}>
+                  <a
+                    className="contact-info-cta"
+                    href={item.ctaHref}
+                    target={item.ctaHref.startsWith("http") ? "_blank" : undefined}
+                    rel={item.ctaHref.startsWith("http") ? "noopener noreferrer" : undefined}
+                  >
                     {item.ctaLabel}
                     <FontAwesomeIcon icon={contactArrowIcon} aria-hidden="true" />
                   </a>
