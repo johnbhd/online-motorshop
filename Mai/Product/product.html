@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ALD Motorshop - Motorcycle Parts Catalog</title>
+<link rel="stylesheet" href="products.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="ALD logo.png" alt="ALD Motorshop logo" class="logo-img">
+    <div class="brand-text">
+      <h1>ALD Motorshop</h1>
+      <p>Motorcycle Parts Trading</p>
+    </div>
+  </div>
+
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="#" class="active">Products</a>
+    <a href="#">Categories</a>
+    <a href="#">Branches</a>
+    <a href="#">About Us</a>
+    <a href="#">Contact</a>
+    <a href="#">Track Order</a>
+  </nav>
+
+  <div class="header-right">
+    <span class="cart-wrap">
+      <span class="cart-icon">🛒</span>
+      <span class="cart-badge">0</span>
+    </span>
+    <button class="guest-btn" onclick="window.location.href='auth.html'">Sign In or Continue as Guest <span>→</span></button>
+  </div>
+</header>
+
+<!-- ================= PAGE BANNER ================= -->
+<section class="catalog-banner">
+  <div class="catalog-banner-inner">
+    <p class="breadcrumb"><a href="home.html">Home</a> / <span>Products</span></p>
+    <h1>Motorcycle Parts Catalog</h1>
+    <p class="banner-sub">Browse genuine and compatible motorcycle parts for Honda, Yamaha, and Suzuki motorcycles.</p>
+  </div>
+</section>
+
+<!-- ================= SEARCH BAR ================= -->
+<section class="search-bar-section">
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" placeholder="Search by product name, part number, brand, or motorcycle model">
+    <span class="search-clear">✕</span>
+  </div>
+  <button class="search-btn">🔍 Search Products</button>
+</section>
+
+<!-- ================= CATALOG BODY ================= -->
+<section class="catalog-body">
+
+  <!-- SIDEBAR FILTERS -->
+  <aside class="filters-sidebar">
+    <div class="filters-head">
+      <h3>Filter Products</h3>
+      <a href="#" class="clear-all">Clear All</a>
+    </div>
+
+    <div class="filter-group">
+      <h4>Motorcycle Brand <span class="chev">⌃</span></h4>
+      <label><input type="checkbox" checked> Honda <span>(24)</span></label>
+      <label><input type="checkbox"> Yamaha <span>(21)</span></label>
+      <label><input type="checkbox"> Suzuki <span>(18)</span></label>
+      <label><input type="checkbox"> Universal <span>(23)</span></label>
+    </div>
+
+    <div class="filter-group">
+      <h4>Category <span class="chev">⌃</span></h4>
+      <label><input type="checkbox"> Engine Parts <span>(17)</span></label>
+      <label><input type="checkbox" checked> Brake Parts <span>(15)</span></label>
+      <label><input type="checkbox"> Electrical Parts <span>(12)</span></label>
+      <label><input type="checkbox"> Batteries <span>(8)</span></label>
+      <label><input type="checkbox"> Tires <span>(14)</span></label>
+      <label><input type="checkbox"> Oils and Lubricants <span>(10)</span></label>
+      <label><input type="checkbox"> Fairings <span>(6)</span></label>
+      <label><input type="checkbox"> Accessories <span>(13)</span></label>
+      <label><input type="checkbox"> Suspension Parts <span>(9)</span></label>
+      <label><input type="checkbox"> Maintenance Parts <span>(11)</span></label>
+    </div>
+
+    <div class="filter-group">
+      <h4>Compatible Model <span class="chev">⌃</span></h4>
+      <select class="model-select">
+        <option>Select motorcycle model</option>
+        <option>Honda Click 125i / 150i</option>
+        <option>Yamaha Mio i125 / Mio Soul</option>
+        <option>Suzuki Raider R150</option>
+      </select>
+      <p class="filter-hint">Choose a brand first to narrow the available models.</p>
+    </div>
+
+    <div class="filter-group">
+      <h4>Price Range <span class="chev">⌃</span></h4>
+      <div class="price-inputs">
+        <input type="text" value="₱0" class="price-input">
+        <span>–</span>
+        <input type="text" value="₱10,000" class="price-input">
+      </div>
+      <input type="range" min="0" max="10000" value="10000" class="price-slider">
+    </div>
+
+    <div class="filter-group">
+      <h4>Availability <span class="chev">⌃</span></h4>
+      <label><input type="checkbox" checked> Available <span>(56)</span></label>
+      <label><input type="checkbox"> Low Stock <span>(17)</span></label>
+      <label><input type="checkbox"> Subject to Confirmation <span>(9)</span></label>
+      <label><input type="checkbox"> Out of Stock <span>(4)</span></label>
+    </div>
+
+    <div class="filter-group">
+      <h4>Product Type <span class="chev">⌃</span></h4>
+      <label><input type="checkbox"> Featured <span>(12)</span></label>
+      <label><input type="checkbox"> New Arrival <span>(18)</span></label>
+      <label><input type="checkbox"> On Promotion <span>(10)</span></label>
+    </div>
+
+    <button class="apply-filters-btn">Apply Filters</button>
+  </aside>
+
+  <!-- PRODUCT LISTING -->
+  <div class="catalog-main">
+
+    <div class="catalog-toolbar">
+      <p class="results-count">Showing 1-12 of 86 products</p>
+      <div class="toolbar-right">
+        <label class="sort-label">Sort by:
+          <select class="sort-select">
+            <option>Featured</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+            <option>Newest</option>
+          </select>
+        </label>
+        <div class="view-toggle">
+          <button class="view-btn active">▦</button>
+          <button class="view-btn">☰</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="active-filters">
+      <span class="filter-chip">Honda <span>✕</span></span>
+      <span class="filter-chip">Brake Parts <span>✕</span></span>
+      <span class="filter-chip">Available <span>✕</span></span>
+      <a href="#" class="clear-filters-link">Clear Filters</a>
+    </div>
+
+    <div class="catalog-grid">
+
+      <div class="catalog-card">
+        <span class="card-badge badge-featured">Featured</span>
+        <div class="card-img-wrap"><img src="airfilter.png" alt="Genuine Honda Brake Pad Set"></div>
+        <p class="card-brand honda-brand">HONDA</p>
+        <h4>1. Genuine Honda Brake Pad Set</h4>
+        <p class="card-partno">Part No: HND-BP-001</p>
+        <p class="card-model">Honda Click 125i / 150i</p>
+        <div class="card-price-row">
+          <span class="card-price">₱850</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="battery.png" alt="HONDA Motorcycle Battery"></div>
+        <p class="card-brand honda-brand">HONDA</p>
+        <h4>2. HONDA Motorcycle Battery</h4>
+        <p class="card-partno">Part No: HND-BAT-014</p>
+        <p class="card-model">Mio i125 / Mio Soul</p>
+        <div class="card-price-row">
+          <span class="card-price">₱1,650</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <span class="card-badge badge-low">Low Stock</span>
+        <div class="card-img-wrap"><img src="brakepad.png" alt="HONDA Brake Pads"></div>
+        <p class="card-brand honda-brand">HONDA</p>
+        <h4>3. HONDA Brake Pads</h4>
+        <p class="card-partno">Part No: HND-BP-009</p>
+        <p class="card-model">Raider R150</p>
+        <div class="card-price-row">
+          <span class="card-price">₱420</span>
+          <span class="stock stock-low">Low Stock</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="chainkit (4).png" alt="Honda Drive Chain Kit"></div>
+        <p class="card-brand honda-brand">HONDA</p>
+        <h4>4. Honda Drive Chain Kit</h4>
+        <p class="card-partno">Part No: CHN-001</p>
+        <p class="card-model">Multiple motorcycle models</p>
+        <div class="card-price-row">
+          <span class="card-price">₱380</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="clutchweight.png" alt="Honda Clutch Weight"></div>
+        <p class="card-brand honda-brand">HONDA</p>
+        <h4>5. Honda Clutch Weight</h4>
+        <p class="card-partno">Part No: CLT-WGT-001</p>
+        <p class="card-model">Multiple motorcycle models</p>
+        <div class="card-price-row">
+          <span class="card-price">₱1,200</span>
+          <span class="stock stock-confirm">Subject to Confirmation</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="sparkplug.png" alt="Motorcycle Spark Plug"></div>
+        <p class="card-brand honda-brand">HONDA</p>
+        <h4>6. Honda Genuine Spark Plug</h4>
+        <p class="card-partno">Part No: SPK-NGK-005</p>
+        <p class="card-model">Multiple motorcycle models</p>
+        <div class="card-price-row">
+          <span class="card-price">₱180</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="chainlube.png" alt="Yamalube Super Chain Lube"></div>
+        <p class="card-brand universal-brand">YAMAHA</p>
+        <h4>7. Yamalube Super Chain Lube</h4>
+        <p class="card-partno">Part No: TIR-7090-017</p>
+        <p class="card-model">Standard underbone motorcycles</p>
+        <div class="card-price-row">
+          <span class="card-price">₱1,450</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <span class="card-badge badge-low">Low Stock</span>
+        <div class="card-img-wrap"><img src="sprocket.png" alt="Yamaha Sprocket"></div>
+        <p class="card-brand yamaha-brand">YAMAHA</p>
+        <h4>8. Yamaha Sprocket</h4>
+        <p class="card-partno">Part No: SZK-HL-022</p>
+        <p class="card-model">Smash 115</p>
+        <div class="card-price-row">
+          <span class="card-price">₱950</span>
+          <span class="stock stock-low">Low Stock</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="oilfilter.png" alt="Yamaha Oil Filter"></div>
+        <p class="card-brand yamaha-brand">YAMAHA</p>
+        <h4>9.Yamaha Element Assy, Oil Cleaner</h4>
+        <p class="card-partno">Part No: ACC-MIR-011</p>
+        <p class="card-model">Multiple motorcycle models</p>
+        <div class="card-price-row">
+          <span class="card-price">₱350</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="tire.png" alt="Suzuki Tire"></div>
+        <p class="card-brand suzuki-brand">SUZUKI</p>
+        <h4>10. Suzuki Tire</h4>
+        <p class="card-partno">Part No: SUZ-TI-045</p>
+        <p class="card-model">Suzuki Swift 1.3</p>
+        <div class="card-price-row">
+          <span class="card-price">₱780</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="airfilter (1).png" alt="Suzuki Air Filter"></div>
+        <p class="card-brand suzuki-brand">SUZUKI</p>
+        <h4>11. Suzuki Air Filter / Air Cleaner</h4>
+        <p class="card-partno">Part No: SUZ-BC-018</p>
+        <p class="card-model">Suzuki Swift 1.3</p>
+        <div class="card-price-row">
+          <span class="card-price">₱280</span>
+          <span class="stock stock-confirm">Subject to Confirmation</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+      <div class="catalog-card">
+        <div class="card-img-wrap"><img src="engineoil.png" alt="ECSTAR Genuine Engine Oil"></div>
+        <p class="card-brand suzuki-brand">SUZUKI</p>
+        <h4>12. ECSTAR Genuine Engine Oil</h4>
+        <p class="card-partno">Part No: CHN-SPR-041</p>
+        <p class="card-model">Select underbone models</p>
+        <div class="card-price-row">
+          <span class="card-price">₱1,350</span>
+          <span class="stock stock-available">Available</span>
+        </div>
+        <div class="qty-cart-row">
+          <div class="qty-stepper"><button>−</button><span>1</span><button>+</button></div>
+          <button class="add-cart-btn">🛒 Add to Cart</button>
+        </div>
+        <a href="#" class="view-details">View Details →</a>
+      </div>
+
+    </div>
+
+    <div class="pagination">
+      <button class="page-nav">‹ Previous</button>
+      <button class="page-num active">1</button>
+      <button class="page-num">2</button>
+      <button class="page-num">3</button>
+      <button class="page-num">4</button>
+      <button class="page-num">5</button>
+      <button class="page-nav">Next ›</button>
+    </div>
+
+    <button class="load-more-btn">Load More Products ↓</button>
+
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="footer-brand-head">
+        <img src="ald-logo.png" alt="ALD Motorshop logo" class="footer-logo">
+        <div>
+          <h4>ALD Motorshop</h4>
+          <p>Motorcycle Parts Trading</p>
+        </div>
+      </div>
+      <p class="footer-desc">Your trusted source for genuine and compatible motorcycle parts, with convenient store pickup and Lalamove delivery requests.</p>
+      <div class="footer-socials">
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.15 2 11.26c0 2.91 1.44 5.5 3.7 7.2V22l3.38-1.86c.9.25 1.87.38 2.92.38 5.52 0 10-4.15 10-9.26S17.52 2 12 2zm1.01 12.47l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h5>Shop</h5>
+      <a href="#">All Products</a>
+      <a href="#">Product Categories</a>
+      <a href="#">Featured Products</a>
+      <a href="#">Honda Parts</a>
+      <a href="#">Yamaha Parts</a>
+      <a href="#">Suzuki Parts</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Customer Support</h5>
+      <a href="#">Track Order</a>
+      <a href="#">How to Order</a>
+      <a href="#">Store Pickup</a>
+      <a href="#">Lalamove Delivery</a>
+      <a href="#">Frequently Asked Questions</a>
+      <a href="#">Contact Us</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Company</h5>
+      <a href="#">About ALD Motorshop</a>
+      <a href="#">Branch Locations</a>
+      <a href="#">Business Information</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms and Conditions</a>
+      <a href="#">Staff Login</a>
+    </div>
+  </div>
+
+  <div class="footer-contact-row">
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+      <div><strong>Contact ALD Motorshop</strong><span>Contact details available upon request</span></div>
+    </div>
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+      <div><strong>Business Hours</strong><span>View branch hours</span></div>
+    </div>
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+      <div><strong>Visit Our Branches</strong><span>View branch locations</span></div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 ALD Motorcycle Parts Trading. All rights reserved.</span>
+    <span class="footer-legal">
+      <a href="#">Privacy Policy</a> · <a href="#">Terms and Conditions</a> · <a href="#">Accessibility</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.qty-stepper').forEach(stepper => {
+  const [minusBtn, display, plusBtn] = stepper.querySelectorAll('button, span');
+  minusBtn.addEventListener('click', () => {
+    let val = parseInt(display.textContent);
+    if (val > 1) display.textContent = val - 1;
+  });
+  plusBtn.addEventListener('click', () => {
+    let val = parseInt(display.textContent);
+    display.textContent = val + 1;
+  });
+});
+</script>
+
+</body>
+</html>
