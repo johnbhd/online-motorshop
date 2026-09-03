@@ -803,8 +803,8 @@
 
 .contact-socials {
   padding: clamp(3.25rem, 7vw, 5rem) 0;
-  background: var(--contact-navy);
-  color: #ffffff;
+  background: #ffffff;
+  color: var(--contact-ink);
 }
 
 .contact-socials-inner {
@@ -815,12 +815,12 @@
 }
 
 .contact-socials h2 {
-  color: #ffffff;
+  color: var(--contact-ink);
 }
 
 .contact-socials p:last-child {
   max-width: 680px;
-  color: #c5d0df;
+  color: var(--contact-muted);
 }
 
 .contact-social-list {
@@ -835,19 +835,20 @@
   min-width: 13rem;
   align-items: center;
   gap: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--contact-border);
   border-radius: 0.6rem;
   padding: 0.8rem 0.9rem;
-  background: var(--contact-navy-light);
+  background: #ffffff;
   color: inherit;
+  box-shadow: 0 0.25rem 1.1rem rgba(15, 23, 42, 0.05);
   text-decoration: none;
   transition: border-color 160ms ease, background-color 160ms ease,
     transform 160ms ease;
 }
 
 .contact-social-card:hover {
-  border-color: rgba(247, 148, 29, 0.7);
-  background: #223653;
+  border-color: var(--contact-orange-bright);
+  background: #fff3ec;
   transform: translateY(-2px);
 }
 
@@ -870,11 +871,11 @@
 }
 
 .contact-social-card strong {
-  color: #ffffff;
+  color: var(--contact-ink);
   font-size: 0.88rem;
 }
 
 .contact-social-card small {
-  color: #c5d0df;
+  color: var(--contact-muted);
   font-size: 0.8rem;
 }
