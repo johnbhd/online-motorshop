@@ -25,9 +25,6 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 
 export default function ProductCard({ product, viewMode }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
-  const priceLabel = product.price
-    ? currencyFormatter.format(product.price)
-    : "Contact for price";
   const statusLabel = product.status === "active" ? "Listed" : "Unavailable";
 
   return (
@@ -37,7 +34,11 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
           src={product.image}
           alt={product.alt}
           fill
-          sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
+          sizes={
+            viewMode === "list"
+              ? "(max-width: 760px) 100vw, 220px"
+              : "(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
+          }
         />
       </div>
 
@@ -52,7 +53,11 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
         <p className="products-card-description">{product.description}</p>
 
         <div className="products-card-price-row">
-          <span className="products-card-price">{priceLabel}</span>
+          {product.price > 0 ? (
+            <span className="products-card-price">
+              {currencyFormatter.format(product.price)}
+            </span>
+          ) : null}
           <span
             className={`products-card-status products-card-status--${
               product.status === "active" ? "listed" : "unavailable"
