@@ -1,3 +1,5 @@
+import "../styles/admin-orders.css";
+
 import AdminShell from "@/components/admin/AdminShell";
 export default function AdminLayout({
   children,

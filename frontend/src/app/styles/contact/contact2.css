@@ -1,0 +1,97 @@
+@media (max-width: 1000px) {
+  .contact-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .contact-form-layout {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 2.5rem;
+  }
+
+  .contact-inquiry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-branch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-branch-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .contact-shell {
+    width: min(calc(100% - 2rem), 1180px);
+  }
+
+  .contact-hero {
+    padding-top: 3.5rem;
+  }
+
+  .contact-hero-grid,
+  .contact-form-layout,
+  .contact-socials-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-hero-image {
+    min-height: 18rem;
+  }
+
+  .contact-needs-panel,
+  .contact-inquiry-form {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .contact-form-heading {
+    position: static;
+  }
+
+  .contact-social-list {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .contact-hero-actions,
+  .contact-button,
+  .contact-form-footer {
+    width: 100%;
+  }
+
+  .contact-hero-actions,
+  .contact-form-footer {
+    flex-direction: column;
+  }
+
+  .contact-info-grid,
+  .contact-form-row,
+  .contact-form-grid,
+  .contact-needs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-info-card {
+    min-height: 0;
+  }
+
+  .contact-form-footer .contact-button {
+    width: 100%;
+  }
+
+  .contact-social-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-button,
+  .contact-info-card,
+  .contact-hero-image-slide,
+  .contact-hero-image-dot {
+    transition: none;
+  }
+}

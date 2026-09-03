@@ -4,8 +4,8 @@ import { aboutHighlights, aboutStatistics } from "./aboutData";
 
 export default function AboutHero() {
   return (
-    <>
-      <div className="about-image-wrap">
+    <div className="about-section">
+      <div className="about-image-wrap ">
         <Image
           src="/images/aldbg.png"
           alt="ALD Motorshop storefront"
@@ -26,7 +26,7 @@ export default function AboutHero() {
         </div>
       </div>
 
-      <div className="about-content">
+      <div className="about-content mt-5">
         <p className="about-eyebrow">Who We Are</p>
         <h1>About ALD Motorshop</h1>
 
@@ -59,6 +59,6 @@ export default function AboutHero() {
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 }

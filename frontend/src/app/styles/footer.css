@@ -153,6 +153,15 @@
   line-height: 1.4;
 }
 
+.footer-contact-item small a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-contact-item small a:hover {
+  color: var(--ald-orange);
+}
+
 .footer-bottom {
   display: flex;
   flex-wrap: wrap;

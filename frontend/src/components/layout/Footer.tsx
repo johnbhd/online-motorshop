@@ -125,15 +125,22 @@ export function Footer() {
         </div>
 
         <div className="footer-contact-row">
-          <a className="footer-contact-item" href="tel:+639958691174">
+          <div className="footer-contact-item">
             <span className="footer-contact-icon" aria-hidden="true">
               <FontAwesomeIcon icon={faPhone} />
             </span>
             <span>
               <strong>Contact ALD Motorshop</strong>
-              <small>+63 995 869 1174</small>
+              <small>
+                <a href="tel:+639958691174">+63 995 869 1174</a>
+              </small>
+              <small>
+                <a href="mailto:aldopcorporation@gmail.com">
+                  aldopcorporation@gmail.com
+                </a>
+              </small>
             </span>
-          </a>
+          </div>
 
           <div className="footer-contact-item">
             <span className="footer-contact-icon" aria-hidden="true">

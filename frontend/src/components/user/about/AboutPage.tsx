@@ -8,9 +8,7 @@ export default function AboutPage() {
   return (
     <>
       <section>
-        <div className="about-section">
-          <AboutHero />
-        </div>
+        <AboutHero />
         <AboutJourney />
         <AboutOffers />
         <AboutBranches />

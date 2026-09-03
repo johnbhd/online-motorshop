@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import "../styles/about/about.css";
 import "../styles/about/about2.css";
+import "../styles/contact/contact.css";
+import "../styles/contact/contact2.css";
 import "../styles/footer.css";
 import "../styles/header.css";
 import "../styles/home/home.css";
