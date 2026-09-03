@@ -16,6 +16,7 @@ import {
 const navigationItems = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
+  { href: "/products", label: "Products" },
   { href: "/contact", label: "Contact" },
   { href: "/staff", label: "Staff" },
   { href: "/admin", label: "Admin" },
