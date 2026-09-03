@@ -49,7 +49,7 @@ export default function HomeBrands() {
           ))}
         </div>
 
-        <Link className="home-secondary-cta" href="/#home-products">
+        <Link className="home-secondary-cta" href="/products">
           View All Compatible Parts
           <FontAwesomeIcon
             icon={homeUtilityIcons.arrow}

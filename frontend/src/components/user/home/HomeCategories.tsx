@@ -50,7 +50,7 @@ export default function HomeCategories() {
           ))}
         </div>
 
-        <Link className="home-secondary-cta" href="/#home-products">
+        <Link className="home-secondary-cta" href="/products">
           View All Product Categories
           <FontAwesomeIcon
             icon={homeUtilityIcons.arrow}

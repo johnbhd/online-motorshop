@@ -56,7 +56,7 @@ export default function FeaturedProducts() {
           ))}
         </div>
 
-        <Link className="home-primary-cta" href="/#home-products">
+        <Link className="home-primary-cta" href="/products">
           View All Products
           <FontAwesomeIcon
             icon={homeUtilityIcons.arrow}
