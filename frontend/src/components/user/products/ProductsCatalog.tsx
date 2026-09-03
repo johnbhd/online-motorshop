@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ProductFilters from "./ProductFilters";
@@ -34,6 +34,30 @@ function clampPrice(price: number) {
   return Math.min(productMaxPrice, Math.max(0, Number.isFinite(price) ? price : 0));
 }
 
+function shuffleProducts(products: typeof productCatalog) {
+  const shuffledProducts = [...products];
+
+  for (let index = shuffledProducts.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffledProducts[index], shuffledProducts[randomIndex]] = [
+      shuffledProducts[randomIndex],
+      shuffledProducts[index],
+    ];
+  }
+
+  return shuffledProducts;
+}
+
+function hasSelectedFilters(filters: ProductFilterState) {
+  return (
+    filters.brands.length > 0 ||
+    filters.categories.length > 0 ||
+    filters.availability.length > 0 ||
+    filters.minPrice !== initialProductFilters.minPrice ||
+    filters.maxPrice !== initialProductFilters.maxPrice
+  );
+}
+
 export default function ProductsCatalog() {
   const [searchValue, setSearchValue] = useState("");
   const [filters, setFilters] = useState<ProductFilterState>(
@@ -42,12 +66,17 @@ export default function ProductsCatalog() {
   const [sort, setSort] = useState<ProductSortOption>("featured");
   const [viewMode, setViewMode] = useState<ProductViewMode>("grid");
   const [currentPage, setCurrentPage] = useState(1);
+  const [productOrder, setProductOrder] = useState(productCatalog);
   const catalogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setProductOrder(shuffleProducts(productCatalog));
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
 
-    const matchingProducts = productCatalog.filter((product) => {
+    const matchingProducts = productOrder.filter((product) => {
       const searchMatches = normalizedSearch
         ? [
             product.name,
@@ -87,9 +116,9 @@ export default function ProductsCatalog() {
         return secondProduct.price - firstProduct.price;
       }
 
-      return firstProduct.id.localeCompare(secondProduct.id);
+      return 0;
     });
-  }, [filters, searchValue, sort]);
+  }, [filters, productOrder, searchValue, sort]);
 
   const totalPages = Math.max(
     1,
@@ -107,6 +136,14 @@ export default function ProductsCatalog() {
   const updateFilters = (nextFilters: ProductFilterState) => {
     setFilters(nextFilters);
     setCurrentPage(1);
+
+    if (
+      !hasSelectedFilters(nextFilters) &&
+      !searchValue.trim() &&
+      sort === "featured"
+    ) {
+      setProductOrder(shuffleProducts(productCatalog));
+    }
   };
 
   const toggleBrand = (brand: ProductBrand) => {
@@ -130,11 +167,19 @@ export default function ProductsCatalog() {
   const clearFilters = () => {
     setFilters({ ...initialProductFilters });
     setCurrentPage(1);
+
+    if (!searchValue.trim() && sort === "featured") {
+      setProductOrder(shuffleProducts(productCatalog));
+    }
   };
 
   const clearSearch = () => {
     setSearchValue("");
     setCurrentPage(1);
+
+    if (!hasSelectedFilters(filters) && sort === "featured") {
+      setProductOrder(shuffleProducts(productCatalog));
+    }
   };
 
   const removeBrand = (brand: ProductBrand) => {
@@ -182,6 +227,19 @@ export default function ProductsCatalog() {
         behavior: prefersReducedMotion ? "auto" : "smooth",
         block: "start",
       });
+    }
+  };
+
+  const handleSortChange = (nextSort: ProductSortOption) => {
+    setSort(nextSort);
+    setCurrentPage(1);
+
+    if (
+      nextSort === "featured" &&
+      !searchValue.trim() &&
+      !hasSelectedFilters(filters)
+    ) {
+      setProductOrder(shuffleProducts(productCatalog));
     }
   };
 
@@ -237,10 +295,7 @@ export default function ProductsCatalog() {
               resultEnd={resultEnd}
               totalCount={filteredProducts.length}
               sort={sort}
-              onSortChange={(nextSort) => {
-                setSort(nextSort);
-                setCurrentPage(1);
-              }}
+              onSortChange={handleSortChange}
               viewMode={viewMode}
               onViewModeChange={setViewMode}
             />
@@ -315,15 +370,6 @@ export default function ProductsCatalog() {
                   totalPages={totalPages}
                   onPageChange={handlePageChange}
                 />
-                {filteredProducts.length > pageStart + PRODUCTS_PER_PAGE ? (
-                  <button
-                    className="products-load-more"
-                    type="button"
-                    onClick={() => handlePageChange(safeCurrentPage + 1)}
-                  >
-                    Load More Products
-                  </button>
-                ) : null}
               </>
             ) : (
               <ProductsEmptyState />
