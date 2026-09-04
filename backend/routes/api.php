@@ -53,6 +53,10 @@ Route::prefix('auth')->group(function () {
 // Admin
 Route::prefix('admin')
     ->name('admin.')
+    ->middleware([
+        'auth:sanctum',
+        'role:admin',
+    ])
     ->group(function () {
         Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
             ->name('dashboard.data');
@@ -91,6 +95,10 @@ Route::prefix('admin')
 // Staff
 Route::prefix('staff')
     ->name('staff.')
+    ->middleware([
+        'auth:sanctum',
+        'role:admin'
+    ])
     ->group(function () {
         Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
             ->name('dashboard.data');
