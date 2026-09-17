@@ -157,7 +157,7 @@ export function Navbar() {
           <Link
             className="site-header-cart"
             href="/cart"
-            aria-label="Shopping cart, 0 items"
+            aria-label="Shopping cart"
           >
             <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
             <span className="site-header-cart-badge" aria-hidden="true">
