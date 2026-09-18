@@ -510,7 +510,7 @@
   margin: 0 auto 0.5rem;
   border-radius: 50%;
   background: var(--cart-orange);
-  color: #1b1200;
+  color: #ffffff;
   font-size: 0.76rem;
   font-weight: 800;
 }
@@ -721,7 +721,7 @@
   border-radius: 0.45rem;
   padding: 0.8rem 1rem;
   background: var(--cart-orange);
-  color: #1b1200;
+  color: #ffffff;
   cursor: pointer;
   font-size: 0.84rem;
   font-weight: 800;
