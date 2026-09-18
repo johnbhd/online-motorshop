@@ -1,6 +1,6 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 
-export type ChatSender = "bot" | "customer";
+export type ChatSender = "bot" | "customer" | "staff";
 
 export type ChatMessage = {
   id: string;
@@ -18,12 +18,4 @@ export type ChatQuickAction = {
 
 export type ChatbotResponse = {
   text: string;
-};
-
-export type StoredStaffConversation = {
-  id: string;
-  source: "chatbot";
-  status: "waiting-for-staff";
-  messages: ChatMessage[];
-  createdAt: string;
 };

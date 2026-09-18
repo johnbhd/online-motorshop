@@ -3,17 +3,25 @@
 import type { FormEvent, RefObject } from "react";
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowLeft,
+  faBars,
+  faPaperPlane,
+} from "@fortawesome/free-solid-svg-icons";
 
 export type ChatbotComposerProps = {
   inputRef: RefObject<HTMLInputElement | null>;
+  isStaffMode: boolean;
   onSend: (message: string) => void;
+  onBackToAssistant: () => void;
   onShowQuickActions: () => void;
 };
 
 export default function ChatbotComposer({
   inputRef,
+  isStaffMode,
   onSend,
+  onBackToAssistant,
   onShowQuickActions,
 }: ChatbotComposerProps) {
   const [message, setMessage] = useState("");
@@ -38,13 +46,18 @@ export default function ChatbotComposer({
       <button
         className="ald-chatbot__composer-menu"
         type="button"
-        aria-label="Show chatbot quick actions"
-        onClick={onShowQuickActions}
+        aria-label={
+          isStaffMode ? "Back to ALD Assistant" : "Show chatbot quick actions"
+        }
+        onClick={isStaffMode ? onBackToAssistant : onShowQuickActions}
       >
-        <FontAwesomeIcon icon={faBars} aria-hidden="true" />
+        <FontAwesomeIcon
+          icon={isStaffMode ? faArrowLeft : faBars}
+          aria-hidden="true"
+        />
       </button>
       <label className="sr-only" htmlFor="ald-chatbot-message-input">
-        Message ALD Assistant
+        {isStaffMode ? "Message ALD Staff" : "Message ALD Assistant"}
       </label>
       <input
         ref={inputRef}
@@ -53,7 +66,9 @@ export default function ChatbotComposer({
         name="message"
         type="text"
         value={message}
-        placeholder="Type your message..."
+        placeholder={
+          isStaffMode ? "Message ALD Staff..." : "Type your message..."
+        }
         autoComplete="off"
         onChange={(event) => {
           setMessage(event.target.value);

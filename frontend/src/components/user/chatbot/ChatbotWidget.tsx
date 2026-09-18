@@ -1,17 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import {
+  appendConversationMessage,
+  CONVERSATIONS_STORAGE_KEY,
+  CONVERSATIONS_UPDATED_EVENT,
+  getConversationById,
+  getCurrentConversationParticipant,
+  getOrCreateConversation,
+} from "@/lib/messages/conversationStorage";
+import type { DemoConversation } from "@/lib/messages/conversationTypes";
 import ChatbotLauncher from "./ChatbotLauncher";
-import ChatbotPanel from "./ChatbotPanel";
+import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
 import {
   chatbotQuickActions,
-  chatbotResponses,
   chatbotWelcomeMessage,
 } from "./chatbotData";
-import {
-  resolveChatbotResponse,
-  saveStaffAssistanceRequest,
-} from "./chatbotUtils";
+import { resolveChatbotResponse } from "./chatbotUtils";
 import type { ChatMessage, ChatQuickAction, ChatSender } from "./chatbotTypes";
 
 const initialMessages: ChatMessage[] = [
@@ -23,23 +29,36 @@ const initialMessages: ChatMessage[] = [
   },
 ];
 
+function toChatMessages(conversation: DemoConversation): ChatMessage[] {
+  return conversation.messages.map((message) => {
+    return {
+      id: message.id,
+      sender: message.sender,
+      text: message.text,
+      createdAt: message.createdAt,
+    };
+  });
+}
+
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [showQuickActions, setShowQuickActions] = useState(true);
-  const [staffRequestCreated, setStaffRequestCreated] = useState(false);
+  const [mode, setMode] = useState<ChatbotMode>("assistant");
+  const [staffConversation, setStaffConversation] =
+    useState<DemoConversation | null>(null);
+  const { isReady, session } = useDemoAuth();
   const launcherRef = useRef<HTMLButtonElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
-  const staffRequestCreatedRef = useRef(false);
 
   const createMessage = useCallback(
     (sender: ChatSender, text: string): ChatMessage => {
       messageIdRef.current += 1;
 
       return {
-        id: `${sender}-${messageIdRef.current}`,
+        id: sender + "-" + messageIdRef.current,
         sender,
         text,
         createdAt: new Date().toISOString(),
@@ -56,9 +75,9 @@ export default function ChatbotWidget() {
     });
   }, []);
 
-  const handleSend = useCallback(
-    (message: string, displayText = message) => {
-      const customerMessage = createMessage("customer", displayText);
+  const handleSendAssistant = useCallback(
+    (message: string) => {
+      const customerMessage = createMessage("customer", message);
       const botMessage = createMessage(
         "bot",
         resolveChatbotResponse(message).text,
@@ -76,26 +95,81 @@ export default function ChatbotWidget() {
 
   const handleQuickAction = useCallback(
     (action: ChatQuickAction) => {
-      handleSend(action.query, action.label);
+      handleSendAssistant(action.query);
     },
-    [handleSend],
+    [handleSendAssistant],
   );
 
   const handleRequestStaff = useCallback(() => {
-    if (staffRequestCreatedRef.current) {
+    if (!isReady) {
       return;
     }
 
-    staffRequestCreatedRef.current = true;
-    const customerMessage = createMessage("customer", "Talk to ALD Staff");
-    const botMessage = createMessage("bot", chatbotResponses.staffAssistance);
-    const nextMessages = [...messages, customerMessage, botMessage];
+    const participant = getCurrentConversationParticipant(session);
+    const conversation = getOrCreateConversation(participant);
 
-    setMessages(nextMessages);
-    setStaffRequestCreated(true);
+    setStaffConversation(conversation);
+    setMode("staff");
     setShowQuickActions(false);
-    saveStaffAssistanceRequest(nextMessages);
-  }, [createMessage, messages]);
+  }, [isReady, session]);
+
+  const handleBackToAssistant = useCallback(() => {
+    setMode("assistant");
+    setShowQuickActions(true);
+  }, []);
+
+  const handleStaffSend = useCallback(
+    (message: string) => {
+      if (!staffConversation) {
+        return;
+      }
+
+      const updatedConversation = appendConversationMessage(
+        staffConversation.id,
+        "customer",
+        message,
+      );
+
+      if (updatedConversation) {
+        setStaffConversation(updatedConversation);
+      }
+    },
+    [staffConversation],
+  );
+
+  useEffect(() => {
+    const refreshStaffConversation = () => {
+      setStaffConversation((currentConversation) => {
+        if (!currentConversation) {
+          return currentConversation;
+        }
+
+        return (
+          getConversationById(currentConversation.id) ?? currentConversation
+        );
+      });
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === CONVERSATIONS_STORAGE_KEY) {
+        refreshStaffConversation();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener(
+      CONVERSATIONS_UPDATED_EVENT,
+      refreshStaffConversation,
+    );
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener(
+        CONVERSATIONS_UPDATED_EVENT,
+        refreshStaffConversation,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -130,25 +204,36 @@ export default function ChatbotWidget() {
     };
   }, [closeChatbot, isOpen]);
 
+  const visibleMessages =
+    mode === "staff" && staffConversation
+      ? toChatMessages(staffConversation)
+      : mode === "staff"
+        ? []
+        : messages;
+
   useEffect(() => {
     if (!isOpen || !messageListRef.current) {
       return;
     }
 
     messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-  }, [isOpen, messages]);
+  }, [isOpen, mode, messages.length, staffConversation?.messages.length]);
+
+  const handleSend =
+    mode === "staff" ? handleStaffSend : handleSendAssistant;
 
   return (
     <div className="ald-chatbot">
       {isOpen && (
         <ChatbotPanel
-          messages={messages}
+          messages={visibleMessages}
           messageListRef={messageListRef}
           composerInputRef={composerInputRef}
+          mode={mode}
           quickActions={chatbotQuickActions}
           showQuickActions={showQuickActions}
-          staffRequestCreated={staffRequestCreated}
           onClose={closeChatbot}
+          onBackToAssistant={handleBackToAssistant}
           onQuickAction={handleQuickAction}
           onRequestStaff={handleRequestStaff}
           onShowQuickActions={() => {

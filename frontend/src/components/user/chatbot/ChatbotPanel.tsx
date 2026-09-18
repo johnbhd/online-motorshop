@@ -3,20 +3,27 @@
 import Image from "next/image";
 import type { RefObject } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeadset, faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowLeft,
+  faHeadset,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import ChatbotComposer from "./ChatbotComposer";
 import ChatbotMessageList from "./ChatbotMessageList";
 import ChatbotQuickActions from "./ChatbotQuickActions";
 import type { ChatMessage, ChatQuickAction } from "./chatbotTypes";
 
+export type ChatbotMode = "assistant" | "staff";
+
 export type ChatbotPanelProps = {
   messages: ChatMessage[];
   messageListRef: RefObject<HTMLDivElement | null>;
   composerInputRef: RefObject<HTMLInputElement | null>;
+  mode: ChatbotMode;
   quickActions: ChatQuickAction[];
   showQuickActions: boolean;
-  staffRequestCreated: boolean;
   onClose: () => void;
+  onBackToAssistant: () => void;
   onQuickAction: (action: ChatQuickAction) => void;
   onRequestStaff: () => void;
   onShowQuickActions: () => void;
@@ -27,15 +34,18 @@ export default function ChatbotPanel({
   messages,
   messageListRef,
   composerInputRef,
+  mode,
   quickActions,
   showQuickActions,
-  staffRequestCreated,
   onClose,
+  onBackToAssistant,
   onQuickAction,
   onRequestStaff,
   onShowQuickActions,
   onSend,
 }: ChatbotPanelProps) {
+  const isStaffMode = mode === "staff";
+
   return (
     <section
       className="ald-chatbot__panel"
@@ -53,10 +63,12 @@ export default function ChatbotPanel({
             height={42}
           />
           <div>
-            <h2 id="ald-chatbot-title">ALD Assistant</h2>
+            <h2 id="ald-chatbot-title">
+              {isStaffMode ? "ALD Staff" : "ALD Assistant"}
+            </h2>
             <p>
               <span className="ald-chatbot__status-dot" aria-hidden="true" />
-              How can we help?
+              {isStaffMode ? "Staff Conversation" : "How can we help?"}
             </p>
           </div>
         </div>
@@ -71,42 +83,49 @@ export default function ChatbotPanel({
       </header>
 
       <div className="ald-chatbot__content">
-        <ChatbotMessageList ref={messageListRef} messages={messages} />
+        <ChatbotMessageList
+          ref={messageListRef}
+          messages={messages}
+          ariaLabel={
+            isStaffMode
+              ? "Conversation with ALD Staff"
+              : "ALD Assistant conversation"
+          }
+        />
 
-        {showQuickActions && (
+        {!isStaffMode && showQuickActions && (
           <ChatbotQuickActions actions={quickActions} onSelect={onQuickAction} />
         )}
 
         <button
           className="ald-chatbot__staff-action"
           type="button"
-          disabled={staffRequestCreated}
-          onClick={onRequestStaff}
+          onClick={isStaffMode ? onBackToAssistant : onRequestStaff}
         >
           <span className="ald-chatbot__staff-action-icon" aria-hidden="true">
-            <FontAwesomeIcon icon={faHeadset} />
+            <FontAwesomeIcon icon={isStaffMode ? faArrowLeft : faHeadset} />
           </span>
           <span className="ald-chatbot__staff-action-copy">
             <strong>
-              {staffRequestCreated
-                ? "Staff request recorded"
-                : "Talk to ALD Staff"}
+              {isStaffMode ? "Back to ALD Assistant" : "Talk to ALD Staff"}
             </strong>
             <small>
-              {staffRequestCreated
-                ? "Saved for this frontend demo"
+              {isStaffMode
+                ? "Return to the automated assistant"
                 : "Request assistance from the team"}
             </small>
           </span>
           <span className="ald-chatbot__staff-action-arrow" aria-hidden="true">
-            →
+            {isStaffMode ? "←" : "→"}
           </span>
         </button>
       </div>
 
       <ChatbotComposer
         inputRef={composerInputRef}
+        isStaffMode={isStaffMode}
         onSend={onSend}
+        onBackToAssistant={onBackToAssistant}
         onShowQuickActions={onShowQuickActions}
       />
     </section>

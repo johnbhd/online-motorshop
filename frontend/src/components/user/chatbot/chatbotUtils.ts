@@ -2,13 +2,7 @@ import {
   chatbotBranchResponse,
   chatbotResponses,
 } from "./chatbotData";
-import type {
-  ChatbotResponse,
-  ChatMessage,
-  StoredStaffConversation,
-} from "./chatbotTypes";
-
-const staffConversationStorageKey = "ald_conversations";
+import type { ChatbotResponse } from "./chatbotTypes";
 
 // TEMPORARY FRONTEND CHATBOT DEMO.
 // Replace deterministic responses with the real messaging/chatbot backend later.
@@ -102,59 +96,6 @@ export function resolveChatbotResponse(message: string): ChatbotResponse {
   return { text: chatbotResponses.fallback };
 }
 
-export function saveStaffAssistanceRequest(messages: ChatMessage[]) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const request: StoredStaffConversation = {
-    id: `chatbot-${Date.now()}`,
-    source: "chatbot",
-    status: "waiting-for-staff",
-    messages,
-    createdAt: new Date().toISOString(),
-  };
-
-  let existingConversations: StoredStaffConversation[] = [];
-
-  try {
-    const storedValue = window.localStorage.getItem(staffConversationStorageKey);
-
-    if (storedValue) {
-      const parsedValue: unknown = JSON.parse(storedValue);
-
-      if (Array.isArray(parsedValue)) {
-        existingConversations = parsedValue.filter(isStoredStaffConversation);
-      }
-    }
-
-    window.localStorage.setItem(
-      staffConversationStorageKey,
-      JSON.stringify([...existingConversations, request]),
-    );
-  } catch {
-    // Browser storage can be unavailable or contain malformed demo data.
-  }
-}
-
 function matchesAny(message: string, keywords: string[]) {
   return keywords.some((keyword) => message.includes(keyword));
-}
-
-function isStoredStaffConversation(
-  value: unknown,
-): value is StoredStaffConversation {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<StoredStaffConversation>;
-
-  return (
-    typeof candidate.id === "string" &&
-    candidate.source === "chatbot" &&
-    candidate.status === "waiting-for-staff" &&
-    Array.isArray(candidate.messages) &&
-    typeof candidate.createdAt === "string"
-  );
 }

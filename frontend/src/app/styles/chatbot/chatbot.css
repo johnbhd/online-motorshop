@@ -142,6 +142,19 @@
   scrollbar-width: thin;
 }
 
+.ald-chatbot__empty-state {
+  max-width: 16rem;
+  margin: 3rem auto 0;
+  padding: 0.85rem 1rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
 .ald-chatbot__message-row {
   display: flex;
   align-items: flex-end;
@@ -177,16 +190,30 @@
   overflow-wrap: anywhere;
 }
 
-.ald-chatbot__message--bot {
+.ald-chatbot__message--bot,
+.ald-chatbot__message--staff {
   border-bottom-left-radius: 0.25rem;
   background: #f1f5f9;
   color: #1e293b;
+}
+
+.ald-chatbot__message--staff {
+  background: #eff6ff;
 }
 
 .ald-chatbot__message--customer {
   border-bottom-right-radius: 0.25rem;
   background: var(--ald-orange);
   color: #ffffff;
+}
+
+.ald-chatbot__message-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .ald-chatbot__quick-actions {

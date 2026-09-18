@@ -60,11 +60,10 @@ export const chatbotResponses = {
     "Compatibility information should be confirmed by ALD staff before completing the order request.",
   fallback:
     "I can't confidently answer that inquiry yet. You can choose one of the available topics or talk to ALD staff for assistance.",
-  staffAssistance:
-    "Your request for staff assistance has been recorded for this demo. An ALD staff member can continue the conversation once the messaging system is connected.",
 } as const;
 
-export const chatbotBranchResponse = `ALD Motorshop currently has branches in ${formatBranchNames()}.`;
+export const chatbotBranchResponse =
+  "ALD Motorshop currently has branches in " + formatBranchNames() + ".";
 
 function formatBranchNames() {
   const branchNames = aboutBranches.map((branch) =>
@@ -78,5 +77,5 @@ function formatBranchNames() {
   const lastBranch = branchNames.at(-1);
   const precedingBranches = branchNames.slice(0, -1).join(", ");
 
-  return `${precedingBranches}, and ${lastBranch}`;
+  return precedingBranches + ", and " + lastBranch;
 }
