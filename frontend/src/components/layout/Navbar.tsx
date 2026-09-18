@@ -156,8 +156,8 @@ export function Navbar() {
           <span className="site-header-divider" aria-hidden="true" />
           <Link
             className="site-header-cart"
-            href="/#home-products"
-            aria-label="Shopping cart, 0 items"
+            href="/cart"
+            aria-label="Shopping cart"
           >
             <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
             <span className="site-header-cart-badge" aria-hidden="true">
@@ -231,7 +231,7 @@ export function Navbar() {
               </Link>
               <Link
                 className="site-mobile-nav-action"
-                href="/#home-products"
+                href="/cart"
                 onClick={closeMobileMenu}
               >
                 <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -91,10 +92,14 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
           </button>
         </div>
 
-        <span className="products-card-details">
+        <Link
+          className="products-card-details"
+          href={`/products/${product.id}`}
+          aria-label={`View details for ${product.name}`}
+        >
           <span>View Details</span>
           <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
-        </span>
+        </Link>
       </div>
     </article>
   );

@@ -590,6 +590,14 @@ export const productCatalog: ProductDisplayItem[] = [
   },
 ];
 
+export function getProductById(
+  productId: string,
+): ProductDisplayItem | undefined {
+  return productCatalog.find((product) => {
+    return product.id === productId;
+  });
+}
+
 export const initialProductFilters: ProductFilterState = {
   brands: [],
   categories: [],

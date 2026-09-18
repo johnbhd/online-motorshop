@@ -3,10 +3,12 @@ import "../styles/about/about.css";
 import "../styles/about/about2.css";
 import "../styles/contact/contact.css";
 import "../styles/contact/contact2.css";
+import "../styles/cart/cart.css";
 import "../styles/footer.css";
 import "../styles/header.css";
 import "../styles/home/home.css";
 import "../styles/home/home2.css";
+import "../styles/product-details/product-details.css";
 import "../styles/products/products.css";
 
 import { Footer } from "@/components/layout/Footer";
