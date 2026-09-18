@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
@@ -11,6 +12,7 @@ import {
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import type { ProductDisplayItem } from "./productsData";
+import { addProductToCart } from "../cart/cartStorage";
 import type { ProductViewMode } from "./ProductsToolbar";
 
 type ProductCardProps = {
@@ -26,7 +28,14 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 
 export default function ProductCard({ product, viewMode }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
+  const router = useRouter();
   const statusLabel = product.status === "active" ? "Listed" : "Unavailable";
+
+  const handleAddToCart = () => {
+    if (addProductToCart(product, quantity)) {
+      router.push("/cart");
+    }
+  };
 
   return (
     <article className={`products-card products-card--${viewMode}`}>
@@ -86,7 +95,11 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
               <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
             </button>
           </div>
-          <button className="products-add-cart-button" type="button">
+          <button
+            className="products-add-cart-button"
+            type="button"
+            onClick={handleAddToCart}
+          >
             <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
             <span>Add to Cart</span>
           </button>

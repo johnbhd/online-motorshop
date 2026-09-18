@@ -4,29 +4,40 @@ import {
   faCreditCard,
   faLocationDot,
   faStore,
+  faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import type { TrackOrderData } from "./trackOrderTypes";
+import type { DemoOrder } from "@/lib/orders/orderTypes";
+import { formatOrderTimestamp } from "../checkout/checkoutUtils";
 
 type OrderSummaryCardsProps = {
-  order: TrackOrderData;
+  order: DemoOrder;
 };
 
 export default function OrderSummaryCards({ order }: OrderSummaryCardsProps) {
+  const isPickup = order.fulfillment.method === "pickup";
+  const fulfillmentValue = order.fulfillment.method === "pickup"
+    ? order.fulfillment.branch.name
+    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
   const cards = [
     {
       label: "Fulfillment Method",
-      value: order.fulfillmentMethod,
-      icon: faStore,
+      value: isPickup ? "Store Pickup" : "Lalamove Delivery",
+      icon: isPickup ? faStore : faTruck,
     },
     {
-      label: "Pickup Branch",
-      value: order.branchName,
+      label: isPickup ? "Pickup Branch" : "Delivery Address",
+      value: fulfillmentValue,
       icon: faLocationDot,
     },
     {
       label: "Payment Status",
       value: order.paymentStatus,
       icon: faCreditCard,
+    },
+    {
+      label: "Order Request Date",
+      value: formatOrderTimestamp(order.createdAt),
+      icon: faCalendarDays,
     },
   ];
 
@@ -50,18 +61,6 @@ export default function OrderSummaryCards({ order }: OrderSummaryCardsProps) {
             </div>
           </article>
         ))}
-        <article className="track-order-summary-card">
-          <span className="track-order-summary-card-icon" aria-hidden="true">
-            <FontAwesomeIcon icon={faCalendarDays} />
-          </span>
-          <div>
-            <span>Order Request Date</span>
-            <strong>
-              {order.requestDate}
-              <small>{order.requestTime}</small>
-            </strong>
-          </div>
-        </article>
       </div>
     </section>
   );

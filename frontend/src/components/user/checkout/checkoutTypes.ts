@@ -1,18 +1,15 @@
-import type { CartItemData, FulfillmentMethod } from "../cart/cartTypes";
+import type { FulfillmentMethod } from "../cart/cartTypes";
+import type {
+  DemoOrder as StoredDemoOrder,
+  OrderCustomerSnapshot,
+  OrderDeliverySnapshot,
+  OrderFulfillment,
+  OrderItemSnapshot,
+} from "@/lib/orders/orderTypes";
 
-export type CheckoutCustomerData = {
-  fullName: string;
-  email: string;
-  contactNumber: string;
-};
+export type CheckoutCustomerData = OrderCustomerSnapshot;
 
-export type CheckoutDeliveryData = {
-  address: string;
-  barangay: string;
-  city: string;
-  contactPerson: string;
-  notes: string;
-};
+export type CheckoutDeliveryData = OrderDeliverySnapshot;
 
 export type CheckoutFormData = CheckoutCustomerData & {
   fulfillmentMethod: FulfillmentMethod;
@@ -46,29 +43,6 @@ export type CheckoutFieldErrors = Partial<
   Record<CheckoutFieldErrorKey, string>
 >;
 
-export type DemoOrderFulfillment =
-  | {
-      method: "pickup";
-      branch: {
-        id: string;
-        name: string;
-        address: string;
-      };
-    }
-  | {
-      method: "delivery";
-      delivery: CheckoutDeliveryData;
-    };
-
-export type DemoOrder = {
-  reference: string;
-  customer: CheckoutCustomerData;
-  items: CartItemData[];
-  fulfillment: DemoOrderFulfillment;
-  orderNotes: string;
-  estimatedSubtotal: number | null;
-  totalQuantity: number;
-  status: "Pending";
-  paymentStatus: "Unpaid";
-  createdAt: string;
-};
+export type DemoOrderFulfillment = OrderFulfillment;
+export type DemoOrderItem = OrderItemSnapshot;
+export type DemoOrder = StoredDemoOrder;

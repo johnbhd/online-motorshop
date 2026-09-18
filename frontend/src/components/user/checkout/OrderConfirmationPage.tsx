@@ -11,8 +11,9 @@ import {
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import type { DemoOrder } from "./checkoutTypes";
-import { getDemoOrderByReference } from "./checkoutUtils";
+import type { DemoOrder } from "@/lib/orders/orderTypes";
+import { formatCartCurrency } from "../cart/cartData";
+import { formatOrderTimestamp, getDemoOrderByReference } from "./checkoutUtils";
 
 type OrderConfirmationPageProps = {
   reference: string;
@@ -44,7 +45,10 @@ export default function OrderConfirmationPage({
   if (!order) {
     return (
       <div className="order-confirmation-page">
-        <section className="order-confirmation-missing" aria-labelledby="order-confirmation-missing-title">
+        <section
+          className="order-confirmation-missing"
+          aria-labelledby="order-confirmation-missing-title"
+        >
           <div className="order-confirmation-icon" aria-hidden="true">
             <FontAwesomeIcon icon={faFileLines} />
           </div>
@@ -52,20 +56,25 @@ export default function OrderConfirmationPage({
           <p>
             This browser does not have a saved order request with that reference.
           </p>
-          <Link className="order-confirmation-primary-link" href="/products">
-            Browse Products
-          </Link>
+          <div className="order-confirmation-actions order-confirmation-actions--centered">
+            <Link className="order-confirmation-primary-link" href="/track-order">
+              Track Order
+            </Link>
+            <Link className="order-confirmation-secondary-link" href="/products">
+              Browse Products
+            </Link>
+          </div>
         </section>
       </div>
     );
   }
 
-  const fulfillmentLabel =
-    order.fulfillment.method === "pickup"
-      ? order.fulfillment.branch.name
-      : "Lalamove Delivery";
-  const fulfillmentIcon =
-    order.fulfillment.method === "pickup" ? faStore : faTruck;
+  const isPickup = order.fulfillment.method === "pickup";
+  const fulfillmentLabel = isPickup ? "Store Pickup" : "Lalamove Delivery";
+  const fulfillmentValue = order.fulfillment.method === "pickup"
+    ? order.fulfillment.branch.name
+    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
+  const fulfillmentIcon = isPickup ? faStore : faTruck;
 
   return (
     <div className="order-confirmation-page">
@@ -84,7 +93,10 @@ export default function OrderConfirmationPage({
         </div>
       </section>
 
-      <section className="order-confirmation-content order-confirmation-shell" aria-labelledby="order-confirmation-reference-title">
+      <section
+        className="order-confirmation-content order-confirmation-shell"
+        aria-labelledby="order-confirmation-reference-title"
+      >
         <div className="order-confirmation-success-icon" aria-hidden="true">
           <FontAwesomeIcon icon={faCheck} />
         </div>
@@ -103,7 +115,16 @@ export default function OrderConfirmationPage({
               </span>
               <span>
                 <strong>Fulfillment</strong>
-                {fulfillmentLabel}
+                {fulfillmentLabel} · {fulfillmentValue}
+              </span>
+            </div>
+            <div>
+              <span className="order-confirmation-detail-icon" aria-hidden="true">
+                <FontAwesomeIcon icon={faFileLines} />
+              </span>
+              <span>
+                <strong>Submitted</strong>
+                <time dateTime={order.createdAt}>{formatOrderTimestamp(order.createdAt)}</time>
               </span>
             </div>
             <div>
@@ -115,7 +136,54 @@ export default function OrderConfirmationPage({
                 {order.totalQuantity} {order.totalQuantity === 1 ? "item" : "items"}
               </span>
             </div>
+            <div>
+              <span className="order-confirmation-detail-icon" aria-hidden="true">
+                <FontAwesomeIcon icon={faFileLines} />
+              </span>
+              <span>
+                <strong>Customer</strong>
+                {order.customer.fullName} · {order.customer.email}
+              </span>
+            </div>
           </div>
+
+          <section className="order-confirmation-items" aria-labelledby="order-confirmation-items-title">
+            <div className="order-confirmation-items-heading">
+              <h3 id="order-confirmation-items-title">Submitted Items</h3>
+              <span>Historical snapshot</span>
+            </div>
+            <ul>
+              {order.items.map((item) => {
+                const priceLabel = item.price > 0
+                  ? formatCartCurrency(item.price)
+                  : "Price on request";
+
+                return (
+                  <li key={item.product.id}>
+                    <div>
+                      <strong>{item.product.name}</strong>
+                      <span>{item.product.partNumber} · Qty {item.quantity}</span>
+                    </div>
+                    <span>{priceLabel}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="order-confirmation-total">
+              <span>Estimated subtotal</span>
+              <strong>
+                {order.estimatedSubtotal !== null
+                  ? formatCartCurrency(order.estimatedSubtotal)
+                  : "Final amount confirmed by staff"}
+              </strong>
+            </div>
+          </section>
+
+          {order.orderNotes ? (
+            <p className="order-confirmation-order-note">
+              <strong>Order notes:</strong> {order.orderNotes}
+            </p>
+          ) : null}
 
           <div className="order-confirmation-notice" role="note">
             <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
@@ -132,12 +200,15 @@ export default function OrderConfirmationPage({
           </p>
 
           <div className="order-confirmation-actions">
-            <Link className="order-confirmation-primary-link" href="/products">
-              Continue Shopping
+            <Link
+              className="order-confirmation-primary-link"
+              href={`/track-order?reference=${encodeURIComponent(order.reference)}`}
+            >
+              Track Order
               <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
             </Link>
-            <Link className="order-confirmation-secondary-link" href="/">
-              Return Home
+            <Link className="order-confirmation-secondary-link" href="/products">
+              Continue Shopping
             </Link>
           </div>
         </div>

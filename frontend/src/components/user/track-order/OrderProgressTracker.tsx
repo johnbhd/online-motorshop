@@ -3,10 +3,14 @@ import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import type { TrackOrderProgressStep } from "./trackOrderTypes";
 
 type OrderProgressTrackerProps = {
+  caption: string;
   steps: TrackOrderProgressStep[];
 };
 
-export default function OrderProgressTracker({ steps }: OrderProgressTrackerProps) {
+export default function OrderProgressTracker({
+  caption,
+  steps,
+}: OrderProgressTrackerProps) {
   return (
     <section
       className="track-order-card track-order-progress-card"
@@ -17,9 +21,9 @@ export default function OrderProgressTracker({ steps }: OrderProgressTrackerProp
           <p className="track-order-section-eyebrow">ORDER JOURNEY</p>
           <h2 id="track-order-progress-title">Order Progress</h2>
         </div>
-        <span className="track-order-progress-caption">4 of 6 stages</span>
+        <span className="track-order-progress-caption">{caption}</span>
       </div>
-      <ol className="track-order-progress-list">
+      <ol className="track-order-progress-list" data-count={steps.length}>
         {steps.map((step) => (
           <li
             className="track-order-progress-step"

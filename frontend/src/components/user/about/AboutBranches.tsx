@@ -9,6 +9,7 @@ import {
   type AboutBranch,
 } from "./aboutData";
 import BranchMapModal from "./modal/BranchMapModal";
+import { getBranchId, saveSelectedBranchId } from "@/lib/branches/branchStorage";
 
 export default function AboutBranchesNext() {
   const [selectedBranch, setSelectedBranch] =
@@ -86,10 +87,16 @@ export default function AboutBranchesNext() {
                     <FontAwesomeIcon icon={branchInfoIcons.map} />
                     View on Map
                   </button>
-                  <a className="btn primary" href="#">
+                  <button
+                    className="btn primary"
+                    type="button"
+                    onClick={() => {
+                      saveSelectedBranchId(getBranchId(branch.name));
+                    }}
+                  >
                     <FontAwesomeIcon icon={branchInfoIcons.pickup} />
                     Select as Pickup Branch
-                  </a>
+                  </button>
                 </div>
               </div>
             </article>

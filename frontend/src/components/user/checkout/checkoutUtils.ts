@@ -1,23 +1,45 @@
 import { aboutBranches } from "../about/aboutData";
 import { readStoredCartItems } from "../cart/cartStorage";
-import { initialCartItems, formatCartCurrency } from "../cart/cartData";
+import { formatCartCurrency } from "../cart/cartData";
+import {
+  getBranchId,
+  SELECTED_BRANCH_STORAGE_KEY,
+} from "@/lib/branches/branchStorage";
+import {
+  createOrderReference,
+  getDemoOrderByReference,
+  getDemoOrderByReferenceAndContact,
+  normalizeContactNumber,
+  normalizeOrderReference,
+  ORDERS_STORAGE_KEY,
+  readDemoOrders,
+  saveDemoOrder,
+  updateDemoOrderStatus,
+} from "@/lib/orders/orderStorage";
 import type { CartItemData } from "../cart/cartTypes";
 import type {
   CheckoutFieldErrors,
   CheckoutFormData,
   DemoOrder,
 } from "./checkoutTypes";
-
 export const CUSTOMER_STORAGE_KEY = "ald_customer";
-export const ORDERS_STORAGE_KEY = "ald_orders";
-export const SELECTED_BRANCH_STORAGE_KEY = "ald_selected_branch";
+
+
+export { getBranchId, SELECTED_BRANCH_STORAGE_KEY };
+export {
+  createOrderReference,
+  getDemoOrderByReference,
+  getDemoOrderByReferenceAndContact,
+  normalizeContactNumber,
+  normalizeOrderReference,
+  ORDERS_STORAGE_KEY,
+  readDemoOrders,
+  saveDemoOrder,
+  updateDemoOrderStatus,
+};
 
 export function getCheckoutCartItems(): CartItemData[] {
-  return readStoredCartItems() ?? initialCartItems;
-}
-
-export function getBranchId(branchName: string): string {
-  return branchName.toLowerCase().replace(/\s+branch$/, "");
+  return readStoredCartItems() ?? [];
 }
 
 export function getBranchById(branchId: string) {
@@ -66,7 +88,7 @@ export function readSelectedBranchId(): string {
   return "";
 }
 
-export function readDemoCustomer() {
+export function readDemoCustomer(): DemoOrder["customer"] | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -117,69 +139,31 @@ export function saveDemoCustomer(customer: DemoOrder["customer"]): boolean {
   }
 }
 
-export function readDemoOrders(): DemoOrder[] {
-  if (typeof window === "undefined") {
-    return [];
+export function formatOrderTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
   }
 
-  try {
-    const storedValue = window.localStorage.getItem(ORDERS_STORAGE_KEY);
-
-    if (!storedValue) {
-      return [];
-    }
-
-    const parsedValue: unknown = JSON.parse(storedValue);
-
-    if (!Array.isArray(parsedValue)) {
-      return [];
-    }
-
-    return parsedValue.filter(isDemoOrder);
-  } catch {
-    return [];
-  }
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }
 
-export function getDemoOrderByReference(reference: string): DemoOrder | null {
-  return (
-    readDemoOrders().find((order) => order.reference === reference) ?? null
-  );
+export function hasDisplayablePrices(items: CartItemData[]): boolean {
+  return items.length > 0 && items.every((item) => item.price > 0);
 }
 
-export function saveDemoOrder(order: DemoOrder): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  try {
-    const existingOrders = readDemoOrders();
-    window.localStorage.setItem(
-      ORDERS_STORAGE_KEY,
-      JSON.stringify([...existingOrders, order]),
-    );
-    return true;
-  } catch {
-    return false;
-  }
+export function getCartSubtotal(items: CartItemData[]): number {
+  return items.reduce((subtotal, item) => {
+    return subtotal + item.price * item.quantity;
+  }, 0);
 }
 
-export function createOrderReference(
-  existingOrders: DemoOrder[],
-  currentDate = new Date(),
-): string {
-  const year = currentDate.getFullYear();
-  const sequence = existingOrders.reduce((highestSequence, order) => {
-    const match = order.reference.match(new RegExp(`^ALD-${year}-(\\d+)$`));
-
-    if (!match) {
-      return highestSequence;
-    }
-
-    return Math.max(highestSequence, Number(match[1]));
-  }, 1000);
-
-  return `ALD-${year}-${String(sequence + 1).padStart(6, "0")}`;
+export function formatCheckoutPrice(amount: number): string {
+  return formatCartCurrency(amount);
 }
 
 export function validateCheckoutForm(
@@ -229,36 +213,4 @@ export function validateCheckoutForm(
   }
 
   return errors;
-}
-
-export function hasDisplayablePrices(items: CartItemData[]): boolean {
-  return items.length > 0 && items.every((item) => item.price > 0);
-}
-
-export function getCartSubtotal(items: CartItemData[]): number {
-  return items.reduce((subtotal, item) => {
-    return subtotal + item.price * item.quantity;
-  }, 0);
-}
-
-export function formatCheckoutPrice(amount: number): string {
-  return formatCartCurrency(amount);
-}
-
-function isDemoOrder(value: unknown): value is DemoOrder {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<DemoOrder>;
-
-  return Boolean(
-    typeof candidate.reference === "string" &&
-      typeof candidate.status === "string" &&
-      typeof candidate.paymentStatus === "string" &&
-      typeof candidate.createdAt === "string" &&
-      Array.isArray(candidate.items) &&
-      candidate.customer &&
-      candidate.fulfillment,
-  );
 }

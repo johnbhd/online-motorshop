@@ -51,6 +51,7 @@ function isAuthSession(value: unknown): value is DemoAuthSession {
     typeof value.id === "string" &&
     typeof value.name === "string" &&
     typeof value.email === "string" &&
+    (!("phone" in value) || typeof value.phone === "string") &&
     isDemoRole(value.role) &&
     typeof value.createdAt === "string"
   );
@@ -59,6 +60,22 @@ function isAuthSession(value: unknown): value is DemoAuthSession {
 export function getRegisteredCustomers(): DemoCustomerAccount[] {
   const parsed = readStoredJson(REGISTERED_USERS_STORAGE_KEY);
   return Array.isArray(parsed) ? parsed.filter(isCustomerAccount) : [];
+}
+
+export function getCustomerPhoneForSession(session: DemoAuthSession): string {
+  if (session.role !== "customer") {
+    return "";
+  }
+
+  if (session.phone?.trim()) {
+    return session.phone;
+  }
+
+  const customer = getRegisteredCustomers().find(
+    (account) => account.id === session.id || account.email === session.email,
+  );
+
+  return customer?.phone ?? "";
 }
 
 export function saveRegisteredCustomers(accounts: DemoCustomerAccount[]) {

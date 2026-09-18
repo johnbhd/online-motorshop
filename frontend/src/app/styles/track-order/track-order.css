@@ -1006,3 +1006,22 @@
   font-weight: 800;
   line-height: 1.3;
 }
+
+.track-order-field-error {
+  display: block;
+  margin-top: 0.35rem;
+  color: #b42318;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.track-order-empty-activity {
+  margin: 1.5rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.track-order-progress-list[data-count="7"] {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,12 +9,48 @@ import {
   faPhone,
 } from "@fortawesome/free-solid-svg-icons";
 
-export default function TrackOrderSearch() {
-  const [submitted, setSubmitted] = useState(false);
+type TrackOrderSearchProps = {
+  error: string;
+  onSearch: (reference: string, contactNumber: string) => void;
+};
+
+export default function TrackOrderSearch({
+  error,
+  onSearch,
+}: TrackOrderSearchProps) {
+  const [reference, setReference] = useState("");
+  const [contactNumber, setContactNumber] = useState("");
+  const [referenceError, setReferenceError] = useState("");
+  const [contactError, setContactError] = useState("");
+
+  useEffect(() => {
+    const queryReference = new URLSearchParams(window.location.search).get(
+      "reference",
+    );
+
+    if (queryReference) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill the reference from the confirmation link after hydration
+      setReference(queryReference);
+    }
+  }, []);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
+    const nextReferenceError = reference.trim()
+      ? ""
+      : "Enter your ALD order reference.";
+    const nextContactError = contactNumber.trim()
+      ? ""
+      : "Enter the contact number used for the request.";
+
+    setReferenceError(nextReferenceError);
+    setContactError(nextContactError);
+
+    if (nextReferenceError || nextContactError) {
+      return;
+    }
+
+    onSearch(reference.trim(), contactNumber.trim());
   };
 
   return (
@@ -31,9 +67,13 @@ export default function TrackOrderSearch() {
       </div>
       <p className="track-order-search-intro">
         Use the reference number and contact number from your order request to
-        view its latest status.
+        view its latest saved status.
       </p>
-      <form className="track-order-search-form" onSubmit={handleSubmit}>
+      <form
+        className="track-order-search-form"
+        onSubmit={handleSubmit}
+        noValidate
+      >
         <div className="track-order-field">
           <label htmlFor="track-order-reference">Reference Number</label>
           <div className="track-order-input-wrap">
@@ -42,14 +82,23 @@ export default function TrackOrderSearch() {
               id="track-order-reference"
               name="reference"
               type="text"
+              value={reference}
               placeholder="e.g. ALD-2026-001024"
               autoComplete="off"
+              aria-invalid={Boolean(referenceError)}
               aria-describedby="track-order-reference-help"
+              onChange={(event) => {
+                setReference(event.target.value);
+                setReferenceError("");
+              }}
             />
           </div>
           <span id="track-order-reference-help" className="track-order-field-hint">
             Your ALD order request reference
           </span>
+          {referenceError ? (
+            <span className="track-order-field-error">{referenceError}</span>
+          ) : null}
         </div>
         <div className="track-order-field">
           <label htmlFor="track-order-contact">Contact Number</label>
@@ -59,14 +108,23 @@ export default function TrackOrderSearch() {
               id="track-order-contact"
               name="contact"
               type="tel"
+              value={contactNumber}
               placeholder="e.g. 0917 123 4567"
               autoComplete="tel"
+              aria-invalid={Boolean(contactError)}
               aria-describedby="track-order-contact-help"
+              onChange={(event) => {
+                setContactNumber(event.target.value);
+                setContactError("");
+              }}
             />
           </div>
           <span id="track-order-contact-help" className="track-order-field-hint">
             The contact number used for the request
           </span>
+          {contactError ? (
+            <span className="track-order-field-error">{contactError}</span>
+          ) : null}
         </div>
         <button className="track-order-search-button" type="submit">
           <FontAwesomeIcon icon={faMagnifyingGlass} aria-hidden="true" />
@@ -76,14 +134,12 @@ export default function TrackOrderSearch() {
       <p className="track-order-search-note">
         <FontAwesomeIcon icon={faLock} aria-hidden="true" />
         <span>
-          This page currently shows a sample order request while live tracking
-          is being prepared.
+          This temporary lookup reads saved order requests from this browser.
         </span>
       </p>
-      {submitted ? (
-        <p className="track-order-search-feedback" role="status">
-          The sample order remains visible below. Live order lookup is not
-          connected yet.
+      {error ? (
+        <p className="track-order-search-feedback" role="alert">
+          {error}
         </p>
       ) : null}
     </div>

@@ -16,11 +16,12 @@ import CheckoutOrderSummary from "./CheckoutOrderSummary";
 import DeliveryFields from "./DeliveryFields";
 import FulfillmentMethod from "./FulfillmentMethod";
 import StorePickupFields from "./StorePickupFields";
+import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { getCustomerPhoneForSession } from "@/lib/auth/demoAuthStorage";
 import type {
   CartItemData,
   FulfillmentMethod as CartFulfillmentMethod,
 } from "../cart/cartTypes";
-import { initialCartItems } from "../cart/cartData";
 import {
   clearStoredCart,
   readStoredCartItems,
@@ -31,6 +32,7 @@ import type {
   CheckoutFieldErrors,
   CheckoutFormData,
   DemoOrder,
+  DemoOrderItem,
   DemoOrderFulfillment,
 } from "./checkoutTypes";
 import {
@@ -38,7 +40,6 @@ import {
   getBranchById,
   getCartSubtotal,
   hasDisplayablePrices,
-  readDemoCustomer,
   readDemoOrders,
   readSelectedBranchId,
   saveDemoCustomer,
@@ -67,6 +68,7 @@ const initialFormData: CheckoutFormData = {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { session, isReady: isAuthReady } = useDemoAuth();
   const [cartItems, setCartItems] = useState<CartItemData[]>([]);
   const [formData, setFormData] = useState<CheckoutFormData>(initialFormData);
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
@@ -76,19 +78,30 @@ export default function CheckoutPage() {
   const submitLockRef = useRef(false);
 
   useEffect(() => {
+    if (!isAuthReady) {
+      return;
+    }
+
     const storedCartItems = readStoredCartItems();
-    const storedCustomer = readDemoCustomer();
+    const loggedInCustomer =
+      session?.role === "customer"
+        ? {
+            fullName: session.name,
+            email: session.email,
+            contactNumber: getCustomerPhoneForSession(session),
+          }
+        : null;
 
     // Browser storage is read after hydration to avoid server/client markup drift.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate shared cart and customer data after the client mounts
-    setCartItems(storedCartItems ?? initialCartItems);
+    setCartItems(storedCartItems ?? []);
     setFormData((currentFormData) => ({
       ...currentFormData,
-      ...(storedCustomer ?? {}),
+      ...(loggedInCustomer ?? {}),
       branchId: readSelectedBranchId(),
     }));
     setIsReady(true);
-  }, []);
+  }, [isAuthReady, session]);
 
   const updateCustomer = (
     field: keyof CheckoutCustomerData,
@@ -215,10 +228,20 @@ export default function CheckoutPage() {
             notes: formData.delivery.notes.trim(),
           },
         };
+    const orderItems: DemoOrderItem[] = cartItems.map((item) => ({
+      product: {
+        ...item.product,
+      },
+      compatibility: item.compatibility,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+    const reference = createOrderReference(readDemoOrders());
+    const timestamp = new Date().toISOString();
     const order: DemoOrder = {
-      reference: createOrderReference(readDemoOrders()),
+      reference,
       customer,
-      items: cartItems,
+      items: orderItems,
       fulfillment,
       orderNotes: formData.orderNotes.trim(),
       estimatedSubtotal: hasDisplayablePrices(cartItems)
@@ -230,7 +253,17 @@ export default function CheckoutPage() {
       ),
       status: "Pending",
       paymentStatus: "Unpaid",
-      createdAt: new Date().toISOString(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      activities: [
+        {
+          id: `${reference}-submitted`,
+          status: "Pending",
+          title: "Order Request Submitted",
+          message: "Your order request has been received.",
+          createdAt: timestamp,
+        },
+      ],
     };
 
     if (!saveDemoOrder(order)) {
@@ -244,7 +277,9 @@ export default function CheckoutPage() {
 
     saveDemoCustomer(customer);
     clearStoredCart();
-    router.push(`/order-confirmation/${order.reference}`);
+    router.push(
+      `/order-confirmation/${encodeURIComponent(order.reference)}`,
+    );
   };
 
   if (!isReady) {

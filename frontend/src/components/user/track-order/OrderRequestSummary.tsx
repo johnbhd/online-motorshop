@@ -1,12 +1,23 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck, faFileLines } from "@fortawesome/free-solid-svg-icons";
-import type { TrackOrderData } from "./trackOrderTypes";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
+import type { DemoOrder } from "@/lib/orders/orderTypes";
+import { formatOrderTimestamp } from "../checkout/checkoutUtils";
 
 type OrderRequestSummaryProps = {
-  order: TrackOrderData;
+  order: DemoOrder;
 };
 
 export default function OrderRequestSummary({ order }: OrderRequestSummaryProps) {
+  const fulfillmentLabel = order.fulfillment.method === "pickup"
+    ? "Store Pickup"
+    : "Lalamove Delivery";
+  const fulfillmentValue = order.fulfillment.method === "pickup"
+    ? order.fulfillment.branch.name
+    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
+  const fulfillmentFieldLabel = order.fulfillment.method === "pickup"
+    ? "Branch"
+    : "Delivery Address";
+
   return (
     <section
       className="track-order-card track-order-request-summary"
@@ -29,24 +40,17 @@ export default function OrderRequestSummary({ order }: OrderRequestSummaryProps)
         </div>
         <div>
           <span>Submitted</span>
-          <strong>{order.submittedAt}</strong>
+          <strong>{formatOrderTimestamp(order.createdAt)}</strong>
         </div>
         <div>
           <span>Fulfillment</span>
-          <strong>{order.fulfillmentMethod}</strong>
+          <strong>{fulfillmentLabel}</strong>
         </div>
         <div>
-          <span>Branch</span>
-          <strong>{order.branchName}</strong>
+          <span>{fulfillmentFieldLabel}</span>
+          <strong>{fulfillmentValue}</strong>
         </div>
       </div>
-      <p className="track-order-demo-note">
-        <FontAwesomeIcon icon={faFileLines} aria-hidden="true" />
-        <span>
-          Sample order request for this UI demonstration. No live order record
-          is being looked up.
-        </span>
-      </p>
     </section>
   );
 }

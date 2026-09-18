@@ -1,9 +1,24 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { featuredProducts, homeUtilityIcons } from "../../../data/homeData";
+import { productCatalog } from "../products/productsData";
+import { addProductToCart } from "../cart/cartStorage";
 
 export default function FeaturedProducts() {
+  const router = useRouter();
+
+  const handleAddToCart = (productId: string) => {
+    const product = productCatalog.find((item) => item.id === productId);
+
+    if (product && addProductToCart(product, 1)) {
+      router.push("/cart");
+    }
+  };
+
   return (
     <section
       className="home-section home-products"
@@ -38,7 +53,11 @@ export default function FeaturedProducts() {
                 <h3>{product.name}</h3>
                 <p className="home-product-brand">{product.brand}</p>
               </div>
-              <button className="home-cart-button" type="button">
+              <button
+                className="home-cart-button"
+                type="button"
+                onClick={() => handleAddToCart(product.id)}
+              >
                 <FontAwesomeIcon
                   icon={homeUtilityIcons.cart}
                   aria-hidden="true"

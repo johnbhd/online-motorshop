@@ -12,40 +12,37 @@ import {
 import CartItems from "./CartItems";
 import CartOrderRequestNotice from "./CartOrderRequestNotice";
 import CartSummary from "./CartSummary";
-import { initialCartItems } from "./cartData";
 import {
+  CART_UPDATED_EVENT,
   readStoredCartItems,
   writeCartItems,
 } from "./cartStorage";
-import type { FulfillmentMethod } from "./cartTypes";
+import type { CartItemData, FulfillmentMethod } from "./cartTypes";
 import { hasDisplayablePrices } from "../checkout/checkoutUtils";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const [cartItems, setCartItems] = useState<CartItemData[]>([]);
   const [fulfillmentMethod, setFulfillmentMethod] =
     useState<FulfillmentMethod>("pickup");
   const [cartStatus, setCartStatus] = useState("");
-  const [isCartReady, setIsCartReady] = useState(false);
 
   useEffect(() => {
-    const storedCartItems = readStoredCartItems();
+    const syncCartItems = () => {
+      const storedCartItems = readStoredCartItems();
 
-    if (storedCartItems) {
       // Browser storage is read after hydration to avoid server/client markup drift.
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate shared cart storage after the client mounts
-      setCartItems(storedCartItems);
-    } else {
-      writeCartItems(initialCartItems);
-    }
+      setCartItems(storedCartItems ?? []);
+    };
 
-    setIsCartReady(true);
+    syncCartItems();
+    window.addEventListener(CART_UPDATED_EVENT, syncCartItems);
+    window.addEventListener("storage", syncCartItems);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, syncCartItems);
+      window.removeEventListener("storage", syncCartItems);
+    };
   }, []);
-
-  useEffect(() => {
-    if (isCartReady) {
-      writeCartItems(cartItems);
-    }
-  }, [cartItems, isCartReady]);
 
   const totalQuantity = cartItems.reduce((total, item) => {
     return total + item.quantity;
@@ -55,10 +52,20 @@ export default function CartPage() {
     return total + item.price * item.quantity;
   }, 0);
 
+  const persistCartItems = (nextItems: CartItemData[]) => {
+    if (writeCartItems(nextItems)) {
+      setCartItems(nextItems);
+      return true;
+    }
+
+    setCartStatus("Your cart could not be saved in this browser. Please try again.");
+    return false;
+  };
+
   const handleIncrement = (itemId: string) => {
     setCartStatus("");
-    setCartItems((currentItems) => {
-      return currentItems.map((item) => {
+    persistCartItems(
+      cartItems.map((item) => {
         if (item.product.id !== itemId) {
           return item;
         }
@@ -67,14 +74,14 @@ export default function CartPage() {
           ...item,
           quantity: item.quantity + 1,
         };
-      });
-    });
+      }),
+    );
   };
 
   const handleDecrement = (itemId: string) => {
     setCartStatus("");
-    setCartItems((currentItems) => {
-      return currentItems.map((item) => {
+    persistCartItems(
+      cartItems.map((item) => {
         if (item.product.id !== itemId) {
           return item;
         }
@@ -83,41 +90,44 @@ export default function CartPage() {
           ...item,
           quantity: Math.max(1, item.quantity - 1),
         };
-      });
-    });
+      }),
+    );
   };
 
   const handleRemove = (itemId: string) => {
     const removedItem = cartItems.find(
       (item) => item.product.id === itemId,
     );
+    const didSave = persistCartItems(
+      cartItems.filter((item) => item.product.id !== itemId),
+    );
 
-    setCartItems((currentItems) => {
-      return currentItems.filter((item) => item.product.id !== itemId);
-    });
-
-    if (removedItem) {
+    if (didSave && removedItem) {
       setCartStatus(`${removedItem.product.name} was removed from your cart.`);
     }
   };
 
   const handleClearCart = () => {
-    setCartItems([]);
-    setCartStatus("Your cart was cleared.");
+    if (persistCartItems([])) {
+      setCartStatus("Your cart was cleared.");
+    }
   };
 
   const handleUpdateCart = () => {
-    setCartItems((currentItems) => {
-      return currentItems.map((item) => {
+    const didSave = persistCartItems(
+      cartItems.map((item) => {
         return {
           ...item,
           quantity: Number.isFinite(item.quantity)
             ? Math.max(1, Math.floor(item.quantity))
             : 1,
         };
-      });
-    });
-    setCartStatus("Cart totals updated.");
+      }),
+    );
+
+    if (didSave) {
+      setCartStatus("Cart totals updated.");
+    }
   };
 
   const hasItems = cartItems.length > 0;

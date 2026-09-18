@@ -1,12 +1,17 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faClock } from "@fortawesome/free-solid-svg-icons";
-import type { TrackOrderActivity as TrackOrderActivityItem } from "./trackOrderTypes";
+import type { OrderActivity as OrderActivityItem } from "@/lib/orders/orderTypes";
+import { formatOrderTimestamp } from "../checkout/checkoutUtils";
 
 type OrderActivityProps = {
-  activity: TrackOrderActivityItem[];
+  activity: OrderActivityItem[];
 };
 
 export default function OrderActivity({ activity }: OrderActivityProps) {
+  const orderedActivity = [...activity].sort((first, second) => {
+    return second.createdAt.localeCompare(first.createdAt);
+  });
+
   return (
     <section
       className="track-order-card track-order-activity-card"
@@ -18,28 +23,36 @@ export default function OrderActivity({ activity }: OrderActivityProps) {
           <h2 id="track-order-activity-title">Order Activity</h2>
         </div>
       </div>
-      <ol className="track-order-activity-list">
-        {activity.map((item) => (
-          <li
-            className="track-order-activity-item"
-            data-state={item.state}
-            key={`${item.title}-${item.timestamp}`}
-          >
-            <span className="track-order-activity-marker" aria-hidden="true">
-              <FontAwesomeIcon
-                icon={item.state === "current" ? faClock : faCheck}
-              />
-            </span>
-            <div>
-              <div className="track-order-activity-title-row">
-                <h3>{item.title}</h3>
-                <time dateTime={item.dateTime}>{item.timestamp}</time>
-              </div>
-              <p>{item.description}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      {orderedActivity.length > 0 ? (
+        <ol className="track-order-activity-list">
+          {orderedActivity.map((item, index) => {
+            const isCurrent = index === 0;
+
+            return (
+              <li
+                className="track-order-activity-item"
+                data-state={isCurrent ? "current" : "complete"}
+                key={item.id}
+              >
+                <span className="track-order-activity-marker" aria-hidden="true">
+                  <FontAwesomeIcon icon={isCurrent ? faClock : faCheck} />
+                </span>
+                <div>
+                  <div className="track-order-activity-title-row">
+                    <h3>{item.title}</h3>
+                    <time dateTime={item.createdAt}>
+                      {formatOrderTimestamp(item.createdAt)}
+                    </time>
+                  </div>
+                  <p>{item.message}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p className="track-order-empty-activity">No activity recorded yet.</p>
+      )}
     </section>
   );
 }

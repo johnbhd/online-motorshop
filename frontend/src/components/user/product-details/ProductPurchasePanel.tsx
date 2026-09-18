@@ -2,6 +2,7 @@
 
 import type { ChangeEvent } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -27,6 +28,7 @@ export default function ProductPurchasePanel({
   product,
 }: ProductPurchasePanelProps) {
   const [quantity, setQuantity] = useState(1);
+  const router = useRouter();
   const [cartMessage, setCartMessage] = useState("");
   const priceLabel =
     product.price > 0
@@ -49,10 +51,13 @@ export default function ProductPurchasePanel({
   const handleAddToCart = () => {
     const didSave = addProductToCart(product, quantity);
 
+    if (didSave) {
+      router.push("/cart");
+      return;
+    }
+
     setCartMessage(
-      didSave
-        ? `${product.name} was added to your cart.`
-        : "This product could not be added in this browser. Please try again.",
+      "This product could not be added in this browser. Please try again.",
     );
   };
 

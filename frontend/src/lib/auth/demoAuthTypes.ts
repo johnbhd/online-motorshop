@@ -4,6 +4,7 @@ export type DemoAuthSession = {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: DemoUserRole;
   createdAt: string;
 };

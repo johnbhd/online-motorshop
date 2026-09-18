@@ -16,6 +16,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getRedirectPathForRole } from "@/lib/auth/demoAuth";
 import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import {
+  CART_UPDATED_EVENT,
+  getStoredCartQuantity,
+} from "@/components/user/cart/cartStorage";
 
 const navigationItems = [
   { href: "/", label: "Home" },
@@ -47,8 +51,24 @@ export function Navbar() {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [cartQuantity, setCartQuantity] = useState(0);
   const lastScrollY = useRef(0);
   const accountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const syncCartQuantity = () => {
+      setCartQuantity(getStoredCartQuantity());
+    };
+
+    syncCartQuantity();
+    window.addEventListener(CART_UPDATED_EVENT, syncCartQuantity);
+    window.addEventListener("storage", syncCartQuantity);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, syncCartQuantity);
+      window.removeEventListener("storage", syncCartQuantity);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -174,6 +194,11 @@ export function Navbar() {
     ? getSessionLinkLabel(session.role, session.name)
     : "Sign In or Continue as Guest";
 
+  const cartLabel =
+    cartQuantity === 1
+      ? "Shopping cart, 1 item"
+      : "Shopping cart, " + cartQuantity + " items";
+
   return (
     <>
       <header
@@ -217,12 +242,14 @@ export function Navbar() {
             <Link
               className="site-header-cart"
               href="/cart"
-              aria-label="Shopping cart"
+              aria-label={cartLabel}
             >
               <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
-              <span className="site-header-cart-badge" aria-hidden="true">
-                0
-              </span>
+              {cartQuantity > 0 ? (
+                <span className="site-header-cart-badge" aria-hidden="true">
+                  {cartQuantity}
+                </span>
+              ) : null}
             </Link>
             {session ? (
               <div className="site-header-account" ref={accountRef}>
@@ -346,11 +373,16 @@ export function Navbar() {
               <Link
                 className="site-mobile-nav-action"
                 href="/cart"
+                aria-label={cartLabel}
                 onClick={closeMobileMenu}
               >
                 <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
                 <span>Cart</span>
-                <span className="site-mobile-nav-cart-badge">0</span>
+                {cartQuantity > 0 ? (
+                  <span className="site-mobile-nav-cart-badge" aria-hidden="true">
+                    {cartQuantity}
+                  </span>
+                ) : null}
               </Link>
               {session ? (
                 <>

@@ -4,16 +4,33 @@ import {
   faCreditCard,
   faMessage,
   faStore,
+  faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import type { TrackOrderData } from "./trackOrderTypes";
+import type { DemoOrder } from "@/lib/orders/orderTypes";
 
 type OrderSupportSectionProps = {
-  order: TrackOrderData;
+  order: DemoOrder;
 };
 
 export default function OrderSupportSection({
   order,
 }: OrderSupportSectionProps) {
+  const isPickup = order.fulfillment.method === "pickup";
+  const fulfillmentMethod = isPickup ? "Store Pickup" : "Lalamove Delivery";
+  const fulfillmentInformation = isPickup
+    ? "Please wait for ALD staff to confirm that the request is ready before visiting the branch."
+    : "ALD staff will confirm the delivery details, fee, and arrangement before dispatch.";
+  const fulfillmentDetailLabel = isPickup
+    ? "Pickup branch"
+    : "Delivery address";
+  const fulfillmentDetail = order.fulfillment.method === "pickup"
+    ? order.fulfillment.branch.name
+    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
+  const paymentInformation =
+    order.paymentStatus === "Paid"
+      ? "Payment is recorded as paid for this order request."
+      : "No payment has been collected. ALD staff will provide instructions after confirming the request and final amount.";
+
   return (
     <aside className="track-order-support-column">
       <section
@@ -21,15 +38,15 @@ export default function OrderSupportSection({
         aria-labelledby="track-order-fulfillment-title"
       >
         <span className="track-order-support-icon" aria-hidden="true">
-          <FontAwesomeIcon icon={faStore} />
+          <FontAwesomeIcon icon={isPickup ? faStore : faTruck} />
         </span>
         <p className="track-order-section-eyebrow">FULFILLMENT</p>
         <h2 id="track-order-fulfillment-title">Fulfillment Information</h2>
-        <strong>{order.fulfillmentMethod}</strong>
-        <p>{order.fulfillmentInformation}</p>
+        <strong>{fulfillmentMethod}</strong>
+        <p>{fulfillmentInformation}</p>
         <div className="track-order-support-detail">
-          <span>Pickup branch</span>
-          <strong>{order.branchName}</strong>
+          <span>{fulfillmentDetailLabel}</span>
+          <strong>{fulfillmentDetail}</strong>
         </div>
       </section>
       <section
@@ -42,7 +59,7 @@ export default function OrderSupportSection({
         <p className="track-order-section-eyebrow">PAYMENT</p>
         <h2 id="track-order-payment-title">Payment Status</h2>
         <strong>{order.paymentStatus}</strong>
-        <p>{order.paymentInformation}</p>
+        <p>{paymentInformation}</p>
       </section>
       <section
         className="track-order-help-card"

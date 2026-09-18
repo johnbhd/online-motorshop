@@ -1,8 +1,8 @@
 import type { ProductDisplayItem } from "../products/productsData";
-import { initialCartItems } from "./cartData";
 import type { CartItemData, CartProduct } from "./cartTypes";
 
 export const CART_STORAGE_KEY = "ald_cart";
+export const CART_UPDATED_EVENT = "ald-cart-updated";
 
 export function readStoredCartItems(): CartItemData[] | null {
   if (typeof window === "undefined") {
@@ -29,7 +29,13 @@ export function readStoredCartItems(): CartItemData[] | null {
 }
 
 export function getCurrentCartItems(): CartItemData[] {
-  return readStoredCartItems() ?? initialCartItems;
+  return readStoredCartItems() ?? [];
+}
+
+export function getStoredCartQuantity(): number {
+  return (readStoredCartItems() ?? []).reduce((total, item) => {
+    return total + item.quantity;
+  }, 0);
 }
 
 export function writeCartItems(items: CartItemData[]): boolean {
@@ -39,6 +45,7 @@ export function writeCartItems(items: CartItemData[]): boolean {
 
   try {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    window.dispatchEvent(new CustomEvent(CART_UPDATED_EVENT));
     return true;
   } catch {
     return false;

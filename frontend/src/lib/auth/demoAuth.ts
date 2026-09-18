@@ -35,11 +35,13 @@ function createSession(
   name: string,
   email: string,
   role: DemoAuthSession["role"],
+  phone?: string,
 ): DemoAuthSession {
   return {
     id,
     name,
     email,
+    ...(phone ? { phone } : {}),
     role,
     createdAt: new Date().toISOString(),
   };
@@ -167,7 +169,13 @@ export function loginDemoUser(email: string, password: string): DemoLoginResult 
   }
 
   return persistSession(
-    createSession(customer.id, customer.name, customer.email, "customer"),
+    createSession(
+      customer.id,
+      customer.name,
+      customer.email,
+      "customer",
+      customer.phone,
+    ),
   );
 }
 

@@ -1,96 +1,125 @@
-import { aboutBranches } from "../about/aboutData";
-import { productCatalog } from "../products/productsData";
-import type {
-  TrackOrderData,
-  TrackOrderProduct,
-} from "./trackOrderTypes";
+import type { DemoOrder, OrderStatus } from "@/lib/orders/orderTypes";
+import type { TrackOrderProgressStep } from "./trackOrderTypes";
 
-const findDemoProduct = (productId: string): TrackOrderProduct => {
-  const product = productCatalog.find((candidate) => candidate.id === productId);
+const pickupStages = [
+  "Order Request Submitted",
+  "Under Review",
+  "Confirmed",
+  "Preparing Order",
+  "Ready for Pickup",
+  "Completed",
+] as const;
 
-  if (!product) {
-    throw new Error(`Track order fixture references missing product: ${productId}`);
-  }
+const deliveryStages = [
+  "Order Request Submitted",
+  "Under Review",
+  "Confirmed",
+  "Preparing Order",
+  "Booked for Delivery",
+  "Picked Up by Rider",
+  "Completed",
+] as const;
 
-  return {
-    id: product.id,
-    partNumber: product.partNumber,
-    name: product.name,
-    brand: product.brand,
-    image: product.image,
-    alt: product.alt,
-  };
+const statusDescriptions: Record<OrderStatus, string> = {
+  Pending: "Your order request has been received and is waiting for ALD staff review.",
+  "Under Review": "ALD staff is reviewing availability and compatibility for your request.",
+  Confirmed: "ALD staff has confirmed the request and will share the next fulfillment details.",
+  "Waiting for Payment": "Payment instructions are pending confirmation from ALD staff.",
+  "Payment Verification": "ALD staff is verifying the submitted payment information.",
+  "Preparing Order": "Your confirmed items are being prepared for fulfillment.",
+  "Ready for Pickup": "Your order is ready for pickup at the submitted branch.",
+  "Booked for Delivery": "The delivery request has been arranged for the submitted address.",
+  "Picked Up by Rider": "The delivery has been picked up by the assigned rider.",
+  Completed: "This order request has reached its recorded completed state.",
+  Rejected: "ALD staff could not approve this order request. Please contact us if you need help.",
+  Cancelled: "This order request was cancelled and will not continue through fulfillment.",
 };
 
-const manilaBranch = aboutBranches.find(
-  (branch) => branch.name === "Manila Branch",
-);
-
-if (!manilaBranch) {
-  throw new Error("Track order fixture references missing Manila Branch.");
+export function getOrderStatusPresentation(status: OrderStatus) {
+  return {
+    label: status,
+    description: statusDescriptions[status],
+  };
 }
 
-/*
- * UI-only display data for the first Track Order page pass. This is not a
- * lookup result and must be replaced by an agreed backend contract later.
- */
-export const demoTrackOrder: TrackOrderData = {
-  reference: "ALD-2026-001024",
-  status: "Preparing Order",
-  submittedAt: "September 18, 2026 · 3:40 PM",
-  fulfillmentMethod: "Store Pickup",
-  branchName: manilaBranch.name,
-  paymentStatus: "Waiting for Payment",
-  requestDate: "September 18, 2026",
-  requestTime: "3:40 PM",
-  currentStatus: "Preparing Order",
-  currentStatusDescription:
-    "Your order request has been confirmed and the ALD team is preparing the items for fulfillment.",
-  progress: [
-    { label: "Order Request Submitted", state: "complete" },
-    { label: "Under Review", state: "complete" },
-    { label: "Confirmed", state: "complete" },
-    { label: "Preparing Order", state: "current" },
-    { label: "Ready for Pickup / Delivery", state: "pending" },
-    { label: "Completed", state: "pending" },
-  ],
-  items: [
-    { product: findDemoProduct("HON-003"), quantity: 1 },
-    { product: findDemoProduct("HON-007"), quantity: 1 },
-    { product: findDemoProduct("YAM-009"), quantity: 2 },
-  ],
-  activity: [
-    {
-      title: "Preparing Order",
-      timestamp: "September 18, 2026 · 5:42 PM",
-      dateTime: "2026-09-18T17:42:00+08:00",
-      description: "Your requested items are being prepared for fulfillment.",
-      state: "current",
-    },
-    {
-      title: "Order Confirmed",
-      timestamp: "September 18, 2026 · 4:28 PM",
-      dateTime: "2026-09-18T16:28:00+08:00",
-      description: "The order request was confirmed by ALD staff.",
+export function getOrderProgressSteps(
+  order: DemoOrder,
+): TrackOrderProgressStep[] {
+  const stages = order.fulfillment.method === "pickup"
+    ? pickupStages
+    : deliveryStages;
+
+  if (order.status === "Rejected" || order.status === "Cancelled") {
+    return stages.map((label, index) => ({
+      label,
+      state: index === 0 ? "complete" : "pending",
+    }));
+  }
+
+  if (order.status === "Completed") {
+    return stages.map((label) => ({
+      label,
       state: "complete",
-    },
-    {
-      title: "Under Review",
-      timestamp: "September 18, 2026 · 3:55 PM",
-      dateTime: "2026-09-18T15:55:00+08:00",
-      description: "ALD staff reviewed the request and item availability.",
-      state: "complete",
-    },
-    {
-      title: "Order Request Submitted",
-      timestamp: "September 18, 2026 · 3:40 PM",
-      dateTime: "2026-09-18T15:40:00+08:00",
-      description: "Your order request was received by ALD Motorshop.",
-      state: "complete",
-    },
-  ],
-  fulfillmentInformation:
-    "Once your order is prepared, the status will change to Ready for Pickup. Please wait for confirmation before visiting the branch.",
-  paymentInformation:
-    "Payment instructions will follow after ALD staff confirms the order request and final amount.",
-};
+    }));
+  }
+
+  const currentIndex = getCurrentStageIndex(order.status, order.fulfillment.method);
+
+  return stages.map((label, index) => ({
+    label,
+    state:
+      index < currentIndex
+        ? "complete"
+        : index === currentIndex
+          ? "current"
+          : "pending",
+  }));
+}
+
+export function getOrderProgressCaption(order: DemoOrder): string {
+  if (order.status === "Rejected" || order.status === "Cancelled") {
+    return order.status;
+  }
+
+  const steps = getOrderProgressSteps(order);
+  const completedStages = steps.filter((step) => step.state === "complete").length;
+  const currentStage = steps.some((step) => step.state === "current")
+    ? 1
+    : 0;
+
+  return `${completedStages + currentStage} of ${steps.length} stages`;
+}
+
+function getCurrentStageIndex(
+  status: OrderStatus,
+  method: "pickup" | "delivery",
+): number {
+  if (status === "Under Review") {
+    return 1;
+  }
+
+  if (
+    status === "Confirmed" ||
+    status === "Waiting for Payment" ||
+    status === "Payment Verification"
+  ) {
+    return 2;
+  }
+
+  if (status === "Preparing Order") {
+    return 3;
+  }
+
+  if (
+    status === "Ready for Pickup" ||
+    status === "Booked for Delivery"
+  ) {
+    return 4;
+  }
+
+  if (status === "Picked Up by Rider") {
+    return method === "delivery" ? 5 : 4;
+  }
+
+  return 0;
+}
