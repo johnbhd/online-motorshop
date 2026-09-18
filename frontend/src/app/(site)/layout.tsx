@@ -8,6 +8,7 @@ import "../styles/footer.css";
 import "../styles/header.css";
 import "../styles/home/home.css";
 import "../styles/home/home2.css";
+import "../styles/product-details/product-details.css";
 import "../styles/products/products.css";
 
 import { Footer } from "@/components/layout/Footer";
