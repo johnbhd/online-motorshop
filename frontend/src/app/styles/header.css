@@ -238,6 +238,47 @@
   color: #ffffff;
 }
 
+.site-header-account {
+  display: flex;
+  min-width: max-content;
+  align-items: center;
+  gap: 0.65rem;
+}
+.site-header-account-link {
+  max-width: 10rem;
+  overflow: hidden;
+  color: #1b1c1f;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-header-account-link:hover {
+  color: #e07a08;
+}
+.site-header-logout {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.site-header-logout:hover {
+  color: #e07a08;
+}
+.site-header--scrolled .site-header-account-link,
+.site-header--scrolled .site-header-logout {
+  color: #ffffff;
+}
+.site-header--scrolled .site-header-account-link:hover,
+.site-header--scrolled .site-header-logout:hover {
+  color: #fdb813;
+}
 .site-header-menu-toggle,
 .site-mobile-nav-overlay,
 .site-mobile-nav {
@@ -432,6 +473,14 @@
     color: #fdb813;
   }
 
+  .site-mobile-nav-button {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
   .site-mobile-nav-action .svg-inline--fa {
     width: 1.1em;
     flex: 0 0 auto;

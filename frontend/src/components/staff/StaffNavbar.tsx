@@ -1,19 +1,40 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { notifications } from "@/lib/mock/staff";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faBell, faChevronDown, faCircleUser, faMagnifyingGlass, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBars,
+  faBell,
+  faChevronDown,
+  faCircleUser,
+  faRightFromBracket,
+} from "@fortawesome/free-solid-svg-icons";
+import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+
 export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
   const [menu, setMenu] = useState<"notifications" | "profile" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const { logout, session } = useDemoAuth();
+
   useEffect(() => {
     const close = (e: MouseEvent) =>
       !ref.current?.contains(e.target as Node) && setMenu(null);
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, []);
+
   const unread = notifications.filter((n) => n.unread).length;
+
+  const handleLogout = () => {
+    logout();
+    setMenu(null);
+    router.replace("/");
+  };
+
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
       <div className="flex min-h-18 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
@@ -23,7 +44,7 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
             className="grid size-10 place-items-center rounded-lg text-xl hover:bg-slate-100 lg:hidden"
             aria-label="Open staff navigation"
           >
-            ☰
+            <FontAwesomeIcon icon={faBars} />
           </button>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[.16em] text-orange-600">
@@ -39,10 +60,10 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
                 setMenu(menu === "notifications" ? null : "notifications")
               }
               className="relative grid size-10 place-items-center rounded-lg text-lg text-slate-600 hover:bg-slate-100"
-              aria-label="Notifications"
+              aria-label={`Notifications, ${unread} unread`}
             >
               <FontAwesomeIcon icon={faBell} aria-hidden="true" />
-              </button>
+            </button>
             {menu === "notifications" && (
               <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
                 <p className="px-4 py-3 text-sm font-bold text-[#0B1930]">
@@ -80,27 +101,39 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
             <button
               onClick={() => setMenu(menu === "profile" ? null : "profile")}
               className="flex items-center gap-3 rounded-xl p-1.5 text-left hover:bg-slate-100"
+              aria-haspopup="menu"
+              aria-expanded={menu === "profile"}
             >
-              <span className="grid size-9 place-items-center rounded-full bg-slate-100 text-slate-500"><FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />
+              <span className="grid size-9 place-items-center rounded-full bg-slate-100 text-slate-500">
+                <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />
               </span>
               <span className="hidden sm:block">
-                <span className="block text-sm font-semibold text-[#0B1930]">
-                  Staff User
+                <span className="block max-w-40 truncate text-sm font-semibold text-[#0B1930]">
+                  {session?.name ?? "Staff User"}
                 </span>
                 <span className="block text-xs text-slate-500">Staff</span>
               </span>
-              <span className="hidden text-xs sm:block"><FontAwesomeIcon icon={faChevronDown} /></span>
+              <span className="hidden text-xs sm:block">
+                <FontAwesomeIcon icon={faChevronDown} />
+              </span>
             </button>
             {menu === "profile" && (
               <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl">
                 <a
                   href="#"
                   className="block px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                ><FontAwesomeIcon icon={faCircleUser} aria-hidden="true" /> &nbsp; Profile</a>
-                <Link
-                  href="/"
-                  className="block border-t border-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                ><FontAwesomeIcon icon={faRightFromBracket} aria-hidden="true" /> &nbsp; Logout</Link>
+                >
+                  <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />{" "}
+                  &nbsp; Profile
+                </a>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="block w-full border-t border-slate-100 px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  <FontAwesomeIcon icon={faRightFromBracket} aria-hidden="true" />{" "}
+                  &nbsp; Logout
+                </button>
               </div>
             )}
           </div>

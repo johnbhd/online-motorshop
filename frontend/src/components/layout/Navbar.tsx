@@ -2,16 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
   faCartShopping,
   faClipboardList,
+  faRightFromBracket,
   faUser,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { getRedirectPathForRole } from "@/lib/auth/demoAuth";
+import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
 
 const navigationItems = [
   { href: "/", label: "Home" },
@@ -23,8 +26,22 @@ const navigationItems = [
 const FLOAT_THRESHOLD = 64;
 const SCROLL_DIRECTION_TOLERANCE = 8;
 
+function getSessionLinkLabel(role: "customer" | "staff" | "admin", name: string) {
+  if (role === "admin") {
+    return "Admin Portal";
+  }
+
+  if (role === "staff") {
+    return "Staff Portal";
+  }
+
+  return name;
+}
+
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout, session } = useDemoAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -107,6 +124,12 @@ export function Navbar() {
     setIsMobileMenuOpen(true);
   };
 
+  const handleLogout = () => {
+    logout();
+    closeMobileMenu();
+    router.replace("/");
+  };
+
   const isActiveNavigationItem = (href: string) => {
     if (href === "/") {
       return pathname === "/";
@@ -115,70 +138,96 @@ export function Navbar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
+  const sessionLink = session ? getRedirectPathForRole(session.role) : "/auth/login";
+  const sessionLabel = session
+    ? getSessionLinkLabel(session.role, session.name)
+    : "Sign In or Continue as Guest";
+
   return (
     <>
       <header
         className={`site-header ${isScrolled ? "site-header--scrolled" : ""} ${isVisible ? "site-header--visible" : "site-header--hidden"} ${isMobileMenuOpen ? "site-header--menu-open" : ""}`}
       >
-      <div className="site-header-inner">
-        <Link href="/" className="site-header-brand">
-          <Image
-            src="/branding/logo.png"
-            alt="ALD Motorshop logo"
-            width={44}
-            height={44}
-            className="site-header-logo"
-          />
-          <span className="site-header-brand-text">
-            <strong>ALD Motorshop</strong>
-            <small>Motorcycle Parts Trading</small>
-          </span>
-        </Link>
-
-        <nav className="site-header-nav" aria-label="Main navigation">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`site-header-nav-link${isActiveNavigationItem(item.href) ? " is-active" : ""}`}
-              aria-current={isActiveNavigationItem(item.href) ? "page" : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="site-header-actions">
-          <Link className="site-header-track" href="/#home-ordering">
-            Track Order
-          </Link>
-          <span className="site-header-divider" aria-hidden="true" />
-          <Link
-            className="site-header-cart"
-            href="/cart"
-            aria-label="Shopping cart"
-          >
-            <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
-            <span className="site-header-cart-badge" aria-hidden="true">
-              0
+        <div className="site-header-inner">
+          <Link href="/" className="site-header-brand">
+            <Image
+              src="/branding/logo.png"
+              alt="ALD Motorshop logo"
+              width={44}
+              height={44}
+              className="site-header-logo"
+            />
+            <span className="site-header-brand-text">
+              <strong>ALD Motorshop</strong>
+              <small>Motorcycle Parts Trading</small>
             </span>
           </Link>
-          <Link className="site-header-guest" href="/auth/login">
-            Sign In or Continue as Guest
-          </Link>
-        </div>
 
-        <button
-          className="site-header-menu-toggle"
-          type="button"
-          aria-label="Open navigation menu"
-          aria-expanded={isMobileMenuOpen}
-          aria-controls="site-mobile-nav"
-          onClick={openMobileMenu}
-        >
-          <FontAwesomeIcon icon={faBars} aria-hidden="true" />
-        </button>
-      </div>
+          <nav className="site-header-nav" aria-label="Main navigation">
+            {navigationItems.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`site-header-nav-link${isActiveNavigationItem(item.href) ? " is-active" : ""}`}
+                aria-current={
+                  isActiveNavigationItem(item.href) ? "page" : undefined
+                }
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="site-header-actions">
+            <Link className="site-header-track" href="/#home-ordering">
+              Track Order
+            </Link>
+            <span className="site-header-divider" aria-hidden="true" />
+            <Link
+              className="site-header-cart"
+              href="/cart"
+              aria-label="Shopping cart"
+            >
+              <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
+              <span className="site-header-cart-badge" aria-hidden="true">
+                0
+              </span>
+            </Link>
+            {session ? (
+              <div className="site-header-account">
+                <Link
+                  className="site-header-account-link"
+                  href={sessionLink}
+                  title={session.email}
+                >
+                  {sessionLabel}
+                </Link>
+                <button
+                  type="button"
+                  className="site-header-logout"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link className="site-header-guest" href="/auth/login">
+                Sign In or Continue as Guest
+              </Link>
+            )}
+          </div>
+
+          <button
+            className="site-header-menu-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="site-mobile-nav"
+            onClick={openMobileMenu}
+          >
+            <FontAwesomeIcon icon={faBars} aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       {isMobileMenuOpen ? (
@@ -212,7 +261,9 @@ export function Navbar() {
                   key={item.label}
                   href={item.href}
                   className={`site-mobile-nav-link${isActiveNavigationItem(item.href) ? " is-active" : ""}`}
-                  aria-current={isActiveNavigationItem(item.href) ? "page" : undefined}
+                  aria-current={
+                    isActiveNavigationItem(item.href) ? "page" : undefined
+                  }
                   onClick={closeMobileMenu}
                 >
                   {item.label}
@@ -238,14 +289,38 @@ export function Navbar() {
                 <span>Cart</span>
                 <span className="site-mobile-nav-cart-badge">0</span>
               </Link>
-              <Link
-                className="site-mobile-nav-action"
-                href="/auth/login"
-                onClick={closeMobileMenu}
-              >
-                <FontAwesomeIcon icon={faUser} aria-hidden="true" />
-                <span>Sign In or Continue as Guest</span>
-              </Link>
+              {session ? (
+                <>
+                  <Link
+                    className="site-mobile-nav-action"
+                    href={sessionLink}
+                    onClick={closeMobileMenu}
+                  >
+                    <FontAwesomeIcon icon={faUser} aria-hidden="true" />
+                    <span>{sessionLabel}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="site-mobile-nav-action site-mobile-nav-button"
+                    onClick={handleLogout}
+                  >
+                    <FontAwesomeIcon
+                      icon={faRightFromBracket}
+                      aria-hidden="true"
+                    />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : (
+                <Link
+                  className="site-mobile-nav-action"
+                  href="/auth/login"
+                  onClick={closeMobileMenu}
+                >
+                  <FontAwesomeIcon icon={faUser} aria-hidden="true" />
+                  <span>Sign In or Continue as Guest</span>
+                </Link>
+              )}
             </div>
           </aside>
         </>
