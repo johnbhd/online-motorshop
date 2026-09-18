@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
   faCartShopping,
+  faCircleUser,
   faClipboardList,
   faRightFromBracket,
   faUser,
@@ -43,9 +44,11 @@ export function Navbar() {
   const router = useRouter();
   const { logout, session } = useDemoAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const accountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,6 +90,32 @@ export function Navbar() {
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
+    if (!isAccountMenuOpen) {
+      return;
+    }
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (!accountRef.current?.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isAccountMenuOpen]);
+
+  useEffect(() => {
     if (!isMobileMenuOpen) {
       return;
     }
@@ -121,11 +150,13 @@ export function Navbar() {
 
   const openMobileMenu = () => {
     setIsVisible(true);
+    setIsAccountMenuOpen(false);
     setIsMobileMenuOpen(true);
   };
 
   const handleLogout = () => {
     logout();
+    setIsAccountMenuOpen(false);
     closeMobileMenu();
     router.replace("/");
   };
@@ -194,21 +225,53 @@ export function Navbar() {
               </span>
             </Link>
             {session ? (
-              <div className="site-header-account">
-                <Link
-                  className="site-header-account-link"
-                  href={sessionLink}
-                  title={session.email}
-                >
-                  {sessionLabel}
-                </Link>
+              <div className="site-header-account" ref={accountRef}>
                 <button
                   type="button"
-                  className="site-header-logout"
-                  onClick={handleLogout}
+                  className="site-header-account-trigger"
+                  aria-label={
+                    isAccountMenuOpen ? "Close account menu" : "Open account menu"
+                  }
+                  aria-haspopup="menu"
+                  aria-expanded={isAccountMenuOpen}
+                  onClick={() => setIsAccountMenuOpen((open) => !open)}
                 >
-                  Logout
+                  <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />
                 </button>
+                {isAccountMenuOpen ? (
+                  <div
+                    className="site-header-account-menu"
+                    role="menu"
+                    aria-label="Account menu"
+                  >
+                    <div className="site-header-account-summary">
+                      <strong>{session.name}</strong>
+                      <span>{session.email}</span>
+                    </div>
+                    {session.role !== "customer" ? (
+                      <Link
+                        href={sessionLink}
+                        className="site-header-account-menu-link"
+                        role="menuitem"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                      >
+                        {sessionLabel}
+                      </Link>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="site-header-account-logout"
+                      role="menuitem"
+                      onClick={handleLogout}
+                    >
+                      <FontAwesomeIcon
+                        icon={faRightFromBracket}
+                        aria-hidden="true"
+                      />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <Link className="site-header-guest" href="/auth/login">
