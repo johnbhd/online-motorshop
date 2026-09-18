@@ -12,6 +12,7 @@ import {
 } from "@/lib/messages/conversationStorage";
 import type { DemoConversation } from "@/lib/messages/conversationTypes";
 import ChatbotLauncher from "./ChatbotLauncher";
+import { OPEN_STAFF_CHAT_EVENT } from "./chatbotEvents";
 import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
 import {
   chatbotQuickActions,
@@ -112,6 +113,23 @@ export default function ChatbotWidget() {
     setMode("staff");
     setShowQuickActions(false);
   }, [isReady, session]);
+
+  const openStaffChat = useCallback(() => {
+    if (!isReady) {
+      return;
+    }
+
+    handleRequestStaff();
+    setIsOpen(true);
+  }, [handleRequestStaff, isReady]);
+
+  useEffect(() => {
+    window.addEventListener(OPEN_STAFF_CHAT_EVENT, openStaffChat);
+
+    return () => {
+      window.removeEventListener(OPEN_STAFF_CHAT_EVENT, openStaffChat);
+    };
+  }, [openStaffChat]);
 
   const handleBackToAssistant = useCallback(() => {
     setMode("assistant");

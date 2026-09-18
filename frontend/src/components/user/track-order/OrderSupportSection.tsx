@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -7,6 +9,7 @@ import {
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
 import type { DemoOrder } from "@/lib/orders/orderTypes";
+import { OPEN_STAFF_CHAT_EVENT } from "../chatbot/chatbotEvents";
 
 type OrderSupportSectionProps = {
   order: DemoOrder;
@@ -30,6 +33,10 @@ export default function OrderSupportSection({
     order.paymentStatus === "Paid"
       ? "Payment is recorded as paid for this order request."
       : "No payment has been collected. ALD staff will provide instructions after confirming the request and final amount.";
+
+  const handleTalkToStaff = () => {
+    window.dispatchEvent(new Event(OPEN_STAFF_CHAT_EVENT));
+  };
 
   return (
     <aside className="track-order-support-column">
@@ -76,7 +83,11 @@ export default function OrderSupportSection({
           <Link className="track-order-help-link" href="/contact">
             Contact Us
           </Link>
-          <button className="track-order-help-button" type="button">
+          <button
+            className="track-order-help-button"
+            type="button"
+            onClick={handleTalkToStaff}
+          >
             <FontAwesomeIcon icon={faMessage} aria-hidden="true" />
             <span>Talk to ALD Staff</span>
           </button>
