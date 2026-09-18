@@ -387,7 +387,7 @@
   position: absolute;
   z-index: 0;
   top: 1.05rem;
-  right: 0;
+  right: -50%;
   left: 50%;
   height: 2px;
   background: var(--track-order-border);

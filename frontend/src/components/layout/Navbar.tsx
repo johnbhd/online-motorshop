@@ -210,7 +210,7 @@ export function Navbar() {
           </nav>
 
           <div className="site-header-actions">
-            <Link className="site-header-track" href="/#home-ordering">
+            <Link className="site-header-track" href="/track-order">
               Track Order
             </Link>
             <span className="site-header-divider" aria-hidden="true" />
@@ -337,7 +337,7 @@ export function Navbar() {
             <div className="site-mobile-nav-actions">
               <Link
                 className="site-mobile-nav-action"
-                href="/#home-ordering"
+                href="/track-order"
                 onClick={closeMobileMenu}
               >
                 <FontAwesomeIcon icon={faClipboardList} aria-hidden="true" />
