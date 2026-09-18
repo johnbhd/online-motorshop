@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
-  faArrowsRotate,
   faCircleInfo,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
@@ -113,23 +112,6 @@ export default function CartPage() {
     }
   };
 
-  const handleUpdateCart = () => {
-    const didSave = persistCartItems(
-      cartItems.map((item) => {
-        return {
-          ...item,
-          quantity: Number.isFinite(item.quantity)
-            ? Math.max(1, Math.floor(item.quantity))
-            : 1,
-        };
-      }),
-    );
-
-    if (didSave) {
-      setCartStatus("Cart totals updated.");
-    }
-  };
-
   const hasItems = cartItems.length > 0;
 
   return (
@@ -193,7 +175,9 @@ export default function CartPage() {
                 </p>
               </div>
 
-              <div className="cart-actions-row">
+              <CartOrderRequestNotice />
+
+              <div className="cart-continue-shopping-row">
                 <Link
                   className="cart-button cart-button--secondary"
                   href="/products"
@@ -201,17 +185,7 @@ export default function CartPage() {
                   <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />
                   Continue Shopping
                 </Link>
-                <button
-                  className="cart-button cart-button--dark"
-                  type="button"
-                  onClick={handleUpdateCart}
-                >
-                  <FontAwesomeIcon icon={faArrowsRotate} aria-hidden="true" />
-                  Update Cart
-                </button>
               </div>
-
-              <CartOrderRequestNotice />
             </>
           ) : null}
         </div>
