@@ -1,8 +1,28 @@
+"use client";
+
 import Image from "next/image";
+import { useCallback, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { aboutBranches, branchInfoIcons } from "./aboutData";
+import {
+  aboutBranches,
+  branchInfoIcons,
+  type AboutBranch,
+} from "./aboutData";
+import BranchMapModal from "./modal/BranchMapModal";
 
 export default function AboutBranchesNext() {
+  const [selectedBranch, setSelectedBranch] =
+    useState<AboutBranch | null>(null);
+  const handleOpenMap = useCallback(
+    (branch: AboutBranch) => {
+      setSelectedBranch(branch);
+    },
+    [],
+  );
+  const handleCloseMap = useCallback(() => {
+    setSelectedBranch(null);
+  }, []);
+
   return (
     <section className="branches-section">
       <div className="wrap">
@@ -55,10 +75,17 @@ export default function AboutBranchesNext() {
                   ))}
                 </div>
                 <div className="branch-actions">
-                  <a className="btn" href="#">
+                  <button
+                    className="btn"
+                    type="button"
+                    aria-label={`View map for ${branch.name}`}
+                    onClick={() => {
+                      handleOpenMap(branch);
+                    }}
+                  >
                     <FontAwesomeIcon icon={branchInfoIcons.map} />
                     View on Map
-                  </a>
+                  </button>
                   <a className="btn primary" href="#">
                     <FontAwesomeIcon icon={branchInfoIcons.pickup} />
                     Select as Pickup Branch
@@ -69,6 +96,12 @@ export default function AboutBranchesNext() {
           ))}
         </div>
       </div>
+      {selectedBranch && (
+        <BranchMapModal
+          branch={selectedBranch}
+          onClose={handleCloseMap}
+        />
+      )}
     </section>
   );
 }
