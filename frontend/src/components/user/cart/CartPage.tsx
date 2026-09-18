@@ -17,7 +17,7 @@ import {
   writeCartItems,
 } from "./cartStorage";
 import type { CartItemData, FulfillmentMethod } from "./cartTypes";
-import { hasDisplayablePrices } from "../checkout/checkoutUtils";
+import { getCartSubtotal, hasDisplayablePrices } from "../checkout/checkoutUtils";
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState<CartItemData[]>([]);
@@ -47,9 +47,7 @@ export default function CartPage() {
     return total + item.quantity;
   }, 0);
 
-  const subtotal = cartItems.reduce((total, item) => {
-    return total + item.price * item.quantity;
-  }, 0);
+  const subtotal = getCartSubtotal(cartItems);
 
   const persistCartItems = (nextItems: CartItemData[]) => {
     if (writeCartItems(nextItems)) {

@@ -41,6 +41,9 @@ export type ProductFilterState = {
   maxPrice: number;
 };
 
+// TEMPORARY DEMO PRICES.
+// These Philippine peso values are realistic presentation estimates only.
+// Replace with verified ALD Motorshop pricing from the backend later.
 export const productCatalog: ProductDisplayItem[] = [
   {
     id: "HON-001",
@@ -49,7 +52,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Electrical Parts",
     description: "Honda motorcycle spark plug.",
-    price: 0,
+    price: 180,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560931/Honda-Spark-Plug.png",
     alt: "Honda motorcycle spark plug",
@@ -63,7 +66,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Accessories & Maintenance",
     description: "Honda motorcycle air filter.",
-    price: 0,
+    price: 350,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561452/Honda-Air-Filter.png",
     alt: "Honda motorcycle air filter",
@@ -77,7 +80,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Brake Parts",
     description: "Honda motorcycle front brake pad set.",
-    price: 0,
+    price: 480,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561477/Honda-Brake-Pad.png",
     alt: "Honda motorcycle front brake pad set",
@@ -91,7 +94,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Accessories & Maintenance",
     description: "Honda motorcycle oil filter.",
-    price: 0,
+    price: 220,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561449/Honda-Oil-Filter.png",
     alt: "Honda motorcycle oil filter",
@@ -105,7 +108,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Transmission Parts",
     description: "Honda motorcycle drive chain kit.",
-    price: 0,
+    price: 1450,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561477/Honda-Chain-Kit.png",
     alt: "Honda motorcycle drive chain kit",
@@ -119,7 +122,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Transmission Parts",
     description: "Honda motorcycle drive belt.",
-    price: 0,
+    price: 1050,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560941/Honda-Drive-Belt.png",
     alt: "Honda motorcycle drive belt",
@@ -133,7 +136,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Electrical Parts",
     description: "Honda motorcycle battery.",
-    price: 0,
+    price: 1550,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561463/Honda-Battery.png",
     alt: "Honda motorcycle battery",
@@ -147,7 +150,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Tires & Wheels",
     description: "Honda motorcycle front tire.",
-    price: 0,
+    price: 1750,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560944/Honda-Front-Tire.png",
     alt: "Honda motorcycle front tire",
@@ -161,7 +164,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Transmission Parts",
     description: "Honda motorcycle clutch weight set.",
-    price: 0,
+    price: 520,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560934/Honda-Clutch-Weight.png",
     alt: "Honda motorcycle clutch weight set",
@@ -175,7 +178,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Suspension Parts",
     description: "Honda motorcycle shock absorber.",
-    price: 0,
+    price: 1450,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560947/Honda-Shock-Absorber.png",
     alt: "Honda motorcycle shock absorber",
@@ -189,7 +192,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Engine Parts",
     description: "Honda motorcycle filter set.",
-    price: 0,
+    price: 680,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561337/Honda-Filter-Set.png",
     alt: "Honda motorcycle filter set",
@@ -203,7 +206,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Honda",
     category: "Body & Exterior",
     description: "Honda motorcycle front cover pipe.",
-    price: 0,
+    price: 950,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561351/Honda-Front-Cover-Pipe.png",
     alt: "Honda motorcycle front cover pipe",
@@ -217,7 +220,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Accessories & Maintenance",
     description: "Suzuki motorcycle oil filter.",
-    price: 0,
+    price: 220,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561055/Suzuki-Oil-Filter.png",
     alt: "Suzuki motorcycle oil filter",
@@ -231,7 +234,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Electrical Parts",
     description: "Suzuki motorcycle spark plug.",
-    price: 0,
+    price: 180,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561055/Suzuki-Spark-Plug.png",
     alt: "Suzuki motorcycle spark plug",
@@ -245,7 +248,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Accessories & Maintenance",
     description: "Suzuki motorcycle air filter and air cleaner.",
-    price: 0,
+    price: 380,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561036/Suzuki-Air-Filter.png",
     alt: "Suzuki motorcycle air filter and air cleaner",
@@ -259,7 +262,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Brake Parts",
     description: "Suzuki motorcycle brake pad.",
-    price: 0,
+    price: 480,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561053/Suzuki-Brake-Pad.png",
     alt: "Suzuki motorcycle brake pad",
@@ -273,7 +276,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Brake Parts",
     description: "Suzuki motorcycle brake shoe.",
-    price: 0,
+    price: 450,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561079/Suzuki-Brake-Shoe.png",
     alt: "Suzuki motorcycle brake shoe",
@@ -287,7 +290,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Transmission Parts",
     description: "Suzuki motorcycle drive chain kit.",
-    price: 0,
+    price: 1450,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561052/Suzuki-Chain-Kit.png",
     alt: "Suzuki motorcycle drive chain kit",
@@ -301,7 +304,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Transmission Parts",
     description: "Suzuki motorcycle sprocket.",
-    price: 0,
+    price: 580,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561050/Suzuki-Sprocket.png",
     alt: "Suzuki motorcycle sprocket",
@@ -315,7 +318,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Electrical Parts",
     description: "Suzuki motorcycle battery.",
-    price: 0,
+    price: 1550,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561037/Suzuki-Battery.webp",
     alt: "Suzuki motorcycle battery",
@@ -329,7 +332,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Tires & Wheels",
     description: "Suzuki motorcycle tire.",
-    price: 0,
+    price: 1750,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561038/Suzuki-Tire.png",
     alt: "Suzuki motorcycle tire",
@@ -343,7 +346,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Suzuki",
     category: "Accessories & Maintenance",
     description: "ECSTAR genuine motorcycle engine oil.",
-    price: 0,
+    price: 320,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561038/ECSTAR-Engine-Oil.png",
     alt: "ECSTAR genuine motorcycle engine oil",
@@ -357,7 +360,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Transmission Parts",
     description: "Yamaha motorcycle V-belt.",
-    price: 0,
+    price: 1100,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561168/Yamaha-V-Belt.png",
     alt: "Yamaha motorcycle V-belt",
@@ -371,7 +374,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Brake Parts",
     description: "Yamaha motorcycle brake pad kit.",
-    price: 0,
+    price: 520,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561155/Yamaha-Brake-Pad.png",
     alt: "Yamaha motorcycle brake pad kit",
@@ -385,7 +388,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Accessories & Maintenance",
     description: "Yamaha motorcycle air cleaner element assembly.",
-    price: 0,
+    price: 400,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561170/Yamaha-Air-Filter.png",
     alt: "Yamaha motorcycle air cleaner element assembly",
@@ -399,7 +402,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Accessories & Maintenance",
     description: "Yamaha motorcycle oil cleaner element assembly.",
-    price: 0,
+    price: 250,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561179/Yamaha-Oil-Filter.png",
     alt: "Yamaha motorcycle oil cleaner element assembly",
@@ -413,7 +416,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Electrical Parts",
     description: "Yamaha motorcycle spark plug.",
-    price: 0,
+    price: 180,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561151/Yamaha-Spark-Plug.png",
     alt: "Yamaha motorcycle spark plug",
@@ -427,7 +430,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Transmission Parts",
     description: "Yamaha motorcycle chain.",
-    price: 0,
+    price: 720,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561161/Yamaha-Chain.png",
     alt: "Yamaha motorcycle chain",
@@ -441,7 +444,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Transmission Parts",
     description: "Yamaha motorcycle sprocket.",
-    price: 0,
+    price: 580,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561191/Yamaha-Sprocket.png",
     alt: "Yamaha motorcycle sprocket",
@@ -455,7 +458,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Brake Parts",
     description: "Yamaha motorcycle brake shoe set.",
-    price: 0,
+    price: 480,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561143/Yamaha-Brake-Shoe.png",
     alt: "Yamaha motorcycle brake shoe set",
@@ -469,7 +472,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Accessories & Maintenance",
     description: "Yamalube motorcycle engine oil.",
-    price: 0,
+    price: 350,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561135/Yamalube-Engine-Oil.webp",
     alt: "Yamalube motorcycle engine oil",
@@ -483,7 +486,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Accessories & Maintenance",
     description: "Yamalube motorcycle chain lubricant.",
-    price: 0,
+    price: 300,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561179/Yamalube-Chain-Lube.png",
     alt: "Yamalube motorcycle chain lubricant",
@@ -497,7 +500,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Body & Exterior",
     description: "Yamaha motorcycle rear carrier.",
-    price: 0,
+    price: 1350,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561566/Yamaha-Rear-Carrier.png",
     alt: "Yamaha motorcycle rear carrier",
@@ -511,7 +514,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Electrical Parts",
     description: "Yamaha motorcycle USB charger.",
-    price: 0,
+    price: 980,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561542/Yamaha-USB-Charger.png",
     alt: "Yamaha motorcycle USB charger",
@@ -525,7 +528,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Suspension Parts",
     description: "Yamaha motorcycle reservoir cap.",
-    price: 0,
+    price: 420,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561579/Yamaha-Reservoir-Cap.png",
     alt: "Yamaha motorcycle reservoir cap",
@@ -539,7 +542,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Transmission Parts",
     description: "Yamaha motorcycle clutch lever.",
-    price: 0,
+    price: 480,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561581/Yamaha-Clutch-Lever.png",
     alt: "Yamaha motorcycle clutch lever",
@@ -553,7 +556,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Tires & Wheels",
     description: "Yamaha motorcycle wheel rim.",
-    price: 0,
+    price: 2350,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561559/Yamaha-Wheel-Rim.png",
     alt: "Yamaha motorcycle wheel rim",
@@ -567,7 +570,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Accessories & Maintenance",
     description: "Yamalube motorcycle carbon cleaner.",
-    price: 0,
+    price: 380,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561544/Yamalube-Carbon-Cleaner.png",
     alt: "Yamalube motorcycle carbon cleaner",
@@ -581,7 +584,7 @@ export const productCatalog: ProductDisplayItem[] = [
     brand: "Yamaha",
     category: "Brake Parts",
     description: "Yamaha motorcycle brake lever.",
-    price: 0,
+    price: 480,
     image:
       "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561562/Yamaha-Brake-Lever.png",
     alt: "Yamaha motorcycle brake lever",

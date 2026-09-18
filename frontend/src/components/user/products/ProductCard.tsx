@@ -13,18 +13,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { ProductDisplayItem } from "./productsData";
 import { addProductToCart } from "../cart/cartStorage";
+import { formatCartCurrency } from "../cart/cartData";
 import type { ProductViewMode } from "./ProductsToolbar";
 
 type ProductCardProps = {
   product: ProductDisplayItem;
   viewMode: ProductViewMode;
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  maximumFractionDigits: 0,
-});
 
 export default function ProductCard({ product, viewMode }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
@@ -65,9 +60,13 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
         <div className="products-card-price-row">
           {product.price > 0 ? (
             <span className="products-card-price">
-              {currencyFormatter.format(product.price)}
+              {formatCartCurrency(product.price)}
             </span>
-          ) : null}
+          ) : (
+            <span className="products-card-price products-card-price--unavailable">
+              Price unavailable
+            </span>
+          )}
           <span
             className={`products-card-status products-card-status--${
               product.status === "active" ? "listed" : "unavailable"

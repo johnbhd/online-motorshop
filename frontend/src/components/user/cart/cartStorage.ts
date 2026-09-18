@@ -1,4 +1,5 @@
-import type { ProductDisplayItem } from "../products/productsData";
+import { getProductById, type ProductDisplayItem } from "../products/productsData";
+import { isUsablePrice } from "./cartData";
 import type { CartItemData, CartProduct } from "./cartTypes";
 
 export const CART_STORAGE_KEY = "ald_cart";
@@ -22,7 +23,11 @@ export function readStoredCartItems(): CartItemData[] | null {
       return null;
     }
 
-    return parsedValue.filter(isCartItemData);
+    const parsedItems = parsedValue
+      .map(parseStoredCartItem)
+      .filter((item): item is CartItemData => item !== null);
+
+    return normalizeStoredCartItems(parsedItems);
   } catch {
     return null;
   }
@@ -102,27 +107,81 @@ export function addProductToCart(
   ]);
 }
 
-function isCartItemData(value: unknown): value is CartItemData {
+function normalizeStoredCartItems(items: CartItemData[]): CartItemData[] {
+  let didNormalize = false;
+
+  const normalizedItems = items.map((item) => {
+    const currentProduct = getProductById(item.product.id);
+
+    if (
+      currentProduct &&
+      !isUsablePrice(item.price) &&
+      isUsablePrice(currentProduct.price)
+    ) {
+      didNormalize = true;
+      return {
+        ...item,
+        price: currentProduct.price,
+      };
+    }
+
+    return item;
+  });
+
+  if (didNormalize) {
+    try {
+      window.localStorage.setItem(
+        CART_STORAGE_KEY,
+        JSON.stringify(normalizedItems),
+      );
+    } catch {
+      // Keep the normalized in-memory values if persistence is unavailable.
+    }
+  }
+
+  return normalizedItems;
+}
+
+function parseStoredCartItem(value: unknown): CartItemData | null {
   if (!value || typeof value !== "object") {
-    return false;
+    return null;
   }
 
   const candidate = value as Partial<CartItemData>;
   const product = candidate.product as Partial<CartProduct> | undefined;
 
-  return Boolean(
-    product &&
-      typeof product.id === "string" &&
-      typeof product.partNumber === "string" &&
-      typeof product.name === "string" &&
-      typeof product.brand === "string" &&
-      typeof product.image === "string" &&
-      typeof product.alt === "string" &&
-      typeof candidate.compatibility === "string" &&
-      typeof candidate.price === "number" &&
-      Number.isFinite(candidate.price) &&
-      typeof candidate.quantity === "number" &&
-      Number.isFinite(candidate.quantity) &&
-      candidate.quantity >= 1,
-  );
+  if (
+    !product ||
+    typeof product.id !== "string" ||
+    typeof product.partNumber !== "string" ||
+    typeof product.name !== "string" ||
+    typeof product.brand !== "string" ||
+    typeof product.image !== "string" ||
+    typeof product.alt !== "string" ||
+    typeof candidate.compatibility !== "string" ||
+    typeof candidate.quantity !== "number" ||
+    !Number.isFinite(candidate.quantity) ||
+    candidate.quantity < 1
+  ) {
+    return null;
+  }
+
+  const price =
+    typeof candidate.price === "number" && Number.isFinite(candidate.price)
+      ? candidate.price
+      : 0;
+
+  return {
+    product: {
+      id: product.id,
+      partNumber: product.partNumber,
+      name: product.name,
+      brand: product.brand,
+      image: product.image,
+      alt: product.alt,
+    },
+    compatibility: candidate.compatibility,
+    price,
+    quantity: candidate.quantity,
+  };
 }

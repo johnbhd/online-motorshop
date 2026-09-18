@@ -12,7 +12,7 @@ import {
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
 import type { DemoOrder } from "@/lib/orders/orderTypes";
-import { formatCartCurrency } from "../cart/cartData";
+import { formatCartCurrency, isUsablePrice } from "../cart/cartData";
 import { formatOrderTimestamp, getDemoOrderByReference } from "./checkoutUtils";
 
 type OrderConfirmationPageProps = {
@@ -154,29 +154,53 @@ export default function OrderConfirmationPage({
             </div>
             <ul>
               {order.items.map((item) => {
-                const priceLabel = item.price > 0
-                  ? formatCartCurrency(item.price)
-                  : "Price on request";
+                const unitPriceLabel = isUsablePrice(item.unitPrice)
+                  ? formatCartCurrency(item.unitPrice)
+                  : "Price unavailable";
+                const lineTotalLabel = isUsablePrice(item.lineTotal)
+                  ? formatCartCurrency(item.lineTotal)
+                  : "Price unavailable";
 
                 return (
                   <li key={item.product.id}>
-                    <div>
+                    <div className="order-confirmation-item-product">
                       <strong>{item.product.name}</strong>
                       <span>{item.product.partNumber} · Qty {item.quantity}</span>
                     </div>
-                    <span>{priceLabel}</span>
+                    <div className="order-confirmation-item-price">
+                      <span>Unit price</span>
+                      <strong>{unitPriceLabel}</strong>
+                    </div>
+                    <div className="order-confirmation-item-price">
+                      <span>Line total</span>
+                      <strong>{lineTotalLabel}</strong>
+                    </div>
                   </li>
                 );
               })}
             </ul>
             <div className="order-confirmation-total">
-              <span>Estimated subtotal</span>
+              <span>Subtotal</span>
               <strong>
-                {order.estimatedSubtotal !== null
-                  ? formatCartCurrency(order.estimatedSubtotal)
-                  : "Final amount confirmed by staff"}
+                {order.subtotal !== null
+                  ? formatCartCurrency(order.subtotal)
+                  : "Price unavailable"}
               </strong>
             </div>
+            <div className="order-confirmation-total">
+              <span>Estimated total</span>
+              <strong>
+                {order.estimatedTotal !== null
+                  ? formatCartCurrency(order.estimatedTotal)
+                  : "Price unavailable"}
+              </strong>
+            </div>
+            {isUsablePrice(order.finalAmount) ? (
+              <div className="order-confirmation-total">
+                <span>Final amount</span>
+                <strong>{formatCartCurrency(order.finalAmount)}</strong>
+              </div>
+            ) : null}
           </section>
 
           {order.orderNotes ? (

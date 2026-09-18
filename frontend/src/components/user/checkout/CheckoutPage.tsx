@@ -22,6 +22,7 @@ import type {
   CartItemData,
   FulfillmentMethod as CartFulfillmentMethod,
 } from "../cart/cartTypes";
+import { calculateLineTotal, isUsablePrice } from "../cart/cartData";
 import {
   clearStoredCart,
   readStoredCartItems,
@@ -228,20 +229,30 @@ export default function CheckoutPage() {
             notes: formData.delivery.notes.trim(),
           },
         };
-    const orderItems: DemoOrderItem[] = cartItems.map((item) => ({
-      product: {
-        ...item.product,
-      },
-      compatibility: item.compatibility,
-      price: item.price,
-      quantity: item.quantity,
-    }));
+    const orderItems: DemoOrderItem[] = cartItems.map((item) => {
+      const hasPrice = isUsablePrice(item.price);
+
+      return {
+        product: {
+          ...item.product,
+        },
+        compatibility: item.compatibility,
+        unitPrice: hasPrice ? item.price : null,
+        lineTotal: hasPrice
+          ? calculateLineTotal(item.price, item.quantity)
+          : null,
+        quantity: item.quantity,
+      };
+    });
     const reference = createOrderReference(readDemoOrders());
     const timestamp = new Date().toISOString();
     // TEMPORARY CUSTOMER ORDER HISTORY DEMO.
     // Guest requests remain unowned; customer requests use the stable account ID.
     const customerAccountId =
       session?.role === "customer" ? session.id : null;
+    const subtotal = hasDisplayablePrices(cartItems)
+      ? getCartSubtotal(cartItems)
+      : null;
     const order: DemoOrder = {
       reference,
       customerAccountId,
@@ -249,9 +260,8 @@ export default function CheckoutPage() {
       items: orderItems,
       fulfillment,
       orderNotes: formData.orderNotes.trim(),
-      estimatedSubtotal: hasDisplayablePrices(cartItems)
-        ? getCartSubtotal(cartItems)
-        : null,
+      subtotal,
+      estimatedTotal: subtotal,
       totalQuantity: cartItems.reduce(
         (total, item) => total + item.quantity,
         0,

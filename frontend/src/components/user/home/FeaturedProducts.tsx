@@ -5,14 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { featuredProducts, homeUtilityIcons } from "../../../data/homeData";
-import { productCatalog } from "../products/productsData";
+import { getProductById } from "../products/productsData";
 import { addProductToCart } from "../cart/cartStorage";
+import { formatCartCurrency } from "../cart/cartData";
 
 export default function FeaturedProducts() {
   const router = useRouter();
 
   const handleAddToCart = (productId: string) => {
-    const product = productCatalog.find((item) => item.id === productId);
+    const product = getProductById(productId);
 
     if (product && addProductToCart(product, 1)) {
       router.push("/cart");
@@ -38,41 +39,57 @@ export default function FeaturedProducts() {
         </div>
 
         <div className="home-product-grid">
-          {featuredProducts.map((product) => (
-            <article className="home-product-card" key={product.id}>
-              <span className="home-product-category">{product.category}</span>
-              <div className="home-product-image">
-                <Image
-                  src={product.image}
-                  alt={product.alt}
-                  fill
-                  sizes="(max-width: 760px) 100vw, (max-width: 1040px) 50vw, 33vw"
-                />
-              </div>
-              <div className="home-product-content">
-                <h3>{product.name}</h3>
-                <p className="home-product-brand">{product.brand}</p>
-              </div>
-              <button
-                className="home-cart-button"
-                type="button"
-                onClick={() => handleAddToCart(product.id)}
-              >
-                <FontAwesomeIcon
-                  icon={homeUtilityIcons.cart}
-                  aria-hidden="true"
-                />
-                Add to Cart
-              </button>
-              <Link className="home-product-details" href={product.href}>
-                View Details
-                <FontAwesomeIcon
-                  icon={homeUtilityIcons.arrow}
-                  aria-hidden="true"
-                />
-              </Link>
-            </article>
-          ))}
+          {featuredProducts.map((featuredProduct) => {
+            const product = getProductById(featuredProduct.id);
+
+            if (!product) {
+              return null;
+            }
+
+            return (
+              <article className="home-product-card" key={product.id}>
+                <span className="home-product-category">{product.category}</span>
+                <div className="home-product-image">
+                  <Image
+                    src={product.image}
+                    alt={product.alt}
+                    fill
+                    sizes="(max-width: 760px) 100vw, (max-width: 1040px) 50vw, 33vw"
+                  />
+                </div>
+                <div className="home-product-content">
+                  <h3>{product.name}</h3>
+                  <p className="home-product-brand">{product.brand}</p>
+                  <p className="home-product-price">
+                    {product.price > 0
+                      ? formatCartCurrency(product.price)
+                      : "Price unavailable"}
+                  </p>
+                </div>
+                <button
+                  className="home-cart-button"
+                  type="button"
+                  onClick={() => handleAddToCart(product.id)}
+                >
+                  <FontAwesomeIcon
+                    icon={homeUtilityIcons.cart}
+                    aria-hidden="true"
+                  />
+                  Add to Cart
+                </button>
+                <Link
+                  className="home-product-details"
+                  href={`/products/${product.id}`}
+                >
+                  View Details
+                  <FontAwesomeIcon
+                    icon={homeUtilityIcons.arrow}
+                    aria-hidden="true"
+                  />
+                </Link>
+              </article>
+            );
+          })}
         </div>
 
         <Link className="home-primary-cta" href="/products">

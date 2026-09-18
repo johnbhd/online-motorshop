@@ -262,12 +262,18 @@ function parseStoredOrder(value: unknown): DemoOrder | null {
       ? candidate.customerAccountId.trim()
       : null;
 
-  const finalAmount =
-    typeof candidate.finalAmount === "number" &&
-    Number.isFinite(candidate.finalAmount) &&
-    candidate.finalAmount > 0
-      ? candidate.finalAmount
-      : null;
+  const storedFinalAmount = parseNonNegativeAmount(candidate.finalAmount);
+  const finalAmount = storedFinalAmount !== null && storedFinalAmount > 0
+    ? storedFinalAmount
+    : null;
+  const legacyCandidate = candidate as Partial<DemoOrder> & {
+    estimatedSubtotal?: unknown;
+  };
+  const subtotal =
+    parseNonNegativeAmount(candidate.subtotal) ??
+    parseNonNegativeAmount(legacyCandidate.estimatedSubtotal);
+  const estimatedTotal =
+    parseNonNegativeAmount(candidate.estimatedTotal) ?? subtotal;
 
   const activities = parseActivities(candidate.activities);
   const totalQuantity =
@@ -275,11 +281,6 @@ function parseStoredOrder(value: unknown): DemoOrder | null {
     Number.isFinite(candidate.totalQuantity)
       ? candidate.totalQuantity
       : items.reduce((total, item) => total + item.quantity, 0);
-  const estimatedSubtotal =
-    typeof candidate.estimatedSubtotal === "number" &&
-    Number.isFinite(candidate.estimatedSubtotal)
-      ? candidate.estimatedSubtotal
-      : null;
 
   return {
     reference: normalizeOrderReference(candidate.reference),
@@ -289,7 +290,8 @@ function parseStoredOrder(value: unknown): DemoOrder | null {
     fulfillment,
     orderNotes:
       typeof candidate.orderNotes === "string" ? candidate.orderNotes : "",
-    estimatedSubtotal,
+    subtotal,
+    estimatedTotal,
     finalAmount,
     totalQuantity,
     status,
@@ -301,6 +303,12 @@ function parseStoredOrder(value: unknown): DemoOrder | null {
         : candidate.createdAt,
     activities,
   };
+}
+
+function parseNonNegativeAmount(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : null;
 }
 
 function parseCustomer(value: unknown): DemoOrder["customer"] | null {
@@ -330,26 +338,50 @@ function parseOrderItems(value: unknown): OrderItemSnapshot[] {
     return [];
   }
 
-  return value.filter(isOrderItemSnapshot);
+  return value
+    .map(parseStoredOrderItem)
+    .filter((item): item is OrderItemSnapshot => item !== null);
 }
 
-function isOrderItemSnapshot(value: unknown): value is OrderItemSnapshot {
+function parseStoredOrderItem(value: unknown): OrderItemSnapshot | null {
   if (!value || typeof value !== "object") {
-    return false;
+    return null;
   }
 
   const candidate = value as Partial<OrderItemSnapshot>;
+  const legacyCandidate = candidate as Partial<OrderItemSnapshot> & {
+    price?: unknown;
+  };
   const product = parseProductSnapshot(candidate.product);
 
-  return Boolean(
-    product &&
-      typeof candidate.compatibility === "string" &&
-      typeof candidate.price === "number" &&
-      Number.isFinite(candidate.price) &&
-      typeof candidate.quantity === "number" &&
-      Number.isFinite(candidate.quantity) &&
-      candidate.quantity >= 1,
+  if (
+    !product ||
+    typeof candidate.compatibility !== "string" ||
+    typeof candidate.quantity !== "number" ||
+    !Number.isFinite(candidate.quantity) ||
+    candidate.quantity < 1
+  ) {
+    return null;
+  }
+
+  const unitPrice = parseNonNegativeAmount(
+    candidate.unitPrice ?? legacyCandidate.price,
   );
+  const storedLineTotal = parseNonNegativeAmount(candidate.lineTotal);
+  const lineTotal =
+    storedLineTotal !== null
+      ? storedLineTotal
+      : unitPrice !== null
+        ? unitPrice * candidate.quantity
+        : null;
+
+  return {
+    product,
+    compatibility: candidate.compatibility,
+    unitPrice,
+    lineTotal,
+    quantity: candidate.quantity,
+  };
 }
 
 function parseProductSnapshot(value: unknown): OrderProductSnapshot | null {

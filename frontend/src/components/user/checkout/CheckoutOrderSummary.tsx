@@ -5,7 +5,11 @@ import {
   faCircleInfo,
   faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
-import { formatCartCurrency } from "../cart/cartData";
+import {
+  calculateLineTotal,
+  formatCartCurrency,
+  isUsablePrice,
+} from "../cart/cartData";
 import type { CartItemData } from "../cart/cartTypes";
 import {
   getCartSubtotal,
@@ -60,11 +64,23 @@ export default function CheckoutOrderSummary({
                   {item.product.partNumber} · Qty {item.quantity}
                 </span>
               </div>
-              <span className="checkout-summary-item-price">
-                {item.price > 0
-                  ? formatCartCurrency(item.price * item.quantity)
-                  : "Price on request"}
-              </span>
+              <div className="checkout-summary-item-pricing">
+                <span>
+                  Unit price: {isUsablePrice(item.price)
+                    ? formatCartCurrency(item.price)
+                    : "Price unavailable"} · Qty {item.quantity}
+                </span>
+                <span className="checkout-summary-item-total-label">
+                  Line total
+                </span>
+                <strong>
+                  {isUsablePrice(item.price)
+                    ? formatCartCurrency(
+                        calculateLineTotal(item.price, item.quantity),
+                      )
+                    : "Price unavailable"}
+                </strong>
+              </div>
             </div>
           ))}
         </div>

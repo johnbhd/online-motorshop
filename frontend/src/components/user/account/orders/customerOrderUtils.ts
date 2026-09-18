@@ -1,4 +1,4 @@
-import { formatCartCurrency } from "../../cart/cartData";
+import { formatCartCurrency, isUsablePrice } from "../../cart/cartData";
 import type { DemoOrder, OrderStatus } from "@/lib/orders/orderTypes";
 
 export type CustomerOrderTab = "active" | "history";
@@ -73,14 +73,11 @@ export function getOrderFulfillmentSummary(order: DemoOrder): {
 }
 
 export function getOrderAmountDisplay(order: DemoOrder): string {
-  const amount =
-    typeof order.finalAmount === "number"
-      ? order.finalAmount
-      : order.estimatedSubtotal;
+  const amount = isUsablePrice(order.finalAmount)
+    ? order.finalAmount
+    : order.estimatedTotal;
 
-  if (typeof amount === "number" && Number.isFinite(amount) && amount > 0) {
-    return formatCartCurrency(amount);
-  }
-
-  return "Pending confirmation";
+  return isUsablePrice(amount)
+    ? formatCartCurrency(amount)
+    : "Price unavailable";
 }

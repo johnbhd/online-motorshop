@@ -342,6 +342,14 @@
   line-height: 1.5;
 }
 
+.home-product-price {
+  margin: 0.55rem 0 0;
+  color: var(--home-navy);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .home-product-content h3 {
   font-size: 1.05rem;
   line-height: 1.35;

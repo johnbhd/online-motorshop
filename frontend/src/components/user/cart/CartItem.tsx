@@ -6,7 +6,7 @@ import {
   faPlus,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
-import { formatCartCurrency } from "./cartData";
+import { calculateLineTotal, formatCartCurrency, isUsablePrice } from "./cartData";
 import type { CartItemData } from "./cartTypes";
 
 type CartItemProps = {
@@ -23,11 +23,11 @@ export default function CartItem({
   onRemove,
 }: CartItemProps) {
   const { product } = item;
-  const itemSubtotal = item.price * item.quantity;
+  const itemSubtotal = calculateLineTotal(item.price, item.quantity);
   const itemPriceLabel =
-    item.price > 0 ? formatCartCurrency(item.price) : "Price on request";
+    isUsablePrice(item.price) ? formatCartCurrency(item.price) : "Price unavailable";
   const itemSubtotalLabel =
-    item.price > 0 ? formatCartCurrency(itemSubtotal) : "To be confirmed";
+    isUsablePrice(item.price) ? formatCartCurrency(itemSubtotal) : "To be confirmed";
 
   return (
     <article className="cart-row">

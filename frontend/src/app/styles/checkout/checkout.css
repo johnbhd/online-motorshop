@@ -529,12 +529,28 @@
   line-height: 1.35;
 }
 
-.checkout-summary-item-price {
-  color: var(--checkout-navy);
-  font-size: 0.76rem;
-  font-weight: 800;
+.checkout-summary-item-pricing {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 8.5rem;
+  color: var(--checkout-muted);
+  font-size: 0.7rem;
   line-height: 1.35;
   text-align: right;
+}
+
+.checkout-summary-item-total-label {
+  color: var(--checkout-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.checkout-summary-item-pricing strong {
+  color: var(--checkout-navy);
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .checkout-edit-cart {
@@ -1000,7 +1016,7 @@
     grid-template-columns: 3rem minmax(0, 1fr);
   }
 
-  .checkout-summary-item-price {
+  .checkout-summary-item-pricing {
     grid-column: 2;
     text-align: left;
   }
@@ -1012,6 +1028,23 @@
   .order-confirmation-primary-link,
   .order-confirmation-secondary-link {
     width: 100%;
+  }
+
+  .order-confirmation-items li {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .order-confirmation-item-product {
+    grid-column: 1 / -1;
+  }
+
+  .order-confirmation-item-price {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .order-confirmation-item-price strong {
+    text-align: left;
   }
 }
 
@@ -1058,9 +1091,9 @@
 }
 
 .order-confirmation-items li {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: start;
   gap: 1rem;
   border-radius: 0.5rem;
   padding: 0.75rem;
@@ -1080,11 +1113,20 @@
   font-size: 0.8rem;
 }
 
-.order-confirmation-items li > span {
-  flex: 0 0 auto;
-  color: var(--checkout-orange);
-  font-weight: 800;
+.order-confirmation-item-price {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 6.5rem;
+  color: var(--checkout-muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
   text-align: right;
+}
+
+.order-confirmation-item-price strong {
+  color: var(--checkout-orange);
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .order-confirmation-total {
@@ -1111,4 +1153,23 @@
 
 .order-confirmation-actions--centered {
   justify-content: center;
+}
+
+@media (max-width: 560px) {
+  .order-confirmation-items li {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .order-confirmation-item-product {
+    grid-column: 1 / -1;
+  }
+
+  .order-confirmation-item-price {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .order-confirmation-item-price strong {
+    text-align: left;
+  }
 }

@@ -13,16 +13,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import type { ProductDisplayItem } from "../products/productsData";
 import { addProductToCart } from "../cart/cartStorage";
+import { formatCartCurrency } from "../cart/cartData";
 
 type ProductPurchasePanelProps = {
   product: ProductDisplayItem;
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  maximumFractionDigits: 0,
-});
 
 export default function ProductPurchasePanel({
   product,
@@ -32,8 +27,8 @@ export default function ProductPurchasePanel({
   const [cartMessage, setCartMessage] = useState("");
   const priceLabel =
     product.price > 0
-      ? currencyFormatter.format(product.price)
-      : "Price available on request";
+      ? formatCartCurrency(product.price)
+      : "Price unavailable";
 
   const changeQuantity = (nextQuantity: number) => {
     if (!Number.isFinite(nextQuantity)) {
@@ -72,7 +67,8 @@ export default function ProductPurchasePanel({
       </div>
 
       <p className="product-details-purchase-note">
-        Catalog prices are not yet connected to the live ALD product service.
+        Displayed prices are temporary Philippine peso demo estimates and are not connected
+to live ALD pricing.
       </p>
 
       <div className="product-details-quantity-field">

@@ -38,7 +38,7 @@ export default function OrderDetailsView({ order }: OrderDetailsViewProps) {
         <OrderSummaryCards order={order} />
         <div className="track-order-detail-grid">
           <div className="track-order-primary-column">
-            <OrderItems items={order.items} />
+            <OrderItems order={order} />
             <OrderActivity activity={order.activities} />
           </div>
           <OrderSupportSection order={order} />

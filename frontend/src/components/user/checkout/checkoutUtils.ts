@@ -1,6 +1,6 @@
 import { aboutBranches } from "../about/aboutData";
 import { readStoredCartItems } from "../cart/cartStorage";
-import { formatCartCurrency } from "../cart/cartData";
+import { formatCartCurrency, getCartSubtotal, isUsablePrice } from "../cart/cartData";
 import {
   getBranchId,
   SELECTED_BRANCH_STORAGE_KEY,
@@ -153,14 +153,10 @@ export function formatOrderTimestamp(timestamp: string): string {
 }
 
 export function hasDisplayablePrices(items: CartItemData[]): boolean {
-  return items.length > 0 && items.every((item) => item.price > 0);
+  return items.length > 0 && items.every((item) => isUsablePrice(item.price));
 }
 
-export function getCartSubtotal(items: CartItemData[]): number {
-  return items.reduce((subtotal, item) => {
-    return subtotal + item.price * item.quantity;
-  }, 0);
-}
+export { getCartSubtotal };
 
 export function formatCheckoutPrice(amount: number): string {
   return formatCartCurrency(amount);

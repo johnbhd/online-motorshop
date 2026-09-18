@@ -36,7 +36,8 @@ export type OrderProductSnapshot = {
 export type OrderItemSnapshot = {
   product: OrderProductSnapshot;
   compatibility: string;
-  price: number;
+  unitPrice: number | null;
+  lineTotal: number | null;
   quantity: number;
 };
 
@@ -77,7 +78,8 @@ export type DemoOrder = {
   items: OrderItemSnapshot[];
   fulfillment: OrderFulfillment;
   orderNotes: string;
-  estimatedSubtotal: number | null;
+  subtotal: number | null;
+  estimatedTotal: number | null;
   finalAmount?: number | null;
   totalQuantity: number;
   status: OrderStatus;
