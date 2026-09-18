@@ -72,11 +72,13 @@ export type OrderActivity = {
 
 export type DemoOrder = {
   reference: string;
+  customerAccountId: string | null;
   customer: OrderCustomerSnapshot;
   items: OrderItemSnapshot[];
   fulfillment: OrderFulfillment;
   orderNotes: string;
   estimatedSubtotal: number | null;
+  finalAmount?: number | null;
   totalQuantity: number;
   status: OrderStatus;
   paymentStatus: PaymentStatus;

@@ -238,8 +238,13 @@ export default function CheckoutPage() {
     }));
     const reference = createOrderReference(readDemoOrders());
     const timestamp = new Date().toISOString();
+    // TEMPORARY CUSTOMER ORDER HISTORY DEMO.
+    // Guest requests remain unowned; customer requests use the stable account ID.
+    const customerAccountId =
+      session?.role === "customer" ? session.id : null;
     const order: DemoOrder = {
       reference,
+      customerAccountId,
       customer,
       items: orderItems,
       fulfillment,

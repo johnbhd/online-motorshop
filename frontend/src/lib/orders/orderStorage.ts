@@ -67,6 +67,39 @@ export function readDemoOrders(): DemoOrder[] {
   }
 }
 
+export function getDemoOrdersForCustomer(customerAccountId: string): DemoOrder[] {
+  const normalizedAccountId = customerAccountId.trim();
+
+  if (!normalizedAccountId) {
+    return [];
+  }
+
+  return readDemoOrders().filter((order) => {
+    return order.customerAccountId === normalizedAccountId;
+  });
+}
+
+export function getDemoOrderByReferenceForCustomer(
+  reference: string,
+  customerAccountId: string,
+): DemoOrder | null {
+  const normalizedAccountId = customerAccountId.trim();
+  const normalizedReference = normalizeOrderReference(reference);
+
+  if (!normalizedAccountId) {
+    return null;
+  }
+
+  return (
+    readDemoOrders().find((order) => {
+      return (
+        order.customerAccountId === normalizedAccountId &&
+        normalizeOrderReference(order.reference) === normalizedReference
+      );
+    }) ?? null
+  );
+}
+
 export function getDemoOrderByReference(reference: string): DemoOrder | null {
   const normalizedReference = normalizeOrderReference(reference);
 
@@ -222,6 +255,20 @@ function parseStoredOrder(value: unknown): DemoOrder | null {
     return null;
   }
 
+  // Legacy orders without ownership remain explicitly unowned.
+  const customerAccountId =
+    typeof candidate.customerAccountId === "string" &&
+    candidate.customerAccountId.trim()
+      ? candidate.customerAccountId.trim()
+      : null;
+
+  const finalAmount =
+    typeof candidate.finalAmount === "number" &&
+    Number.isFinite(candidate.finalAmount) &&
+    candidate.finalAmount > 0
+      ? candidate.finalAmount
+      : null;
+
   const activities = parseActivities(candidate.activities);
   const totalQuantity =
     typeof candidate.totalQuantity === "number" &&
@@ -236,12 +283,14 @@ function parseStoredOrder(value: unknown): DemoOrder | null {
 
   return {
     reference: normalizeOrderReference(candidate.reference),
+    customerAccountId,
     customer,
     items,
     fulfillment,
     orderNotes:
       typeof candidate.orderNotes === "string" ? candidate.orderNotes : "",
     estimatedSubtotal,
+    finalAmount,
     totalQuantity,
     status,
     paymentStatus,

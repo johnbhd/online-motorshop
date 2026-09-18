@@ -32,7 +32,7 @@ const navigationItems = [
 const FLOAT_THRESHOLD = 64;
 const SCROLL_DIRECTION_TOLERANCE = 8;
 
-function getSessionLinkLabel(role: "customer" | "staff" | "admin", name: string) {
+function getSessionLinkLabel(role: "customer" | "staff" | "admin") {
   if (role === "admin") {
     return "Admin Portal";
   }
@@ -41,7 +41,7 @@ function getSessionLinkLabel(role: "customer" | "staff" | "admin", name: string)
     return "Staff Portal";
   }
 
-  return name;
+  return "My Orders";
 }
 
 export function Navbar() {
@@ -190,9 +190,13 @@ export function Navbar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  const sessionLink = session ? getRedirectPathForRole(session.role) : "/auth/login";
+  const sessionLink = session
+    ? session.role === "customer"
+      ? "/account/orders"
+      : getRedirectPathForRole(session.role)
+    : "/auth/login";
   const sessionLabel = session
-    ? getSessionLinkLabel(session.role, session.name)
+    ? getSessionLinkLabel(session.role)
     : "Sign In or Continue as Guest";
 
   const sessionPhone = session ? getCustomerPhoneForSession(session) : "";
@@ -279,7 +283,6 @@ export function Navbar() {
                       <span>{session.email}</span>
                       {sessionPhone ? <span>{sessionPhone}</span> : null}
                     </div>
-                    {session.role !== "customer" ? (
                       <Link
                         href={sessionLink}
                         className="site-header-account-menu-link"
@@ -288,7 +291,6 @@ export function Navbar() {
                       >
                         {sessionLabel}
                       </Link>
-                    ) : null}
                     <button
                       type="button"
                       className="site-header-account-logout"
