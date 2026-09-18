@@ -5,6 +5,7 @@ import "../styles/about/about-modal.css";
 import "../styles/contact/contact.css";
 import "../styles/contact/contact2.css";
 import "../styles/cart/cart.css";
+import "../styles/checkout/checkout.css";
 import "../styles/chatbot/chatbot.css";
 import "../styles/footer.css";
 import "../styles/header.css";

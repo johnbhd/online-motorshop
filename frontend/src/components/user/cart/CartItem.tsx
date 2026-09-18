@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCircleCheck,
+  faCircleInfo,
   faMinus,
   faPlus,
   faTrashCan,
@@ -24,6 +24,10 @@ export default function CartItem({
 }: CartItemProps) {
   const { product } = item;
   const itemSubtotal = item.price * item.quantity;
+  const itemPriceLabel =
+    item.price > 0 ? formatCartCurrency(item.price) : "Price on request";
+  const itemSubtotalLabel =
+    item.price > 0 ? formatCartCurrency(itemSubtotal) : "To be confirmed";
 
   return (
     <article className="cart-row">
@@ -57,8 +61,8 @@ export default function CartItem({
 
           <div className="cart-badges">
             <span className="cart-stock-badge">
-              <FontAwesomeIcon icon={faCircleCheck} aria-hidden="true" />
-              Available
+              <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
+              Availability to be confirmed
             </span>
             <span className="cart-verify-note">
               Compatibility subject to staff verification
@@ -69,7 +73,7 @@ export default function CartItem({
 
       <div className="cart-data-cell cart-price-cell">
         <span className="cart-mobile-label">Price</span>
-        <span>{formatCartCurrency(item.price)}</span>
+        <span>{itemPriceLabel}</span>
       </div>
 
       <div className="cart-data-cell cart-quantity-cell">
@@ -101,7 +105,7 @@ export default function CartItem({
 
       <div className="cart-data-cell cart-subtotal-cell">
         <span className="cart-mobile-label">Subtotal</span>
-        <strong>{formatCartCurrency(itemSubtotal)}</strong>
+        <strong>{itemSubtotalLabel}</strong>
       </div>
 
       <div className="cart-data-cell cart-action-cell">

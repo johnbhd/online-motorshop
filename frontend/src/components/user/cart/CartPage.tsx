@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -13,13 +13,39 @@ import CartItems from "./CartItems";
 import CartOrderRequestNotice from "./CartOrderRequestNotice";
 import CartSummary from "./CartSummary";
 import { initialCartItems } from "./cartData";
+import {
+  readStoredCartItems,
+  writeCartItems,
+} from "./cartStorage";
 import type { FulfillmentMethod } from "./cartTypes";
+import { hasDisplayablePrices } from "../checkout/checkoutUtils";
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState(initialCartItems);
   const [fulfillmentMethod, setFulfillmentMethod] =
     useState<FulfillmentMethod>("pickup");
   const [cartStatus, setCartStatus] = useState("");
+  const [isCartReady, setIsCartReady] = useState(false);
+
+  useEffect(() => {
+    const storedCartItems = readStoredCartItems();
+
+    if (storedCartItems) {
+      // Browser storage is read after hydration to avoid server/client markup drift.
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate shared cart storage after the client mounts
+      setCartItems(storedCartItems);
+    } else {
+      writeCartItems(initialCartItems);
+    }
+
+    setIsCartReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (isCartReady) {
+      writeCartItems(cartItems);
+    }
+  }, [cartItems, isCartReady]);
 
   const totalQuantity = cartItems.reduce((total, item) => {
     return total + item.quantity;
@@ -135,9 +161,7 @@ export default function CartPage() {
       </section>
 
       <section
-        className={`cart-layout cart-container${
-          hasItems ? "" : " cart-layout--empty"
-        }`}
+        className={`cart-layout cart-container${hasItems ? "" : " cart-layout--empty"}`}
         aria-label="Shopping cart contents"
       >
         <div className="cart-main-column">
@@ -188,6 +212,7 @@ export default function CartPage() {
             totalQuantity={totalQuantity}
             fulfillmentMethod={fulfillmentMethod}
             onFulfillmentChange={setFulfillmentMethod}
+            hasDisplayablePrices={hasDisplayablePrices(cartItems)}
           />
         ) : null}
       </section>
