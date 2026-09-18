@@ -160,7 +160,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Pistons, cylinders, gaskets, and engine components.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561337/Honda-Filter-Set.png",
     alt: "Honda engine filter set",
-    href: "/#home-products",
+    href: "/products?category=Engine%20Parts",
   },
   {
     id: "brake-parts",
@@ -168,7 +168,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Brake pads, discs, cables, and related components.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561477/Honda-Brake-Pad.png",
     alt: "Honda motorcycle brake pad",
-    href: "/#home-products",
+    href: "/products?category=Brake%20Parts",
   },
   {
     id: "electrical-parts",
@@ -176,7 +176,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Lighting, spark plugs, wiring, and electrical parts.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560931/Honda-Spark-Plug.png",
     alt: "Honda motorcycle spark plug",
-    href: "/#home-products",
+    href: "/products?category=Electrical%20Parts",
   },
   {
     id: "suspension-parts",
@@ -184,7 +184,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Shock absorbers and parts for a controlled, comfortable ride.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560947/Honda-Shock-Absorber.png",
     alt: "Honda motorcycle shock absorber",
-    href: "/#home-products",
+    href: "/products?category=Suspension%20Parts",
   },
   {
     id: "transmission-parts",
@@ -192,7 +192,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Drive-chain and transmission components for daily riding.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561477/Honda-Chain-Kit.png",
     alt: "Honda motorcycle chain kit",
-    href: "/#home-products",
+    href: "/products?category=Transmission%20Parts",
   },
   {
     id: "body-exterior",
@@ -200,7 +200,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Covers, fairings, panels, and exterior replacement parts.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561351/Honda-Front-Cover-Pipe.png",
     alt: "Honda motorcycle front cover pipe",
-    href: "/#home-products",
+    href: "/products?category=Body%20%26%20Exterior",
   },
   {
     id: "tires-wheels",
@@ -208,7 +208,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Road-ready tires, wheels, and related replacement parts.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560944/Honda-Front-Tire.png",
     alt: "Honda motorcycle front tire",
-    href: "/#home-products",
+    href: "/products?category=Tires%20%26%20Wheels",
   },
   {
     id: "accessories-maintenance",
@@ -216,7 +216,7 @@ export const homeCategories: HomeCategory[] = [
     description: "Practical accessories and products for routine maintenance.",
     image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561449/Honda-Oil-Filter.png",
     alt: "Honda motorcycle oil filter",
-    href: "/#home-products",
+    href: "/products?category=Accessories%20%26%20Maintenance",
   },
 ];
 
