@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ALD Motorshop - Checkout</title>
+<link rel="stylesheet" href="checkout.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="ALD logo.png" alt="ALD Motorshop logo" class="logo-img">
+    <div class="brand-text">
+      <h1>ALD Motorshop</h1>
+      <p>Motorcycle Parts Trading</p>
+    </div>
+  </div>
+
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="products.html">Products</a>
+    <a href="#">Categories</a>
+    <a href="#">Branches</a>
+    <a href="#">About Us</a>
+    <a href="#">Contact</a>
+    <a href="#">Track Order</a>
+  </nav>
+
+  <div class="header-right">
+    <span class="cart-wrap">
+      <span class="cart-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>
+      <span class="cart-badge">3</span>
+    </span>
+    <div class="user-chip">
+      <span class="user-avatar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <div class="user-info">
+        <strong>John Doe</strong>
+        <span>johndoe@gmail.com</span>
+      </div>
+      <span class="chev"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
+    </div>
+  </div>
+</header>
+
+<!-- ================= TITLE ================= -->
+<section class="checkout-title-section">
+  <p class="breadcrumb"><a href="home.html">Home</a> / <a href="cart.html">Cart</a> / <span>Checkout</span></p>
+  <h1>Checkout</h1>
+  <p class="checkout-sub">Complete your details and submit your order request.</p>
+  <div class="info-banner"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> ALD staff will confirm product availability, final amount, and fulfillment details after submission.</div>
+</section>
+
+<!-- ================= CHECKOUT BODY ================= -->
+<section class="checkout-body">
+
+  <!-- LEFT: FORM -->
+  <div class="checkout-left">
+
+    <div class="form-card">
+      <h3><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Customer Details</h3>
+      <p class="section-note">We'll use this information to contact you about your order.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" value="John Doe">
+        </div>
+        <div class="field">
+          <label>Contact Number</label>
+          <input type="tel" placeholder="09XX XXX XXXX">
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" value="johndoe@gmail.com">
+        </div>
+        <div class="field">
+          <label>Complete Address</label>
+          <input type="text" placeholder="House / Building, Street, Barangay, City">
+          <span class="field-hint">Required for delivery orders.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h3><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8L12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg> How would you like to receive your order?</h3>
+
+      <div class="option-cards">
+        <label class="option-card selected" id="pickupOption">
+          <input type="radio" name="fulfillment" checked>
+          <span class="option-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M4 9v10h16V9"/></svg></span>
+          <div class="option-text"><strong>Store Pickup</strong><span>Pick up your confirmed order from an ALD branch</span></div>
+        </label>
+        <label class="option-card" id="deliveryOption">
+          <input type="radio" name="fulfillment">
+          <span class="option-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="18" r="3"/><circle cx="19" cy="18" r="3"/><path d="M5 18h6l3-6h4l2 3"/><path d="M11 12l-2-4H6"/></svg></span>
+          <div class="option-text"><strong>Lalamove Delivery</strong><span>Have your confirmed order delivered through Lalamove</span></div>
+        </label>
+      </div>
+
+      <div class="sub-panel" id="pickupPanel">
+        <div class="field">
+          <label>Preferred Branch</label>
+          <select>
+            <option>Manila Branch</option>
+            <option>Quezon City Branch</option>
+            <option>Cavite Branch</option>
+          </select>
+        </div>
+        <p class="branch-address">3333 New Panaderos, Sta. Ana, Manila</p>
+        <a href="#" class="view-branch-link">View Branch</a>
+      </div>
+
+      <div class="sub-panel disabled" id="deliveryPanel">
+        <p class="sub-panel-title">Delivery Details (Lalamove) <span class="chev-toggle"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg></span></p>
+        <div class="form-grid">
+          <div class="field">
+            <label>Delivery Address</label>
+            <input type="text" placeholder="House / Building, Street, Barangay, City" disabled>
+          </div>
+          <div class="field">
+            <label>Delivery Notes — Optional</label>
+            <input type="text" placeholder="Landmark or delivery instructions" disabled>
+          </div>
+        </div>
+        <p class="field-hint"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Delivery fee will be confirmed by ALD staff.</p>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h3><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Payment</h3>
+      <p class="section-note">Choose your preferred payment option.</p>
+
+      <div class="option-cards">
+        <label class="option-card selected">
+          <input type="radio" name="payment" checked>
+          <span class="option-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5"/><path d="M3 9a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0"/><path d="M4 9v10h16V9"/></svg></span>
+          <div class="option-text"><strong>Pay at Branch</strong><span>Available for eligible pickup orders</span></div>
+        </label>
+        <label class="option-card">
+          <input type="radio" name="payment">
+          <span class="option-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span>
+          <div class="option-text"><strong>Online Payment</strong><span>ALD staff will send confirmed payment instructions</span></div>
+        </label>
+      </div>
+
+      <p class="payment-warning"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 1 21h22z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Do not send payment until your order is confirmed by ALD Motorshop.</p>
+
+      <div class="field">
+        <label>Order Notes — Optional</label>
+        <textarea placeholder="Add product compatibility, pickup, or delivery notes."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: ORDER SUMMARY -->
+  <div class="checkout-right">
+    <div class="summary-card">
+      <h4>Order Summary</h4>
+      <p class="summary-items">3 items</p>
+
+      <div class="summary-item">
+        <div class="si-img"><img src="brakepad.png" alt="Genuine Honda Brake Pad Set"></div>
+        <div class="si-info"><strong>Genuine Honda Brake Pad Set</strong><span>Qty 1</span></div>
+        <span class="si-price">₱850.00</span>
+      </div>
+      <div class="summary-item">
+        <div class="si-img"><img src="battery.png" alt="Yamaha Motorcycle Battery"></div>
+        <div class="si-info"><strong>Yamaha Motorcycle Battery</strong><span>Qty 1</span></div>
+        <span class="si-price">₱1,650.00</span>
+      </div>
+      <div class="summary-item">
+        <div class="si-img"><img src="engineoil.png" alt="Premium 4T Motorcycle Engine Oil"></div>
+        <div class="si-info"><strong>Premium 4T Motorcycle Engine Oil</strong><span>Qty 2</span></div>
+        <span class="si-price">₱760.00</span>
+      </div>
+
+      <a href="cart.html" class="edit-cart-link">Edit Cart</a>
+
+      <div class="summary-totals">
+        <div class="summary-row"><span>Subtotal</span><span>₱3,260.00</span></div>
+        <div class="summary-row"><span>Delivery Fee</span><span class="muted">To be confirmed</span></div>
+        <div class="summary-row total-row"><span>Estimated Total</span><span>₱3,260.00</span></div>
+        <p class="summary-disclaimer">Final total may change after ALD confirms availability and delivery details.</p>
+      </div>
+
+      <div class="order-request-box">
+        <strong><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Order Request</strong>
+        <p>Submitting this checkout sends your order to ALD staff for confirmation.</p>
+      </div>
+
+      <label class="confirm-checkbox">
+        <input type="checkbox" id="confirmCheck">
+        I confirm that my order and contact information are correct.
+      </label>
+
+      <button class="submit-order-btn" id="submitOrderBtn" onclick="window.location.href='order-confirmation.html'">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Submit Order Request
+      </button>
+      <p class="submit-note">You'll receive an order reference number after submission.</p>
+      <a href="cart.html" class="return-cart-link">← Return to Cart</a>
+    </div>
+  </div>
+
+</section>
+
+<!-- ================= WHAT HAPPENS NEXT ================= -->
+<div class="next-steps">
+  <h3>What Happens Next?</h3>
+  <div class="next-steps-row">
+    <div class="next-step">
+      <div class="next-step-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span>1</span></div>
+      <strong>Submit Request</strong>
+      <p>Your order is sent to ALD Motorshop.</p>
+    </div>
+    <span class="next-arrow">›</span>
+    <div class="next-step">
+      <div class="next-step-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg><span>2</span></div>
+      <strong>Staff Confirmation</strong>
+      <p>ALD confirms products, pricing, payment, and fulfillment.</p>
+    </div>
+    <span class="next-arrow">›</span>
+    <div class="next-step">
+      <div class="next-step-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span>3</span></div>
+      <strong>Track Your Order</strong>
+      <p>Use your reference number to follow your order status.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="footer-brand-head">
+        <img src="ald-logo.png" alt="ALD Motorshop logo" class="footer-logo">
+        <div>
+          <h4>ALD Motorshop</h4>
+          <p>Motorcycle Parts Trading</p>
+        </div>
+      </div>
+      <p class="footer-desc">Your trusted source for genuine and compatible motorcycle parts, with convenient store pickup and Lalamove delivery requests.</p>
+      <div class="footer-socials">
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.15 2 11.26c0 2.91 1.44 5.5 3.7 7.2V22l3.38-1.86c.9.25 1.87.38 2.92.38 5.52 0 10-4.15 10-9.26S17.52 2 12 2zm1.01 12.47l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg></span>
+        <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h5>Shop</h5>
+      <a href="products.html">All Products</a>
+      <a href="#">Product Categories</a>
+      <a href="#">Featured Products</a>
+      <a href="#">Honda Parts</a>
+      <a href="#">Yamaha Parts</a>
+      <a href="#">Suzuki Parts</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Customer Support</h5>
+      <a href="#">Track Order</a>
+      <a href="#">How to Order</a>
+      <a href="#">Store Pickup</a>
+      <a href="#">Lalamove Delivery</a>
+      <a href="#">Frequently Asked Questions</a>
+      <a href="#">Contact Us</a>
+    </div>
+
+    <div class="footer-col">
+      <h5>Company</h5>
+      <a href="#">About ALD Motorshop</a>
+      <a href="#">Branch Locations</a>
+      <a href="#">Business Information</a>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms and Conditions</a>
+      <a href="#">Staff Login</a>
+    </div>
+  </div>
+
+  <div class="footer-contact-row">
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+      <div><strong>Contact ALD Motorshop</strong><span>Contact details available upon request</span></div>
+    </div>
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></span>
+      <div><strong>Business Hours</strong><span>View branch hours</span></div>
+    </div>
+    <div class="footer-contact-item">
+      <span class="fc-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+      <div><strong>Visit Our Branches</strong><span>View branch locations</span></div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2026 ALD Motorcycle Parts Trading. All rights reserved.</span>
+    <span class="footer-legal">
+      <a href="#">Privacy Policy</a> · <a href="#">Terms and Conditions</a> · <a href="#">Accessibility</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+function selectOption(groupSelector, chosen) {
+  document.querySelectorAll(groupSelector).forEach(el => el.classList.remove('selected'));
+  chosen.classList.add('selected');
+  chosen.querySelector('input').checked = true;
+}
+
+const pickupOption = document.getElementById('pickupOption');
+const deliveryOption = document.getElementById('deliveryOption');
+const pickupPanel = document.getElementById('pickupPanel');
+const deliveryPanel = document.getElementById('deliveryPanel');
+
+pickupOption.addEventListener('click', () => {
+  selectOption('#pickupOption, #deliveryOption', pickupOption);
+  pickupPanel.classList.remove('disabled');
+  deliveryPanel.classList.add('disabled');
+  deliveryPanel.querySelectorAll('input').forEach(i => i.disabled = true);
+});
+deliveryOption.addEventListener('click', () => {
+  selectOption('#pickupOption, #deliveryOption', deliveryOption);
+  deliveryPanel.classList.remove('disabled');
+  pickupPanel.classList.add('disabled');
+  deliveryPanel.querySelectorAll('input').forEach(i => i.disabled = false);
+});
+
+document.querySelectorAll('.option-cards').forEach(group => {
+  const cards = group.querySelectorAll('.option-card');
+  if (group.contains(pickupOption)) return; // fulfillment group handled above
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      card.querySelector('input').checked = true;
+    });
+  });
+});
+
+const submitBtn = document.getElementById('submitOrderBtn');
+const confirmCheck = document.getElementById('confirmCheck');
+submitBtn.addEventListener('click', (e) => {
+  if (!confirmCheck.checked) {
+    e.preventDefault();
+    confirmCheck.parentElement.classList.add('shake');
+    setTimeout(() => confirmCheck.parentElement.classList.remove('shake'), 400);
+  }
+});
+</script>
+
+</body>
+</html>
