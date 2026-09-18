@@ -1,0 +1,1008 @@
+.track-order-page {
+  --track-order-navy: #111827;
+  --track-order-ink: #16234a;
+  --track-order-muted: #64748b;
+  --track-order-orange: #e07a08;
+  --track-order-orange-bright: #f7941d;
+  --track-order-border: #e2e8f0;
+  --track-order-surface: #f8fafc;
+  --track-order-tint: #fff3ec;
+  background: #ffffff;
+  color: var(--track-order-ink);
+}
+
+.track-order-shell {
+  width: min(calc(100% - 3rem), 1200px);
+  margin-inline: auto;
+}
+
+.track-order-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.track-order-hero {
+  position: relative;
+  min-height: 17rem;
+  overflow: hidden;
+  background: var(--track-order-navy);
+  color: #ffffff;
+}
+
+.track-order-hero-image,
+.track-order-hero-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.track-order-hero-image {
+  opacity: 0.46;
+}
+
+.track-order-hero-image img {
+  object-fit: cover;
+  object-position: center 60%;
+}
+
+.track-order-hero-overlay {
+  background: rgba(17, 24, 39, 0.72);
+}
+
+.track-order-hero-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 17rem;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 3rem;
+}
+
+.track-order-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.1rem;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.track-order-breadcrumb a {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.track-order-breadcrumb a:hover {
+  color: var(--track-order-orange-bright);
+}
+
+.track-order-breadcrumb span:last-child {
+  color: var(--track-order-orange-bright);
+}
+
+.track-order-eyebrow,
+.track-order-section-eyebrow {
+  margin: 0;
+  color: var(--track-order-orange);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.track-order-hero .track-order-eyebrow {
+  color: #ffb45e;
+}
+
+.track-order-hero h1 {
+  max-width: 720px;
+  margin: 0.35rem 0 0;
+  color: #ffffff;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.08;
+}
+
+.track-order-hero-description {
+  max-width: 640px;
+  margin: 0.85rem 0 0;
+  color: #d8e0ec;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.track-order-search-section {
+  border-bottom: 1px solid var(--track-order-border);
+  background: #ffffff;
+  padding: clamp(1.5rem, 4vw, 2.5rem) 0;
+}
+
+.track-order-search-panel,
+.track-order-card {
+  border: 1px solid var(--track-order-border);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+}
+
+.track-order-search-panel {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.track-order-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.track-order-section-heading h2 {
+  margin: 0.25rem 0 0;
+  color: var(--track-order-ink);
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  line-height: 1.2;
+}
+
+.track-order-search-badge,
+.track-order-status-badge,
+.track-order-progress-caption,
+.track-order-section-count {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.45rem;
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.track-order-search-badge {
+  background: var(--track-order-surface);
+  color: var(--track-order-muted);
+}
+
+.track-order-search-intro {
+  max-width: 680px;
+  margin: 0.65rem 0 1.4rem;
+  color: var(--track-order-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.track-order-search-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+}
+
+.track-order-field {
+  min-width: 0;
+}
+
+.track-order-field label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--track-order-ink);
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.track-order-input-wrap {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--track-order-border);
+  border-radius: 0.55rem;
+  padding: 0 0.9rem;
+  background: #ffffff;
+  color: #94a3b8;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.track-order-input-wrap:focus-within {
+  border-color: var(--track-order-orange-bright);
+  box-shadow: 0 0 0 3px rgba(247, 148, 29, 0.16);
+}
+
+.track-order-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--track-order-ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.track-order-input-wrap input::placeholder {
+  color: #94a3b8;
+}
+
+.track-order-field-hint {
+  display: block;
+  margin-top: 0.4rem;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.track-order-search-button,
+.track-order-help-button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 0;
+  border-radius: 0.55rem;
+  padding: 0.8rem 1.1rem;
+  background: var(--track-order-orange-bright);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.track-order-search-button:hover,
+.track-order-help-button:hover {
+  background: #e07a08;
+  transform: translateY(-1px);
+}
+
+.track-order-search-button:focus-visible,
+.track-order-help-button:focus-visible,
+.track-order-help-link:focus-visible,
+.track-order-breadcrumb a:focus-visible {
+  outline: 3px solid rgba(247, 148, 29, 0.42);
+  outline-offset: 3px;
+}
+
+.track-order-search-note,
+.track-order-search-feedback,
+.track-order-demo-note,
+.track-order-item-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.track-order-search-note svg,
+.track-order-demo-note svg {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--track-order-orange);
+}
+
+.track-order-search-feedback {
+  margin-top: 0.75rem;
+  color: var(--track-order-orange);
+  font-weight: 700;
+}
+
+.track-order-result-section {
+  background: var(--track-order-surface);
+  padding: clamp(2rem, 5vw, 4rem) 0 clamp(3rem, 6vw, 5rem);
+}
+
+.track-order-result {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.track-order-card {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.track-order-status-badge {
+  background: #fff3db;
+  color: #9a5300;
+}
+
+.track-order-request-details {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--track-order-border);
+}
+
+.track-order-request-details div,
+.track-order-summary-card div {
+  min-width: 0;
+}
+
+.track-order-request-details span,
+.track-order-summary-card span,
+.track-order-item-quantity span,
+.track-order-item-price span,
+.track-order-support-detail span {
+  display: block;
+  color: var(--track-order-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.track-order-request-details strong {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--track-order-ink);
+  font-size: 0.92rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.track-order-demo-note {
+  margin-top: 1.25rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.55rem;
+  background: var(--track-order-tint);
+  color: #92520c;
+}
+
+.track-order-progress-card {
+  padding-bottom: 1.75rem;
+}
+
+.track-order-progress-caption,
+.track-order-section-count {
+  background: var(--track-order-surface);
+  color: var(--track-order-muted);
+}
+
+.track-order-progress-list {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.track-order-progress-step {
+  position: relative;
+  min-width: 0;
+  padding: 0 0.35rem;
+  text-align: center;
+}
+
+.track-order-progress-step:not(:last-child)::after {
+  position: absolute;
+  z-index: 0;
+  top: 1.05rem;
+  right: 0;
+  left: 50%;
+  height: 2px;
+  background: var(--track-order-border);
+  content: "";
+}
+
+.track-order-progress-step[data-state="complete"]::after {
+  background: var(--track-order-orange-bright);
+}
+
+.track-order-progress-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  margin-inline: auto;
+  place-items: center;
+  border: 2px solid var(--track-order-border);
+  border-radius: 50%;
+  background: #ffffff;
+  color: #ffffff;
+  font-size: 0.78rem;
+}
+
+.track-order-progress-step[data-state="complete"] .track-order-progress-marker {
+  border-color: var(--track-order-orange-bright);
+  background: var(--track-order-orange-bright);
+}
+
+.track-order-progress-step[data-state="current"] .track-order-progress-marker {
+  border: 5px solid #ffffff;
+  background: var(--track-order-orange-bright);
+  box-shadow: 0 0 0 2px var(--track-order-orange-bright);
+}
+
+.track-order-progress-label {
+  display: block;
+  max-width: 9rem;
+  margin: 0.7rem auto 0;
+  color: var(--track-order-muted);
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.track-order-progress-step[data-state="complete"] .track-order-progress-label,
+.track-order-progress-step[data-state="current"] .track-order-progress-label {
+  color: var(--track-order-ink);
+}
+
+.track-order-progress-step[data-state="current"] .track-order-progress-label {
+  font-weight: 800;
+}
+
+.track-order-current-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  border: 1px solid #fed7aa;
+  border-radius: 0.85rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  background: var(--track-order-tint);
+}
+
+.track-order-current-status-icon,
+.track-order-support-icon,
+.track-order-help-icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  color: var(--track-order-orange);
+  box-shadow: 0 3px 10px rgba(154, 83, 0, 0.1);
+}
+
+.track-order-current-status h2 {
+  margin: 0.25rem 0 0;
+  color: var(--track-order-ink);
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.track-order-current-status p:last-child {
+  max-width: 760px;
+  margin: 0.55rem 0 0;
+  color: #7c5a34;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.track-order-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.track-order-summary-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  min-width: 0;
+  border: 1px solid var(--track-order-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #ffffff;
+}
+
+.track-order-summary-card-icon {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.6rem;
+  background: var(--track-order-tint);
+  color: var(--track-order-orange);
+}
+
+.track-order-summary-card strong {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--track-order-ink);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.track-order-summary-card strong small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--track-order-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.track-order-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.85fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.track-order-primary-column,
+.track-order-support-column {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.track-order-items-list {
+  margin-top: 1.4rem;
+}
+
+.track-order-items-head,
+.track-order-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem 9.5rem;
+  align-items: center;
+  gap: 1rem;
+}
+
+.track-order-items-head {
+  padding: 0 0 0.65rem;
+  border-bottom: 1px solid var(--track-order-border);
+  color: var(--track-order-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.track-order-items-head span:not(:first-child) {
+  text-align: right;
+}
+
+.track-order-items-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.track-order-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--track-order-border);
+}
+
+.track-order-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.track-order-item-product {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.track-order-item-image {
+  display: grid;
+  width: 5rem;
+  height: 5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--track-order-border);
+  border-radius: 0.65rem;
+  background: var(--track-order-surface);
+}
+
+.track-order-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.track-order-item-part-number {
+  color: var(--track-order-orange);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.track-order-item h3 {
+  margin: 0.22rem 0 0;
+  color: var(--track-order-ink);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.track-order-item-product p {
+  margin: 0.2rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.76rem;
+}
+
+.track-order-item-quantity,
+.track-order-item-price {
+  min-width: 0;
+}
+
+.track-order-item-quantity,
+.track-order-item-price {
+  text-align: right;
+}
+
+.track-order-item-quantity strong,
+.track-order-item-price strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--track-order-ink);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.track-order-item-price strong {
+  color: var(--track-order-orange);
+}
+
+.track-order-item-note {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--track-order-border);
+  color: var(--track-order-muted);
+}
+
+.track-order-activity-list {
+  position: relative;
+  display: grid;
+  gap: 1.35rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.track-order-activity-list::before {
+  position: absolute;
+  top: 1.3rem;
+  bottom: 1.3rem;
+  left: 0.9rem;
+  width: 2px;
+  background: var(--track-order-border);
+  content: "";
+}
+
+.track-order-activity-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.8rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.8rem;
+}
+
+.track-order-activity-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border: 2px solid var(--track-order-border);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--track-order-muted);
+  font-size: 0.68rem;
+}
+
+.track-order-activity-item[data-state="current"] .track-order-activity-marker {
+  border-color: var(--track-order-orange-bright);
+  color: var(--track-order-orange);
+}
+
+.track-order-activity-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.track-order-activity-title-row h3 {
+  margin: 0;
+  color: var(--track-order-ink);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.track-order-activity-title-row time {
+  flex: 0 0 auto;
+  color: var(--track-order-muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.track-order-activity-item p {
+  margin: 0.25rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.track-order-support-card {
+  padding: 1.5rem;
+}
+
+.track-order-support-icon,
+.track-order-help-icon {
+  margin-bottom: 1rem;
+}
+
+.track-order-support-card h2,
+.track-order-help-card h2 {
+  margin: 0.3rem 0 0;
+  color: var(--track-order-ink);
+  font-size: 1.1rem;
+  line-height: 1.3;
+}
+
+.track-order-support-card > strong {
+  display: block;
+  margin-top: 1.1rem;
+  color: var(--track-order-orange);
+  font-size: 0.9rem;
+}
+
+.track-order-support-card > p:not(.track-order-section-eyebrow) {
+  margin: 0.55rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.track-order-support-detail {
+  margin-top: 1.1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--track-order-border);
+}
+
+.track-order-support-detail strong {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--track-order-ink);
+  font-size: 0.82rem;
+}
+
+.track-order-help-card {
+  border-radius: 0.85rem;
+  padding: 1.5rem;
+  background: var(--track-order-navy);
+  color: #ffffff;
+}
+
+.track-order-help-icon {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffb45e;
+}
+
+.track-order-help-card h2 {
+  color: #ffffff;
+}
+
+.track-order-help-card > p {
+  margin: 0.65rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.track-order-help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.25rem;
+}
+
+.track-order-help-link,
+.track-order-help-button {
+  min-height: 2.7rem;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.78rem;
+}
+
+.track-order-help-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 0.5rem;
+  color: #ffffff;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.track-order-help-link:hover {
+  border-color: #ffb45e;
+  color: #ffb45e;
+}
+
+.track-order-help-button {
+  background: var(--track-order-orange-bright);
+}
+
+@media (max-width: 1100px) {
+  .track-order-detail-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.75fr);
+  }
+
+  .track-order-summary-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .track-order-search-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .track-order-search-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .track-order-request-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .track-order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .track-order-support-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .track-order-help-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .track-order-shell {
+    width: min(calc(100% - 2rem), 680px);
+  }
+
+  .track-order-progress-list {
+    display: block;
+    margin-top: 1.5rem;
+  }
+
+  .track-order-progress-step {
+    display: grid;
+    grid-template-columns: 2.15rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.85rem;
+    min-height: 4.4rem;
+    padding: 0;
+    text-align: left;
+  }
+
+  .track-order-progress-step:not(:last-child)::after {
+    top: 2.15rem;
+    right: auto;
+    bottom: 0;
+    left: 1.02rem;
+    width: 2px;
+    height: auto;
+  }
+
+  .track-order-progress-marker {
+    margin: 0;
+  }
+
+  .track-order-progress-label {
+    max-width: none;
+    margin: 0;
+    font-size: 0.82rem;
+  }
+
+  .track-order-support-column {
+    grid-template-columns: 1fr;
+  }
+
+  .track-order-help-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .track-order-hero,
+  .track-order-hero-content {
+    min-height: 15rem;
+  }
+
+  .track-order-hero-content {
+    padding-block: 2.5rem;
+  }
+
+  .track-order-section-heading {
+    flex-direction: column;
+  }
+
+  .track-order-search-badge,
+  .track-order-status-badge,
+  .track-order-progress-caption,
+  .track-order-section-count {
+    align-self: flex-start;
+  }
+
+  .track-order-search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .track-order-search-button {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .track-order-request-details,
+  .track-order-summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .track-order-items-head {
+    display: none;
+  }
+
+  .track-order-item {
+    grid-template-columns: minmax(0, 1fr) 4.5rem;
+    align-items: start;
+    gap: 0.85rem;
+  }
+
+  .track-order-item-product {
+    grid-column: 1 / -1;
+  }
+
+  .track-order-item-quantity,
+  .track-order-item-price {
+    text-align: left;
+  }
+
+  .track-order-item-price {
+    grid-column: 2;
+  }
+
+  .track-order-item-quantity {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .track-order-activity-title-row {
+    display: block;
+  }
+
+  .track-order-activity-title-row time {
+    display: block;
+    margin-top: 0.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track-order-input-wrap,
+  .track-order-search-button,
+  .track-order-help-button {
+    transition: none;
+  }
+}
+.track-order-current-status-value {
+  margin: 0.45rem 0 0;
+  color: var(--track-order-orange);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
