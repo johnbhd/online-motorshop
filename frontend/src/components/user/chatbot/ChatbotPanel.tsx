@@ -26,7 +26,7 @@ export type ChatbotPanelProps = {
   onBackToAssistant: () => void;
   onQuickAction: (action: ChatQuickAction) => void;
   onRequestStaff: () => void;
-  onShowQuickActions: () => void;
+  onToggleQuickActions: () => void;
   onSend: (message: string) => void;
 };
 
@@ -41,7 +41,7 @@ export default function ChatbotPanel({
   onBackToAssistant,
   onQuickAction,
   onRequestStaff,
-  onShowQuickActions,
+  onToggleQuickActions,
   onSend,
 }: ChatbotPanelProps) {
   const isStaffMode = mode === "staff";
@@ -124,9 +124,10 @@ export default function ChatbotPanel({
       <ChatbotComposer
         inputRef={composerInputRef}
         isStaffMode={isStaffMode}
+        showQuickActions={showQuickActions}
         onSend={onSend}
         onBackToAssistant={onBackToAssistant}
-        onShowQuickActions={onShowQuickActions}
+        onToggleQuickActions={onToggleQuickActions}
       />
     </section>
   );

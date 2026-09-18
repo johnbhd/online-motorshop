@@ -236,8 +236,8 @@ export default function ChatbotWidget() {
           onBackToAssistant={handleBackToAssistant}
           onQuickAction={handleQuickAction}
           onRequestStaff={handleRequestStaff}
-          onShowQuickActions={() => {
-            setShowQuickActions(true);
+          onToggleQuickActions={() => {
+            setShowQuickActions((currentValue) => !currentValue);
           }}
           onSend={handleSend}
         />

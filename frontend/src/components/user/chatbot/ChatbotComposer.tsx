@@ -12,17 +12,19 @@ import {
 export type ChatbotComposerProps = {
   inputRef: RefObject<HTMLInputElement | null>;
   isStaffMode: boolean;
+  showQuickActions: boolean;
   onSend: (message: string) => void;
   onBackToAssistant: () => void;
-  onShowQuickActions: () => void;
+  onToggleQuickActions: () => void;
 };
 
 export default function ChatbotComposer({
   inputRef,
   isStaffMode,
+  showQuickActions,
   onSend,
   onBackToAssistant,
-  onShowQuickActions,
+  onToggleQuickActions,
 }: ChatbotComposerProps) {
   const [message, setMessage] = useState("");
   const hasMessage = message.trim().length > 0;
@@ -47,9 +49,13 @@ export default function ChatbotComposer({
         className="ald-chatbot__composer-menu"
         type="button"
         aria-label={
-          isStaffMode ? "Back to ALD Assistant" : "Show chatbot quick actions"
+          isStaffMode
+            ? "Back to ALD Assistant"
+            : showQuickActions
+              ? "Hide chatbot quick actions"
+              : "Show chatbot quick actions"
         }
-        onClick={isStaffMode ? onBackToAssistant : onShowQuickActions}
+        onClick={isStaffMode ? onBackToAssistant : onToggleQuickActions}
       >
         <FontAwesomeIcon
           icon={isStaffMode ? faArrowLeft : faBars}
