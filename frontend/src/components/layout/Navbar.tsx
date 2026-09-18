@@ -15,6 +15,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { getRedirectPathForRole } from "@/lib/auth/demoAuth";
+import { getCustomerPhoneForSession } from "@/lib/auth/demoAuthStorage";
 import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
 import {
   CART_UPDATED_EVENT,
@@ -194,6 +195,8 @@ export function Navbar() {
     ? getSessionLinkLabel(session.role, session.name)
     : "Sign In or Continue as Guest";
 
+  const sessionPhone = session ? getCustomerPhoneForSession(session) : "";
+
   const cartLabel =
     cartQuantity === 1
       ? "Shopping cart, 1 item"
@@ -274,6 +277,7 @@ export function Navbar() {
                     <div className="site-header-account-summary">
                       <strong>{session.name}</strong>
                       <span>{session.email}</span>
+                      {sessionPhone ? <span>{sessionPhone}</span> : null}
                     </div>
                     {session.role !== "customer" ? (
                       <Link
