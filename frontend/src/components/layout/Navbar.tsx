@@ -15,11 +15,9 @@ import {
 
 const navigationItems = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
   { href: "/products", label: "Products" },
+  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
-  { href: "/staff", label: "Staff" },
-  { href: "/admin", label: "Admin" },
 ];
 
 const FLOAT_THRESHOLD = 64;
@@ -143,6 +141,7 @@ export function Navbar() {
               key={item.label}
               href={item.href}
               className={`site-header-nav-link${isActiveNavigationItem(item.href) ? " is-active" : ""}`}
+              aria-current={isActiveNavigationItem(item.href) ? "page" : undefined}
             >
               {item.label}
             </Link>
@@ -213,6 +212,7 @@ export function Navbar() {
                   key={item.label}
                   href={item.href}
                   className={`site-mobile-nav-link${isActiveNavigationItem(item.href) ? " is-active" : ""}`}
+                  aria-current={isActiveNavigationItem(item.href) ? "page" : undefined}
                   onClick={closeMobileMenu}
                 >
                   {item.label}
