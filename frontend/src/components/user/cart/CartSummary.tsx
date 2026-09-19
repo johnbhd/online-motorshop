@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
@@ -17,6 +18,7 @@ type CartSummaryProps = {
   totalQuantity: number;
   fulfillmentMethod: FulfillmentMethod;
   onFulfillmentChange: (method: FulfillmentMethod) => void;
+  hasDisplayablePrices: boolean;
 };
 
 export default function CartSummary({
@@ -24,8 +26,12 @@ export default function CartSummary({
   totalQuantity,
   fulfillmentMethod,
   onFulfillmentChange,
+  hasDisplayablePrices,
 }: CartSummaryProps) {
   const itemLabel = totalQuantity === 1 ? "item" : "items";
+  const subtotalLabel = hasDisplayablePrices
+    ? formatCartCurrency(subtotal)
+    : "To be confirmed";
 
   return (
     <aside className="cart-sidebar" aria-labelledby="cart-summary-title">
@@ -47,7 +53,7 @@ export default function CartSummary({
 
         <div className="cart-summary-row">
           <span>Products subtotal</span>
-          <strong>{formatCartCurrency(subtotal)}</strong>
+          <strong>{subtotalLabel}</strong>
         </div>
 
         <div className="cart-summary-row">
@@ -55,14 +61,9 @@ export default function CartSummary({
           <span className="cart-muted">Calculated after confirmation</span>
         </div>
 
-        <div className="cart-summary-row">
-          <span>Discount</span>
-          <span>{formatCartCurrency(0)}</span>
-        </div>
-
         <div className="cart-summary-row cart-summary-total">
           <span>Estimated total</span>
-          <strong>{formatCartCurrency(subtotal)}</strong>
+          <strong>{subtotalLabel}</strong>
         </div>
 
         <p className="cart-summary-disclaimer">
@@ -74,9 +75,7 @@ export default function CartSummary({
           <legend>Fulfillment Method</legend>
 
           <label
-            className={`cart-fulfillment-option${
-              fulfillmentMethod === "pickup" ? " is-selected" : ""
-            }`}
+            className={`cart-fulfillment-option${fulfillmentMethod === "pickup" ? " is-selected" : ""}`}
           >
             <input
               type="radio"
@@ -95,9 +94,7 @@ export default function CartSummary({
           </label>
 
           <label
-            className={`cart-fulfillment-option${
-              fulfillmentMethod === "delivery" ? " is-selected" : ""
-            }`}
+            className={`cart-fulfillment-option${fulfillmentMethod === "delivery" ? " is-selected" : ""}`}
           >
             <input
               type="radio"
@@ -140,19 +137,17 @@ export default function CartSummary({
           </div>
         </section>
 
-        <button
+        <Link
           className="cart-checkout-button"
-          type="button"
-          disabled
+          href="/checkout"
           aria-describedby="cart-checkout-note"
         >
           <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
           Proceed to Checkout
-        </button>
+        </Link>
 
         <p className="cart-checkout-note" id="cart-checkout-note">
-          Checkout details are not available in this migration yet. The future
-          flow will submit an order request for staff confirmation; it will not
+          Checkout submits an order request for staff confirmation; it does not
           finalize a sale automatically.
         </p>
 

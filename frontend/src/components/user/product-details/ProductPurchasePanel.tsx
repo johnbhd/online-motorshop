@@ -2,6 +2,7 @@
 
 import type { ChangeEvent } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,26 +12,23 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import type { ProductDisplayItem } from "../products/productsData";
+import { addProductToCart } from "../cart/cartStorage";
+import { formatCartCurrency } from "../cart/cartData";
 
 type ProductPurchasePanelProps = {
   product: ProductDisplayItem;
 };
 
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  maximumFractionDigits: 0,
-});
-
 export default function ProductPurchasePanel({
   product,
 }: ProductPurchasePanelProps) {
   const [quantity, setQuantity] = useState(1);
+  const router = useRouter();
   const [cartMessage, setCartMessage] = useState("");
   const priceLabel =
     product.price > 0
-      ? currencyFormatter.format(product.price)
-      : "Price available on request";
+      ? formatCartCurrency(product.price)
+      : "Price unavailable";
 
   const changeQuantity = (nextQuantity: number) => {
     if (!Number.isFinite(nextQuantity)) {
@@ -46,8 +44,15 @@ export default function ProductPurchasePanel({
   };
 
   const handleAddToCart = () => {
+    const didSave = addProductToCart(product, quantity);
+
+    if (didSave) {
+      router.push("/cart");
+      return;
+    }
+
     setCartMessage(
-      "Cart integration is not connected yet, so this selection was not added."
+      "This product could not be added in this browser. Please try again.",
     );
   };
 
@@ -62,7 +67,8 @@ export default function ProductPurchasePanel({
       </div>
 
       <p className="product-details-purchase-note">
-        Catalog prices are not yet connected to the live ALD product service.
+        Displayed prices are temporary Philippine peso demo estimates and are not connected
+to live ALD pricing.
       </p>
 
       <div className="product-details-quantity-field">
@@ -123,8 +129,8 @@ export default function ProductPurchasePanel({
       </div>
 
       <p className="product-details-cart-note" id="product-details-cart-note">
-        The current Cart page uses independent demo state, so this selection
-        does not persist across routes yet.
+        Your selection is saved in the shared cart for checkout. Price,
+        compatibility, and availability are confirmed by ALD staff.
       </p>
 
       <p className="product-details-cart-message" role="status" aria-live="polite">

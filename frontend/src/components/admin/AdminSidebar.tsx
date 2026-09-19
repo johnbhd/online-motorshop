@@ -1,7 +1,8 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
@@ -20,6 +21,8 @@ import {
   faUserGear,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
+import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+
 const adminIcons = {
   Dashboard: faGaugeHigh,
   Orders: faClipboardList,
@@ -38,6 +41,7 @@ const adminIcons = {
   Settings: faGear,
   Profile: faUser,
 } as const;
+
 const links = [
   ["Dashboard", "/admin", "▦"],
   ["Orders", "/admin/orders", "▤"],
@@ -56,6 +60,7 @@ const links = [
   ["Settings", "#", "⚙"],
   ["Profile", "#", "◉"],
 ] as const;
+
 export default function AdminSidebar({
   open,
   onClose,
@@ -64,6 +69,15 @@ export default function AdminSidebar({
   onClose: () => void;
 }) {
   const path = usePathname();
+  const router = useRouter();
+  const { logout } = useDemoAuth();
+
+  const handleLogout = () => {
+    logout();
+    onClose();
+    router.replace("/");
+  };
+
   return (
     <>
       <button
@@ -105,7 +119,7 @@ export default function AdminSidebar({
         </div>
         <nav className="flex-1 px-3 py-5" aria-label="Admin navigation">
           <ul className="space-y-1">
-            {links.map(([name, href, icon]) => {
+            {links.map(([name, href]) => {
               const active =
                 href !== "#" &&
                 (path === href ||
@@ -125,10 +139,7 @@ export default function AdminSidebar({
                           : "text-slate-400 group-hover:text-orange-400"
                       }
                     >
-                      <FontAwesomeIcon
-                        icon={adminIcons[name]}
-                        className="w-4"
-                      />
+                      <FontAwesomeIcon icon={adminIcons[name]} className="w-4" />
                     </span>
                     <span className="min-w-0 flex-1 truncate">{name}</span>
                   </Link>
@@ -138,12 +149,13 @@ export default function AdminSidebar({
           </ul>
         </nav>
         <div className="mt-auto border-t border-white/10 p-3">
-          <Link
-            href="/"
-            className="flex min-h-11 items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/[.06] hover:text-white"
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex min-h-11 w-full items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-left text-sm font-medium text-slate-300 hover:bg-white/[.06] hover:text-white"
           >
             ↪ <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
     </>

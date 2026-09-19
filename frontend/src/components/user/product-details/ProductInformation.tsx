@@ -46,9 +46,9 @@ export default function ProductInformation({
       </div>
 
       <p className="product-details-information-note">
-        Model compatibility, stock quantity, specifications, and final pricing
-        are not included in the current catalog data. Please confirm these
-        details with ALD staff before ordering.
+        Displayed prices are temporary Philippine peso demo estimates. Confirm model
+        compatibility, stock quantity, specifications, and final pricing with ALD
+        staff before ordering.
       </p>
     </section>
   );

@@ -14,6 +14,7 @@ import ProductsToolbar, {
 } from "./ProductsToolbar";
 import {
   initialProductFilters,
+  productCategories,
   productCatalog,
   productMaxPrice,
   type ProductAvailability,
@@ -58,10 +59,26 @@ function hasSelectedFilters(filters: ProductFilterState) {
   );
 }
 
-export default function ProductsCatalog() {
+function getInitialFilters(initialCategory?: string): ProductFilterState {
+  const selectedCategory = productCategories.find((category) => {
+    return category === initialCategory;
+  });
+
+  return selectedCategory
+    ? { ...initialProductFilters, categories: [selectedCategory] }
+    : initialProductFilters;
+}
+
+type ProductsCatalogProps = {
+  initialCategory?: string;
+};
+
+export default function ProductsCatalog({
+  initialCategory,
+}: ProductsCatalogProps) {
   const [searchValue, setSearchValue] = useState("");
   const [filters, setFilters] = useState<ProductFilterState>(
-    initialProductFilters,
+    () => getInitialFilters(initialCategory),
   );
   const [sort, setSort] = useState<ProductSortOption>("featured");
   const [viewMode, setViewMode] = useState<ProductViewMode>("grid");

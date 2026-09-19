@@ -1,54 +1,36 @@
-import { productCatalog } from "../products/productsData";
-import type { CartItemData, CartProduct } from "./cartTypes";
-
-const findProduct = (productId: string): CartProduct => {
-  const product = productCatalog.find((candidate) => candidate.id === productId);
-
-  if (!product) {
-    throw new Error(`Cart fixture references missing product: ${productId}`);
-  }
-
-  return {
-    id: product.id,
-    partNumber: product.partNumber,
-    name: product.name,
-    brand: product.brand,
-    image: product.image,
-    alt: product.alt,
-  };
-};
-
-/*
- * These temporary local fixtures preserve the migration source's visible
- * quantities and demo amounts. The prices are not authoritative backend data.
- */
-export const initialCartItems: CartItemData[] = [
-  {
-    product: findProduct("HON-003"),
-    compatibility: "Honda Click 125i / 150i",
-    price: 850,
-    quantity: 1,
-  },
-  {
-    product: findProduct("HON-007"),
-    compatibility: "Honda commuter motorcycle models",
-    price: 1650,
-    quantity: 1,
-  },
-  {
-    product: findProduct("YAM-009"),
-    compatibility: "Multiple motorcycle models",
-    price: 380,
-    quantity: 2,
-  },
-];
+import type { CartItemData } from "./cartTypes";
 
 export const cartCurrencyFormatter = new Intl.NumberFormat("en-PH", {
   style: "currency",
   currency: "PHP",
+  minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
-export function formatCartCurrency(amount: number): string {
+export function formatPeso(amount: number): string {
   return cartCurrencyFormatter.format(amount);
+}
+
+// Backwards-compatible name for existing cart and order UI imports.
+export const formatCartCurrency = formatPeso;
+
+export function isUsablePrice(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
+export function calculateLineTotal(
+  unitPrice: number,
+  quantity: number,
+): number {
+  if (!isUsablePrice(unitPrice) || !Number.isFinite(quantity) || quantity < 1) {
+    return 0;
+  }
+
+  return unitPrice * quantity;
+}
+
+export function getCartSubtotal(items: CartItemData[]): number {
+  return items.reduce((subtotal, item) => {
+    return subtotal + calculateLineTotal(item.price, item.quantity);
+  }, 0);
 }
