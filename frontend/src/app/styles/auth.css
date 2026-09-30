@@ -162,6 +162,36 @@
   border-color: var(--ald-orange);
   background: #fff7ed;
 }
+.auth-secondary-button {
+  text-decoration: none;
+}
+
+.auth-feedback {
+  margin: 0 0 0.9rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  text-align: left;
+}
+.auth-feedback.error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+.auth-feedback.success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.auth-primary-button:focus-visible,
+.auth-secondary-button:focus-visible {
+  outline: 3px solid #fdb813;
+  outline-offset: 3px;
+}
+
 .auth-divider {
   display: flex;
   align-items: center;

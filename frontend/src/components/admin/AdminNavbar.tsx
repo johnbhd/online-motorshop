@@ -1,8 +1,8 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { notifications } from "@/lib/mock/staff";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
@@ -12,6 +12,8 @@ import {
   faMagnifyingGlass,
   faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
+import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+
 const labels: Record<string, string> = {
   "/admin": "Dashboard",
   "/admin/orders": "Orders",
@@ -20,6 +22,7 @@ const labels: Record<string, string> = {
   "/admin/delivery-requests": "Delivery Requests",
   "/admin/products": "Products",
 };
+
 export default function AdminNavbar({
   onMenu,
   open,
@@ -30,7 +33,10 @@ export default function AdminNavbar({
   const [menu, setMenu] = useState<"notifications" | "profile" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const path = usePathname();
+  const router = useRouter();
+  const { logout, session } = useDemoAuth();
   const title = labels[path] ?? "Dashboard";
+
   useEffect(() => {
     const click = (e: MouseEvent) =>
       !ref.current?.contains(e.target as Node) && setMenu(null);
@@ -42,6 +48,13 @@ export default function AdminNavbar({
       window.removeEventListener("keydown", escape);
     };
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    setMenu(null);
+    router.replace("/");
+  };
+
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
       <div className="flex min-h-20 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -139,7 +152,7 @@ export default function AdminNavbar({
               </span>
               <span className="hidden sm:block">
                 <b className="block max-w-40 truncate text-sm text-[#0B1930]">
-                  Admin User
+                  {session?.name ?? "Admin User"}
                 </b>
                 <small className="block text-xs text-slate-500">
                   Administrator
@@ -157,13 +170,14 @@ export default function AdminNavbar({
                 >
                   ◉ &nbsp; Profile
                 </a>
-                <Link
-                  href="/"
-                  className="block border-t border-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="block w-full border-t border-slate-100 px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   <FontAwesomeIcon icon={faRightFromBracket} />
                   &nbsp; Logout
-                </Link>
+                </button>
               </div>
             )}
           </div>

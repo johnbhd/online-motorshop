@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
@@ -10,6 +12,8 @@ import {
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import type { ProductDisplayItem } from "./productsData";
+import { addProductToCart } from "../cart/cartStorage";
+import { formatCartCurrency } from "../cart/cartData";
 import type { ProductViewMode } from "./ProductsToolbar";
 
 type ProductCardProps = {
@@ -17,15 +21,16 @@ type ProductCardProps = {
   viewMode: ProductViewMode;
 };
 
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  maximumFractionDigits: 0,
-});
-
 export default function ProductCard({ product, viewMode }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
+  const router = useRouter();
   const statusLabel = product.status === "active" ? "Listed" : "Unavailable";
+
+  const handleAddToCart = () => {
+    if (addProductToCart(product, quantity)) {
+      router.push("/cart");
+    }
+  };
 
   return (
     <article className={`products-card products-card--${viewMode}`}>
@@ -55,9 +60,13 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
         <div className="products-card-price-row">
           {product.price > 0 ? (
             <span className="products-card-price">
-              {currencyFormatter.format(product.price)}
+              {formatCartCurrency(product.price)}
             </span>
-          ) : null}
+          ) : (
+            <span className="products-card-price products-card-price--unavailable">
+              Price unavailable
+            </span>
+          )}
           <span
             className={`products-card-status products-card-status--${
               product.status === "active" ? "listed" : "unavailable"
@@ -85,16 +94,24 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
               <FontAwesomeIcon icon={faPlus} aria-hidden="true" />
             </button>
           </div>
-          <button className="products-add-cart-button" type="button">
+          <button
+            className="products-add-cart-button"
+            type="button"
+            onClick={handleAddToCart}
+          >
             <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
             <span>Add to Cart</span>
           </button>
         </div>
 
-        <span className="products-card-details">
+        <Link
+          className="products-card-details"
+          href={`/products/${product.id}`}
+          aria-label={`View details for ${product.name}`}
+        >
           <span>View Details</span>
           <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
-        </span>
+        </Link>
       </div>
     </article>
   );

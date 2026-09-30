@@ -1,11 +1,17 @@
 import ProductsCatalog from "./ProductsCatalog";
 import ProductsHero from "./ProductsHero";
 
-export default function ProductsPage() {
+type ProductsPageProps = {
+  initialCategory?: string;
+};
+
+export default function ProductsPage({
+  initialCategory,
+}: ProductsPageProps) {
   return (
     <div className="products-page">
       <ProductsHero />
-      <ProductsCatalog />
+      <ProductsCatalog initialCategory={initialCategory} />
     </div>
   );
 }

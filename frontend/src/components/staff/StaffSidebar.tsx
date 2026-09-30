@@ -1,7 +1,8 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
@@ -16,6 +17,8 @@ import {
   faUser,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
+import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+
 const links = [
   ["Dashboard", "/staff", "▦"],
   ["Orders", "/staff/orders", "▤", 8],
@@ -29,6 +32,7 @@ const links = [
   ["Reports", "/staff/reports", "▥"],
   ["Profile", "#", "◉"],
 ] as const;
+
 const icons = {
   Dashboard: faGaugeHigh,
   Orders: faClipboardList,
@@ -42,6 +46,7 @@ const icons = {
   Reports: faChartColumn,
   Profile: faUser,
 } as const;
+
 export default function StaffSidebar({
   open,
   onClose,
@@ -50,6 +55,15 @@ export default function StaffSidebar({
   onClose: () => void;
 }) {
   const path = usePathname();
+  const router = useRouter();
+  const { logout } = useDemoAuth();
+
+  const handleLogout = () => {
+    logout();
+    onClose();
+    router.replace("/");
+  };
+
   return (
     <>
       <button
@@ -88,7 +102,7 @@ export default function StaffSidebar({
             </span>
           </Link>
         </div>
-        <nav className="flex-1 px-3 py-5">
+        <nav className="flex-1 px-3 py-5" aria-label="Staff navigation">
           <ul className="space-y-1">
             {links.map(([label, href, , badge]) => {
               const active =
@@ -100,6 +114,7 @@ export default function StaffSidebar({
                   <Link
                     href={href}
                     onClick={onClose}
+                    aria-current={active ? "page" : undefined}
                     className={`group flex min-h-11 items-center gap-3 rounded-r-lg border-l-4 px-3 py-2.5 text-sm font-medium transition ${active ? "border-orange-500 bg-[#152B4B] text-white" : "border-transparent text-slate-300 hover:bg-white/[.06] hover:text-white"}`}
                   >
                     <span
@@ -124,12 +139,13 @@ export default function StaffSidebar({
           </ul>
         </nav>
         <div className="border-t border-white/10 p-3">
-          <Link
-            href="/"
-            className="flex min-h-11 items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/[.06] hover:text-white"
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex min-h-11 w-full items-center gap-3 rounded-lg border-l-4 border-transparent px-3 py-2.5 text-left text-sm font-medium text-slate-300 hover:bg-white/[.06] hover:text-white"
           >
             <span>↪</span>Logout
-          </Link>
+          </button>
         </div>
       </aside>
     </>
