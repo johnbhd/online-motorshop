@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ProductFilters, { type ProductFilterOption } from "./ProductFilters";
 import ProductGrid from "./ProductGrid";
+import ProductsLoadingState from "./ProductsLoadingState";
 import ProductsEmptyState from "./ProductsEmptyState";
 import ProductsPagination from "./ProductsPagination";
 import ProductsSearch from "./ProductsSearch";
@@ -458,9 +459,7 @@ export default function ProductsCatalogRemote({
             ) : null}
 
             {isLoading ? (
-              <div className="products-loading-state" role="status">
-                Loading products...
-              </div>
+              <ProductsLoadingState viewMode={viewMode} />
             ) : error ? (
               <div className="products-error-state" role="alert">
                 <h2>Products are temporarily unavailable</h2>
