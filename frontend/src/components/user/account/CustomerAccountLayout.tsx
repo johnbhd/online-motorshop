@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboardList } from "@fortawesome/free-solid-svg-icons";
-import DemoRoleGuard from "@/components/auth/DemoRoleGuard";
+import RoleGuard from "@/components/auth/RoleGuard";
 
 export default function CustomerAccountLayout({
   children,
@@ -17,7 +17,7 @@ export default function CustomerAccountLayout({
     Boolean(pathname?.startsWith("/account/orders/"));
 
   return (
-    <DemoRoleGuard allowedRole="customer">
+    <RoleGuard allowedRole="customer">
       <div className="customer-account-layout">
         <nav
           className="customer-account-nav"
@@ -41,6 +41,6 @@ export default function CustomerAccountLayout({
         </nav>
         {children}
       </div>
-    </DemoRoleGuard>
+    </RoleGuard>
   );
 }

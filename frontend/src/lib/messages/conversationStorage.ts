@@ -1,4 +1,4 @@
-import type { DemoAuthSession } from "@/lib/auth/demoAuthTypes";
+import type { AuthUser } from "@/lib/auth/authTypes";
 import type {
   ConversationMessage,
   ConversationMessageSender,
@@ -130,14 +130,14 @@ export function getConversationByParticipant(
 }
 
 export function getCurrentConversationParticipant(
-  session: DemoAuthSession | null,
+  user: AuthUser | null,
 ): ConversationParticipant {
-  if (session?.role === "customer") {
+  if (user?.role === "customer") {
     return {
-      id: session.id,
-      name: session.name,
+      id: String(user.id),
+      name: user.name,
       type: "customer",
-      email: session.email,
+      email: user.email,
     };
   }
 

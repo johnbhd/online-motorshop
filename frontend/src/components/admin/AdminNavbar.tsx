@@ -12,7 +12,7 @@ import {
   faMagnifyingGlass,
   faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const labels: Record<string, string> = {
   "/admin": "Dashboard",
@@ -34,7 +34,7 @@ export default function AdminNavbar({
   const ref = useRef<HTMLDivElement>(null);
   const path = usePathname();
   const router = useRouter();
-  const { logout, session } = useDemoAuth();
+  const { logout, user } = useAuth();
   const title = labels[path] ?? "Dashboard";
 
   useEffect(() => {
@@ -49,8 +49,8 @@ export default function AdminNavbar({
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setMenu(null);
     router.replace("/");
   };
@@ -152,7 +152,7 @@ export default function AdminNavbar({
               </span>
               <span className="hidden sm:block">
                 <b className="block max-w-40 truncate text-sm text-[#0B1930]">
-                  {session?.name ?? "Admin User"}
+                  {user?.name ?? "Admin User"}
                 </b>
                 <small className="block text-xs text-slate-500">
                   Administrator

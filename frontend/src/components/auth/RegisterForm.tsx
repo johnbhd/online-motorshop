@@ -13,35 +13,57 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
-import { registerCustomer } from "@/lib/auth/demoAuth";
+import {
+  getAuthErrorMessage,
+  getRedirectPathForRole,
+  register,
+} from "@/lib/auth/authApi";
+import { useAuth } from "./AuthProvider";
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { establishSession } = useAuth();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
-    const result = registerCustomer({
-      name: String(formData.get("name") ?? ""),
-      email: String(formData.get("email") ?? ""),
-      phone: String(formData.get("phone") ?? ""),
-      password: String(formData.get("password") ?? ""),
-      passwordConfirmation: String(
-        formData.get("password_confirmation") ?? "",
-      ),
-    });
-
-    if (!result.success) {
-      setError(result.error);
+    if (isSubmitting) {
       return;
     }
 
+    const formData = new FormData(event.currentTarget);
+    const input = {
+      name: String(formData.get("name") ?? "").trim(),
+      email: String(formData.get("email") ?? "").trim(),
+      phone: String(formData.get("phone") ?? "").trim(),
+      password: String(formData.get("password") ?? ""),
+      password_confirmation: String(
+        formData.get("password_confirmation") ?? "",
+      ),
+    };
+
+    setIsSubmitting(true);
     setError("");
-    router.push("/auth/login?registered=1");
+
+    try {
+      const response = await register(input);
+      const user = await establishSession(response.token);
+
+      router.replace(getRedirectPathForRole(user.role));
+    } catch (requestError) {
+      setError(
+        getAuthErrorMessage(
+          requestError,
+          "Unable to create your account. Please try again.",
+        ),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -146,8 +168,12 @@ export function RegisterForm() {
             />
           </button>
         </div>
-        <button type="submit" className="auth-primary-button">
-          Create Account
+        <button
+          type="submit"
+          className="auth-primary-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating Account…" : "Create Account"}
         </button>
       </form>
       <button type="button" className="auth-secondary-button">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import StaffSidebar from "./StaffSidebar";
 import StaffNavbar from "./StaffNavbar";
-import DemoRoleGuard from "@/components/auth/DemoRoleGuard";
+import RoleGuard from "@/components/auth/RoleGuard";
 
 export default function StaffShell({
   children,
@@ -19,7 +19,7 @@ export default function StaffShell({
   }, []);
 
   return (
-    <DemoRoleGuard allowedRole="staff">
+    <RoleGuard allowedRole="staff">
       <div className="min-h-screen bg-slate-50">
         <StaffSidebar open={open} onClose={() => setOpen(false)} />
         <div className="lg:pl-72">
@@ -29,6 +29,6 @@ export default function StaffShell({
           </main>
         </div>
       </div>
-    </DemoRoleGuard>
+    </RoleGuard>
   );
 }

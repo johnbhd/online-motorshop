@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { DemoOrder } from "@/lib/orders/orderTypes";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   getDemoOrdersForCustomer,
   ORDERS_STORAGE_KEY,
@@ -20,9 +20,10 @@ import {
 } from "./customerOrderUtils";
 
 export default function MyOrdersPage() {
-  const { isReady: isAuthReady, session } = useDemoAuth();
+  const { isLoading: isAuthLoading, user } = useAuth();
+  const isAuthReady = !isAuthLoading;
   const customerAccountId =
-    session?.role === "customer" ? session.id : null;
+    user?.role === "customer" ? String(user.id) : null;
   const [ownedOrders, setOwnedOrders] = useState<DemoOrder[]>([]);
   const [activeTab, setActiveTab] = useState<CustomerOrderTab>("active");
   const [currentPage, setCurrentPage] = useState(1);
