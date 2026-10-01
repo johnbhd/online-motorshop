@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useMemo, useState } from "react";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalTable, {
   Badge,
@@ -8,38 +9,63 @@ import PortalTable, {
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
 import Summary from "@/components/staff/Summary";
 import { orders, type Order } from "@/lib/mock/staff";
+import StaffOrderDetailsModal from "./StaffOrderDetailsModal";
 
 export default function OrdersPage() {
-  const columns: Column<Order>[] = [
-    {
-      label: "Reference",
-      render: (row) => <b className="text-[#0B1930]">{row.reference}</b>,
-      search: (row) => row.reference,
-    },
-    {
-      label: "Customer",
-      render: (row) => row.customer,
-      search: (row) => row.customer,
-    },
-    { label: "Date", render: (row) => row.date },
-    { label: "Amount", render: (row) => <b>{row.amount}</b> },
-    {
-      label: "Fulfillment",
-      render: (row) => row.fulfillment,
-      search: (row) => row.fulfillment,
-    },
-    {
-      label: "Payment",
-      render: (row) => <Badge>{row.payment}</Badge>,
-      search: (row) => row.payment,
-    },
-    {
-      label: "Status",
-      render: (row) => <Badge>{row.status}</Badge>,
-      search: (row) => row.status,
-    },
-    { label: "Action", render: (row) => <ActionButton label={row.action} /> },
-  ];
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+
+  const handleViewOrder = useCallback((order: Order) => {
+    setSelectedOrder(order);
+    setIsOrderModalOpen(true);
+  }, []);
+
+  const handleCloseOrder = useCallback(() => {
+    setIsOrderModalOpen(false);
+    setSelectedOrder(null);
+  }, []);
+
+  const columns: Column<Order>[] = useMemo(
+    () => [
+      {
+        label: "Reference",
+        render: (row) => <b className="text-[#0B1930]">{row.reference}</b>,
+        search: (row) => row.reference,
+      },
+      {
+        label: "Customer",
+        render: (row) => row.customer,
+        search: (row) => row.customer,
+      },
+      { label: "Date", render: (row) => row.date },
+      { label: "Amount", render: (row) => <b>{row.amount}</b> },
+      {
+        label: "Fulfillment",
+        render: (row) => row.fulfillment,
+        search: (row) => row.fulfillment,
+      },
+      {
+        label: "Payment",
+        render: (row) => <Badge>{row.payment}</Badge>,
+        search: (row) => row.payment,
+      },
+      {
+        label: "Status",
+        render: (row) => <Badge>{row.status}</Badge>,
+        search: (row) => row.status,
+      },
+      {
+        label: "Action",
+        render: (row) => (
+          <ActionButton
+            label={row.action}
+            onClick={() => handleViewOrder(row)}
+          />
+        ),
+      },
+    ],
+    [handleViewOrder],
+  );
 
   return (
     <div className="space-y-5">
@@ -75,6 +101,11 @@ export default function OrdersPage() {
             ? row.status === "Preparing Order"
             : row.status === tab
         }
+      />
+      <StaffOrderDetailsModal
+        order={selectedOrder}
+        isOpen={isOrderModalOpen}
+        onClose={handleCloseOrder}
       />
     </div>
   );

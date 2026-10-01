@@ -1,3 +1,5 @@
+import "../styles/admin-orders.css";
+
 import StaffShell from "@/components/staff/StaffShell";
 
 export default function StaffLayout({

@@ -1,10 +1,24 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCalendarDays, faClipboardCheck, faClipboardList, faCreditCard, faStore, faTruck } from "@fortawesome/free-solid-svg-icons";
+import {
+  faArrowRight,
+  faCalendarDays,
+  faClipboardCheck,
+  faClipboardList,
+  faCreditCard,
+  faStore,
+  faTruck,
+} from "@fortawesome/free-solid-svg-icons";
 
 import { Badge } from "@/components/staff/PortalTable";
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
-import { orders, products } from "@/lib/mock/staff";
+import StaffRecentActivityModal from "@/components/staff/dashboard/StaffRecentActivityModal";
+import { getStaffActivityIcon } from "@/components/staff/dashboard/staffActivity";
+import { notifications, orders, products } from "@/lib/mock/staff";
+import type { Notification } from "@/lib/mock/staff";
 
 const summary = [
   ["8", "Pending Orders", "Awaiting staff review", "â—·"],
@@ -17,6 +31,17 @@ const summary = [
 const summaryIcons = { "Pending Orders": faClipboardList, "Confirmed Orders": faClipboardCheck, "Payments to Verify": faCreditCard, "Pickup Requests": faStore, "Delivery Requests": faTruck, "Completed Today": faClipboardCheck } as const;
 
 export default function Dashboard() {
+  const [selectedActivity, setSelectedActivity] =
+    useState<Notification | null>(null);
+
+  const handleViewActivity = (activity: Notification) => {
+    setSelectedActivity(activity);
+  };
+
+  const handleCloseActivity = () => {
+    setSelectedActivity(null);
+  };
+
   return (
     <div className="space-y-6">
       <StaffPageHeader
@@ -126,6 +151,67 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div>
+            <h2 className="text-lg font-semibold text-[#0B1930]">
+              Recent Activity
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Recent Staff and system updates across the portal.
+            </p>
+          </div>
+          <Link
+            href="/staff/notifications"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-orange-600"
+          >
+            View All Notifications
+            <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
+          </Link>
+        </div>
+
+        <div className="divide-y divide-slate-100">
+          {notifications.slice(0, 5).map((activity) => (
+            <button
+              key={activity.id}
+              type="button"
+              aria-haspopup="dialog"
+              aria-label={`View details for ${activity.title}`}
+              onClick={() => handleViewActivity(activity)}
+              className={`flex w-full items-start gap-4 px-5 py-4 text-left transition hover:bg-slate-50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-400 sm:px-6 ${activity.unread ? "bg-orange-50/40" : ""}`}
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-slate-100 text-orange-600">
+                <FontAwesomeIcon
+                  icon={getStaffActivityIcon(activity.type)}
+                  aria-hidden="true"
+                />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <b className="text-sm text-[#0B1930]">{activity.title}</b>
+                  {activity.unread ? (
+                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                      New
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mt-1 block break-words text-sm text-slate-600">
+                  {activity.description}
+                </span>
+                <span className="mt-1 block text-xs text-slate-400">
+                  {activity.type} · {activity.time}
+                </span>
+              </span>
+              <FontAwesomeIcon
+                icon={faArrowRight}
+                className="mt-1 shrink-0 text-slate-300"
+                aria-hidden="true"
+              />
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
         <DashboardCard title="Today's Order Status">
           {[
@@ -179,6 +265,12 @@ export default function Dashboard() {
           ))}
         </DashboardCard>
       </section>
+
+      <StaffRecentActivityModal
+        activity={selectedActivity}
+        isOpen={Boolean(selectedActivity)}
+        onClose={handleCloseActivity}
+      />
     </div>
   );
 }

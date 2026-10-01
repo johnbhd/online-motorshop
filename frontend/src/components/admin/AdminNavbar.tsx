@@ -21,6 +21,11 @@ const labels: Record<string, string> = {
   "/admin/pickup-requests": "Pickup Requests",
   "/admin/delivery-requests": "Delivery Requests",
   "/admin/products": "Products",
+  "/admin/customers": "Customers",
+  "/admin/messages": "Messages",
+  "/admin/branches": "Branches",
+  "/admin/staff-management": "Staff Management",
+  "/admin/website-content": "Website Content",
 };
 
 export default function AdminNavbar({

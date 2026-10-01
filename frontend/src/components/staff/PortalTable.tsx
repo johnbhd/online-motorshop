@@ -1,5 +1,9 @@
 "use client";
+
 import { useMemo, useState } from "react";
+import PortalPagination, {
+  STAFF_TABLE_PAGE_SIZE,
+} from "@/components/staff/PortalPagination";
 export type Column<T> = {
   label: string;
   render: (row: T) => React.ReactNode;
@@ -43,7 +47,8 @@ export default function PortalTable<T extends object>({
 }) {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("All");
-  const filtered = useMemo(
+  const [currentPage, setCurrentPage] = useState(1);
+  const filteredRows = useMemo(
     () =>
       rows.filter((row) => {
         const text = columns
@@ -57,6 +62,32 @@ export default function PortalTable<T extends object>({
       }),
     [rows, columns, query, tab, tabs, tabValue],
   );
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredRows.length / STAFF_TABLE_PAGE_SIZE),
+  );
+  const visiblePage = Math.min(currentPage, totalPages);
+  const startIndex = (visiblePage - 1) * STAFF_TABLE_PAGE_SIZE;
+  const paginatedRows = filteredRows.slice(
+    startIndex,
+    startIndex + STAFF_TABLE_PAGE_SIZE,
+  );
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleTabChange = (nextTab: string) => {
+    setTab(nextTab);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    const clampedPage = Math.min(Math.max(nextPage, 1), totalPages);
+    setCurrentPage(clampedPage);
+  };
+
   return (
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       {tabs && (
@@ -65,7 +96,8 @@ export default function PortalTable<T extends object>({
             {tabs.map((item) => (
               <button
                 key={item}
-                onClick={() => setTab(item)}
+                type="button"
+                onClick={() => handleTabChange(item)}
                 className={`min-h-14 border-b-2 text-sm font-semibold ${tab === item ? "border-orange-500 text-[#0B1930]" : "border-transparent text-slate-500 hover:text-[#0B1930]"}`}
               >
                 {item}
@@ -85,7 +117,7 @@ export default function PortalTable<T extends object>({
           </span>
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(event) => handleQueryChange(event.target.value)}
             placeholder="Search"
             className="min-h-10 w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
           />
@@ -107,7 +139,7 @@ export default function PortalTable<T extends object>({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map((row, index) => (
+            {paginatedRows.map((row, index) => (
               <tr key={index} className="transition hover:bg-slate-50/80">
                 {columns.map((c) => (
                   <td
@@ -122,7 +154,7 @@ export default function PortalTable<T extends object>({
           </tbody>
         </table>
       </div>
-      {!filtered.length && (
+      {!filteredRows.length && (
         <div className="px-6 py-16 text-center">
           <p className="font-semibold text-[#0B1930]">{empty}</p>
           <p className="mt-1 text-sm text-slate-500">
@@ -130,14 +162,12 @@ export default function PortalTable<T extends object>({
           </p>
         </div>
       )}
-      <div className="border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:px-6">
-        Showing{" "}
-        <span className="font-semibold text-slate-700">
-          {filtered.length ? `1–${filtered.length}` : "0"}
-        </span>{" "}
-        of <span className="font-semibold text-slate-700">{rows.length}</span>{" "}
-        records
-      </div>
+      <PortalPagination
+        currentPage={visiblePage}
+        totalItems={filteredRows.length}
+        pageSize={STAFF_TABLE_PAGE_SIZE}
+        onPageChange={handlePageChange}
+      />
     </section>
   );
 }

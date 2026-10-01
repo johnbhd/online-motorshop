@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChangeEvent, FormEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,11 +17,22 @@ import DeliveryFields from "./DeliveryFields";
 import FulfillmentMethod from "./FulfillmentMethod";
 import StorePickupFields from "./StorePickupFields";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { getAuthToken } from "@/lib/auth/authStorage";
+import {
+  getCheckoutBranches,
+  type CheckoutBranch,
+} from "@/lib/branches/branchApi";
+import {
+  getOrderRequestErrorMessage,
+  OrderRequestApiError,
+  submitOrderRequest,
+} from "@/lib/orders/orderRequestApi";
+import { saveOrderConfirmation } from "@/lib/orders/orderConfirmationStorage";
+import { buildOrderRequestPayload } from "@/lib/orders/orderRequestMapper";
 import type {
   CartItemData,
   FulfillmentMethod as CartFulfillmentMethod,
 } from "../cart/cartTypes";
-import { calculateLineTotal, isUsablePrice } from "../cart/cartData";
 import {
   clearStoredCart,
   readStoredCartItems,
@@ -31,19 +42,11 @@ import type {
   CheckoutDeliveryData,
   CheckoutFieldErrors,
   CheckoutFormData,
-  DemoOrder,
-  DemoOrderItem,
-  DemoOrderFulfillment,
 } from "./checkoutTypes";
 import {
-  createOrderReference,
-  getBranchById,
-  getCartSubtotal,
-  hasDisplayablePrices,
-  readDemoOrders,
+  getCheckoutBranchById,
   readSelectedBranchId,
-  saveDemoCustomer,
-  saveDemoOrder,
+  resolveSelectedBranchId,
   validateCheckoutForm,
 } from "./checkoutUtils";
 
@@ -71,12 +74,40 @@ export default function CheckoutPage() {
   const { isLoading: isAuthLoading, user } = useAuth();
   const isAuthReady = !isAuthLoading;
   const [cartItems, setCartItems] = useState<CartItemData[]>([]);
+  const [branches, setBranches] = useState<CheckoutBranch[]>([]);
+  const [isLoadingBranches, setIsLoadingBranches] = useState(false);
+  const [branchLoadError, setBranchLoadError] = useState("");
   const [formData, setFormData] = useState<CheckoutFormData>(initialFormData);
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
   const [submitError, setSubmitError] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitLockRef = useRef(false);
+
+  const loadBranches = useCallback(async () => {
+    setIsLoadingBranches(true);
+    setBranchLoadError("");
+
+    try {
+      const nextBranches = await getCheckoutBranches();
+
+      setBranches(nextBranches);
+      setFormData((currentFormData) => ({
+        ...currentFormData,
+        branchId: resolveSelectedBranchId(
+          nextBranches,
+          currentFormData.branchId || readSelectedBranchId(),
+        ),
+      }));
+    } catch {
+      setBranches([]);
+      setBranchLoadError(
+        "ALD branches could not be loaded. Please try again before submitting.",
+      );
+    } finally {
+      setIsLoadingBranches(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthReady) {
@@ -102,7 +133,8 @@ export default function CheckoutPage() {
       branchId: readSelectedBranchId(),
     }));
     setIsReady(true);
-  }, [isAuthReady, user]);
+    void loadBranches();
+  }, [isAuthReady, loadBranches, user]);
 
   const updateCustomer = (
     field: keyof CheckoutCustomerData,
@@ -173,7 +205,7 @@ export default function CheckoutPage() {
     setSubmitError("");
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (submitLockRef.current || isSubmitting) {
@@ -186,13 +218,16 @@ export default function CheckoutPage() {
     }
 
     const validationErrors = validateCheckoutForm(formData);
-    const selectedBranch =
-      formData.fulfillmentMethod === "pickup"
-        ? getBranchById(formData.branchId)
-        : undefined;
+    const selectedBranch = getCheckoutBranchById(branches, formData.branchId);
 
-    if (formData.fulfillmentMethod === "pickup" && !selectedBranch) {
-      validationErrors.branchId = "Choose an ALD branch for pickup.";
+    if (!selectedBranch) {
+      validationErrors.branchId = "Choose an ALD branch for this request.";
+    } else if (
+      formData.fulfillmentMethod === "pickup" &&
+      !selectedBranch.pickupAvailable
+    ) {
+      validationErrors.branchId =
+        "Choose a branch that currently supports store pickup.";
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -203,98 +238,73 @@ export default function CheckoutPage() {
 
     submitLockRef.current = true;
     setIsSubmitting(true);
-    setSubmitError("");
 
-    const customer: CheckoutCustomerData = {
-      fullName: formData.fullName.trim(),
-      email: formData.email.trim(),
-      contactNumber: formData.contactNumber.trim(),
-    };
-    const fulfillment: DemoOrderFulfillment = selectedBranch
-      ? {
-          method: "pickup",
-          branch: {
-            id: formData.branchId,
-            name: selectedBranch.name,
-            address: selectedBranch.address,
-          },
-        }
-      : {
-          method: "delivery",
-          delivery: {
-            address: formData.delivery.address.trim(),
-            barangay: formData.delivery.barangay.trim(),
-            city: formData.delivery.city.trim(),
-            contactPerson: formData.delivery.contactPerson.trim(),
-            notes: formData.delivery.notes.trim(),
-          },
-        };
-    const orderItems: DemoOrderItem[] = cartItems.map((item) => {
-      const hasPrice = isUsablePrice(item.price);
+    const payload = buildOrderRequestPayload(formData, cartItems, branches);
 
-      return {
-        product: {
-          ...item.product,
-        },
-        compatibility: item.compatibility,
-        unitPrice: hasPrice ? item.price : null,
-        lineTotal: hasPrice
-          ? calculateLineTotal(item.price, item.quantity)
-          : null,
-        quantity: item.quantity,
-      };
-    });
-    const reference = createOrderReference(readDemoOrders());
-    const timestamp = new Date().toISOString();
-    // TEMPORARY CUSTOMER ORDER HISTORY DEMO.
-    // Guest requests remain unowned; customer requests use the stable account ID.
-    const customerAccountId =
-      user?.role === "customer" ? String(user.id) : null;
-    const subtotal = hasDisplayablePrices(cartItems)
-      ? getCartSubtotal(cartItems)
-      : null;
-    const order: DemoOrder = {
-      reference,
-      customerAccountId,
-      customer,
-      items: orderItems,
-      fulfillment,
-      orderNotes: formData.orderNotes.trim(),
-      subtotal,
-      estimatedTotal: subtotal,
-      totalQuantity: cartItems.reduce(
-        (total, item) => total + item.quantity,
-        0,
-      ),
-      status: "Pending",
-      paymentStatus: "Unpaid",
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      activities: [
-        {
-          id: `${reference}-submitted`,
-          status: "Pending",
-          title: "Order Request Submitted",
-          message: "Your order request has been received.",
-          createdAt: timestamp,
-        },
-      ],
-    };
-
-    if (!saveDemoOrder(order)) {
+    if (!payload) {
       setIsSubmitting(false);
       submitLockRef.current = false;
       setSubmitError(
-        "This request could not be saved in this browser. Please try again or contact ALD Motorshop.",
+        "This request contains an invalid branch or cart item. Review your details and try again.",
       );
       return;
     }
 
-    saveDemoCustomer(customer);
-    clearStoredCart();
-    router.push(
-      `/order-confirmation/${encodeURIComponent(order.reference)}`,
-    );
+    try {
+      const response = await submitOrderRequest(payload, getAuthToken());
+
+      if (!saveOrderConfirmation(response.order)) {
+        throw new OrderRequestApiError(
+          0,
+          "The order was saved, but the confirmation could not be stored in this browser.",
+        );
+      }
+
+      clearStoredCart();
+      router.push(
+        `/order-confirmation/${encodeURIComponent(response.order.reference)}`,
+      );
+    } catch (error) {
+      if (error instanceof OrderRequestApiError && error.status === 0) {
+        setSubmitError(error.message);
+      } else {
+        setSubmitError(
+          getOrderRequestErrorMessage(
+            error,
+            "This request could not be submitted. Your cart is still saved. Please try again.",
+          ),
+        );
+      }
+
+      if (error instanceof OrderRequestApiError) {
+        const firstValidationError = Object.entries(error.errors)[0];
+
+        if (firstValidationError) {
+          const [field, messages] = firstValidationError;
+          const message = messages[0];
+          const fieldMap: Record<string, keyof CheckoutFieldErrors> = {
+            "customer.name": "fullName",
+            "customer.email": "email",
+            "customer.contact_number": "contactNumber",
+            "fulfillment.branch_id": "branchId",
+            "fulfillment.delivery.address": "deliveryAddress",
+            "fulfillment.delivery.barangay": "barangay",
+            "fulfillment.delivery.city": "city",
+            "fulfillment.delivery.contact_person": "contactPerson",
+          };
+
+          if (message && fieldMap[field]) {
+            setErrors((currentErrors) => ({
+              ...currentErrors,
+              [fieldMap[field]]: message,
+            }));
+          }
+        }
+      }
+    } finally {
+      setIsSubmitting(false);
+      submitLockRef.current = false;
+    }
   };
 
   if (!isReady) {
@@ -372,6 +382,15 @@ export default function CheckoutPage() {
           </p>
         ) : null}
 
+        {branchLoadError ? (
+          <p className="checkout-submit-error" role="alert">
+            {branchLoadError}{" "}
+            <button type="button" onClick={() => void loadBranches()}>
+              Try again
+            </button>
+          </p>
+        ) : null}
+
         <form className="checkout-layout" onSubmit={handleSubmit} noValidate>
           <div className="checkout-form-column">
             <CustomerInformation
@@ -385,29 +404,32 @@ export default function CheckoutPage() {
               onChange={handleFulfillmentChange}
             />
 
-            {formData.fulfillmentMethod === "pickup" ? (
-              <StorePickupFields
-                selectedBranchId={formData.branchId}
-                error={errors.branchId}
-                onChange={(branchId) => {
-                  setFormData((currentFormData) => ({
-                    ...currentFormData,
-                    branchId,
-                  }));
-                  setErrors((currentErrors) => ({
-                    ...currentErrors,
-                    branchId: undefined,
-                  }));
-                  setSubmitError("");
-                }}
-              />
-            ) : (
+            <StorePickupFields
+              branches={branches}
+              fulfillmentMethod={formData.fulfillmentMethod}
+              selectedBranchId={formData.branchId}
+              isLoading={isLoadingBranches}
+              error={errors.branchId}
+              onChange={(branchId) => {
+                setFormData((currentFormData) => ({
+                  ...currentFormData,
+                  branchId,
+                }));
+                setErrors((currentErrors) => ({
+                  ...currentErrors,
+                  branchId: undefined,
+                }));
+                setSubmitError("");
+              }}
+            />
+
+            {formData.fulfillmentMethod === "delivery" ? (
               <DeliveryFields
                 values={formData.delivery}
                 errors={errors}
                 onChange={updateDelivery}
               />
-            )}
+            ) : null}
 
             <section className="checkout-section checkout-section--payment" aria-labelledby="checkout-payment-title">
               <div className="checkout-section-heading">
