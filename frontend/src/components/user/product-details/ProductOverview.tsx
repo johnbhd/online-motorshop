@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-import type { ProductDisplayItem } from "../products/productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
 type ProductOverviewProps = {
   product: ProductDisplayItem;

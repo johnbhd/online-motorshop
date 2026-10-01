@@ -48,16 +48,6 @@ export type HomeCategory = {
   href: string;
 };
 
-export type HomeProduct = {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  image: string;
-  alt: string;
-  href: string;
-};
-
 export type OrderingStep = {
   id: string;
   title: string;
@@ -220,89 +210,17 @@ export const homeCategories: HomeCategory[] = [
   },
 ];
 
-export const featuredProducts: HomeProduct[] = [
-  {
-    id: "HON-002",
-    name: "Honda Air Filter",
-    brand: "Honda",
-    category: "Accessories & Maintenance",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561452/Honda-Air-Filter.png",
-    alt: "Motorcycle parts display for Honda air filter customers",
-    href: "/products/HON-002",
-  },
-  {
-    id: "HON-007",
-    name: "Honda Motorcycle Battery",
-    brand: "Honda",
-    category: "Electrical Parts",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561463/Honda-Battery.png",
-    alt: "Motorcycle parts display for Honda battery customers",
-    href: "/products/HON-007",
-  },
-  {
-    id: "HON-010",
-    name: "Honda Shock Absorber",
-    brand: "Honda",
-    category: "Suspension Parts",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787560947/Honda-Shock-Absorber.png",
-    alt: "Motorcycle parts display for Honda suspension customers",
-    href: "/products/HON-010",
-  },
-  {
-    id: "SUZ-005",
-    name: "Suzuki Brake Shoe",
-    brand: "Suzuki",
-    category: "Brake Parts",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561079/Suzuki-Brake-Shoe.png",
-    alt: "Motorcycle parts display for Suzuki brake customers",
-    href: "/products/SUZ-005",
-  },
-  {
-    id: "SUZ-009",
-    name: "Suzuki Tire",
-    brand: "Suzuki",
-    category: "Tires & Wheels",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561038/Suzuki-Tire.png",
-    alt: "Motorcycle parts display for Suzuki tire customers",
-    href: "/products/SUZ-009",
-  },
-  {
-    id: "SUZ-006",
-    name: "Suzuki Drive Chain Kit",
-    brand: "Suzuki",
-    category: "Transmission Parts",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561052/Suzuki-Chain-Kit.png",
-    alt: "Motorcycle parts display for Suzuki transmission customers",
-    href: "/products/SUZ-006",
-  },
-  {
-    id: "YAM-002",
-    name: "Yamaha Brake Pad Kit",
-    brand: "Yamaha",
-    category: "Brake Parts",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561155/Yamaha-Brake-Pad.png",
-    alt: "Motorcycle parts display for Yamaha brake customers",
-    href: "/products/YAM-002",
-  },
-  {
-    id: "YAM-005",
-    name: "Yamaha Spark Plug",
-    brand: "Yamaha",
-    category: "Electrical Parts",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561151/Yamaha-Spark-Plug.png",
-    alt: "Motorcycle parts display for Yamaha electrical customers",
-    href: "/products/YAM-005",
-  },
-  {
-    id: "YAM-001",
-    name: "Yamaha V-Belt",
-    brand: "Yamaha",
-    category: "Transmission Parts",
-    image: "https://res.cloudinary.com/ykkjo51n/image/upload/v1787561168/Yamaha-V-Belt.png",
-    alt: "Motorcycle parts display for Yamaha transmission customers",
-    href: "/products/YAM-001",
-  },
-];
+export const featuredProductIds = [
+  "HON-002",
+  "HON-007",
+  "HON-010",
+  "SUZ-005",
+  "SUZ-009",
+  "SUZ-006",
+  "YAM-002",
+  "YAM-005",
+  "YAM-001",
+] as const;
 
 export const orderingSteps: OrderingStep[] = [
   {

@@ -4,14 +4,21 @@ import Image from "next/image";
 import { useCallback, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  aboutBranches,
   branchInfoIcons,
   type AboutBranch,
 } from "./aboutData";
 import BranchMapModal from "./modal/BranchMapModal";
 import { getBranchId, saveSelectedBranchId } from "@/lib/branches/branchStorage";
 
-export default function AboutBranchesNext() {
+type AboutBranchesProps = {
+  branches: AboutBranch[];
+  error?: string;
+};
+
+export default function AboutBranchesNext({
+  branches,
+  error,
+}: AboutBranchesProps) {
   const [selectedBranch, setSelectedBranch] =
     useState<AboutBranch | null>(null);
   const handleOpenMap = useCallback(
@@ -37,8 +44,14 @@ export default function AboutBranchesNext() {
             ALD Motorshop.
           </p>
         </div>
-        <div className="branch-grid">
-          {aboutBranches.map((branch) => (
+        {error ? (
+          <p className="branches-error" role="status">
+            Branch information is temporarily unavailable. Please try again
+            shortly.
+          </p>
+        ) : (
+          <div className="branch-grid">
+          {branches.map((branch) => (
             <article className="branch-card" key={branch.name}>
               <div className="branch-photo">
                 <Image
@@ -66,7 +79,7 @@ export default function AboutBranchesNext() {
                   <div className="icon">
                     <FontAwesomeIcon icon={branchInfoIcons.contact} />
                   </div>
-                  <span>Contact ALD Motorshop</span>
+                  <span>{branch.contactNumber ?? "Contact ALD Motorshop"}</span>
                 </div>
                 <div className="tag-row">
                   {branch.tags.map((tag) => (
@@ -95,13 +108,16 @@ export default function AboutBranchesNext() {
                     }}
                   >
                     <FontAwesomeIcon icon={branchInfoIcons.pickup} />
-                    Select as Pickup Branch
+                    {branch.pickupAvailable === false
+                      ? "Pickup unavailable"
+                      : "Select as Pickup Branch"}
                   </button>
                 </div>
               </div>
             </article>
           ))}
-        </div>
+          </div>
+        )}
       </div>
       {selectedBranch && (
         <BranchMapModal

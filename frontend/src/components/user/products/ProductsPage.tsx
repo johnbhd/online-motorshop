@@ -1,4 +1,4 @@
-import ProductsCatalog from "./ProductsCatalog";
+import ProductsCatalog from "./ProductsCatalogRemote";
 import ProductsHero from "./ProductsHero";
 
 type ProductsPageProps = {

@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProductDetailsPage from "@/components/user/product-details/ProductDetailsPage";
-import { getProductById } from "@/components/user/products/productsData";
+import {
+  CatalogApiError,
+  getCatalogProduct,
+} from "@/lib/catalog/catalogQueries";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
+
+export const dynamic = "force-dynamic";
 
 type ProductDetailsRouteProps = {
   params: Promise<{
@@ -13,26 +19,33 @@ export async function generateMetadata({
   params,
 }: ProductDetailsRouteProps): Promise<Metadata> {
   const { productId } = await params;
-  const product = getProductById(productId);
 
-  if (!product) {
+  try {
+    const { product } = await getCatalogProduct(productId);
+
+    return {
+      title: `${product.name} | ALD Motorshop`,
+      description: product.description,
+    };
+  } catch {
     return {};
   }
-
-  return {
-    title: `${product.name} | ALD Motorshop`,
-    description: product.description,
-  };
 }
 
 export default async function ProductDetailsRoute({
   params,
 }: ProductDetailsRouteProps) {
   const { productId } = await params;
-  const product = getProductById(productId);
+  let product: ProductDisplayItem;
 
-  if (!product) {
-    notFound();
+  try {
+    ({ product } = await getCatalogProduct(productId));
+  } catch (error) {
+    if (error instanceof CatalogApiError && error.status === 404) {
+      notFound();
+    }
+
+    throw error;
   }
 
   return <ProductDetailsPage product={product} />;

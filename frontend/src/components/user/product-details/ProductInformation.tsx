@@ -1,4 +1,4 @@
-import type { ProductDisplayItem } from "../products/productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
 type ProductInformationProps = {
   product: ProductDisplayItem;
@@ -46,9 +46,8 @@ export default function ProductInformation({
       </div>
 
       <p className="product-details-information-note">
-        Displayed prices are temporary Philippine peso demo estimates. Confirm model
-        compatibility, stock quantity, specifications, and final pricing with ALD
-        staff before ordering.
+        Prices are current catalog values. Confirm model compatibility, stock
+        quantity, specifications, and final availability with ALD staff before ordering.
       </p>
     </section>
   );

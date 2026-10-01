@@ -1,5 +1,5 @@
 import ProductCard from "./ProductCard";
-import type { ProductDisplayItem } from "./productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import type { ProductViewMode } from "./ProductsToolbar";
 
 type ProductGridProps = {

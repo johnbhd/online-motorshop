@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { ProductDisplayItem } from "../products/productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
 type ProductGalleryProps = {
   product: ProductDisplayItem;
