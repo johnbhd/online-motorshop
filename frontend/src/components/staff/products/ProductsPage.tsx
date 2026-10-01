@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalTable, {
   Badge,
@@ -7,9 +8,57 @@ import PortalTable, {
 } from "@/components/staff/PortalTable";
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
 import Summary from "@/components/staff/Summary";
+import StaffProductAvailabilityModal, {
+  type ProductAvailability,
+} from "./StaffProductAvailabilityModal";
+import StaffProductDetailsModal from "./StaffProductDetailsModal";
 import { products, type Product } from "@/lib/mock/staff";
 
 export default function ProductsPage() {
+  const [productRows, setProductRows] = useState<Product[]>(products);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(
+    null,
+  );
+  const [productModal, setProductModal] = useState<
+    "details" | "availability" | null
+  >(null);
+
+  const openProductDetails = useCallback((product: Product) => {
+    setSelectedProduct(product);
+    setProductModal("details");
+  }, []);
+
+  const openAvailabilityModal = useCallback((product: Product) => {
+    setSelectedProduct(product);
+    setProductModal("availability");
+  }, []);
+
+  const closeProductModal = useCallback(() => {
+    setProductModal(null);
+    setSelectedProduct(null);
+  }, []);
+
+  const updateAvailability = useCallback(
+    (partNumber: string, availability: ProductAvailability) => {
+      setProductRows((currentProducts) =>
+        currentProducts.map((product) =>
+          product.partNumber === partNumber
+            ? {
+                ...product,
+                availability,
+                action:
+                  availability === "Available"
+                    ? "View Product"
+                    : "Update Status",
+              }
+            : product,
+        ),
+      );
+      closeProductModal();
+    },
+    [closeProductModal],
+  );
+
   const columns: Column<Product>[] = [
     {
       label: "Product",
@@ -34,7 +83,22 @@ export default function ProductsPage() {
       search: (row) => row.availability,
     },
     { label: "Updated", render: (row) => row.updated },
-    { label: "Action", render: (row) => <ActionButton label={row.action} /> },
+    {
+      label: "Action",
+      render: (row) => (
+        <ActionButton
+          label={row.action}
+          onClick={() => {
+            if (row.action === "View Product") {
+              openProductDetails(row);
+              return;
+            }
+
+            openAvailabilityModal(row);
+          }}
+        />
+      ),
+    },
   ];
 
   return (
@@ -55,7 +119,7 @@ export default function ProductsPage() {
       <PortalTable
         title="Product List"
         description="86 products in catalog"
-        rows={products}
+        rows={productRows}
         columns={columns}
         tabs={[
           "All",
@@ -65,6 +129,19 @@ export default function ProductsPage() {
           "Out of Stock",
         ]}
         tabValue={(row, tab) => row.availability === tab}
+      />
+      <StaffProductDetailsModal
+        key={`details-${selectedProduct?.partNumber ?? "closed"}`}
+        isOpen={productModal === "details"}
+        product={selectedProduct}
+        onClose={closeProductModal}
+      />
+      <StaffProductAvailabilityModal
+        key={`availability-${selectedProduct?.partNumber ?? "closed"}`}
+        isOpen={productModal === "availability"}
+        product={selectedProduct}
+        onClose={closeProductModal}
+        onUpdateAvailability={updateAvailability}
       />
     </div>
   );
