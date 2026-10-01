@@ -10,6 +10,8 @@ import PickupRequestDetailsModal, {
 import DeliveryRequestDetailsModal, {
   type DeliveryModalMode,
 } from "./delivery-requests/DeliveryRequestDetailsModal";
+import CreateProductModal from "./products/CreateProductModal";
+import ManageProductModal from "./products/ManageProductModal";
 import type { Column } from "@/components/staff/PortalTable";
 import {
   adminPayments,
@@ -539,9 +541,32 @@ export function ProductsPage() {
   const [query, setQuery] = useState("");
   const [brand, setBrand] = useState("All");
   const [availability, setAvailability] = useState("All");
+  const [products, setProducts] = useState(adminProducts);
+  const [isCreateProductModalOpen, setIsCreateProductModalOpen] =
+    useState(false);
+  const [selectedProductPartNumber, setSelectedProductPartNumber] = useState<
+    string | null
+  >(null);
+  const [isManageProductModalOpen, setIsManageProductModalOpen] =
+    useState(false);
+  const selectedProduct =
+    products.find(
+      (product) => product.partNumber === selectedProductPartNumber,
+    ) ?? null;
+  const brandOptions = productBrands.map((brandItem) => brandItem.name);
+  const categoryOptions = productCategories.map(
+    (categoryItem) => categoryItem.name,
+  );
+  const availabilityOptions = Array.from(
+    new Set(products.map((product) => product.availability)),
+  );
+  const statusOptions = Array.from(
+    new Set(products.map((product) => product.status)),
+  );
+
   const filtered = useMemo(
     () =>
-      adminProducts.filter(
+      products.filter(
         (p) =>
           `${p.name} ${p.partNumber}`
             .toLowerCase()
@@ -549,8 +574,46 @@ export function ProductsPage() {
           (brand === "All" || p.brand === brand) &&
           (availability === "All" || p.availability === availability),
       ),
-    [query, brand, availability],
+    [products, query, brand, availability],
   );
+
+  const openCreateProductModal = () => {
+    setIsCreateProductModalOpen(true);
+  };
+
+  const closeCreateProductModal = () => {
+    setIsCreateProductModalOpen(false);
+  };
+
+  const openManageProductModal = (product: AdminProduct) => {
+    setSelectedProductPartNumber(product.partNumber);
+    setIsManageProductModalOpen(true);
+  };
+
+  const closeManageProductModal = () => {
+    setIsManageProductModalOpen(false);
+    setSelectedProductPartNumber(null);
+  };
+
+  const createProduct = (product: AdminProduct) => {
+    setProducts((currentProducts) => [product, ...currentProducts]);
+    closeCreateProductModal();
+  };
+
+  const saveProduct = (
+    originalPartNumber: string,
+    product: AdminProduct,
+  ) => {
+    setProducts((currentProducts) =>
+      currentProducts.map((currentProduct) =>
+        currentProduct.partNumber === originalPartNumber
+          ? product
+          : currentProduct,
+      ),
+    );
+    closeManageProductModal();
+  };
+
   const columns: Column<AdminProduct>[] = [
     {
       label: "Product",
@@ -579,7 +642,18 @@ export function ProductsPage() {
       search: (r) => r.status,
     },
     { label: "Updated", render: (r) => r.updated },
-    { label: "Action", render: () => action("Manage") },
+    {
+      label: "Action",
+      render: (product) => (
+        <button
+          className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+          type="button"
+          onClick={() => openManageProductModal(product)}
+        >
+          Manage
+        </button>
+      ),
+    },
   ];
   return (
     <div className="space-y-5">
@@ -651,7 +725,11 @@ export function ProductsPage() {
               </select>
             </div>
           </section>
-          <ProductTable rows={filtered} columns={columns} />
+          <ProductTable
+            rows={filtered}
+            columns={columns}
+            onAddProduct={openCreateProductModal}
+          />
         </>
       )}
       {main === "Categories & Brands" && (
@@ -718,15 +796,40 @@ export function ProductsPage() {
           </div>
         </section>
       )}
+      <CreateProductModal
+        key={isCreateProductModalOpen ? "create-open" : "create-closed"}
+        isOpen={isCreateProductModalOpen}
+        existingProducts={products}
+        brandOptions={brandOptions}
+        categoryOptions={categoryOptions}
+        availabilityOptions={availabilityOptions}
+        statusOptions={statusOptions}
+        onClose={closeCreateProductModal}
+        onCreate={createProduct}
+      />
+      <ManageProductModal
+        key={selectedProduct?.partNumber ?? "manage-closed"}
+        isOpen={isManageProductModalOpen}
+        product={selectedProduct}
+        existingProducts={products}
+        brandOptions={brandOptions}
+        categoryOptions={categoryOptions}
+        availabilityOptions={availabilityOptions}
+        statusOptions={statusOptions}
+        onClose={closeManageProductModal}
+        onSave={saveProduct}
+      />
     </div>
   );
 }
 function ProductTable({
   rows,
   columns,
+  onAddProduct,
 }: {
   rows: AdminProduct[];
   columns: Column<AdminProduct>[];
+  onAddProduct: () => void;
 }) {
   return (
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -737,7 +840,11 @@ function ProductTable({
             {rows.length} motorcycle products
           </p>
         </div>
-        <button className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white">
+        <button
+          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white"
+          type="button"
+          onClick={onAddProduct}
+        >
           + Add Product
         </button>
       </div>
