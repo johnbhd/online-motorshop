@@ -514,3 +514,32 @@
     scroll-behavior: auto;
   }
 }
+
+.admin-branch-staff-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-branch-staff-table {
+  min-width: 620px;
+}
+
+.admin-branch-staff-table th:first-child,
+.admin-branch-staff-table td:first-child {
+  width: 30%;
+}
+
+.admin-branch-staff-table th:nth-child(2),
+.admin-branch-staff-table td:nth-child(2) {
+  width: 24%;
+  text-align: left;
+}
+
+.admin-branch-staff-table th:nth-child(3),
+.admin-branch-staff-table td:nth-child(3) {
+  width: 32%;
+}
+
+.admin-branch-staff-table th:nth-child(4),
+.admin-branch-staff-table td:nth-child(4) {
+  width: 14%;
+}
