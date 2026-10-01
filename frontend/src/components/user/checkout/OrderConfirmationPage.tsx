@@ -8,6 +8,7 @@ import {
   faCheck,
   faCircleInfo,
   faFileLines,
+  faPhone,
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
@@ -159,6 +160,15 @@ export default function OrderConfirmationPage({
                 {order.customer
                   ? `${order.customer.full_name} · ${order.customer.email}`
                   : "Customer details unavailable"}
+              </span>
+            </div>
+            <div>
+              <span className="order-confirmation-detail-icon" aria-hidden="true">
+                <FontAwesomeIcon icon={faPhone} />
+              </span>
+              <span>
+                <strong>Contact Number</strong>
+                {order.customer?.contact_number || "Contact number unavailable"}
               </span>
             </div>
           </div>

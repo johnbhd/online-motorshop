@@ -8,6 +8,7 @@ import {
   faMagnifyingGlass,
   faPhone,
 } from "@fortawesome/free-solid-svg-icons";
+import { getOrderConfirmation } from "@/lib/orders/orderConfirmationStorage";
 
 type TrackOrderSearchProps = {
   error: string;
@@ -31,6 +32,13 @@ export default function TrackOrderSearch({
     if (queryReference) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- prefill the reference from the confirmation link after hydration
       setReference(queryReference);
+
+      const savedConfirmation = getOrderConfirmation(queryReference);
+      const savedContactNumber = savedConfirmation?.customer?.contact_number;
+
+      if (savedContactNumber?.trim()) {
+        setContactNumber(savedContactNumber);
+      }
     }
   }, []);
 
