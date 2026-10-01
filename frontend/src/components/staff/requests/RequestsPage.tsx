@@ -10,6 +10,8 @@ import {
   pickupRequests,
   type Request,
 } from "@/lib/mock/staff";
+import { useCallback, useMemo, useState } from "react";
+import StaffPickupRequestDetailsModal from "@/components/staff/pickup-requests/StaffPickupRequestDetailsModal";
 
 type RequestsPageProps = {
   type: "pickup" | "delivery";
@@ -17,42 +19,85 @@ type RequestsPageProps = {
 
 export default function RequestsPage({ type }: RequestsPageProps) {
   const delivery = type === "delivery";
-  const records = delivery ? deliveryRequests : pickupRequests;
-  const columns: Column<Request>[] = [
-    {
-      label: "Order",
-      render: (row) => <b className="text-[#0B1930]">{row.orderReference}</b>,
-      search: (row) => row.orderReference,
+  const [pickupRecords, setPickupRecords] = useState<Request[]>(pickupRequests);
+  const [selectedPickupRequest, setSelectedPickupRequest] =
+    useState<Request | null>(null);
+  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
+  const records = delivery ? deliveryRequests : pickupRecords;
+
+  const handleViewPickup = useCallback((pickupRequest: Request) => {
+    setSelectedPickupRequest(pickupRequest);
+    setIsPickupModalOpen(true);
+  }, []);
+
+  const handleClosePickup = useCallback(() => {
+    setIsPickupModalOpen(false);
+    setSelectedPickupRequest(null);
+  }, []);
+
+  const handlePickupStatusChange = useCallback(
+    (orderReference: string, nextStatus: "Ready for Pickup" | "Completed") => {
+      setPickupRecords((currentRecords) =>
+        currentRecords.map((record) =>
+          record.orderReference === orderReference
+            ? {
+                ...record,
+                status: nextStatus,
+              }
+            : record,
+        ),
+      );
+      handleClosePickup();
     },
-    {
-      label: "Customer",
-      render: (row) => row.customer,
-      search: (row) => row.customer,
-    },
-    {
-      label: "Branch",
-      render: (row) => row.branch,
-      search: (row) => row.branch,
-    },
-    ...(delivery
-      ? [
-          {
-            label: "Destination",
-            render: (row: Request) => row.destination ?? "â€”",
-            search: (row: Request) => row.destination ?? "",
-          },
-        ]
-      : []),
-    { label: "Amount", render: (row) => <b>{row.amount}</b> },
-    { label: "Payment", render: (row) => <Badge>{row.payment}</Badge> },
-    {
-      label: "Status",
-      render: (row) => <Badge>{row.status}</Badge>,
-      search: (row) => row.status,
-    },
-    { label: "Updated", render: (row) => row.updated },
-    { label: "Action", render: (row) => <ActionButton label={row.action} /> },
-  ];
+    [handleClosePickup],
+  );
+
+  const columns: Column<Request>[] = useMemo(
+    () => [
+      {
+        label: "Order",
+        render: (row) => <b className="text-[#0B1930]">{row.orderReference}</b>,
+        search: (row) => row.orderReference,
+      },
+      {
+        label: "Customer",
+        render: (row) => row.customer,
+        search: (row) => row.customer,
+      },
+      {
+        label: "Branch",
+        render: (row) => row.branch,
+        search: (row) => row.branch,
+      },
+      ...(delivery
+        ? [
+            {
+              label: "Destination",
+              render: (row: Request) => row.destination ?? "â€”",
+              search: (row: Request) => row.destination ?? "",
+            },
+          ]
+        : []),
+      { label: "Amount", render: (row) => <b>{row.amount}</b> },
+      { label: "Payment", render: (row) => <Badge>{row.payment}</Badge> },
+      {
+        label: "Status",
+        render: (row) => <Badge>{row.status}</Badge>,
+        search: (row) => row.status,
+      },
+      { label: "Updated", render: (row) => row.updated },
+      {
+        label: "Action",
+        render: (row) => (
+          <ActionButton
+            label={row.action}
+            onClick={delivery ? undefined : () => handleViewPickup(row)}
+          />
+        ),
+      },
+    ],
+    [delivery, handleViewPickup],
+  );
   const title = delivery ? "Delivery Requests" : "Pickup Requests";
   const summary: SummaryItem[] = delivery
     ? [
@@ -62,10 +107,32 @@ export default function RequestsPage({ type }: RequestsPageProps) {
         ["1", "Waiting for Booking", "Needs staff action"],
       ]
     : [
-        ["18", "Pickup Requests", "All pickup orders"],
-        ["4", "Active Pickups", "Preparing or ready"],
-        ["2", "Preparing", "Currently being prepared"],
-        ["12", "Completed", "Picked up successfully"],
+        [String(records.length), "Pickup Requests", "All pickup orders"],
+        [
+          String(
+            records.filter(
+              (record) =>
+                record.status === "Preparing" ||
+                record.status === "Ready for Pickup",
+            ).length,
+          ),
+          "Active Pickups",
+          "Preparing or ready",
+        ],
+        [
+          String(
+            records.filter((record) => record.status === "Preparing").length,
+          ),
+          "Preparing",
+          "Currently being prepared",
+        ],
+        [
+          String(
+            records.filter((record) => record.status === "Completed").length,
+          ),
+          "Completed",
+          "Picked up successfully",
+        ],
       ];
 
   return (
@@ -96,6 +163,14 @@ export default function RequestsPage({ type }: RequestsPageProps) {
         ]}
         tabValue={(row, tab) => row.status === tab}
       />
+      {!delivery ? (
+        <StaffPickupRequestDetailsModal
+          pickupRequest={selectedPickupRequest}
+          isOpen={isPickupModalOpen}
+          onClose={handleClosePickup}
+          onStatusChange={handlePickupStatusChange}
+        />
+      ) : null}
     </div>
   );
 }
