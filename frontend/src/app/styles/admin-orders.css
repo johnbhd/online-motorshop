@@ -179,6 +179,10 @@
   border-radius: 0.55rem;
 }
 
+.admin-customer-orders-table-wrap {
+  overflow-x: auto;
+}
+
 .admin-order-items-table {
   width: 100%;
   table-layout: fixed;
@@ -186,6 +190,40 @@
   color: #475569;
   font-size: 0.8rem;
   text-align: left;
+}
+
+.admin-customer-orders-table {
+  min-width: 680px;
+}
+
+.admin-customer-orders-table th:first-child,
+.admin-customer-orders-table td:first-child {
+  width: 22%;
+}
+
+.admin-customer-orders-table th:nth-child(2),
+.admin-customer-orders-table td:nth-child(2) {
+  width: 14%;
+}
+
+.admin-customer-orders-table th:nth-child(3),
+.admin-customer-orders-table td:nth-child(3) {
+  width: 14%;
+}
+
+.admin-customer-orders-table th:nth-child(4),
+.admin-customer-orders-table td:nth-child(4) {
+  width: 22%;
+}
+
+.admin-customer-orders-table th:nth-child(5),
+.admin-customer-orders-table td:nth-child(5) {
+  width: 14%;
+}
+
+.admin-customer-orders-table th:nth-child(6),
+.admin-customer-orders-table td:nth-child(6) {
+  width: 14%;
 }
 
 .admin-order-items-table th,
