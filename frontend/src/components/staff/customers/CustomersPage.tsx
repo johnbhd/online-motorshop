@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalTable, {
   Badge,
@@ -8,8 +9,23 @@ import PortalTable, {
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
 import Summary from "@/components/staff/Summary";
 import { customers, type Customer } from "@/lib/mock/staff";
+import StaffCustomerDetailsModal from "./StaffCustomerDetailsModal";
 
 export default function CustomersPage() {
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<Customer | null>(null);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+
+  const openCustomerModal = useCallback((customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsCustomerModalOpen(true);
+  }, []);
+
+  const closeCustomerModal = useCallback(() => {
+    setIsCustomerModalOpen(false);
+    setSelectedCustomer(null);
+  }, []);
+
   const columns: Column<Customer>[] = [
     {
       label: "Customer",
@@ -40,7 +56,15 @@ export default function CustomersPage() {
     { label: "Orders", render: (row) => row.orders },
     { label: "Active Orders", render: (row) => row.activeOrders },
     { label: "Last Order", render: (row) => row.lastOrder },
-    { label: "Action", render: () => <ActionButton label="View Customer" /> },
+    {
+      label: "Action",
+      render: (row) => (
+        <ActionButton
+          label="View Customer"
+          onClick={() => openCustomerModal(row)}
+        />
+      ),
+    },
   ];
 
   return (
@@ -65,6 +89,12 @@ export default function CustomersPage() {
         columns={columns}
         tabs={["All", "Registered", "Guest"]}
         tabValue={(row, tab) => row.type === tab}
+      />
+      <StaffCustomerDetailsModal
+        key={selectedCustomer?.name ?? "closed"}
+        isOpen={isCustomerModalOpen}
+        customer={selectedCustomer}
+        onClose={closeCustomerModal}
       />
     </div>
   );
