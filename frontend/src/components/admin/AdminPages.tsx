@@ -7,6 +7,9 @@ import PaymentDetailsModal, {
 import PickupRequestDetailsModal, {
   type PickupModalMode,
 } from "./pickup-requests/PickupRequestDetailsModal";
+import DeliveryRequestDetailsModal, {
+  type DeliveryModalMode,
+} from "./delivery-requests/DeliveryRequestDetailsModal";
 import type { Column } from "@/components/staff/PortalTable";
 import {
   adminPayments,
@@ -365,6 +368,56 @@ export function PickupsPage() {
   );
 }
 export function DeliveriesPage() {
+  const [deliveries, setDeliveries] = useState(adminDeliveries);
+  const [selectedDeliveryOrder, setSelectedDeliveryOrder] = useState<
+    string | null
+  >(null);
+  const [deliveryModalMode, setDeliveryModalMode] =
+    useState<DeliveryModalMode>("view");
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const selectedDeliveryRequest =
+    deliveries.find((delivery) => delivery.order === selectedDeliveryOrder) ??
+    null;
+
+  const openDeliveryModal = (
+    delivery: AdminDelivery,
+    mode: DeliveryModalMode,
+  ) => {
+    setSelectedDeliveryOrder(delivery.order);
+    setDeliveryModalMode(mode);
+    setIsDeliveryModalOpen(true);
+  };
+
+  const closeDeliveryModal = () => {
+    setIsDeliveryModalOpen(false);
+    setSelectedDeliveryOrder(null);
+  };
+
+  const updateDelivery = (
+    orderId: string,
+    changes: Partial<AdminDelivery>,
+  ) => {
+    setDeliveries((currentDeliveries) =>
+      currentDeliveries.map((delivery) =>
+        delivery.order === orderId ? { ...delivery, ...changes } : delivery,
+      ),
+    );
+  };
+
+  const assignDeliveryStaff = (orderId: string, staff: string) => {
+    updateDelivery(orderId, { staff });
+  };
+
+  const markDeliveryBooked = (orderId: string) => {
+    updateDelivery(orderId, { status: "Booked", action: "View" });
+    closeDeliveryModal();
+  };
+
+  const cancelDelivery = (orderId: string) => {
+    updateDelivery(orderId, { status: "Cancelled", action: "View" });
+    closeDeliveryModal();
+  };
+
   const c: Column<AdminDelivery>[] = [
     {
       label: "Order",
@@ -386,7 +439,23 @@ export function DeliveriesPage() {
       render: (r) => <AdminBadge>{r.status}</AdminBadge>,
       search: (r) => r.status,
     },
-    { label: "Action", render: (r) => action(r.action) },
+    {
+      label: "Action",
+      render: (delivery) => {
+        const mode: DeliveryModalMode =
+          delivery.action === "View" ? "view" : "review";
+
+        return (
+          <button
+            className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+            type="button"
+            onClick={() => openDeliveryModal(delivery, mode)}
+          >
+            {mode === "review" ? "Review" : "View"}
+          </button>
+        );
+      },
+    },
   ];
   return (
     <div className="space-y-5">
@@ -405,7 +474,7 @@ export function DeliveriesPage() {
       <AdminDataTable
         title="Delivery Request List"
         description="20 Lalamove delivery requests"
-        rows={adminDeliveries}
+        rows={deliveries}
         columns={c}
         tabs={[
           "All",
@@ -451,6 +520,16 @@ export function DeliveriesPage() {
           ["Makati Branch", "7", "1 Active · 6 Delivered"],
           ["Imus Branch", "5", "0 Active · 5 Delivered"],
         ]}
+      />
+      <DeliveryRequestDetailsModal
+        key={selectedDeliveryRequest?.order ?? "closed"}
+        isOpen={isDeliveryModalOpen}
+        mode={deliveryModalMode}
+        deliveryRequest={selectedDeliveryRequest}
+        onClose={closeDeliveryModal}
+        onAssignStaff={assignDeliveryStaff}
+        onMarkBooked={markDeliveryBooked}
+        onCancel={cancelDelivery}
       />
     </div>
   );
