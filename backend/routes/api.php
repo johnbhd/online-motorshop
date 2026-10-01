@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffDeliveryRequestsController;
@@ -44,6 +45,8 @@ Route::get('/categories', [CatalogController::class, 'categories'])
     ->name('catalog.categories.index');
 Route::get('/branches', [CatalogController::class, 'branches'])
     ->name('catalog.branches.index');
+Route::post('/order-requests', [OrderRequestController::class, 'store'])
+    ->name('order-requests.store');
 
 // Auth
 Route::prefix('auth')->group(function () {
