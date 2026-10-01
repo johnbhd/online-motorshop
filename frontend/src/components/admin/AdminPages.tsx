@@ -1,6 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
 import AdminDataTable, { AdminBadge } from "./AdminDataTable";
+import PaymentDetailsModal, {
+  type PaymentModalMode,
+} from "./payments/PaymentDetailsModal";
 import type { Column } from "@/components/staff/PortalTable";
 import {
   adminPayments,
@@ -60,6 +63,43 @@ const metrics = (items: [string, string, string][]) => (
   </section>
 );
 export function PaymentsPage() {
+  const [payments, setPayments] = useState(adminPayments);
+  const [selectedPayment, setSelectedPayment] =
+    useState<AdminPayment | null>(null);
+  const [paymentModalMode, setPaymentModalMode] =
+    useState<PaymentModalMode>("view");
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+  const openPaymentModal = (
+    payment: AdminPayment,
+    mode: PaymentModalMode,
+  ) => {
+    setSelectedPayment(payment);
+    setPaymentModalMode(mode);
+    setIsPaymentModalOpen(true);
+  };
+
+  const closePaymentModal = () => {
+    setIsPaymentModalOpen(false);
+    setSelectedPayment(null);
+  };
+
+  const updatePaymentStatus = (orderId: string, status: string) => {
+    setPayments((currentPayments) =>
+      currentPayments.map((payment) =>
+        payment.order === orderId
+          ? {
+              ...payment,
+              status,
+              verifiedBy: "Admin User",
+              action: "View",
+            }
+          : payment,
+      ),
+    );
+    closePaymentModal();
+  };
+
   const c: Column<AdminPayment>[] = [
     {
       label: "Order",
@@ -82,7 +122,23 @@ export function PaymentsPage() {
       search: (r) => r.verifiedBy,
     },
     { label: "Payment Date", render: (r) => r.date },
-    { label: "Action", render: (r) => action(r.action) },
+    {
+      label: "Action",
+      render: (payment) => {
+        const mode: PaymentModalMode =
+          payment.action === "Review" ? "review" : "view";
+
+        return (
+          <button
+            className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+            type="button"
+            onClick={() => openPaymentModal(payment, mode)}
+          >
+            {mode === "review" ? "Review" : "View"}
+          </button>
+        );
+      },
+    },
   ];
   return (
     <div className="space-y-5">
@@ -101,7 +157,7 @@ export function PaymentsPage() {
       <AdminDataTable
         title="Payment Records"
         description="41 customer payment records"
-        rows={adminPayments}
+        rows={payments}
         columns={c}
         tabs={[
           "All",
@@ -138,6 +194,15 @@ export function PaymentsPage() {
             ],
           },
         ]}
+      />
+      <PaymentDetailsModal
+        key={selectedPayment?.order ?? "closed"}
+        isOpen={isPaymentModalOpen}
+        mode={paymentModalMode}
+        payment={selectedPayment}
+        onClose={closePaymentModal}
+        onVerify={(orderId) => updatePaymentStatus(orderId, "Paid")}
+        onReject={(orderId) => updatePaymentStatus(orderId, "Failed")}
       />
     </div>
   );
