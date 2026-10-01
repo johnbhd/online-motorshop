@@ -1,17 +1,18 @@
 "use client";
 
+import { useCallback, useMemo, useState } from "react";
 import { Badge, type Column } from "@/components/staff/PortalTable";
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
 import Summary, { type SummaryItem } from "@/components/staff/Summary";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalTable from "@/components/staff/PortalTable";
+import StaffDeliveryRequestDetailsModal from "@/components/staff/delivery-requests/StaffDeliveryRequestDetailsModal";
+import StaffPickupRequestDetailsModal from "@/components/staff/pickup-requests/StaffPickupRequestDetailsModal";
 import {
   deliveryRequests,
   pickupRequests,
   type Request,
 } from "@/lib/mock/staff";
-import { useCallback, useMemo, useState } from "react";
-import StaffPickupRequestDetailsModal from "@/components/staff/pickup-requests/StaffPickupRequestDetailsModal";
 
 type RequestsPageProps = {
   type: "pickup" | "delivery";
@@ -20,10 +21,15 @@ type RequestsPageProps = {
 export default function RequestsPage({ type }: RequestsPageProps) {
   const delivery = type === "delivery";
   const [pickupRecords, setPickupRecords] = useState<Request[]>(pickupRequests);
+  const [deliveryRecords, setDeliveryRecords] =
+    useState<Request[]>(deliveryRequests);
   const [selectedPickupRequest, setSelectedPickupRequest] =
     useState<Request | null>(null);
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
-  const records = delivery ? deliveryRequests : pickupRecords;
+  const [selectedDeliveryRequest, setSelectedDeliveryRequest] =
+    useState<Request | null>(null);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const records = delivery ? deliveryRecords : pickupRecords;
 
   const handleViewPickup = useCallback((pickupRequest: Request) => {
     setSelectedPickupRequest(pickupRequest);
@@ -33,6 +39,16 @@ export default function RequestsPage({ type }: RequestsPageProps) {
   const handleClosePickup = useCallback(() => {
     setIsPickupModalOpen(false);
     setSelectedPickupRequest(null);
+  }, []);
+
+  const handleViewDelivery = useCallback((deliveryRequest: Request) => {
+    setSelectedDeliveryRequest(deliveryRequest);
+    setIsDeliveryModalOpen(true);
+  }, []);
+
+  const handleCloseDelivery = useCallback(() => {
+    setIsDeliveryModalOpen(false);
+    setSelectedDeliveryRequest(null);
   }, []);
 
   const handlePickupStatusChange = useCallback(
@@ -50,6 +66,23 @@ export default function RequestsPage({ type }: RequestsPageProps) {
       handleClosePickup();
     },
     [handleClosePickup],
+  );
+
+  const handleDeliveryStatusChange = useCallback(
+    (orderReference: string, nextStatus: "Booked" | "Delivered") => {
+      setDeliveryRecords((currentRecords) =>
+        currentRecords.map((record) =>
+          record.orderReference === orderReference
+            ? {
+                ...record,
+                status: nextStatus,
+              }
+            : record,
+        ),
+      );
+      handleCloseDelivery();
+    },
+    [handleCloseDelivery],
   );
 
   const columns: Column<Request>[] = useMemo(
@@ -91,20 +124,49 @@ export default function RequestsPage({ type }: RequestsPageProps) {
         render: (row) => (
           <ActionButton
             label={row.action}
-            onClick={delivery ? undefined : () => handleViewPickup(row)}
+            onClick={
+              delivery
+                ? () => handleViewDelivery(row)
+                : () => handleViewPickup(row)
+            }
           />
         ),
       },
     ],
-    [delivery, handleViewPickup],
+    [delivery, handleViewDelivery, handleViewPickup],
   );
   const title = delivery ? "Delivery Requests" : "Pickup Requests";
   const summary: SummaryItem[] = delivery
     ? [
-        ["16", "Delivery Requests", "All delivery requests"],
-        ["2", "Active Deliveries", "Booking or transit"],
-        ["10", "Delivered", "Successfully delivered"],
-        ["1", "Waiting for Booking", "Needs staff action"],
+        [String(records.length), "Delivery Requests", "All delivery requests"],
+        [
+          String(
+            records.filter(
+              (record) =>
+                record.status === "Waiting for Booking" ||
+                record.status === "Booked" ||
+                record.status === "In Transit",
+            ).length,
+          ),
+          "Active Deliveries",
+          "Booking or transit",
+        ],
+        [
+          String(
+            records.filter((record) => record.status === "Delivered").length,
+          ),
+          "Delivered",
+          "Successfully delivered",
+        ],
+        [
+          String(
+            records.filter(
+              (record) => record.status === "Waiting for Booking",
+            ).length,
+          ),
+          "Waiting for Booking",
+          "Needs staff action",
+        ],
       ]
     : [
         [String(records.length), "Pickup Requests", "All pickup orders"],
@@ -169,6 +231,14 @@ export default function RequestsPage({ type }: RequestsPageProps) {
           isOpen={isPickupModalOpen}
           onClose={handleClosePickup}
           onStatusChange={handlePickupStatusChange}
+        />
+      ) : null}
+      {delivery ? (
+        <StaffDeliveryRequestDetailsModal
+          deliveryRequest={selectedDeliveryRequest}
+          isOpen={isDeliveryModalOpen}
+          onClose={handleCloseDelivery}
+          onStatusChange={handleDeliveryStatusChange}
         />
       ) : null}
     </div>
