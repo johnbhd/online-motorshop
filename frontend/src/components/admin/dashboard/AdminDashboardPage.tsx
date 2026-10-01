@@ -208,6 +208,7 @@ export default function AdminDashboard() {
           rows={attention}
         />
         <DashboardList
+          className="xl:col-span-5"
           title="Branch Overview"
           description="Current order activity by branch."
           rows={[
