@@ -1,6 +1,4 @@
 <?php
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 
 use App\Http\Controllers\Admin\AdminBranchesController;
 use App\Http\Controllers\Admin\AdminCustomersController;
@@ -13,6 +11,9 @@ use App\Http\Controllers\Admin\AdminPickupRequestsController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffDeliveryRequestsController;
@@ -34,8 +35,18 @@ Route::get('/health', function () {
     ]);
 });
 
+// Public catalog
+Route::get('/products', [CatalogController::class, 'products'])
+    ->name('catalog.products.index');
+Route::get('/products/{identifier}', [CatalogController::class, 'product'])
+    ->name('catalog.products.show');
+Route::get('/categories', [CatalogController::class, 'categories'])
+    ->name('catalog.categories.index');
+Route::get('/branches', [CatalogController::class, 'branches'])
+    ->name('catalog.branches.index');
+
 // Auth
-Route::prefix('auth')->group(function () {    
+Route::prefix('auth')->group(function () {
     Route::post('/login', [LoginController::class, 'store'])
         ->name('auth.login');
     Route::post('/register', [RegisterController::class, 'store'])
@@ -47,7 +58,7 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [LoginController::class, 'destroy'])
             ->name('auth.logout');
     });
-    
+
 });
 
 // Admin
@@ -97,7 +108,7 @@ Route::prefix('staff')
     ->name('staff.')
     ->middleware([
         'auth:sanctum',
-        'role:admin'
+        'role:admin',
     ])
     ->group(function () {
         Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
@@ -133,4 +144,3 @@ Route::prefix('staff')
         Route::get('/reviews/data', [StaffReviewsController::class, 'data'])
             ->name('reviews.data');
     });
-    

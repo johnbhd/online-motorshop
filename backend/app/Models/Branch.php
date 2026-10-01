@@ -11,7 +11,13 @@ class Branch extends Model
         'address',
         'contact_number',
         'pickup_available',
-        'status'
+        'status',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'pickup_available' => 'boolean',
+        ];
+    }
 }
