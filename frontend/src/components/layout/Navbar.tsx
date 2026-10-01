@@ -14,9 +14,8 @@ import {
   faUser,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { getRedirectPathForRole } from "@/lib/auth/demoAuth";
-import { getCustomerPhoneForSession } from "@/lib/auth/demoAuthStorage";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { getRedirectPathForRole } from "@/lib/auth/authApi";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   CART_UPDATED_EVENT,
   getStoredCartQuantity,
@@ -47,7 +46,7 @@ function getSessionLinkLabel(role: "customer" | "staff" | "admin") {
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, session } = useDemoAuth();
+  const { isLoading: isAuthLoading, logout, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -175,8 +174,8 @@ export function Navbar() {
     setIsMobileMenuOpen(true);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setIsAccountMenuOpen(false);
     closeMobileMenu();
     router.replace("/");
@@ -190,16 +189,16 @@ export function Navbar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  const sessionLink = session
-    ? session.role === "customer"
+  const sessionLink = user
+    ? user.role === "customer"
       ? "/account/orders"
-      : getRedirectPathForRole(session.role)
+      : getRedirectPathForRole(user.role)
     : "/auth/login";
-  const sessionLabel = session
-    ? getSessionLinkLabel(session.role)
+  const sessionLabel = user
+    ? getSessionLinkLabel(user.role)
     : "Sign In or Continue as Guest";
 
-  const sessionPhone = session ? getCustomerPhoneForSession(session) : "";
+  const sessionPhone = user?.customer?.contact_number ?? "";
 
   const cartLabel =
     cartQuantity === 1
@@ -258,7 +257,11 @@ export function Navbar() {
                 </span>
               ) : null}
             </Link>
-            {session ? (
+            {isAuthLoading ? (
+              <span className="site-header-guest" aria-live="polite">
+                Checking session…
+              </span>
+            ) : user ? (
               <div className="site-header-account" ref={accountRef}>
                 <button
                   type="button"
@@ -279,8 +282,8 @@ export function Navbar() {
                     aria-label="Account menu"
                   >
                     <div className="site-header-account-summary">
-                      <strong>{session.name}</strong>
-                      <span>{session.email}</span>
+                      <strong>{user.name}</strong>
+                      <span>{user.email}</span>
                       {sessionPhone ? <span>{sessionPhone}</span> : null}
                     </div>
                       <Link
@@ -390,7 +393,11 @@ export function Navbar() {
                   </span>
                 ) : null}
               </Link>
-              {session ? (
+              {isAuthLoading ? (
+                <span className="site-mobile-nav-action" aria-live="polite">
+                  Checking session…
+                </span>
+              ) : user ? (
                 <>
                   <Link
                     className="site-mobile-nav-action"

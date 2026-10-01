@@ -6,7 +6,7 @@ import ProductGallery from "./ProductGallery";
 import ProductInformation from "./ProductInformation";
 import ProductOverview from "./ProductOverview";
 import ProductPurchasePanel from "./ProductPurchasePanel";
-import type { ProductDisplayItem } from "../products/productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
 type ProductDetailsPageProps = {
   product: ProductDisplayItem;

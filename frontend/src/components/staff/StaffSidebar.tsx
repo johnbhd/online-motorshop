@@ -17,7 +17,7 @@ import {
   faUser,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const links = [
   ["Dashboard", "/staff", "▦"],
@@ -56,10 +56,10 @@ export default function StaffSidebar({
 }) {
   const path = usePathname();
   const router = useRouter();
-  const { logout } = useDemoAuth();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onClose();
     router.replace("/");
   };

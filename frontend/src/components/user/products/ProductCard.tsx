@@ -11,7 +11,7 @@ import {
   faPlus,
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
-import type { ProductDisplayItem } from "./productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
 import type { ProductViewMode } from "./ProductsToolbar";

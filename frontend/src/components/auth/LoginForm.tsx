@@ -13,17 +13,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
+  getAuthErrorMessage,
   getRedirectPathForRole,
-  loginDemoUser,
-} from "@/lib/auth/demoAuth";
-import { useDemoAuth } from "./DemoAuthProvider";
+  login,
+} from "@/lib/auth/authApi";
+import { useAuth } from "./AuthProvider";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { setSession } = useDemoAuth();
+  const { establishSession } = useAuth();
 
   useEffect(() => {
     if (!window.location.search.includes("registered=1")) {
@@ -37,25 +39,37 @@ export function LoginForm() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const formData = new FormData(event.currentTarget);
-    const result = loginDemoUser(
-      String(formData.get("email") ?? ""),
-      String(formData.get("password") ?? ""),
-    );
-
-    if (!result.success) {
-      setSuccess("");
-      setError(result.error);
+    if (isSubmitting) {
       return;
     }
 
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    setIsSubmitting(true);
     setError("");
-    setSuccess("");
-    setSession(result.session);
-    router.replace(getRedirectPathForRole(result.session.role));
+
+    try {
+      const response = await login({ email, password });
+      const user = await establishSession(response.token);
+
+      setSuccess("");
+      router.replace(getRedirectPathForRole(user.role));
+    } catch (requestError) {
+      setSuccess("");
+      setError(
+        getAuthErrorMessage(
+          requestError,
+          "Unable to sign in. Please check your credentials and try again.",
+        ),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -117,8 +131,12 @@ export function LoginForm() {
             Register here
           </Link>
         </p>
-        <button type="submit" className="auth-primary-button">
-          Sign In
+        <button
+          type="submit"
+          className="auth-primary-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Signing In…" : "Sign In"}
         </button>
       </form>
       <button type="button" className="auth-secondary-button">

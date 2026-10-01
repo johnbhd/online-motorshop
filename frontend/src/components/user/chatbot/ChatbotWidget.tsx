@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   appendConversationMessage,
   CONVERSATIONS_STORAGE_KEY,
@@ -48,7 +48,8 @@ export default function ChatbotWidget() {
   const [mode, setMode] = useState<ChatbotMode>("assistant");
   const [staffConversation, setStaffConversation] =
     useState<DemoConversation | null>(null);
-  const { isReady, session } = useDemoAuth();
+  const { isLoading: isAuthLoading, user } = useAuth();
+  const isAuthReady = !isAuthLoading;
   const launcherRef = useRef<HTMLButtonElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
@@ -102,26 +103,26 @@ export default function ChatbotWidget() {
   );
 
   const handleRequestStaff = useCallback(() => {
-    if (!isReady) {
+    if (!isAuthReady) {
       return;
     }
 
-    const participant = getCurrentConversationParticipant(session);
+    const participant = getCurrentConversationParticipant(user);
     const conversation = getOrCreateConversation(participant);
 
     setStaffConversation(conversation);
     setMode("staff");
     setShowQuickActions(false);
-  }, [isReady, session]);
+  }, [isAuthReady, user]);
 
   const openStaffChat = useCallback(() => {
-    if (!isReady) {
+    if (!isAuthReady) {
       return;
     }
 
     handleRequestStaff();
     setIsOpen(true);
-  }, [handleRequestStaff, isReady]);
+  }, [handleRequestStaff, isAuthReady]);
 
   useEffect(() => {
     window.addEventListener(OPEN_STAFF_CHAT_EVENT, openStaffChat);

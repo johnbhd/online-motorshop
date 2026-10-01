@@ -1,6 +1,15 @@
 "use client";
 import { useMemo, useState } from "react";
 import AdminDataTable, { AdminBadge } from "./AdminDataTable";
+import PaymentDetailsModal, {
+  type PaymentModalMode,
+} from "./payments/PaymentDetailsModal";
+import PickupRequestDetailsModal, {
+  type PickupModalMode,
+} from "./pickup-requests/PickupRequestDetailsModal";
+import DeliveryRequestDetailsModal, {
+  type DeliveryModalMode,
+} from "./delivery-requests/DeliveryRequestDetailsModal";
 import type { Column } from "@/components/staff/PortalTable";
 import {
   adminPayments,
@@ -60,6 +69,43 @@ const metrics = (items: [string, string, string][]) => (
   </section>
 );
 export function PaymentsPage() {
+  const [payments, setPayments] = useState(adminPayments);
+  const [selectedPayment, setSelectedPayment] =
+    useState<AdminPayment | null>(null);
+  const [paymentModalMode, setPaymentModalMode] =
+    useState<PaymentModalMode>("view");
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+  const openPaymentModal = (
+    payment: AdminPayment,
+    mode: PaymentModalMode,
+  ) => {
+    setSelectedPayment(payment);
+    setPaymentModalMode(mode);
+    setIsPaymentModalOpen(true);
+  };
+
+  const closePaymentModal = () => {
+    setIsPaymentModalOpen(false);
+    setSelectedPayment(null);
+  };
+
+  const updatePaymentStatus = (orderId: string, status: string) => {
+    setPayments((currentPayments) =>
+      currentPayments.map((payment) =>
+        payment.order === orderId
+          ? {
+              ...payment,
+              status,
+              verifiedBy: "Admin User",
+              action: "View",
+            }
+          : payment,
+      ),
+    );
+    closePaymentModal();
+  };
+
   const c: Column<AdminPayment>[] = [
     {
       label: "Order",
@@ -82,7 +128,23 @@ export function PaymentsPage() {
       search: (r) => r.verifiedBy,
     },
     { label: "Payment Date", render: (r) => r.date },
-    { label: "Action", render: (r) => action(r.action) },
+    {
+      label: "Action",
+      render: (payment) => {
+        const mode: PaymentModalMode =
+          payment.action === "Review" ? "review" : "view";
+
+        return (
+          <button
+            className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+            type="button"
+            onClick={() => openPaymentModal(payment, mode)}
+          >
+            {mode === "review" ? "Review" : "View"}
+          </button>
+        );
+      },
+    },
   ];
   return (
     <div className="space-y-5">
@@ -101,7 +163,7 @@ export function PaymentsPage() {
       <AdminDataTable
         title="Payment Records"
         description="41 customer payment records"
-        rows={adminPayments}
+        rows={payments}
         columns={c}
         tabs={[
           "All",
@@ -139,10 +201,62 @@ export function PaymentsPage() {
           },
         ]}
       />
+      <PaymentDetailsModal
+        key={selectedPayment?.order ?? "closed"}
+        isOpen={isPaymentModalOpen}
+        mode={paymentModalMode}
+        payment={selectedPayment}
+        onClose={closePaymentModal}
+        onVerify={(orderId) => updatePaymentStatus(orderId, "Paid")}
+        onReject={(orderId) => updatePaymentStatus(orderId, "Failed")}
+      />
     </div>
   );
 }
 export function PickupsPage() {
+  const [pickups, setPickups] = useState(adminPickups);
+  const [selectedPickupOrder, setSelectedPickupOrder] = useState<string | null>(
+    null,
+  );
+  const [pickupModalMode, setPickupModalMode] =
+    useState<PickupModalMode>("view");
+  const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
+  const selectedPickupRequest =
+    pickups.find((pickup) => pickup.order === selectedPickupOrder) ?? null;
+
+  const openPickupModal = (pickup: AdminPickup, mode: PickupModalMode) => {
+    setSelectedPickupOrder(pickup.order);
+    setPickupModalMode(mode);
+    setIsPickupModalOpen(true);
+  };
+
+  const closePickupModal = () => {
+    setIsPickupModalOpen(false);
+    setSelectedPickupOrder(null);
+  };
+
+  const updatePickup = (orderId: string, changes: Partial<AdminPickup>) => {
+    setPickups((currentPickups) =>
+      currentPickups.map((pickup) =>
+        pickup.order === orderId ? { ...pickup, ...changes } : pickup,
+      ),
+    );
+  };
+
+  const assignPickupStaff = (orderId: string, staff: string) => {
+    updatePickup(orderId, { staff });
+  };
+
+  const markPickupReady = (orderId: string) => {
+    updatePickup(orderId, { status: "Ready for Pickup" });
+    closePickupModal();
+  };
+
+  const cancelPickup = (orderId: string) => {
+    updatePickup(orderId, { status: "Cancelled" });
+    closePickupModal();
+  };
+
   const c: Column<AdminPickup>[] = [
     {
       label: "Order",
@@ -164,7 +278,23 @@ export function PickupsPage() {
       render: (r) => <AdminBadge>{r.status}</AdminBadge>,
       search: (r) => r.status,
     },
-    { label: "Action", render: () => action("View") },
+    {
+      label: "Action",
+      render: (pickup) => {
+        const mode: PickupModalMode =
+          pickup.status === "Preparing" ? "review" : "view";
+
+        return (
+          <button
+            className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+            type="button"
+            onClick={() => openPickupModal(pickup, mode)}
+          >
+            {mode === "review" ? "Review" : "View"}
+          </button>
+        );
+      },
+    },
   ];
   return (
     <div className="space-y-5">
@@ -183,7 +313,7 @@ export function PickupsPage() {
       <AdminDataTable
         title="Pickup Request List"
         description="22 store pickup requests"
-        rows={adminPickups}
+        rows={pickups}
         columns={c}
         tabs={[
           "All",
@@ -224,10 +354,70 @@ export function PickupsPage() {
           ["Imus Branch", "6", "1 Active · 5 Completed"],
         ]}
       />
+      <PickupRequestDetailsModal
+        key={selectedPickupRequest?.order ?? "closed"}
+        isOpen={isPickupModalOpen}
+        mode={pickupModalMode}
+        pickupRequest={selectedPickupRequest}
+        onClose={closePickupModal}
+        onAssignStaff={assignPickupStaff}
+        onMarkReady={markPickupReady}
+        onCancel={cancelPickup}
+      />
     </div>
   );
 }
 export function DeliveriesPage() {
+  const [deliveries, setDeliveries] = useState(adminDeliveries);
+  const [selectedDeliveryOrder, setSelectedDeliveryOrder] = useState<
+    string | null
+  >(null);
+  const [deliveryModalMode, setDeliveryModalMode] =
+    useState<DeliveryModalMode>("view");
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const selectedDeliveryRequest =
+    deliveries.find((delivery) => delivery.order === selectedDeliveryOrder) ??
+    null;
+
+  const openDeliveryModal = (
+    delivery: AdminDelivery,
+    mode: DeliveryModalMode,
+  ) => {
+    setSelectedDeliveryOrder(delivery.order);
+    setDeliveryModalMode(mode);
+    setIsDeliveryModalOpen(true);
+  };
+
+  const closeDeliveryModal = () => {
+    setIsDeliveryModalOpen(false);
+    setSelectedDeliveryOrder(null);
+  };
+
+  const updateDelivery = (
+    orderId: string,
+    changes: Partial<AdminDelivery>,
+  ) => {
+    setDeliveries((currentDeliveries) =>
+      currentDeliveries.map((delivery) =>
+        delivery.order === orderId ? { ...delivery, ...changes } : delivery,
+      ),
+    );
+  };
+
+  const assignDeliveryStaff = (orderId: string, staff: string) => {
+    updateDelivery(orderId, { staff });
+  };
+
+  const markDeliveryBooked = (orderId: string) => {
+    updateDelivery(orderId, { status: "Booked", action: "View" });
+    closeDeliveryModal();
+  };
+
+  const cancelDelivery = (orderId: string) => {
+    updateDelivery(orderId, { status: "Cancelled", action: "View" });
+    closeDeliveryModal();
+  };
+
   const c: Column<AdminDelivery>[] = [
     {
       label: "Order",
@@ -249,7 +439,23 @@ export function DeliveriesPage() {
       render: (r) => <AdminBadge>{r.status}</AdminBadge>,
       search: (r) => r.status,
     },
-    { label: "Action", render: (r) => action(r.action) },
+    {
+      label: "Action",
+      render: (delivery) => {
+        const mode: DeliveryModalMode =
+          delivery.action === "View" ? "view" : "review";
+
+        return (
+          <button
+            className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+            type="button"
+            onClick={() => openDeliveryModal(delivery, mode)}
+          >
+            {mode === "review" ? "Review" : "View"}
+          </button>
+        );
+      },
+    },
   ];
   return (
     <div className="space-y-5">
@@ -268,7 +474,7 @@ export function DeliveriesPage() {
       <AdminDataTable
         title="Delivery Request List"
         description="20 Lalamove delivery requests"
-        rows={adminDeliveries}
+        rows={deliveries}
         columns={c}
         tabs={[
           "All",
@@ -314,6 +520,16 @@ export function DeliveriesPage() {
           ["Makati Branch", "7", "1 Active · 6 Delivered"],
           ["Imus Branch", "5", "0 Active · 5 Delivered"],
         ]}
+      />
+      <DeliveryRequestDetailsModal
+        key={selectedDeliveryRequest?.order ?? "closed"}
+        isOpen={isDeliveryModalOpen}
+        mode={deliveryModalMode}
+        deliveryRequest={selectedDeliveryRequest}
+        onClose={closeDeliveryModal}
+        onAssignStaff={assignDeliveryStaff}
+        onMarkBooked={markDeliveryBooked}
+        onCancel={cancelDelivery}
       />
     </div>
   );

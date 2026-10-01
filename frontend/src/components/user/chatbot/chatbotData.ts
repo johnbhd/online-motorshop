@@ -4,7 +4,6 @@ import {
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import { aboutBranches } from "@/components/user/about/aboutData";
 import type { ChatQuickAction } from "./chatbotTypes";
 
 export const chatbotWelcomeMessage =
@@ -63,19 +62,4 @@ export const chatbotResponses = {
 } as const;
 
 export const chatbotBranchResponse =
-  "ALD Motorshop currently has branches in " + formatBranchNames() + ".";
-
-function formatBranchNames() {
-  const branchNames = aboutBranches.map((branch) =>
-    branch.name.replace(/\s+Branch$/i, ""),
-  );
-
-  if (branchNames.length < 2) {
-    return branchNames.join("");
-  }
-
-  const lastBranch = branchNames.at(-1);
-  const precedingBranches = branchNames.slice(0, -1).join(", ");
-
-  return precedingBranches + ", and " + lastBranch;
-}
+  "ALD Motorshop branch locations are listed on the About page. Check there for the latest addresses, contact details, and pickup availability.";

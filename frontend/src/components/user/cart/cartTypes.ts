@@ -1,4 +1,4 @@
-import type { ProductDisplayItem } from "../products/productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
 export type CartProduct = Pick<
   ProductDisplayItem,

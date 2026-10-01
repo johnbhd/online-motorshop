@@ -21,7 +21,7 @@ import {
   faUserGear,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const adminIcons = {
   Dashboard: faGaugeHigh,
@@ -70,10 +70,10 @@ export default function AdminSidebar({
 }) {
   const path = usePathname();
   const router = useRouter();
-  const { logout } = useDemoAuth();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onClose();
     router.replace("/");
   };

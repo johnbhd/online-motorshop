@@ -16,8 +16,7 @@ import CheckoutOrderSummary from "./CheckoutOrderSummary";
 import DeliveryFields from "./DeliveryFields";
 import FulfillmentMethod from "./FulfillmentMethod";
 import StorePickupFields from "./StorePickupFields";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
-import { getCustomerPhoneForSession } from "@/lib/auth/demoAuthStorage";
+import { useAuth } from "@/components/auth/AuthProvider";
 import type {
   CartItemData,
   FulfillmentMethod as CartFulfillmentMethod,
@@ -69,7 +68,8 @@ const initialFormData: CheckoutFormData = {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { session, isReady: isAuthReady } = useDemoAuth();
+  const { isLoading: isAuthLoading, user } = useAuth();
+  const isAuthReady = !isAuthLoading;
   const [cartItems, setCartItems] = useState<CartItemData[]>([]);
   const [formData, setFormData] = useState<CheckoutFormData>(initialFormData);
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
@@ -85,11 +85,11 @@ export default function CheckoutPage() {
 
     const storedCartItems = readStoredCartItems();
     const loggedInCustomer =
-      session?.role === "customer"
+      user?.role === "customer"
         ? {
-            fullName: session.name,
-            email: session.email,
-            contactNumber: getCustomerPhoneForSession(session),
+            fullName: user.name,
+            email: user.email,
+            contactNumber: user.customer?.contact_number ?? "",
           }
         : null;
 
@@ -102,7 +102,7 @@ export default function CheckoutPage() {
       branchId: readSelectedBranchId(),
     }));
     setIsReady(true);
-  }, [isAuthReady, session]);
+  }, [isAuthReady, user]);
 
   const updateCustomer = (
     field: keyof CheckoutCustomerData,
@@ -249,7 +249,7 @@ export default function CheckoutPage() {
     // TEMPORARY CUSTOMER ORDER HISTORY DEMO.
     // Guest requests remain unowned; customer requests use the stable account ID.
     const customerAccountId =
-      session?.role === "customer" ? session.id : null;
+      user?.role === "customer" ? String(user.id) : null;
     const subtotal = hasDisplayablePrices(cartItems)
       ? getCartSubtotal(cartItems)
       : null;
