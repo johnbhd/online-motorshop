@@ -12,13 +12,13 @@ import {
   faCircleUser,
   faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
   const [menu, setMenu] = useState<"notifications" | "profile" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { logout, session } = useDemoAuth();
+  const { logout, user } = useAuth();
 
   useEffect(() => {
     const close = (e: MouseEvent) =>
@@ -29,8 +29,8 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
 
   const unread = notifications.filter((n) => n.unread).length;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setMenu(null);
     router.replace("/");
   };
@@ -109,7 +109,7 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
               </span>
               <span className="hidden sm:block">
                 <span className="block max-w-40 truncate text-sm font-semibold text-[#0B1930]">
-                  {session?.name ?? "Staff User"}
+                  {user?.name ?? "Staff User"}
                 </span>
                 <span className="block text-xs text-slate-500">Staff</span>
               </span>

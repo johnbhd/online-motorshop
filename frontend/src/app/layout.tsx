@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { DemoAuthProvider } from "@/components/auth/DemoAuthProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 export const metadata: Metadata = {
   title: "ALD Motorshop",
@@ -15,7 +15,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body>
-        <DemoAuthProvider>{children}</DemoAuthProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

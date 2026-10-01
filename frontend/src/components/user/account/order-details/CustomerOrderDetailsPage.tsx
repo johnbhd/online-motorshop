@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faRoute } from "@fortawesome/free-solid-svg-icons";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   getDemoOrderByReferenceForCustomer,
 } from "@/lib/orders/orderStorage";
@@ -18,9 +18,10 @@ type CustomerOrderDetailsPageProps = {
 export default function CustomerOrderDetailsPage({
   reference,
 }: CustomerOrderDetailsPageProps) {
-  const { isReady: isAuthReady, session } = useDemoAuth();
+  const { isLoading: isAuthLoading, user } = useAuth();
+  const isAuthReady = !isAuthLoading;
   const customerAccountId =
-    session?.role === "customer" ? session.id : null;
+    user?.role === "customer" ? String(user.id) : null;
   const [order, setOrder] = useState<DemoOrder | null>(null);
   const [isOrderReady, setIsOrderReady] = useState(false);
 
