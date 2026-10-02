@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderRequest extends Model
 {
+    public const TERMINAL_STATUSES = [
+        'completed',
+        'rejected',
+        'cancelled',
+    ];
+
     public const STAFF_STATUS_VALUES = [
         'pending',
         'under_review',

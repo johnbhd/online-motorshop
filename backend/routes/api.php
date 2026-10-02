@@ -203,6 +203,13 @@ Route::prefix('staff')
 
             Route::get('/messages/data', [StaffConversationsController::class, 'index'])
                 ->name('messages.data');
+
+            Route::get('/customers', [StaffCustomersController::class, 'index'])
+                ->name('customers.index');
+
+            Route::get('/customers/{customer}', [StaffCustomersController::class, 'show'])
+                ->whereNumber('customer')
+                ->name('customers.show');
         });
 
         Route::middleware('role:admin')->group(function () {
@@ -211,9 +218,6 @@ Route::prefix('staff')
 
             Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
                 ->name('notifications.data');
-
-            Route::get('/customers/data', [StaffCustomersController::class, 'data'])
-                ->name('customers.data');
 
             Route::get('/reports/data', [StaffReportsController::class, 'data'])
                 ->name('reports.data');

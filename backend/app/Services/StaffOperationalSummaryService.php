@@ -13,11 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class StaffOperationalSummaryService
 {
-    public const ORDER_TERMINAL_STATUSES = [
-        'completed',
-        'rejected',
-        'cancelled',
-    ];
+    public const ORDER_TERMINAL_STATUSES = OrderRequest::TERMINAL_STATUSES;
 
     public const PAYMENT_ATTENTION_STATUSES = [
         'waiting_for_verification',
