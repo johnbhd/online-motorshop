@@ -1,5 +1,5 @@
-import RequestsPage from "@/components/staff/requests/RequestsPage";
+import RealPickupRequestsPage from "@/components/staff/pickup-requests/RealPickupRequestsPage";
 
 export default function PickupRequestsPage() {
-  return <RequestsPage type="pickup" />;
+  return <RealPickupRequestsPage />;
 }

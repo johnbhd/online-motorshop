@@ -140,6 +140,18 @@ Route::prefix('staff')
             Route::patch('/orders/{reference}/status', [StaffOrdersController::class, 'updateStatus'])
                 ->name('orders.status');
 
+            Route::get('/pickup-requests', [StaffPickupRequestsController::class, 'index'])
+                ->name('pickup-requests.index');
+
+            Route::get('/pickup-requests/data', [StaffPickupRequestsController::class, 'data'])
+                ->name('pickup-requests.data');
+
+            Route::get('/pickup-requests/{pickup}', [StaffPickupRequestsController::class, 'show'])
+                ->name('pickup-requests.show');
+
+            Route::patch('/pickup-requests/{pickup}/status', [StaffPickupRequestsController::class, 'updateStatus'])
+                ->name('pickup-requests.status');
+
             Route::get('/payments', [StaffPaymentsController::class, 'index'])
                 ->name('payments.index');
 
@@ -156,9 +168,6 @@ Route::prefix('staff')
         Route::middleware('role:admin')->group(function () {
             Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
                 ->name('dashboard.data');
-
-            Route::get('/pickup-requests/data', [StaffPickupRequestsController::class, 'data'])
-                ->name('pickup-requests.data');
 
             Route::get('/delivery-requests/data', [StaffDeliveryRequestsController::class, 'data'])
                 ->name('delivery-requests.data');

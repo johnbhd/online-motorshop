@@ -9,6 +9,14 @@ class PickupRequest extends Model
 {
     use HasFactory;
 
+    public const STATUS_VALUES = [
+        'pending',
+        'preparing',
+        'ready_for_pickup',
+        'completed',
+        'cancelled',
+    ];
+
     protected $fillable = [
         'order_id',
         'branch_id',
