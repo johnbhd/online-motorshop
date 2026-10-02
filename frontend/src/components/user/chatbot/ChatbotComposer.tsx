@@ -7,12 +7,14 @@ import {
   faArrowLeft,
   faBars,
   faPaperPlane,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 export type ChatbotComposerProps = {
   inputRef: RefObject<HTMLInputElement | null>;
   isStaffMode: boolean;
   showQuickActions: boolean;
+  isSending?: boolean;
   onSend: (message: string) => void;
   onBackToAssistant: () => void;
   onToggleQuickActions: () => void;
@@ -22,6 +24,7 @@ export default function ChatbotComposer({
   inputRef,
   isStaffMode,
   showQuickActions,
+  isSending = false,
   onSend,
   onBackToAssistant,
   onToggleQuickActions,
@@ -58,7 +61,7 @@ export default function ChatbotComposer({
         onClick={isStaffMode ? onBackToAssistant : onToggleQuickActions}
       >
         <FontAwesomeIcon
-          icon={isStaffMode ? faArrowLeft : faBars}
+          icon={isStaffMode ? faArrowLeft : showQuickActions ? faXmark : faBars}
           aria-hidden="true"
         />
       </button>
@@ -76,6 +79,7 @@ export default function ChatbotComposer({
           isStaffMode ? "Message ALD Staff..." : "Type your message..."
         }
         autoComplete="off"
+        disabled={isSending}
         onChange={(event) => {
           setMessage(event.target.value);
         }}
@@ -84,7 +88,7 @@ export default function ChatbotComposer({
         className="ald-chatbot__send"
         type="submit"
         aria-label="Send message"
-        disabled={!hasMessage}
+        disabled={!hasMessage || isSending}
       >
         <FontAwesomeIcon icon={faPaperPlane} aria-hidden="true" />
       </button>

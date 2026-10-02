@@ -46,6 +46,7 @@ function toChatMessages(conversation: Conversation): ChatMessage[] {
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [isAssistantThinking, setIsAssistantThinking] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [mode, setMode] = useState<ChatbotMode>("assistant");
   const [staffConversation, setStaffConversation] =
@@ -58,6 +59,7 @@ export default function ChatbotWidget() {
   const messageListRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
+  const assistantResponseTimeoutRef = useRef<number | null>(null);
 
   const createMessage = useCallback(
     (sender: ChatSender, text: string): ChatMessage => {
@@ -83,20 +85,28 @@ export default function ChatbotWidget() {
 
   const handleSendAssistant = useCallback(
     (message: string) => {
-      const customerMessage = createMessage("customer", message);
-      const botMessage = createMessage(
-        "bot",
-        resolveChatbotResponse(message).text,
-      );
+      if (isAssistantThinking) {
+        return;
+      }
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        customerMessage,
-        botMessage,
-      ]);
+      const customerMessage = createMessage("customer", message);
+
+      setMessages((currentMessages) => [...currentMessages, customerMessage]);
       setShowQuickActions(false);
+
+      setIsAssistantThinking(true);
+      assistantResponseTimeoutRef.current = window.setTimeout(() => {
+        const botMessage = createMessage(
+          "bot",
+          resolveChatbotResponse(message).text,
+        );
+
+        setMessages((currentMessages) => [...currentMessages, botMessage]);
+        setIsAssistantThinking(false);
+        assistantResponseTimeoutRef.current = null;
+      }, 1000);
     },
-    [createMessage],
+    [createMessage, isAssistantThinking],
   );
 
   const handleQuickAction = useCallback(
@@ -194,6 +204,14 @@ export default function ChatbotWidget() {
   );
 
   useEffect(() => {
+    return () => {
+      if (assistantResponseTimeoutRef.current !== null) {
+        window.clearTimeout(assistantResponseTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isOpen || mode !== "staff") {
       return;
     }
@@ -275,7 +293,13 @@ export default function ChatbotWidget() {
     }
 
     messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-  }, [isOpen, mode, messages.length, staffConversation?.messages.length]);
+  }, [
+    isAssistantThinking,
+    isOpen,
+    mode,
+    messages.length,
+    staffConversation?.messages.length,
+  ]);
 
   const handleSend =
     mode === "staff" ? handleStaffSend : handleSendAssistant;
@@ -298,6 +322,7 @@ export default function ChatbotWidget() {
             setShowQuickActions((currentValue) => !currentValue);
           }}
           onSend={handleSend}
+          isAssistantThinking={isAssistantThinking}
           staffError={staffError}
           staffLoading={staffLoading}
         />
