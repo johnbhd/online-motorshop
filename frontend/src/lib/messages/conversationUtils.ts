@@ -1,23 +1,32 @@
 import type {
+  Conversation,
   ConversationMessage,
-  DemoConversation,
+  StaffConversationSummary,
 } from "./conversationTypes";
 
+type ConversationListItem = Conversation | StaffConversationSummary;
+
 export function sortConversationsByRecent(
-  conversations: DemoConversation[],
-): DemoConversation[] {
+  conversations: ConversationListItem[],
+): ConversationListItem[] {
   return [...conversations].sort((firstConversation, secondConversation) => {
     return (
-      new Date(secondConversation.updatedAt).getTime() -
-      new Date(firstConversation.updatedAt).getTime()
+      new Date(
+        secondConversation.last_message_at ?? secondConversation.updated_at,
+      ).getTime() -
+      new Date(
+        firstConversation.last_message_at ?? firstConversation.updated_at,
+      ).getTime()
     );
   });
 }
 
 export function getLastConversationMessage(
-  conversation: DemoConversation,
+  conversation: ConversationListItem,
 ): ConversationMessage | null {
-  return conversation.messages.at(-1) ?? null;
+  return ("messages" in conversation
+    ? conversation.messages.at(-1)
+    : conversation.last_message) ?? null;
 }
 
 export function formatConversationTime(timestamp: string) {

@@ -28,6 +28,8 @@ export type ChatbotPanelProps = {
   onRequestStaff: () => void;
   onToggleQuickActions: () => void;
   onSend: (message: string) => void;
+  staffError?: string | null;
+  staffLoading?: boolean;
 };
 
 export default function ChatbotPanel({
@@ -43,6 +45,8 @@ export default function ChatbotPanel({
   onRequestStaff,
   onToggleQuickActions,
   onSend,
+  staffError,
+  staffLoading = false,
 }: ChatbotPanelProps) {
   const isStaffMode = mode === "staff";
 
@@ -92,6 +96,17 @@ export default function ChatbotPanel({
               : "ALD Assistant conversation"
           }
         />
+
+        {isStaffMode && staffLoading && (
+          <p className="px-4 py-2 text-xs text-slate-500" role="status">
+            Syncing with ALD Staff...
+          </p>
+        )}
+        {isStaffMode && staffError && (
+          <p className="px-4 py-2 text-xs text-red-600" role="alert">
+            {staffError}
+          </p>
+        )}
 
         {!isStaffMode && showQuickActions && (
           <ChatbotQuickActions actions={quickActions} onSelect={onQuickAction} />

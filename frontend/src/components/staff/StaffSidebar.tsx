@@ -60,7 +60,7 @@ const links: SidebarLink[] = [
     badgeKey: "delivery_requests",
   },
   { label: "Products", href: "/staff/products" },
-  { label: "Messages", href: "/staff/messages" },
+  { label: "Messages", href: "/staff/messages", badgeKey: "messages" },
   { label: "Customers", href: "/staff/customers" },
   { label: "Reviews", href: "/staff/reviews" },
   { label: "Reports", href: "/staff/reports" },

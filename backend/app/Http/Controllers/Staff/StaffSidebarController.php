@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
 use App\Models\DeliveryRequest;
 use App\Models\OrderRequest;
 use App\Models\Payment;
@@ -55,9 +56,13 @@ class StaffSidebarController extends Controller
                         'in_transit',
                     ])
                     ->count(),
-            ],
-            'meta' => [
-                'messages' => 'unavailable',
+                'messages' => Conversation::query()
+                    ->where('status', 'open')
+                    ->whereHas(
+                        'latestMessage',
+                        fn (Builder $query): Builder => $query->where('sender_type', 'customer'),
+                    )
+                    ->count(),
             ],
         ]);
     }

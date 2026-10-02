@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { getAuthToken } from "@/lib/auth/authStorage";
 import {
-  appendConversationMessage,
-  CONVERSATIONS_STORAGE_KEY,
-  CONVERSATIONS_UPDATED_EVENT,
-  getConversationById,
-  getCurrentConversationParticipant,
-  getOrCreateConversation,
-} from "@/lib/messages/conversationStorage";
-import type { DemoConversation } from "@/lib/messages/conversationTypes";
+  getCurrentConversation,
+  sendCustomerConversationMessage,
+  startConversation,
+} from "@/lib/messages/conversationApi";
+import {
+  getGuestConversationToken,
+  setGuestConversationToken,
+} from "@/lib/messages/guestTokenStorage";
+import type { Conversation } from "@/lib/messages/conversationTypes";
 import ChatbotLauncher from "./ChatbotLauncher";
 import { OPEN_STAFF_CHAT_EVENT } from "./chatbotEvents";
 import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
@@ -30,13 +32,13 @@ const initialMessages: ChatMessage[] = [
   },
 ];
 
-function toChatMessages(conversation: DemoConversation): ChatMessage[] {
+function toChatMessages(conversation: Conversation): ChatMessage[] {
   return conversation.messages.map((message) => {
     return {
-      id: message.id,
+      id: String(message.id),
       sender: message.sender,
-      text: message.text,
-      createdAt: message.createdAt,
+      text: message.body,
+      createdAt: message.created_at,
     };
   });
 }
@@ -47,7 +49,9 @@ export default function ChatbotWidget() {
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [mode, setMode] = useState<ChatbotMode>("assistant");
   const [staffConversation, setStaffConversation] =
-    useState<DemoConversation | null>(null);
+    useState<Conversation | null>(null);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState<string | null>(null);
   const { isLoading: isAuthLoading, user } = useAuth();
   const isAuthReady = !isAuthLoading;
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -102,25 +106,40 @@ export default function ChatbotWidget() {
     [handleSendAssistant],
   );
 
-  const handleRequestStaff = useCallback(() => {
+  const handleRequestStaff = useCallback(async () => {
     if (!isAuthReady) {
       return;
     }
 
-    const participant = getCurrentConversationParticipant(user);
-    const conversation = getOrCreateConversation(participant);
-
-    setStaffConversation(conversation);
     setMode("staff");
     setShowQuickActions(false);
-  }, [isAuthReady, user]);
+    setStaffLoading(true);
+
+    try {
+      setStaffConversation(
+        await getCurrentConversation(
+          getAuthToken(),
+          getGuestConversationToken(),
+        ),
+      );
+      setStaffError(null);
+    } catch (error) {
+      setStaffError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load your staff conversation.",
+      );
+    } finally {
+      setStaffLoading(false);
+    }
+  }, [isAuthReady]);
 
   const openStaffChat = useCallback(() => {
     if (!isAuthReady) {
       return;
     }
 
-    handleRequestStaff();
+    void handleRequestStaff();
     setIsOpen(true);
   }, [handleRequestStaff, isAuthReady]);
 
@@ -138,57 +157,77 @@ export default function ChatbotWidget() {
   }, []);
 
   const handleStaffSend = useCallback(
-    (message: string) => {
-      if (!staffConversation) {
-        return;
-      }
+    async (message: string) => {
+      setStaffLoading(true);
 
-      const updatedConversation = appendConversationMessage(
-        staffConversation.id,
-        "customer",
-        message,
-      );
+      try {
+        const guestToken = getGuestConversationToken();
 
-      if (updatedConversation) {
-        setStaffConversation(updatedConversation);
+        if (staffConversation) {
+          setStaffConversation(
+            await sendCustomerConversationMessage(
+              staffConversation.id,
+              message,
+              guestToken,
+            ),
+          );
+        } else {
+          const response = await startConversation(message, guestToken);
+
+          if (response.guest_token) {
+            setGuestConversationToken(response.guest_token);
+          }
+
+          setStaffConversation(response.conversation);
+        }
+
+        setStaffError(null);
+      } catch (error) {
+        setStaffError(
+          error instanceof Error ? error.message : "Unable to send your message.",
+        );
+      } finally {
+        setStaffLoading(false);
       }
     },
     [staffConversation],
   );
 
   useEffect(() => {
-    const refreshStaffConversation = () => {
-      setStaffConversation((currentConversation) => {
-        if (!currentConversation) {
-          return currentConversation;
-        }
+    if (!isOpen || mode !== "staff") {
+      return;
+    }
 
-        return (
-          getConversationById(currentConversation.id) ?? currentConversation
+    const refreshStaffConversation = async () => {
+      try {
+        setStaffConversation(
+          await getCurrentConversation(
+            getAuthToken(),
+            getGuestConversationToken(),
+          ),
         );
-      });
-    };
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === CONVERSATIONS_STORAGE_KEY) {
-        refreshStaffConversation();
+      } catch {
+        // Keep the current thread visible if a background refresh fails.
       }
     };
 
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(
-      CONVERSATIONS_UPDATED_EVENT,
-      refreshStaffConversation,
-    );
+    const interval = window.setInterval(() => void refreshStaffConversation(), 10000);
+    window.addEventListener("focus", refreshStaffConversation);
 
     return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(
-        CONVERSATIONS_UPDATED_EVENT,
-        refreshStaffConversation,
-      );
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshStaffConversation);
     };
-  }, []);
+  }, [isOpen, mode]);
+
+  useEffect(() => {
+    const resetTimeout = window.setTimeout(() => {
+      setStaffConversation(null);
+      setStaffError(null);
+    }, 0);
+
+    return () => window.clearTimeout(resetTimeout);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -259,6 +298,8 @@ export default function ChatbotWidget() {
             setShowQuickActions((currentValue) => !currentValue);
           }}
           onSend={handleSend}
+          staffError={staffError}
+          staffLoading={staffLoading}
         />
       )}
       <ChatbotLauncher

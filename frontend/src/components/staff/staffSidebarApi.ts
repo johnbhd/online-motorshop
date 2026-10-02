@@ -3,6 +3,7 @@ export type StaffSidebarCounts = {
   payments: number;
   pickup_requests: number;
   delivery_requests: number;
+  messages: number;
 };
 
 type StaffSidebarResponse = {

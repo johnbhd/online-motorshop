@@ -14,12 +14,13 @@ use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\OrderRequestController;
+use App\Http\Controllers\Staff\StaffConversationsController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\StaffDeliveryRequestsController;
-use App\Http\Controllers\Staff\StaffMessagesController;
 use App\Http\Controllers\Staff\StaffNotificationsController;
 use App\Http\Controllers\Staff\StaffOrdersController;
 use App\Http\Controllers\Staff\StaffPaymentsController;
@@ -51,6 +52,14 @@ Route::post('/order-requests', [OrderRequestController::class, 'store'])
     ->name('order-requests.store');
 Route::post('/order-requests/track', [OrderRequestController::class, 'track'])
     ->name('order-requests.track');
+
+// Customer and guest conversations
+Route::get('/conversations/current', [ConversationController::class, 'current'])
+    ->name('conversations.current');
+Route::post('/conversations', [ConversationController::class, 'store'])
+    ->name('conversations.store');
+Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'storeMessage'])
+    ->name('conversations.messages.store');
 
 Route::prefix('customer')
     ->name('customer.')
@@ -179,6 +188,18 @@ Route::prefix('staff')
 
             Route::patch('/payments/{payment}/status', [StaffPaymentsController::class, 'updateStatus'])
                 ->name('payments.status');
+
+            Route::get('/conversations', [StaffConversationsController::class, 'index'])
+                ->name('conversations.index');
+
+            Route::get('/conversations/{conversation}', [StaffConversationsController::class, 'show'])
+                ->name('conversations.show');
+
+            Route::post('/conversations/{conversation}/messages', [StaffConversationsController::class, 'storeMessage'])
+                ->name('conversations.messages.store');
+
+            Route::get('/messages/data', [StaffConversationsController::class, 'index'])
+                ->name('messages.data');
         });
 
         Route::middleware('role:admin')->group(function () {
@@ -187,9 +208,6 @@ Route::prefix('staff')
 
             Route::get('/products/data', [StaffProductsController::class, 'data'])
                 ->name('products.data');
-
-            Route::get('/messages/data', [StaffMessagesController::class, 'data'])
-                ->name('messages.data');
 
             Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
                 ->name('notifications.data');

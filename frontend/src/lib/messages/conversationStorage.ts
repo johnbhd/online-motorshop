@@ -1,11 +1,33 @@
 import type { AuthUser } from "@/lib/auth/authTypes";
-import type {
-  ConversationMessage,
-  ConversationMessageSender,
-  ConversationParticipant,
-  ConversationParticipantType,
-  DemoConversation,
-} from "./conversationTypes";
+import type { ConversationMessageSender, ConversationParticipantType } from "./conversationTypes";
+
+// Legacy storage parser kept only so existing browser data can be ignored safely.
+// Human conversations are now read and written through the Laravel API.
+type ConversationParticipant = {
+  id: string;
+  name: string;
+  type: ConversationParticipantType;
+  email?: string;
+};
+
+type ConversationMessage = {
+  id: string;
+  sender: ConversationMessageSender;
+  text: string;
+  createdAt: string;
+};
+
+type DemoConversation = {
+  id: string;
+  participantId: string;
+  participantName: string;
+  participantType: ConversationParticipantType;
+  participantEmail?: string;
+  status: "open";
+  messages: ConversationMessage[];
+  createdAt: string;
+  updatedAt: string;
+};
 
 export const CONVERSATIONS_STORAGE_KEY = "ald_conversations";
 export const CONVERSATIONS_UPDATED_EVENT = "ald-conversations-updated";

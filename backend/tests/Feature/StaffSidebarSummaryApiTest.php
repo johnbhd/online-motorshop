@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Conversation;
 use App\Models\Customer;
 use App\Models\DeliveryRequest;
 use App\Models\OrderRequest;
@@ -106,6 +107,16 @@ class StaffSidebarSummaryApiTest extends TestCase
             'pickup_status' => 'pending',
         ]);
 
+        $conversation = Conversation::create([
+            'guest_token_hash' => hash('sha256', 'sidebar-guest-token'),
+            'participant_type' => 'guest',
+            'status' => 'open',
+        ]);
+        $conversation->messages()->create([
+            'sender_type' => 'customer',
+            'body' => 'I need help with my order.',
+        ]);
+
         $response = $this->withToken($staff->createToken('sidebar-test')->plainTextToken)
             ->getJson('/api/staff/sidebar-summary')
             ->assertOk()
@@ -113,9 +124,7 @@ class StaffSidebarSummaryApiTest extends TestCase
             ->assertJsonPath('counts.payments', 1)
             ->assertJsonPath('counts.pickup_requests', 1)
             ->assertJsonPath('counts.delivery_requests', 1)
-            ->assertJsonPath('meta.messages', 'unavailable');
-
-        $response->assertJsonMissingPath('counts.messages');
+            ->assertJsonPath('counts.messages', 1);
     }
 
     private function createStaff(Branch $branch): User
