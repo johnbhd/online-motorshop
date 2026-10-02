@@ -3,6 +3,7 @@ import type {
   StaffPickupsResponse,
   StaffPickupStatusResponse,
 } from "./staffPickupTypes";
+import { notifyStaffDataUpdated } from "@/components/staff/staffSidebarApi";
 
 type StaffPickupsQuery = {
   search?: string;
@@ -133,13 +134,13 @@ export function getStaffPickup(
   );
 }
 
-export function updateStaffPickupStatus(
+export async function updateStaffPickupStatus(
   token: string,
   pickupId: number,
   status: string,
   signal?: AbortSignal,
 ): Promise<StaffPickupStatusResponse> {
-  return requestStaffPickupApi<StaffPickupStatusResponse>(
+  const response = await requestStaffPickupApi<StaffPickupStatusResponse>(
     `/api/staff/pickup-requests/${pickupId}/status`,
     token,
     {
@@ -148,6 +149,10 @@ export function updateStaffPickupStatus(
       body: JSON.stringify({ status }),
     },
   );
+
+  notifyStaffDataUpdated();
+
+  return response;
 }
 
 export function getStaffPickupsErrorMessage(

@@ -3,6 +3,7 @@ import type {
   StaffDeliveriesResponse,
   StaffDeliveryStatusResponse,
 } from "./staffDeliveryTypes";
+import { notifyStaffDataUpdated } from "@/components/staff/staffSidebarApi";
 
 type StaffDeliveriesQuery = {
   search?: string;
@@ -142,13 +143,13 @@ export type StaffDeliveryStatusUpdate = {
   remarks?: string;
 };
 
-export function updateStaffDeliveryStatus(
+export async function updateStaffDeliveryStatus(
   token: string,
   deliveryId: number,
   update: StaffDeliveryStatusUpdate,
   signal?: AbortSignal,
 ): Promise<StaffDeliveryStatusResponse> {
-  return requestStaffDeliveryApi<StaffDeliveryStatusResponse>(
+  const response = await requestStaffDeliveryApi<StaffDeliveryStatusResponse>(
     `/api/staff/delivery-requests/${deliveryId}/status`,
     token,
     {
@@ -157,6 +158,10 @@ export function updateStaffDeliveryStatus(
       body: JSON.stringify(update),
     },
   );
+
+  notifyStaffDataUpdated();
+
+  return response;
 }
 
 export function getStaffDeliveriesErrorMessage(

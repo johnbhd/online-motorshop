@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
@@ -18,20 +19,11 @@ import {
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-const links = [
-  ["Dashboard", "/staff", "▦"],
-  ["Orders", "/staff/orders", "▤", 8],
-  ["Payments", "/staff/payments", "▣", 3],
-  ["Pickup Requests", "/staff/pickup-requests", "⌂", 4],
-  ["Delivery Requests", "/staff/delivery-requests", "♞", 2],
-  ["Products", "/staff/products", "□"],
-  ["Messages", "/staff/messages", "✉", 5],
-  ["Customers", "/staff/customers", "♧"],
-  ["Reviews", "/staff/reviews", "☆"],
-  ["Reports", "/staff/reports", "▥"],
-  ["Profile", "#", "◉"],
-] as const;
+import { getAuthToken } from "@/lib/auth/authStorage";
+import {
+  getStaffSidebarCounts,
+  type StaffSidebarCounts,
+} from "./staffSidebarApi";
 
 const icons = {
   Dashboard: faGaugeHigh,
@@ -47,6 +39,34 @@ const icons = {
   Profile: faUser,
 } as const;
 
+type SidebarLink = {
+  label: keyof typeof icons;
+  href: string;
+  badgeKey?: keyof StaffSidebarCounts;
+};
+
+const links: SidebarLink[] = [
+  { label: "Dashboard", href: "/staff" },
+  { label: "Orders", href: "/staff/orders", badgeKey: "orders" },
+  { label: "Payments", href: "/staff/payments", badgeKey: "payments" },
+  {
+    label: "Pickup Requests",
+    href: "/staff/pickup-requests",
+    badgeKey: "pickup_requests",
+  },
+  {
+    label: "Delivery Requests",
+    href: "/staff/delivery-requests",
+    badgeKey: "delivery_requests",
+  },
+  { label: "Products", href: "/staff/products" },
+  { label: "Messages", href: "/staff/messages" },
+  { label: "Customers", href: "/staff/customers" },
+  { label: "Reviews", href: "/staff/reviews" },
+  { label: "Reports", href: "/staff/reports" },
+  { label: "Profile", href: "#" },
+];
+
 function formatSidebarBadge(value: number) {
   return value > 9 ? "9+" : value;
 }
@@ -60,7 +80,51 @@ export default function StaffSidebar({
 }) {
   const path = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const [counts, setCounts] = useState<StaffSidebarCounts | null>(null);
+
+  const refreshCounts = useCallback(
+    async (signal?: AbortSignal) => {
+      const token = getAuthToken();
+
+      if (!token || user?.role !== "staff") {
+        setCounts(null);
+        return;
+      }
+
+      try {
+        setCounts(await getStaffSidebarCounts(token, signal));
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
+
+        setCounts(null);
+      }
+    },
+    [user?.role],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const refresh = () => void refreshCounts();
+
+    const initialRefresh = window.setTimeout(
+      () => void refreshCounts(controller.signal),
+      0,
+    );
+    const interval = window.setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("staff-data-updated", refresh);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(initialRefresh);
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("staff-data-updated", refresh);
+    };
+  }, [path, refreshCounts]);
 
   const handleLogout = async () => {
     await logout();
@@ -108,11 +172,12 @@ export default function StaffSidebar({
         </div>
         <nav className="flex-1 px-3 py-5" aria-label="Staff navigation">
           <ul className="space-y-1">
-            {links.map(([label, href, , badge]) => {
+            {links.map(({ label, href, badgeKey }) => {
               const active =
                 href !== "#" &&
                 (path === href ||
                   (href !== "/staff" && path.startsWith(`${href}/`)));
+              const badge = badgeKey ? counts?.[badgeKey] : undefined;
               return (
                 <li key={label}>
                   <Link

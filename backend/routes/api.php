@@ -27,6 +27,7 @@ use App\Http\Controllers\Staff\StaffPickupRequestsController;
 use App\Http\Controllers\Staff\StaffProductsController;
 use App\Http\Controllers\Staff\StaffReportsController;
 use App\Http\Controllers\Staff\StaffReviewsController;
+use App\Http\Controllers\Staff\StaffSidebarController;
 use Illuminate\Support\Facades\Route;
 
 // Connection
@@ -128,6 +129,9 @@ Route::prefix('staff')
     ->middleware('auth:sanctum')
     ->group(function () {
         Route::middleware('role:staff')->group(function () {
+            Route::get('/sidebar-summary', [StaffSidebarController::class, 'data'])
+                ->name('sidebar-summary.data');
+
             Route::get('/orders', [StaffOrdersController::class, 'index'])
                 ->name('orders.index');
 

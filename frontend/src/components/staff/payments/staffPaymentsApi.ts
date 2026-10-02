@@ -3,6 +3,7 @@ import type {
   StaffPaymentsResponse,
   StaffPaymentStatusResponse,
 } from "./staffPaymentsTypes";
+import { notifyStaffDataUpdated } from "@/components/staff/staffSidebarApi";
 
 type StaffPaymentsQuery = {
   search?: string;
@@ -138,13 +139,13 @@ export function getStaffPayment(
   );
 }
 
-export function updateStaffPaymentStatus(
+export async function updateStaffPaymentStatus(
   token: string,
   paymentId: number,
   status: string,
   signal?: AbortSignal,
 ): Promise<StaffPaymentStatusResponse> {
-  return requestStaffPaymentApi<StaffPaymentStatusResponse>(
+  const response = await requestStaffPaymentApi<StaffPaymentStatusResponse>(
     `/api/staff/payments/${paymentId}/status`,
     token,
     {
@@ -153,6 +154,10 @@ export function updateStaffPaymentStatus(
       body: JSON.stringify({ status }),
     },
   );
+
+  notifyStaffDataUpdated();
+
+  return response;
 }
 
 export function getStaffPaymentsErrorMessage(
