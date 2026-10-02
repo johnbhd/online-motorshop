@@ -261,6 +261,11 @@
   transition: background-color 160ms ease, transform 160ms ease;
 }
 
+.track-order-search-button {
+  align-self: start;
+  margin-top: 1.45rem;
+}
+
 .track-order-search-button:hover,
 .track-order-help-button:hover {
   background: #e07a08;
@@ -911,6 +916,7 @@
   .track-order-search-button {
     grid-column: 1 / -1;
     justify-self: start;
+    margin-top: 0;
   }
 
   .track-order-request-details {
