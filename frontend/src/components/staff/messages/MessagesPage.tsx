@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faUser } from "@fortawesome/free-solid-svg-icons";
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
 import PortalPagination from "@/components/staff/PortalPagination";
 import { getAuthToken } from "@/lib/auth/authStorage";
@@ -17,7 +17,6 @@ import type {
 } from "@/lib/messages/conversationTypes";
 import {
   formatConversationTime,
-  getConversationInitials,
   getLastConversationMessage,
 } from "@/lib/messages/conversationUtils";
 
@@ -304,7 +303,7 @@ export default function MessagesPage() {
                     }
                   >
                     <span className="grid size-10 shrink-0 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
-                      {getConversationInitials(conversation.participant.name)}
+                      <FontAwesomeIcon icon={faUser} aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
@@ -367,9 +366,7 @@ export default function MessagesPage() {
                     <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />
                   </button>
                   <span className="grid size-10 place-items-center rounded-full bg-[#0B1930] text-xs font-bold text-white">
-                    {getConversationInitials(
-                      activeConversation.participant.name,
-                    )}
+                    <FontAwesomeIcon icon={faUser} aria-hidden="true" />
                   </span>
                   <div>
                     <h2 className="font-semibold text-[#0B1930]">
