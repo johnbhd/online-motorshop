@@ -23,6 +23,8 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Badge } from "@/components/staff/PortalTable";
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
+import RealStaffOrderDetailsModal from "@/components/staff/orders/RealStaffOrderDetailsModal";
+import type { StaffOrderDetails } from "@/components/staff/orders/staffOrdersTypes";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   getStaffDashboard,
@@ -153,6 +155,10 @@ export default function StaffDashboardLivePage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedReference, setSelectedReference] = useState<string | null>(
+    null,
+  );
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
   const loadDashboard = useCallback(async (signal?: AbortSignal) => {
     const token = getAuthToken();
@@ -198,6 +204,38 @@ export default function StaffDashboardLivePage() {
     };
   }, [loadDashboard]);
 
+  const handleViewOrder = useCallback((reference: string) => {
+    setSelectedReference(reference);
+    setIsOrderModalOpen(true);
+  }, []);
+
+  const handleCloseOrder = useCallback(() => {
+    setIsOrderModalOpen(false);
+    setSelectedReference(null);
+  }, []);
+
+  const handleStatusUpdated = useCallback((updatedOrder: StaffOrderDetails) => {
+    setDashboard((currentDashboard) => {
+      if (!currentDashboard) {
+        return currentDashboard;
+      }
+
+      return {
+        ...currentDashboard,
+        recent_orders: currentDashboard.recent_orders.map((order) =>
+          order.reference === updatedOrder.reference
+            ? {
+                ...order,
+                status: updatedOrder.status,
+                payment_status: updatedOrder.payment_status,
+                updated_at: updatedOrder.updated_at,
+              }
+            : order,
+        ),
+      };
+    });
+  }, []);
+
   const branchName = dashboard?.branch?.name ?? "your branch";
   const staffName = user?.name ?? "Staff";
 
@@ -234,15 +272,29 @@ export default function StaffDashboardLivePage() {
         />
       ) : null}
 
-      {dashboard ? <DashboardContent dashboard={dashboard} /> : null}
+      {dashboard ? (
+        <DashboardContent
+          dashboard={dashboard}
+          onViewOrder={handleViewOrder}
+        />
+      ) : null}
+
+      <RealStaffOrderDetailsModal
+        reference={selectedReference}
+        isOpen={isOrderModalOpen}
+        onClose={handleCloseOrder}
+        onStatusUpdated={handleStatusUpdated}
+      />
     </div>
   );
 }
 
 function DashboardContent({
   dashboard,
+  onViewOrder,
 }: {
   dashboard: StaffDashboardResponse;
+  onViewOrder: (reference: string) => void;
 }) {
   const orderRows = useMemo(
     () => createStatusRows(dashboard.operational.orders, orderStatusOrder),
@@ -290,7 +342,10 @@ function DashboardContent({
         ))}
       </section>
 
-      <RecentOrders orders={dashboard.recent_orders} />
+      <RecentOrders
+        orders={dashboard.recent_orders}
+        onViewOrder={onViewOrder}
+      />
       <RecentConversations conversations={dashboard.recent_conversations} />
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-3">
@@ -322,8 +377,10 @@ function DashboardContent({
 
 function RecentOrders({
   orders,
+  onViewOrder,
 }: {
   orders: StaffDashboardResponse["recent_orders"];
+  onViewOrder: (reference: string) => void;
 }) {
   return (
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -394,12 +451,13 @@ function RecentOrders({
                     {formatDateTime(order.created_at)}
                   </td>
                   <td className="whitespace-nowrap px-5 py-4">
-                    <Link
-                      href={`/staff/orders/${encodeURIComponent(order.reference)}`}
+                    <button
+                      type="button"
+                      onClick={() => onViewOrder(order.reference)}
                       className="font-semibold text-orange-600 hover:text-orange-700 hover:underline"
                     >
                       View Order
-                    </Link>
+                    </button>
                   </td>
                 </tr>
               ))}
