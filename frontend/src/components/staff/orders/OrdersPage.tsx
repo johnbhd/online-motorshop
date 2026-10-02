@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalPagination from "@/components/staff/PortalPagination";
 import { Badge } from "@/components/staff/PortalTable";
@@ -251,10 +253,10 @@ export default function OrdersPage() {
             <p className="mt-1 text-sm text-slate-500">{description}</p>
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-            <label className="relative block w-full sm:w-80">
-              <span className="pointer-events-none absolute left-3 top-2.5 text-slate-400" aria-hidden="true">
-                ⌕
+          <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:items-center lg:max-w-[34rem]">
+            <label className="relative block min-w-0 flex-1 sm:w-[22rem] sm:flex-none">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400" aria-hidden="true">
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3.5 w-3.5" />
               </span>
               <span className="sr-only">Search Staff orders</span>
               <input
@@ -264,7 +266,7 @@ export default function OrdersPage() {
                   setCurrentPage(1);
                 }}
                 placeholder="Search reference, customer, phone"
-                className="min-h-10 w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                className="h-10 w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
               />
             </label>
 
@@ -278,7 +280,7 @@ export default function OrdersPage() {
                 setFulfillment(event.target.value);
                 setCurrentPage(1);
               }}
-              className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+              className="h-10 w-full shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 sm:w-[11rem]"
             >
               <option value="">All fulfillment</option>
               <option value="pickup">Store pickup</option>
@@ -309,59 +311,105 @@ export default function OrdersPage() {
         ) : orders.length ? (
           <>
             <div className="hidden overflow-x-auto md:block">
-              <table className="w-full min-w-[980px] border-collapse text-left">
+              <table className="w-full min-w-[1280px] table-fixed border-collapse text-left">
+                <colgroup>
+                  <col className="w-[155px]" />
+                  <col className="w-[205px]" />
+                  <col className="w-[180px]" />
+                  <col className="w-[125px]" />
+                  <col className="w-[175px]" />
+                  <col className="w-[145px]" />
+                  <col className="w-[160px]" />
+                  <col className="w-[135px]" />
+                </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
-                    {[
-                      "Reference",
-                      "Customer",
-                      "Date",
-                      "Amount",
-                      "Fulfillment",
-                      "Payment",
-                      "Status",
-                      "Action",
-                    ].map((heading) => (
-                      <th
-                        key={heading}
-                        scope="col"
-                        className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
-                      >
-                        {heading}
-                      </th>
-                    ))}
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Reference
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Customer
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Date
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Amount
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Fulfillment
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Payment
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {orders.map((order) => (
                     <tr key={order.reference} className="transition hover:bg-slate-50/80">
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm font-bold text-[#0B1930]">
+                      <td className="whitespace-nowrap px-5 py-3.5 align-middle text-sm font-bold text-[#0B1930]">
                         {order.reference}
                       </td>
-                      <td className="px-5 py-3.5 text-sm text-slate-600">
-                        <span className="block whitespace-nowrap">{customerLabel(order)}</span>
-                        <span className="block text-xs text-slate-400">{order.customer?.contact_number ?? "No phone"}</span>
+                      <td className="px-5 py-3.5 align-middle text-sm text-slate-600">
+                        <span className="block truncate font-medium text-slate-700">{customerLabel(order)}</span>
+                        <span className="block truncate text-xs text-slate-400">{order.customer?.contact_number ?? "No phone"}</span>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm text-slate-600">
+                      <td className="whitespace-nowrap px-5 py-3.5 align-middle text-sm text-slate-600">
                         {formatDate(order.created_at)}
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm font-semibold text-slate-700">
+                      <td className="whitespace-nowrap px-5 py-3.5 text-right align-middle text-sm font-semibold text-slate-700">
                         {formatCurrency(order.total_amount)}
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm text-slate-600">
+                      <td className="whitespace-nowrap px-5 py-3.5 align-middle text-sm text-slate-600">
                         {fulfillmentLabel(order.fulfillment_method)}
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm text-slate-600">
-                        <Badge>{toStatusLabel(order.payment_status)}</Badge>
+                      <td className="px-5 py-3.5 text-center align-middle text-sm text-slate-600">
+                        <span className="flex justify-center">
+                          <Badge>{toStatusLabel(order.payment_status)}</Badge>
+                        </span>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm text-slate-600">
-                        <Badge>{toStatusLabel(order.status)}</Badge>
+                      <td className="px-5 py-3.5 text-center align-middle text-sm text-slate-600">
+                        <span className="flex justify-center">
+                          <Badge>{toStatusLabel(order.status)}</Badge>
+                        </span>
                       </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm text-slate-600">
-                        <ActionButton
-                          label="Review Order"
-                          onClick={() => handleViewOrder(order)}
-                        />
+                      <td className="px-5 py-3.5 text-right align-middle text-sm text-slate-600">
+                        <span className="flex justify-end">
+                          <ActionButton
+                            label="Review Order"
+                            onClick={() => handleViewOrder(order)}
+                          />
+                        </span>
                       </td>
                     </tr>
                   ))}
