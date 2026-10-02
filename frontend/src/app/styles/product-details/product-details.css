@@ -78,8 +78,7 @@
   display: grid;
   grid-template-columns:
     minmax(0, 1.05fr)
-    minmax(0, 1.2fr)
-    minmax(14rem, 0.72fr);
+    minmax(0, 1.2fr);
   align-items: start;
   gap: clamp(1rem, 2.5vw, 1.75rem);
   padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
@@ -374,6 +373,8 @@
 }
 
 .product-details-fulfillment {
+  grid-column: 1;
+  grid-row: 2;
   padding: clamp(1.15rem, 2vw, 1.35rem);
 }
 
@@ -540,6 +541,7 @@
   .product-details-fulfillment {
     display: grid;
     grid-column: 1 / -1;
+    grid-row: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1.5rem;
   }
