@@ -6,6 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderRequest extends Model
 {
+    public const STAFF_STATUS_VALUES = [
+        'pending',
+        'under_review',
+        'confirmed',
+        'waiting_for_payment',
+        'payment_verification',
+        'preparing_order',
+        'ready_for_pickup',
+        'booked_for_delivery',
+        'picked_up_by_rider',
+        'waiting_for_booking',
+        'completed',
+        'rejected',
+        'cancelled',
+    ];
+
     protected $fillable = [
         'order_reference',
         'customer_id',
@@ -25,7 +41,7 @@ class OrderRequest extends Model
         return [
             'subtotal' => 'decimal:2',
             'delivery_fee' => 'decimal:2',
-            'total_amount' => 'decimal:2'
+            'total_amount' => 'decimal:2',
         ];
     }
 
@@ -39,7 +55,7 @@ class OrderRequest extends Model
         return $this->belongsTo(Branch::class);
     }
 
-    public function assignedStaff() 
+    public function assignedStaff()
     {
         return $this->belongsTo(User::class, 'assigned_staff_id');
     }
@@ -54,12 +70,12 @@ class OrderRequest extends Model
         return $this->hasMany(Payment::class, 'order_id');
     }
 
-    public function pickupRequest() 
+    public function pickupRequest()
     {
         return $this->hasOne(PickupRequest::class, 'order_id');
     }
 
-    public function deliveryRequest() 
+    public function deliveryRequest()
     {
         return $this->hasOne(DeliveryRequest::class, 'order_id');
     }

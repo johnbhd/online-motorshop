@@ -32,6 +32,46 @@ class OrderRequestPresenter
         ];
     }
 
+    public function staffSummary(OrderRequest $order): array
+    {
+        return [
+            'id' => $order->id,
+            'reference' => $order->order_reference,
+            'customer' => $order->customer?->only([
+                'id',
+                'full_name',
+                'contact_number',
+                'email',
+            ]),
+            'status' => $order->order_status,
+            'payment_status' => $this->paymentStatus($order),
+            'fulfillment_method' => $order->fulfillment_type,
+            'branch' => $this->branchPayload($order),
+            'item_count' => (int) ($order->getAttribute('items_sum_quantity') ?? 0),
+            'line_item_count' => (int) ($order->getAttribute('items_count') ?? 0),
+            'subtotal' => (float) $order->subtotal,
+            'delivery_fee' => (float) $order->delivery_fee,
+            'estimated_total' => (float) $order->total_amount,
+            'total_amount' => (float) $order->total_amount,
+            'created_at' => $order->created_at?->toISOString(),
+            'updated_at' => $order->updated_at?->toISOString(),
+        ];
+    }
+
+    public function staffDetail(OrderRequest $order): array
+    {
+        $payload = $this->payload($order, includeCustomer: true, includePayment: true);
+        $payload['staff_notes'] = $order->staff_notes;
+        $payload['assigned_staff'] = $order->assignedStaff?->only([
+            'id',
+            'name',
+            'email',
+            'branch_id',
+        ]);
+
+        return $payload;
+    }
+
     public function detail(
         OrderRequest $order,
         bool $includeCustomer = true,

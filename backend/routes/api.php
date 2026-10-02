@@ -125,41 +125,51 @@ Route::prefix('admin')
 // Staff
 Route::prefix('staff')
     ->name('staff.')
-    ->middleware([
-        'auth:sanctum',
-        'role:admin',
-    ])
+    ->middleware('auth:sanctum')
     ->group(function () {
-        Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
-            ->name('dashboard.data');
+        Route::middleware('role:staff')->group(function () {
+            Route::get('/orders', [StaffOrdersController::class, 'index'])
+                ->name('orders.index');
 
-        Route::get('/orders/data', [StaffOrdersController::class, 'data'])
-            ->name('orders.data');
+            Route::get('/orders/data', [StaffOrdersController::class, 'index'])
+                ->name('orders.data');
 
-        Route::get('/payments/data', [StaffPaymentsController::class, 'data'])
-            ->name('payments.data');
+            Route::get('/orders/{reference}', [StaffOrdersController::class, 'show'])
+                ->name('orders.show');
 
-        Route::get('/pickup-requests/data', [StaffPickupRequestsController::class, 'data'])
-            ->name('pickup-requests.data');
+            Route::patch('/orders/{reference}/status', [StaffOrdersController::class, 'updateStatus'])
+                ->name('orders.status');
+        });
 
-        Route::get('/delivery-requests/data', [StaffDeliveryRequestsController::class, 'data'])
-            ->name('delivery-requests.data');
+        Route::middleware('role:admin')->group(function () {
+            Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
+                ->name('dashboard.data');
 
-        Route::get('/products/data', [StaffProductsController::class, 'data'])
-            ->name('products.data');
+            Route::get('/payments/data', [StaffPaymentsController::class, 'data'])
+                ->name('payments.data');
 
-        Route::get('/messages/data', [StaffMessagesController::class, 'data'])
-            ->name('messages.data');
+            Route::get('/pickup-requests/data', [StaffPickupRequestsController::class, 'data'])
+                ->name('pickup-requests.data');
 
-        Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
-            ->name('notifications.data');
+            Route::get('/delivery-requests/data', [StaffDeliveryRequestsController::class, 'data'])
+                ->name('delivery-requests.data');
 
-        Route::get('/customers/data', [StaffCustomersController::class, 'data'])
-            ->name('customers.data');
+            Route::get('/products/data', [StaffProductsController::class, 'data'])
+                ->name('products.data');
 
-        Route::get('/reports/data', [StaffReportsController::class, 'data'])
-            ->name('reports.data');
+            Route::get('/messages/data', [StaffMessagesController::class, 'data'])
+                ->name('messages.data');
 
-        Route::get('/reviews/data', [StaffReviewsController::class, 'data'])
-            ->name('reviews.data');
+            Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
+                ->name('notifications.data');
+
+            Route::get('/customers/data', [StaffCustomersController::class, 'data'])
+                ->name('customers.data');
+
+            Route::get('/reports/data', [StaffReportsController::class, 'data'])
+                ->name('reports.data');
+
+            Route::get('/reviews/data', [StaffReviewsController::class, 'data'])
+                ->name('reviews.data');
+        });
     });
