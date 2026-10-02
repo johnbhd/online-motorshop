@@ -47,6 +47,10 @@ const icons = {
   Profile: faUser,
 } as const;
 
+function formatSidebarBadge(value: number) {
+  return value > 9 ? "9+" : value;
+}
+
 export default function StaffSidebar({
   open,
   onClose,
@@ -127,9 +131,9 @@ export default function StaffSidebar({
                       <FontAwesomeIcon icon={icons[label]} className="w-4" />
                     </span>
                     <span className="min-w-0 flex-1 truncate">{label}</span>
-                    {badge && (
+                    {badge !== undefined && badge > 0 && (
                       <span className="grid size-5 place-items-center rounded-full bg-orange-500 text-[11px] font-bold text-white">
-                        {badge}
+                        {formatSidebarBadge(badge)}
                       </span>
                     )}
                   </Link>
