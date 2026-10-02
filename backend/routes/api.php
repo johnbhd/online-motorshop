@@ -138,6 +138,9 @@ Route::prefix('staff')
     ->middleware('auth:sanctum')
     ->group(function () {
         Route::middleware('role:staff')->group(function () {
+            Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
+                ->name('dashboard.data');
+
             Route::get('/sidebar-summary', [StaffSidebarController::class, 'data'])
                 ->name('sidebar-summary.data');
 
@@ -203,9 +206,6 @@ Route::prefix('staff')
         });
 
         Route::middleware('role:admin')->group(function () {
-            Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
-                ->name('dashboard.data');
-
             Route::get('/products/data', [StaffProductsController::class, 'data'])
                 ->name('products.data');
 
