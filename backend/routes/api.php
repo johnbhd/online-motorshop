@@ -139,14 +139,23 @@ Route::prefix('staff')
 
             Route::patch('/orders/{reference}/status', [StaffOrdersController::class, 'updateStatus'])
                 ->name('orders.status');
+
+            Route::get('/payments', [StaffPaymentsController::class, 'index'])
+                ->name('payments.index');
+
+            Route::get('/payments/data', [StaffPaymentsController::class, 'data'])
+                ->name('payments.data');
+
+            Route::get('/payments/{payment}', [StaffPaymentsController::class, 'show'])
+                ->name('payments.show');
+
+            Route::patch('/payments/{payment}/status', [StaffPaymentsController::class, 'updateStatus'])
+                ->name('payments.status');
         });
 
         Route::middleware('role:admin')->group(function () {
             Route::get('/dashboard/data', [StaffDashboardController::class, 'data'])
                 ->name('dashboard.data');
-
-            Route::get('/payments/data', [StaffPaymentsController::class, 'data'])
-                ->name('payments.data');
 
             Route::get('/pickup-requests/data', [StaffPickupRequestsController::class, 'data'])
                 ->name('pickup-requests.data');

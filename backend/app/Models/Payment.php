@@ -6,6 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    public const STATUS_VALUES = [
+        'unpaid',
+        'waiting_for_payment',
+        'waiting_for_verification',
+        'paid',
+        'failed',
+        'refunded',
+        'cancelled',
+    ];
+
     protected $fillable = [
         'order_id',
         'payment_method',
@@ -21,13 +31,13 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
-            'verified_at' => 'datetime'
+            'verified_at' => 'datetime',
         ];
     }
 
-    public function order() 
+    public function order()
     {
-        return $this->belongsTo(OrderRequest::class, 'order_id');   
+        return $this->belongsTo(OrderRequest::class, 'order_id');
     }
 
     public function verifiedBy()
