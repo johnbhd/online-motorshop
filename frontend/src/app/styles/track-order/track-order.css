@@ -267,6 +267,12 @@
   transform: translateY(-1px);
 }
 
+.track-order-search-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
 .track-order-search-button:focus-visible,
 .track-order-help-button:focus-visible,
 .track-order-help-link:focus-visible,
@@ -623,6 +629,9 @@
   border: 1px solid var(--track-order-border);
   border-radius: 0.65rem;
   background: var(--track-order-surface);
+  color: var(--track-order-muted);
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
 .track-order-item-image img {

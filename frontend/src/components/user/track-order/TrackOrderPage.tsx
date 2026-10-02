@@ -1,33 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
-import { getDemoOrderByReferenceAndContact } from "../checkout/checkoutUtils";
+import {
+  getOrderApiErrorMessage,
+  OrderApiError,
+  trackOrder,
+} from "@/lib/orders/orderApi";
+import { toOrderViewModel } from "@/lib/orders/orderAdapter";
+import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import TrackOrderHero from "./TrackOrderHero";
 import TrackOrderResult from "./TrackOrderResult";
 import TrackOrderSearch from "./TrackOrderSearch";
 
 export default function TrackOrderPage() {
-  const [matchedOrder, setMatchedOrder] = useState<DemoOrder | null>(null);
+  const [matchedOrder, setMatchedOrder] = useState<OrderViewModel | null>(null);
   const [searchError, setSearchError] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = (reference: string, contactNumber: string) => {
+  const handleSearch = async (reference: string, contactNumber: string) => {
     setMatchedOrder(null);
     setSearchError("");
+    setIsSearching(true);
 
-    const order = getDemoOrderByReferenceAndContact(
-      reference,
-      contactNumber,
-    );
-
-    if (!order) {
-      setSearchError(
-        "Order not found or verification information is incorrect.",
-      );
-      return;
+    try {
+      const response = await trackOrder(reference, contactNumber);
+      setMatchedOrder(toOrderViewModel(response.order));
+    } catch (error: unknown) {
+      if (error instanceof OrderApiError && error.status === 404) {
+        setSearchError(
+          "Order not found or verification information is incorrect.",
+        );
+      } else {
+        setSearchError(
+          getOrderApiErrorMessage(
+            error,
+            "We could not check your order right now. Please try again.",
+          ),
+        );
+      }
+    } finally {
+      setIsSearching(false);
     }
-
-    setMatchedOrder(order);
   };
 
   return (
@@ -40,6 +53,7 @@ export default function TrackOrderPage() {
         <div className="track-order-shell">
           <TrackOrderSearch
             error={searchError}
+            isSubmitting={isSearching}
             onSearch={handleSearch}
           />
         </div>

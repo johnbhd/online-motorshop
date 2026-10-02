@@ -1,4 +1,4 @@
-import type { DemoOrder } from "@/lib/orders/orderTypes";
+import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import CurrentOrderStatus from "../track-order/CurrentOrderStatus";
 import OrderActivity from "../track-order/OrderActivity";
 import OrderItems from "../track-order/OrderItems";
@@ -13,7 +13,7 @@ import {
 } from "../track-order/trackOrderData";
 
 type OrderDetailsViewProps = {
-  order: DemoOrder;
+  order: OrderViewModel;
 };
 
 export default function OrderDetailsView({ order }: OrderDetailsViewProps) {
