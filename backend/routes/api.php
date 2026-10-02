@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
@@ -47,6 +48,21 @@ Route::get('/branches', [CatalogController::class, 'branches'])
     ->name('catalog.branches.index');
 Route::post('/order-requests', [OrderRequestController::class, 'store'])
     ->name('order-requests.store');
+Route::post('/order-requests/track', [OrderRequestController::class, 'track'])
+    ->name('order-requests.track');
+
+Route::prefix('customer')
+    ->name('customer.')
+    ->middleware([
+        'auth:sanctum',
+        'role:customer',
+    ])
+    ->group(function () {
+        Route::get('/orders', [CustomerOrderController::class, 'index'])
+            ->name('orders.index');
+        Route::get('/orders/{reference}', [CustomerOrderController::class, 'show'])
+            ->name('orders.show');
+    });
 
 // Auth
 Route::prefix('auth')->group(function () {

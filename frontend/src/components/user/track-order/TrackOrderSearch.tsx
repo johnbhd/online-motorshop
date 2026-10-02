@@ -12,11 +12,13 @@ import { getOrderConfirmation } from "@/lib/orders/orderConfirmationStorage";
 
 type TrackOrderSearchProps = {
   error: string;
-  onSearch: (reference: string, contactNumber: string) => void;
+  isSubmitting: boolean;
+  onSearch: (reference: string, contactNumber: string) => void | Promise<void>;
 };
 
 export default function TrackOrderSearch({
   error,
+  isSubmitting,
   onSearch,
 }: TrackOrderSearchProps) {
   const [reference, setReference] = useState("");
@@ -58,7 +60,7 @@ export default function TrackOrderSearch({
       return;
     }
 
-    onSearch(reference.trim(), contactNumber.trim());
+    void onSearch(reference.trim(), contactNumber.trim());
   };
 
   return (
@@ -134,15 +136,20 @@ export default function TrackOrderSearch({
             <span className="track-order-field-error">{contactError}</span>
           ) : null}
         </div>
-        <button className="track-order-search-button" type="submit">
+        <button
+          className="track-order-search-button"
+          type="submit"
+          disabled={isSubmitting}
+          aria-busy={isSubmitting}
+        >
           <FontAwesomeIcon icon={faMagnifyingGlass} aria-hidden="true" />
-          <span>Check Order Status</span>
+          <span>{isSubmitting ? "Checking order..." : "Check Order Status"}</span>
         </button>
       </form>
       <p className="track-order-search-note">
         <FontAwesomeIcon icon={faLock} aria-hidden="true" />
         <span>
-          This temporary lookup reads saved order requests from this browser.
+          This lookup verifies the order with ALD Motorshop.
         </span>
       </p>
       {error ? (

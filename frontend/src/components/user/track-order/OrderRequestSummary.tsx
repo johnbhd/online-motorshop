@@ -1,19 +1,19 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
+import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import { formatOrderTimestamp } from "../checkout/checkoutUtils";
 
 type OrderRequestSummaryProps = {
-  order: DemoOrder;
+  order: OrderViewModel;
 };
 
 export default function OrderRequestSummary({ order }: OrderRequestSummaryProps) {
   const fulfillmentLabel = order.fulfillment.method === "pickup"
     ? "Store Pickup"
-    : "Lalamove Delivery";
+    : "Delivery";
   const fulfillmentValue = order.fulfillment.method === "pickup"
-    ? order.fulfillment.branch.name
-    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
+    ? order.fulfillment.branch?.name ?? "Branch unavailable"
+    : order.fulfillment.delivery?.address ?? "Delivery address unavailable";
   const fulfillmentFieldLabel = order.fulfillment.method === "pickup"
     ? "Branch"
     : "Delivery Address";

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrderRequestRequest;
+use App\Http\Requests\TrackOrderRequest;
 use App\Models\OrderRequest;
 use App\Services\OrderRequestCreator;
+use App\Services\OrderRequestPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,6 +14,7 @@ class OrderRequestController extends Controller
 {
     public function __construct(
         private readonly OrderRequestCreator $orderRequestCreator,
+        private readonly OrderRequestPresenter $orderRequestPresenter,
     ) {}
 
     public function store(StoreOrderRequestRequest $request): JsonResponse
@@ -35,60 +38,47 @@ class OrderRequestController extends Controller
 
         return response()->json([
             'message' => 'Order request submitted successfully.',
-            'order' => $this->orderPayload($order),
+            'order' => $this->orderRequestPresenter->confirmation($order),
         ], 201);
     }
 
-    private function orderPayload(OrderRequest $order): array
+    public function track(TrackOrderRequest $request): JsonResponse
     {
-        $payload = [
-            'id' => $order->id,
-            'reference' => $order->order_reference,
-            'status' => $order->order_status,
-            'payment_status' => 'unpaid',
-            'fulfillment_method' => $order->fulfillment_type,
-            'branch' => $order->branch?->only([
-                'id',
-                'name',
-                'address',
-                'contact_number',
-            ]),
-            'customer' => $order->customer?->only([
-                'id',
-                'full_name',
-                'contact_number',
-                'email',
-                'address',
-            ]),
-            'items' => $order->items->map(fn ($item): array => [
-                'product_id' => $item->product_id,
-                'part_number' => $item->product?->part_number,
-                'name' => $item->product_name,
-                'unit_price' => (float) $item->unit_price,
-                'quantity' => $item->quantity,
-                'line_total' => (float) $item->subtotal,
-            ])->values()->all(),
-            'subtotal' => (float) $order->subtotal,
-            'delivery_fee' => (float) $order->delivery_fee,
-            'estimated_total' => (float) $order->total_amount,
-            'customer_notes' => $order->customer_notes,
-            'created_at' => $order->created_at?->toISOString(),
-        ];
+        $data = $request->validated();
+        $order = OrderRequest::query()
+            ->whereRaw('LOWER(order_reference) = ?', [strtolower($data['order_reference'])])
+            ->with([
+                'branch',
+                'items.product:id,part_number',
+                'customer',
+                'payments:id,order_id,payment_method,amount,payment_reference,payment_status,created_at,verified_at',
+                'pickupRequest.branch',
+                'deliveryRequest.branch',
+            ])
+            ->first();
 
-        if ($order->fulfillment_type === 'pickup') {
-            $payload['pickup'] = [
-                'branch_id' => $order->pickupRequest?->branch_id,
-                'status' => $order->pickupRequest?->pickup_status,
-            ];
-        } else {
-            $payload['delivery'] = [
-                'branch_id' => $order->deliveryRequest?->branch_id,
-                'address' => $order->deliveryRequest?->delivery_address,
-                'status' => $order->deliveryRequest?->delivery_status,
-                'remarks' => $order->deliveryRequest?->remarks,
-            ];
+        if (! $order || ! $this->contactsMatch($order->customer?->contact_number, $data['contact_number'])) {
+            return response()->json([
+                'message' => 'Order not found or verification information is incorrect.',
+            ], 404);
         }
 
-        return $payload;
+        return response()->json([
+            'order' => $this->orderRequestPresenter->detail($order, includeCustomer: false),
+        ]);
+    }
+
+    private function contactsMatch(?string $storedContact, string $providedContact): bool
+    {
+        if ($storedContact === null) {
+            return false;
+        }
+
+        return $this->normalizeContact($storedContact) === $this->normalizeContact($providedContact);
+    }
+
+    private function normalizeContact(string $contact): string
+    {
+        return preg_replace('/\D+/', '', trim($contact)) ?? '';
     }
 }

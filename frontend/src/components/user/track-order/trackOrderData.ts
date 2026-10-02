@@ -1,4 +1,4 @@
-import type { DemoOrder, OrderStatus } from "@/lib/orders/orderTypes";
+import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import type { TrackOrderProgressStep } from "./trackOrderTypes";
 
 const pickupStages = [
@@ -20,50 +20,60 @@ const deliveryStages = [
   "Completed",
 ] as const;
 
-const statusDescriptions: Record<OrderStatus, string> = {
-  Pending: "Your order request has been received and is waiting for ALD staff review.",
-  "Under Review": "ALD staff is reviewing availability and compatibility for your request.",
-  Confirmed: "ALD staff has confirmed the request and will share the next fulfillment details.",
-  "Waiting for Payment": "Payment instructions are pending confirmation from ALD staff.",
-  "Payment Verification": "ALD staff is verifying the submitted payment information.",
-  "Preparing Order": "Your confirmed items are being prepared for fulfillment.",
-  "Ready for Pickup": "Your order is ready for pickup at the submitted branch.",
-  "Booked for Delivery": "The delivery request has been arranged for the submitted address.",
-  "Picked Up by Rider": "The delivery has been picked up by the assigned rider.",
-  Completed: "This order request has reached its recorded completed state.",
-  Rejected: "ALD staff could not approve this order request. Please contact us if you need help.",
-  Cancelled: "This order request was cancelled and will not continue through fulfillment.",
+const statusDescriptions: Record<string, string> = {
+  pending: "Your order request has been received and is waiting for ALD staff review.",
+  under_review: "ALD staff is reviewing availability and compatibility for your request.",
+  confirmed: "ALD staff has confirmed the request and will share the next fulfillment details.",
+  waiting_for_booking: "The delivery request is waiting for fulfillment arrangements.",
+  waiting_for_payment: "Payment instructions are pending confirmation from ALD staff.",
+  payment_verification: "ALD staff is verifying the submitted payment information.",
+  preparing: "Your confirmed items are being prepared for fulfillment.",
+  preparing_order: "Your confirmed items are being prepared for fulfillment.",
+  ready_for_pickup: "Your order is ready for pickup at the submitted branch.",
+  booked_for_delivery: "The delivery request has been arranged for the submitted address.",
+  picked_up_by_rider: "The delivery has been picked up by the assigned rider.",
+  completed: "This order request has reached its recorded completed state.",
+  rejected: "ALD staff could not approve this order request. Please contact us if you need help.",
+  cancelled: "This order request was cancelled and will not continue through fulfillment.",
 };
 
-export function getOrderStatusPresentation(status: OrderStatus) {
+export function getOrderStatusPresentation(status: string) {
+  const normalizedStatus = normalizeStatus(status);
+
   return {
     label: status,
-    description: statusDescriptions[status],
+    description:
+      statusDescriptions[normalizedStatus] ??
+      "ALD staff will update this order request as fulfillment progresses.",
   };
 }
 
 export function getOrderProgressSteps(
-  order: DemoOrder,
+  order: OrderViewModel,
 ): TrackOrderProgressStep[] {
   const stages = order.fulfillment.method === "pickup"
     ? pickupStages
     : deliveryStages;
+  const normalizedStatus = normalizeStatus(order.status);
 
-  if (order.status === "Rejected" || order.status === "Cancelled") {
+  if (normalizedStatus === "rejected" || normalizedStatus === "cancelled") {
     return stages.map((label, index) => ({
       label,
       state: index === 0 ? "complete" : "pending",
     }));
   }
 
-  if (order.status === "Completed") {
+  if (normalizedStatus === "completed") {
     return stages.map((label) => ({
       label,
       state: "complete",
     }));
   }
 
-  const currentIndex = getCurrentStageIndex(order.status, order.fulfillment.method);
+  const currentIndex = getCurrentStageIndex(
+    normalizedStatus,
+    order.fulfillment.method,
+  );
 
   return stages.map((label, index) => ({
     label,
@@ -76,8 +86,11 @@ export function getOrderProgressSteps(
   }));
 }
 
-export function getOrderProgressCaption(order: DemoOrder): string {
-  if (order.status === "Rejected" || order.status === "Cancelled") {
+export function getOrderProgressCaption(order: OrderViewModel): string {
+  if (
+    normalizeStatus(order.status) === "rejected" ||
+    normalizeStatus(order.status) === "cancelled"
+  ) {
     return order.status;
   }
 
@@ -91,35 +104,40 @@ export function getOrderProgressCaption(order: DemoOrder): string {
 }
 
 function getCurrentStageIndex(
-  status: OrderStatus,
+  status: string,
   method: "pickup" | "delivery",
 ): number {
-  if (status === "Under Review") {
+  if (status === "under_review") {
     return 1;
   }
 
   if (
-    status === "Confirmed" ||
-    status === "Waiting for Payment" ||
-    status === "Payment Verification"
+    status === "confirmed" ||
+    status === "waiting_for_booking" ||
+    status === "waiting_for_payment" ||
+    status === "payment_verification"
   ) {
     return 2;
   }
 
-  if (status === "Preparing Order") {
+  if (status === "preparing" || status === "preparing_order") {
     return 3;
   }
 
   if (
-    status === "Ready for Pickup" ||
-    status === "Booked for Delivery"
+    status === "ready_for_pickup" ||
+    status === "booked_for_delivery"
   ) {
     return 4;
   }
 
-  if (status === "Picked Up by Rider") {
+  if (status === "picked_up_by_rider") {
     return method === "delivery" ? 5 : 4;
   }
 
   return 0;
+}
+
+function normalizeStatus(status: string): string {
+  return status.trim().toLowerCase().replace(/[-\s]+/g, "_");
 }

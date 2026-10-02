@@ -6,22 +6,22 @@ import {
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
+import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import { formatOrderTimestamp } from "../checkout/checkoutUtils";
 
 type OrderSummaryCardsProps = {
-  order: DemoOrder;
+  order: OrderViewModel;
 };
 
 export default function OrderSummaryCards({ order }: OrderSummaryCardsProps) {
   const isPickup = order.fulfillment.method === "pickup";
   const fulfillmentValue = order.fulfillment.method === "pickup"
-    ? order.fulfillment.branch.name
-    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
+    ? order.fulfillment.branch?.name ?? "Branch unavailable"
+    : order.fulfillment.delivery?.address ?? "Delivery address unavailable";
   const cards = [
     {
       label: "Fulfillment Method",
-      value: isPickup ? "Store Pickup" : "Lalamove Delivery",
+      value: isPickup ? "Store Pickup" : "Delivery",
       icon: isPickup ? faStore : faTruck,
     },
     {

@@ -7,8 +7,8 @@ import type { CustomerOrderTab } from "./customerOrderUtils";
 
 type OrdersTabsProps = {
   activeTab: CustomerOrderTab;
-  activeCount: number;
-  historyCount: number;
+  activeCount: number | null;
+  historyCount: number | null;
   onTabChange: (tab: CustomerOrderTab) => void;
 };
 
@@ -48,7 +48,7 @@ export default function OrdersTabs({
         >
           <FontAwesomeIcon icon={tab.icon} aria-hidden="true" />
           <span>{tab.label}</span>
-          <strong>{tab.count}</strong>
+          <strong>{tab.count ?? "—"}</strong>
         </button>
       ))}
     </div>
