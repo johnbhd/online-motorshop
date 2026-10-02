@@ -523,22 +523,121 @@ function StatusRows({
 }
 
 function DashboardLoadingState() {
+  const loadingRows = Array.from({ length: 5 });
+  const loadingOverviewRows = Array.from({ length: 4 });
+
   return (
     <div className="space-y-6" role="status" aria-live="polite">
       <span className="sr-only">Loading Staff dashboard</span>
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <section
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+        aria-hidden="true"
+      >
         {Array.from({ length: 6 }, (_, index) => (
           <div
             key={index}
-            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
           >
-            <div className="h-11 w-11 rounded-lg bg-slate-100" />
-            <div className="mt-5 h-4 w-40 rounded bg-slate-100" />
-            <div className="mt-2 h-3 w-56 rounded bg-slate-100" />
+            <div className="flex items-start justify-between gap-4">
+              <div className="motion-safe:animate-pulse h-11 w-11 rounded-lg bg-slate-100" />
+              <div className="motion-safe:animate-pulse h-9 w-14 rounded bg-slate-100" />
+            </div>
+            <div className="mt-5 flex items-center justify-between gap-3">
+              <div className="motion-safe:animate-pulse h-5 w-36 rounded bg-slate-100" />
+              <div className="motion-safe:animate-pulse h-4 w-4 rounded-full bg-slate-100" />
+            </div>
+            <div className="motion-safe:animate-pulse mt-2 h-3 w-52 max-w-full rounded bg-slate-100" />
           </div>
         ))}
       </section>
-      <div className="h-72 animate-pulse rounded-xl border border-slate-200 bg-white shadow-sm" />
+
+      <section
+        className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+        aria-hidden="true"
+      >
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="space-y-2">
+            <div className="motion-safe:animate-pulse h-5 w-32 rounded bg-slate-100" />
+            <div className="motion-safe:animate-pulse h-3 w-64 max-w-full rounded bg-slate-100" />
+          </div>
+          <div className="motion-safe:animate-pulse h-4 w-28 rounded bg-slate-100" />
+        </div>
+        <div className="overflow-hidden px-5 py-3 sm:px-6">
+          <div className="grid min-w-[980px] grid-cols-[1.25fr_1.5fr_0.75fr_0.9fr_1.2fr_1fr_1.15fr_0.9fr] gap-5 border-b border-slate-100 py-3">
+            {Array.from({ length: 8 }, (_, index) => (
+              <div
+                key={index}
+                className="motion-safe:animate-pulse h-3 rounded bg-slate-100"
+              />
+            ))}
+          </div>
+          {loadingRows.map((_, index) => (
+            <div
+              key={index}
+              className="grid min-w-[980px] grid-cols-[1.25fr_1.5fr_0.75fr_0.9fr_1.2fr_1fr_1.15fr_0.9fr] items-center gap-5 border-b border-slate-100 py-4 last:border-0"
+            >
+              {Array.from({ length: 8 }, (_, cellIndex) => (
+                <div
+                  key={cellIndex}
+                  className={`motion-safe:animate-pulse h-4 rounded bg-slate-100 ${cellIndex === 1 ? "max-w-32" : "max-w-24"}`}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+        aria-hidden="true"
+      >
+        <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="space-y-2">
+            <div className="motion-safe:animate-pulse h-5 w-52 rounded bg-slate-100" />
+            <div className="motion-safe:animate-pulse h-3 w-64 max-w-full rounded bg-slate-100" />
+          </div>
+          <div className="motion-safe:animate-pulse h-4 w-28 rounded bg-slate-100" />
+        </div>
+        <div className="divide-y divide-slate-100">
+          {loadingRows.slice(0, 3).map((_, index) => (
+            <div key={index} className="flex items-start gap-4 px-5 py-4 sm:px-6">
+              <div className="motion-safe:animate-pulse size-10 shrink-0 rounded-full bg-slate-100" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex gap-2">
+                  <div className="motion-safe:animate-pulse h-4 w-32 rounded bg-slate-100" />
+                  <div className="motion-safe:animate-pulse h-4 w-12 rounded-full bg-slate-100" />
+                </div>
+                <div className="motion-safe:animate-pulse h-3 w-3/4 rounded bg-slate-100" />
+                <div className="motion-safe:animate-pulse h-3 w-24 rounded bg-slate-100" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="grid grid-cols-1 gap-5 xl:grid-cols-3"
+        aria-hidden="true"
+      >
+        {Array.from({ length: 3 }, (_, cardIndex) => (
+          <article
+            key={cardIndex}
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
+            <div className="motion-safe:animate-pulse h-5 w-36 rounded bg-slate-100" />
+            <div className="motion-safe:animate-pulse mt-2 h-3 w-56 max-w-full rounded bg-slate-100" />
+            <div className="mt-5 space-y-4">
+              {loadingOverviewRows.map((_, rowIndex) => (
+                <div key={rowIndex} className="flex items-center gap-3">
+                  <div className="motion-safe:animate-pulse h-4 w-28 rounded bg-slate-100" />
+                  <div className="motion-safe:animate-pulse h-2 flex-1 rounded-full bg-slate-100" />
+                  <div className="motion-safe:animate-pulse h-4 w-6 rounded bg-slate-100" />
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </section>
     </div>
   );
 }
