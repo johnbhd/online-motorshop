@@ -6,6 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeliveryRequest extends Model
 {
+    public const STATUS_VALUES = [
+        'waiting_for_booking',
+        'booked',
+        'picked_up',
+        'in_transit',
+        'delivered',
+        'failed',
+        'cancelled',
+    ];
+
     protected $fillable = [
         'order_id',
         'branch_id',
@@ -21,12 +31,12 @@ class DeliveryRequest extends Model
         'delivered_at',
     ];
 
-    protected function casts(): array 
+    protected function casts(): array
     {
         return [
-          'delivery_fee' => 'decimal:2',
-          'delivered_at' => 'datetime',
-      ];
+            'delivery_fee' => 'decimal:2',
+            'delivered_at' => 'datetime',
+        ];
     }
 
     public function order()
