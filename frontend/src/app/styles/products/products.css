@@ -203,6 +203,7 @@
 .products-quantity-stepper button:focus-visible,
 .products-add-cart-button:focus-visible,
 .products-card-details:focus-visible,
+.products-card:focus-visible,
 .products-pagination button:focus-visible {
   outline: 3px solid rgba(247, 148, 29, 0.42);
   outline-offset: 3px;
@@ -568,6 +569,7 @@
   border-radius: 0.7rem;
   padding: 1rem;
   background: #ffffff;
+  cursor: pointer;
   box-shadow: 0 0.2rem 0.85rem rgba(15, 23, 42, 0.03);
   transition: border-color 160ms ease, box-shadow 160ms ease,
     transform 160ms ease;
