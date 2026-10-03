@@ -210,12 +210,18 @@ Route::prefix('staff')
             Route::get('/customers/{customer}', [StaffCustomersController::class, 'show'])
                 ->whereNumber('customer')
                 ->name('customers.show');
+
+            Route::get('/products', [StaffProductsController::class, 'index'])
+                ->name('products.index');
+
+            Route::get('/products/data', [StaffProductsController::class, 'index'])
+                ->name('products.data');
+
+            Route::get('/products/{partNumber}', [StaffProductsController::class, 'show'])
+                ->name('products.show');
         });
 
         Route::middleware('role:admin')->group(function () {
-            Route::get('/products/data', [StaffProductsController::class, 'data'])
-                ->name('products.data');
-
             Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
                 ->name('notifications.data');
 
