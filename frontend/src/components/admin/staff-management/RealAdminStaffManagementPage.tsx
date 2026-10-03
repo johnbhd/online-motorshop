@@ -59,6 +59,7 @@ export default function RealAdminStaffManagementPage() {
     active_staff: 0,
     inactive_staff: 0,
   });
+  const [summaryLoaded, setSummaryLoaded] = useState(false);
   const [query, setQuery] = useState("");
   const [branchId, setBranchId] = useState<number | "">("");
   const [status, setStatus] = useState("");
@@ -108,6 +109,7 @@ export default function RealAdminStaffManagementPage() {
 
       setStaff(response.staff);
       setSummary(response.summary);
+      setSummaryLoaded(true);
       setLastPage(response.meta.last_page);
 
       if (
@@ -165,11 +167,11 @@ export default function RealAdminStaffManagementPage() {
 
   const cards = useMemo(
     () => [
-      [String(summary.total_staff), "Total Staff Accounts", "Live staff records"],
-      [String(summary.active_staff), "Active Accounts", "Can sign in and work"],
-      [String(summary.inactive_staff), "Inactive Accounts", "Sign-in access blocked"],
+      [summaryLoaded ? String(summary.total_staff) : "—", "Total Staff Accounts", "Live staff records"],
+      [summaryLoaded ? String(summary.active_staff) : "—", "Active Accounts", "Can sign in and work"],
+      [summaryLoaded ? String(summary.inactive_staff) : "—", "Inactive Accounts", "Sign-in access blocked"],
     ],
-    [summary],
+    [summary, summaryLoaded],
   );
 
   const selectStaff = useCallback((staffMember: AdminStaff) => {
