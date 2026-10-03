@@ -158,6 +158,24 @@ Route::prefix('admin')
         Route::delete('/brands/{brand}', [AdminBrandController::class, 'destroy'])
             ->name('brands.destroy');
 
+        Route::get('/branches', [AdminBranchesController::class, 'index'])
+            ->name('branches.index');
+
+        Route::post('/branches', [AdminBranchesController::class, 'store'])
+            ->name('branches.store');
+
+        Route::get('/branches/data', [AdminBranchesController::class, 'data'])
+            ->name('branches.data');
+
+        Route::get('/branches/{branch}', [AdminBranchesController::class, 'show'])
+            ->name('branches.show');
+
+        Route::patch('/branches/{branch}', [AdminBranchesController::class, 'update'])
+            ->name('branches.update');
+
+        Route::delete('/branches/{branch}', [AdminBranchesController::class, 'destroy'])
+            ->name('branches.destroy');
+
         Route::get('/orders/data', [AdminOrdersController::class, 'data'])
             ->name('orders.data');
 
@@ -175,9 +193,6 @@ Route::prefix('admin')
 
         Route::get('/messages/data', [AdminMessagesController::class, 'data'])
             ->name('messages.data');
-
-        Route::get('/branches/data', [AdminBranchesController::class, 'data'])
-            ->name('branches.data');
 
         Route::get('/staff-management/data', [AdminStaffController::class, 'data'])
             ->name('staff.data');

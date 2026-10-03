@@ -3,50 +3,74 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminBranchIndexRequest;
+use App\Http\Requests\StoreAdminBranchRequest;
+use App\Http\Requests\UpdateAdminBranchRequest;
+use App\Models\Branch;
+use App\Services\AdminBranchPresenter;
+use App\Services\AdminBranchService;
 use Illuminate\Http\JsonResponse;
 
 class AdminBranchesController extends Controller
 {
-    public function data(): JsonResponse
+    public function __construct(
+        private readonly AdminBranchPresenter $presenter,
+        private readonly AdminBranchService $service,
+    ) {}
+
+    public function index(AdminBranchIndexRequest $request): JsonResponse
+    {
+        return response()->json($this->service->index($request->validated()));
+    }
+
+    public function data(AdminBranchIndexRequest $request): JsonResponse
+    {
+        return $this->index($request);
+    }
+
+    public function show(Branch $branch): JsonResponse
     {
         return response()->json([
-            'summary' => [
-                'total_branches' => 3,
-                'pickup_available' => 3,
-                'active_staff' => 9,
+            'branch' => $this->presenter->detail($this->service->find($branch)),
+        ]);
+    }
+
+    public function store(StoreAdminBranchRequest $request): JsonResponse
+    {
+        $branch = $this->service->create(array_merge(
+            [
+                'pickup_available' => true,
+                'status' => 'active',
             ],
-            'branches' => [
-                [
-                    'id' => 1,
-                    'name' => 'Manila Branch',
-                    'address' => '3333 New Panaderos, Sta. Ana, Manila, 1016 Metro Manila',
-                    'contact' => '+63 995 869 1174',
-                    'pickup_available' => true,
-                    'assigned_staff' => 4,
-                    'operating_hours_configured' => true,
-                    'status' => 'Active',
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'Makati Branch',
-                    'address' => '3678 Bautista Street, Makati City',
-                    'contact' => 'Contact configured',
-                    'pickup_available' => true,
-                    'assigned_staff' => 3,
-                    'operating_hours_configured' => true,
-                    'status' => 'Active',
-                ],
-                [
-                    'id' => 3,
-                    'name' => 'Imus Branch',
-                    'address' => 'LYS Building, General Aguinaldo Highway, Imus, 4103 Cavite',
-                    'contact' => 'Contact configured',
-                    'pickup_available' => true,
-                    'assigned_staff' => 2,
-                    'operating_hours_configured' => true,
-                    'status' => 'Active',
-                ],
-            ],
+            $request->validated(),
+        ));
+
+        return response()->json([
+            'message' => 'Branch created successfully.',
+            'branch' => $this->presenter->detail($branch),
+        ], 201);
+    }
+
+    public function update(UpdateAdminBranchRequest $request, Branch $branch): JsonResponse
+    {
+        $branch = $this->service->update($branch, $request->validated());
+
+        return response()->json([
+            'message' => 'Branch updated successfully.',
+            'branch' => $this->presenter->detail($branch),
+        ]);
+    }
+
+    public function destroy(Branch $branch): JsonResponse
+    {
+        if (! $this->service->delete($branch)) {
+            return response()->json([
+                'message' => 'Branch cannot be deleted while staff, orders, pickup requests, or delivery requests reference it.',
+            ], 409);
+        }
+
+        return response()->json([
+            'message' => 'Branch deleted successfully.',
         ]);
     }
 }
