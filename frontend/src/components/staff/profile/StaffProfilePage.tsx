@@ -326,20 +326,17 @@ export default function StaffProfilePage() {
       />
 
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 bg-[#0B1930] px-5 py-6 text-white sm:px-8">
+        <div className="border-b border-slate-200 bg-white px-5 py-6 text-[#0B1930] sm:px-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="grid size-20 shrink-0 place-items-center rounded-full bg-white/10 text-4xl text-orange-300 ring-1 ring-white/20">
+            <div className="grid size-20 shrink-0 place-items-center rounded-full bg-slate-100 text-4xl text-orange-500 ring-1 ring-slate-200">
               <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[.18em] text-orange-300">
-                Authenticated Staff
-              </p>
               <h2 className="mt-1 truncate text-2xl font-bold">{profile.user.name}</h2>
-              <p className="mt-1 truncate text-sm text-slate-300">
+              <p className="mt-1 truncate text-sm text-slate-500">
                 {profile.user.email}
               </p>
-              <p className="mt-3 text-sm text-slate-300">
+              <p className="mt-3 text-sm text-slate-500">
                 {profile.user.role} · {branchName}
               </p>
             </div>
