@@ -328,7 +328,7 @@ export default function StaffProfilePage() {
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 bg-white px-5 py-6 text-[#0B1930] sm:px-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="grid size-20 shrink-0 place-items-center rounded-full bg-slate-100 text-4xl text-orange-500 ring-1 ring-slate-200">
+            <div className="grid size-20 shrink-0 place-items-center rounded-full bg-slate-100 text-[4.5rem] text-[#B95F00] ring-1 ring-slate-200">
               <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />
             </div>
             <div className="min-w-0">
