@@ -25,7 +25,7 @@ class StoreAdminProductRequest extends FormRequest
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:255'],
             'part_number' => ['required', 'string', 'max:255', 'unique:products,part_number'],
-            'brand' => ['required', 'string', 'max:255'],
+            'brand_id' => ['required', 'integer', 'exists:brands,id'],
             'description' => ['sometimes', 'nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'img_url' => ['required', 'string', 'max:255'],
@@ -38,7 +38,7 @@ class StoreAdminProductRequest extends FormRequest
     {
         $values = [];
 
-        foreach (['name', 'part_number', 'brand', 'description', 'img_url', 'availability_status', 'status'] as $field) {
+        foreach (['name', 'part_number', 'description', 'img_url', 'availability_status', 'status'] as $field) {
             if ($this->has($field) && is_string($this->input($field))) {
                 $values[$field] = trim((string) $this->input($field));
             }

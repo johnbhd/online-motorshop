@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBranchesController;
+use App\Http\Controllers\Admin\AdminBrandController;
+use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminCustomersController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDeliveryRequestsController;
@@ -119,6 +121,42 @@ Route::prefix('admin')
 
         Route::delete('/products/{partNumber}', [AdminProductController::class, 'destroy'])
             ->name('products.destroy');
+
+        Route::get('/categories', [AdminCategoryController::class, 'index'])
+            ->name('categories.index');
+
+        Route::post('/categories', [AdminCategoryController::class, 'store'])
+            ->name('categories.store');
+
+        Route::get('/categories/{category}/products', [AdminCategoryController::class, 'products'])
+            ->name('categories.products');
+
+        Route::get('/categories/{category}', [AdminCategoryController::class, 'show'])
+            ->name('categories.show');
+
+        Route::patch('/categories/{category}', [AdminCategoryController::class, 'update'])
+            ->name('categories.update');
+
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy'])
+            ->name('categories.destroy');
+
+        Route::get('/brands', [AdminBrandController::class, 'index'])
+            ->name('brands.index');
+
+        Route::post('/brands', [AdminBrandController::class, 'store'])
+            ->name('brands.store');
+
+        Route::get('/brands/{brand}/products', [AdminBrandController::class, 'products'])
+            ->name('brands.products');
+
+        Route::get('/brands/{brand}', [AdminBrandController::class, 'show'])
+            ->name('brands.show');
+
+        Route::patch('/brands/{brand}', [AdminBrandController::class, 'update'])
+            ->name('brands.update');
+
+        Route::delete('/brands/{brand}', [AdminBrandController::class, 'destroy'])
+            ->name('brands.destroy');
 
         Route::get('/orders/data', [AdminOrdersController::class, 'data'])
             ->name('orders.data');

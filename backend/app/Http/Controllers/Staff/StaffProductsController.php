@@ -41,7 +41,10 @@ class StaffProductsController extends Controller
         ]);
 
         $query = Product::query()
-            ->with('category:id,name,status');
+            ->with([
+                'category:id,name,status',
+                'brandRecord:id,name,status',
+            ]);
 
         $this->applyFilters($query, $filters);
         $this->applySort($query, $filters['sort'] ?? 'updated_desc');
@@ -66,7 +69,10 @@ class StaffProductsController extends Controller
     public function show(string $partNumber): JsonResponse
     {
         $product = Product::query()
-            ->with('category:id,name,status')
+            ->with([
+                'category:id,name,status',
+                'brandRecord:id,name,status',
+            ])
             ->where('part_number', $partNumber)
             ->first();
 
@@ -101,10 +107,15 @@ class StaffProductsController extends Controller
         }
 
         if (! empty($filters['brand'])) {
-            $query->whereRaw(
-                'LOWER(brand) = ?',
-                [strtolower($filters['brand'])],
-            );
+            $brand = strtolower($filters['brand']);
+
+            $query->where(function (Builder $brandQuery) use ($brand): void {
+                $brandQuery
+                    ->whereRaw('LOWER(brand) = ?', [$brand])
+                    ->orWhereHas('brandRecord', function (Builder $relationQuery) use ($brand): void {
+                        $relationQuery->whereRaw('LOWER(name) = ?', [$brand]);
+                    });
+            });
         }
 
         if (! empty($filters['category'])) {

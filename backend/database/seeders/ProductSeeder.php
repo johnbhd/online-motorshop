@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
@@ -471,6 +472,10 @@ class ProductSeeder extends Seeder
 
         $partNumbers = array_column($products, 'part_number');
 
+        $brandIds = Brand::query()
+            ->whereIn('name', array_unique(array_column($products, 'brand')))
+            ->pluck('id', 'name');
+
         if (count($products) !== 39 || count($partNumbers) !== count(array_unique($partNumbers))) {
             throw new RuntimeException(
                 'ProductSeeder must contain exactly 39 unique products.'
@@ -486,6 +491,8 @@ class ProductSeeder extends Seeder
             ->delete();
 
         foreach ($products as $product) {
+            $product['brand_id'] = $brandIds[$product['brand']] ?? null;
+
             Product::updateOrCreate(
                 [
                     'part_number' => $product['part_number'],

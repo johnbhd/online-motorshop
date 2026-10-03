@@ -30,6 +30,7 @@ class CatalogController extends Controller
         $query = Product::query()
             ->with([
                 'category:id,name',
+                'brandRecord:id,name',
             ])
             ->where('status', 'active');
 
@@ -38,10 +39,15 @@ class CatalogController extends Controller
         }
 
         if (isset($filters['brand'])) {
-            $query->whereRaw(
-                'LOWER(brand) = ?',
-                [strtolower($filters['brand'])],
-            );
+            $brand = strtolower($filters['brand']);
+
+            $query->where(function (Builder $brandQuery) use ($brand): void {
+                $brandQuery
+                    ->whereRaw('LOWER(brand) = ?', [$brand])
+                    ->orWhereHas('brandRecord', function (Builder $relationQuery) use ($brand): void {
+                        $relationQuery->whereRaw('LOWER(name) = ?', [$brand]);
+                    });
+            });
         }
 
         if (isset($filters['category'])) {
@@ -84,6 +90,7 @@ class CatalogController extends Controller
         $product = Product::query()
             ->with([
                 'category:id,name',
+                'brandRecord:id,name',
             ])
             ->where('status', 'active')
             ->where('part_number', $identifier)
@@ -158,7 +165,8 @@ class CatalogController extends Controller
             'part_number' => $product->part_number,
             'name' => $product->name,
             'description' => $product->description,
-            'brand' => $product->brand,
+            'brand_id' => $product->brand_id,
+            'brand' => $product->brandRecord?->name ?? $product->brand,
             'category_id' => $product->category_id,
             'category' => $product->category?->name,
             'price' => (float) $product->price,

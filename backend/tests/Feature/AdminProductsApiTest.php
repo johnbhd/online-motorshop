@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\OrderRequest;
@@ -86,12 +87,13 @@ class AdminProductsApiTest extends TestCase
         $admin = $this->createUser('admin');
         $category = $this->createCategory('Maintenance Parts');
         $otherCategory = $this->createCategory('Electrical Parts');
+        $brand = $this->createBrand('Universal');
 
         $payload = [
             'category_id' => $category->id,
             'name' => '  New Product  ',
             'part_number' => 'NEW-ADMIN-001',
-            'brand' => 'Universal',
+            'brand_id' => $brand->id,
             'description' => 'New product description',
             'price' => 420.5,
             'img_url' => 'https://example.com/new-product.png',
@@ -192,7 +194,7 @@ class AdminProductsApiTest extends TestCase
                 'category_id' => 999999,
                 'name' => '',
                 'part_number' => 'INVALID-ADMIN-001',
-                'brand' => 'Universal',
+                'brand_id' => $this->createBrand('Validation Brand')->id,
                 'price' => -1,
                 'img_url' => '',
                 'availability_status' => 'active',
@@ -234,6 +236,15 @@ class AdminProductsApiTest extends TestCase
     private function createCategory(string $name): Category
     {
         return Category::create([
+            'name' => $name,
+            'description' => $name.' description',
+            'status' => 'active',
+        ]);
+    }
+
+    private function createBrand(string $name): Brand
+    {
+        return Brand::create([
             'name' => $name,
             'description' => $name.' description',
             'status' => 'active',

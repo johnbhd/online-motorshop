@@ -29,6 +29,7 @@ import {
 } from "@/lib/adminProductsApi";
 import type {
   AdminProduct,
+  AdminProductBrandOption,
   AdminProductCategoryOption,
   AdminProductPayload,
   AdminProductsResponse,
@@ -43,9 +44,9 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 
 type ProductFormValues = {
   category_id: string;
+  brand_id: string;
   name: string;
   part_number: string;
-  brand: string;
   description: string;
   price: string;
   img_url: string;
@@ -67,12 +68,25 @@ function formatLabel(value: string | null | undefined) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function emptyForm(categories: AdminProductCategoryOption[]): ProductFormValues {
+function emptyForm(
+  categories: AdminProductCategoryOption[],
+  brands: AdminProductBrandOption[],
+  initialCategoryId?: number,
+  initialBrandId?: number,
+): ProductFormValues {
   return {
-    category_id: categories[0] ? String(categories[0].id) : "",
+    category_id: initialCategoryId
+      ? String(initialCategoryId)
+      : categories[0]
+        ? String(categories[0].id)
+        : "",
+    brand_id: initialBrandId
+      ? String(initialBrandId)
+      : brands[0]
+        ? String(brands[0].id)
+        : "",
     name: "",
     part_number: "",
-    brand: "",
     description: "",
     price: "",
     img_url: "",
@@ -84,9 +98,9 @@ function emptyForm(categories: AdminProductCategoryOption[]): ProductFormValues 
 function formFromProduct(product: AdminProduct): ProductFormValues {
   return {
     category_id: product.category_id ? String(product.category_id) : "",
+    brand_id: product.brand_id ? String(product.brand_id) : "",
     name: product.name,
     part_number: product.part_number,
-    brand: product.brand,
     description: product.description ?? "",
     price: String(product.price),
     img_url: product.img_url,
@@ -100,7 +114,7 @@ function payloadFromForm(values: ProductFormValues): AdminProductPayload {
     category_id: Number(values.category_id),
     name: values.name.trim(),
     part_number: values.part_number.trim(),
-    brand: values.brand.trim(),
+    brand_id: Number(values.brand_id),
     description: values.description.trim() || null,
     price: Number(values.price),
     img_url: values.img_url.trim(),
@@ -115,7 +129,7 @@ function clientFormErrors(values: ProductFormValues): ProductFormErrors {
     ["category_id", "Choose a category."],
     ["name", "Enter a product name."],
     ["part_number", "Enter a part number."],
-    ["brand", "Enter a brand."],
+    ["brand_id", "Choose a brand."],
     ["img_url", "Enter an image URL or existing image path."],
     ["availability_status", "Choose an availability status."],
     ["status", "Choose a catalog status."],
@@ -227,6 +241,7 @@ export default function RealAdminProductsPage() {
 
   const filterOptions = response?.filters;
   const categories = filterOptions?.categories ?? [];
+  const brands = filterOptions?.brand_options ?? [];
   const statuses = filterOptions?.statuses.length ? filterOptions.statuses : ["active", "inactive"];
   const availabilityOptions = filterOptions?.availability_statuses.length
     ? filterOptions.availability_statuses
@@ -463,6 +478,7 @@ export default function RealAdminProductsPage() {
         isEditing={Boolean(editingPartNumber)}
         product={editingProduct}
         categories={categories}
+        brands={brands}
         statusOptions={statuses}
         availabilityOptions={availabilityOptions}
         detailLoading={detailLoading}
@@ -534,8 +550,8 @@ function Pagination({ meta, onPageChange }: { meta: AdminProductsResponse["meta"
   return <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between"><p>Showing <strong>{(meta.current_page - 1) * meta.per_page + 1}–{Math.min(meta.current_page * meta.per_page, meta.total)}</strong> of <strong>{meta.total}</strong> products</p><div className="flex items-center gap-2"><button type="button" disabled={meta.current_page <= 1} onClick={() => onPageChange(meta.current_page - 1)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"><FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" /> Previous</button><span className="px-2 font-semibold text-[#0B1930]">Page {meta.current_page} of {meta.last_page}</span><button type="button" disabled={meta.current_page >= meta.last_page} onClick={() => onPageChange(meta.current_page + 1)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Next <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" /></button></div></div>;
 }
 
-function AdminProductFormModal({ isOpen, isEditing, product, categories, statusOptions, availabilityOptions, detailLoading, submitLoading, error, fieldErrors, onClose, onSubmit, onDelete }: { isOpen: boolean; isEditing: boolean; product: AdminProduct | null; categories: AdminProductCategoryOption[]; statusOptions: string[]; availabilityOptions: string[]; detailLoading: boolean; submitLoading: boolean; error: string | null; fieldErrors: ProductFormErrors; onClose: () => void; onSubmit: (values: ProductFormValues) => void; onDelete: (product: AdminProduct) => void }) {
-  const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(categories));
+export function AdminProductFormModal({ isOpen, isEditing, product, categories, brands, initialCategoryId, initialBrandId, statusOptions, availabilityOptions, detailLoading, submitLoading, error, fieldErrors, onClose, onSubmit, onDelete }: { isOpen: boolean; isEditing: boolean; product: AdminProduct | null; categories: AdminProductCategoryOption[]; brands: AdminProductBrandOption[]; initialCategoryId?: number; initialBrandId?: number; statusOptions: string[]; availabilityOptions: string[]; detailLoading: boolean; submitLoading: boolean; error: string | null; fieldErrors: ProductFormErrors; onClose: () => void; onSubmit: (values: ProductFormValues) => void; onDelete: (product: AdminProduct) => void }) {
+  const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(categories, brands, initialCategoryId, initialBrandId));
 
   if (!isOpen) return null;
 
@@ -551,7 +567,7 @@ function AdminProductFormModal({ isOpen, isEditing, product, categories, statusO
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField label="Product name" value={values.name} error={fieldError("name")} onChange={(value) => update("name", value)} required />
         <TextField label="Part number" value={values.part_number} error={fieldError("part_number")} onChange={(value) => update("part_number", value)} required />
-        <TextField label="Brand" value={values.brand} error={fieldError("brand")} onChange={(value) => update("brand", value)} required />
+        <SelectField label="Brand" value={values.brand_id} error={fieldError("brand_id")} options={brands.map((brand) => ({ value: String(brand.id), label: brand.name }))} placeholder="Select a brand" onChange={(value) => update("brand_id", value)} required />
         <SelectField label="Category" value={values.category_id} error={fieldError("category_id")} options={categories.map((category) => ({ value: String(category.id), label: category.name }))} placeholder="Select a category" onChange={(value) => update("category_id", value)} required />
         <TextField label="Price" type="number" min="0" step="0.01" value={values.price} error={fieldError("price")} onChange={(value) => update("price", value)} required />
         <SelectField label="Availability" value={values.availability_status} error={fieldError("availability_status")} options={availabilityOptions.map((option) => ({ value: option, label: formatLabel(option) }))} onChange={(value) => update("availability_status", value)} required />

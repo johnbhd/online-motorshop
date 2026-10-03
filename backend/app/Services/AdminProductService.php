@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,7 +17,10 @@ class AdminProductService
     /** @param array<string, mixed> $filters */
     public function index(array $filters): array
     {
-        $query = Product::query()->with('category:id,name,status');
+        $query = Product::query()->with([
+            'category:id,name,status',
+            'brandRecord:id,name,status',
+        ]);
 
         $this->applyFilters($query, $filters);
         $this->applySort($query, (string) ($filters['sort'] ?? 'updated_desc'));
@@ -36,7 +40,10 @@ class AdminProductService
     public function findByPartNumber(string $partNumber): ?Product
     {
         return Product::query()
-            ->with('category:id,name,status')
+            ->with([
+                'category:id,name,status',
+                'brandRecord:id,name,status',
+            ])
             ->where('part_number', $partNumber)
             ->first();
     }
@@ -44,16 +51,25 @@ class AdminProductService
     /** @param array<string, mixed> $attributes */
     public function create(array $attributes): Product
     {
-        return Product::query()->create($attributes)->load('category:id,name,status');
+        $attributes = $this->withLegacyBrandName($attributes);
+
+        return Product::query()->create($attributes)->load([
+            'category:id,name,status',
+            'brandRecord:id,name,status',
+        ]);
     }
 
     /** @param array<string, mixed> $attributes */
     public function update(Product $product, array $attributes): Product
     {
+        $attributes = $this->withLegacyBrandName($attributes);
         $product->fill($attributes);
         $product->save();
 
-        return $product->load('category:id,name,status');
+        return $product->load([
+            'category:id,name,status',
+            'brandRecord:id,name,status',
+        ]);
     }
 
     public function delete(Product $product): bool
@@ -80,12 +96,17 @@ class AdminProductService
     private function filterOptions(): array
     {
         return [
-            'brands' => Product::query()
-                ->whereNotNull('brand')
-                ->select('brand')
-                ->distinct()
-                ->orderBy('brand')
-                ->pluck('brand')
+            'brands' => Brand::query()
+                ->orderBy('name')
+                ->pluck('name')
+                ->values(),
+            'brand_options' => Brand::query()
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (Brand $brand): array => [
+                    'id' => $brand->id,
+                    'name' => $brand->name,
+                ])
                 ->values(),
             'categories' => Category::query()
                 ->orderBy('name')
@@ -133,7 +154,15 @@ class AdminProductService
         }
 
         if (! empty($filters['brand'])) {
-            $query->whereRaw('LOWER(brand) = ?', [strtolower((string) $filters['brand'])]);
+            $brand = strtolower((string) $filters['brand']);
+
+            $query->where(function (Builder $brandQuery) use ($brand): void {
+                $brandQuery
+                    ->whereRaw('LOWER(brand) = ?', [$brand])
+                    ->orWhereHas('brandRecord', function (Builder $relationQuery) use ($brand): void {
+                        $relationQuery->whereRaw('LOWER(name) = ?', [$brand]);
+                    });
+            });
         }
 
         if (! empty($filters['category'])) {
@@ -170,5 +199,15 @@ class AdminProductService
             'per_page' => $products->perPage(),
             'total' => $products->total(),
         ];
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private function withLegacyBrandName(array $attributes): array
+    {
+        if (array_key_exists('brand_id', $attributes)) {
+            $attributes['brand'] = Brand::query()->findOrFail($attributes['brand_id'])->name;
+        }
+
+        return $attributes;
     }
 }

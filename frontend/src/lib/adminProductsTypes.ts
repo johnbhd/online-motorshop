@@ -6,6 +6,7 @@ export type AdminProduct = {
   brand: string;
   category_id: number | null;
   category: string | null;
+  brand_id: number | null;
   price: number;
   img_url: string;
   availability_status: string;
@@ -19,6 +20,11 @@ export type AdminProductCategoryOption = {
   name: string;
 };
 
+export type AdminProductBrandOption = {
+  id: number;
+  name: string;
+};
+
 export type AdminProductsResponse = {
   summary: {
     total: number;
@@ -28,6 +34,7 @@ export type AdminProductsResponse = {
   };
   filters: {
     brands: string[];
+    brand_options: AdminProductBrandOption[];
     categories: AdminProductCategoryOption[];
     statuses: string[];
     availability_statuses: string[];
@@ -43,7 +50,7 @@ export type AdminProductsResponse = {
 
 export type AdminProductPayload = Omit<
   AdminProduct,
-  "id" | "category" | "created_at" | "updated_at"
+  "id" | "category" | "brand" | "created_at" | "updated_at"
 >;
 
 export type AdminProductDetailsResponse = {
