@@ -1,5 +1,5 @@
-import StaffManagementPage from "@/components/admin/staff-management/StaffManagementPage";
+import RealAdminStaffManagementPage from "@/components/admin/staff-management/RealAdminStaffManagementPage";
 
 export default function Page() {
-  return <StaffManagementPage />;
+  return <RealAdminStaffManagementPage />;
 }

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
@@ -25,13 +25,13 @@ class LoginController extends Controller
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['These credentials do not match our records.']
+                'email' => ['These credentials do not match our records.'],
             ]);
         }
 
         if ($user->status !== 'active') {
             throw ValidationException::withMessages([
-                'email' => ['This account is not active.']
+                'email' => ['This account is not active.'],
             ]);
         }
 
@@ -49,8 +49,14 @@ class LoginController extends Controller
     {
         $user = $request->user();
 
+        if ($user->status !== 'active') {
+            return response()->json([
+                'message' => 'Account is not active.',
+            ], 401);
+        }
+
         return response()->json([
-            'user' => $this->userData($user)
+            'user' => $this->userData($user),
         ]);
     }
 
@@ -64,7 +70,7 @@ class LoginController extends Controller
         }
 
         return response()->json([
-            'message' => 'Logout successful.'
+            'message' => 'Logout successful.',
         ]);
     }
 

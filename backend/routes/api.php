@@ -176,6 +176,27 @@ Route::prefix('admin')
         Route::delete('/branches/{branch}', [AdminBranchesController::class, 'destroy'])
             ->name('branches.destroy');
 
+        Route::get('/staff', [AdminStaffController::class, 'index'])
+            ->name('staff.index');
+
+        Route::post('/staff', [AdminStaffController::class, 'store'])
+            ->name('staff.store');
+
+        Route::get('/staff/data', [AdminStaffController::class, 'data'])
+            ->name('staff.data');
+
+        Route::get('/staff/{staff}', [AdminStaffController::class, 'show'])
+            ->name('staff.show');
+
+        Route::patch('/staff/{staff}', [AdminStaffController::class, 'update'])
+            ->name('staff.update');
+
+        Route::patch('/staff/{staff}/password', [AdminStaffController::class, 'updatePassword'])
+            ->name('staff.password');
+
+        Route::delete('/staff/{staff}', [AdminStaffController::class, 'destroy'])
+            ->name('staff.destroy');
+
         Route::get('/orders/data', [AdminOrdersController::class, 'data'])
             ->name('orders.data');
 
@@ -195,7 +216,7 @@ Route::prefix('admin')
             ->name('messages.data');
 
         Route::get('/staff-management/data', [AdminStaffController::class, 'data'])
-            ->name('staff.data');
+            ->name('staff-management.data');
 
         Route::get('/website-content/data', [AdminWebsiteContentController::class, 'data'])
             ->name('website-content.data');

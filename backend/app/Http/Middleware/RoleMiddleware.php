@@ -12,10 +12,17 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(
                 ['message' => 'Unauthenticated'],
                 Response::HTTP_UNAUTHORIZED,
+            );
+        }
+
+        if ($user->status !== 'active') {
+            return response()->json(
+                ['message' => 'Account is not active'],
+                Response::HTTP_FORBIDDEN,
             );
         }
 

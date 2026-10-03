@@ -3,92 +3,81 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminStaffIndexRequest;
+use App\Http\Requests\StoreAdminStaffRequest;
+use App\Http\Requests\UpdateAdminStaffPasswordRequest;
+use App\Http\Requests\UpdateAdminStaffRequest;
+use App\Models\User;
+use App\Services\AdminStaffPresenter;
+use App\Services\AdminStaffService;
 use Illuminate\Http\JsonResponse;
 
 class AdminStaffController extends Controller
 {
-    public function data(): JsonResponse
+    public function __construct(
+        private readonly AdminStaffPresenter $presenter,
+        private readonly AdminStaffService $service,
+    ) {}
+
+    public function index(AdminStaffIndexRequest $request): JsonResponse
+    {
+        return response()->json($this->service->index($request->validated()));
+    }
+
+    public function data(AdminStaffIndexRequest $request): JsonResponse
+    {
+        return $this->index($request);
+    }
+
+    public function show(User $staff): JsonResponse
     {
         return response()->json([
-            'summary' => [
-                'total' => 9,
-                'active' => 8,
-                'inactive' => 1,
-            ],
-            'staff' => [
-                [
-                    'id' => 1,
-                    'name' => 'Staff User',
-                    'email' => 'staff@aldmotorshop.com',
-                    'role' => 'Order Processing Staff',
-                    'branch' => 'Manila Branch',
-                    'status' => 'Active',
-                    'last_active' => '5 min ago',
-                ],
-                [
-                    'id' => 2,
-                    'name' => 'Anna Staff',
-                    'email' => 'anna@aldmotorshop.com',
-                    'role' => 'Branch Staff',
-                    'branch' => 'Manila Branch',
-                    'status' => 'Active',
-                    'last_active' => '18 min ago',
-                ],
-                [
-                    'id' => 3,
-                    'name' => 'Mark Staff',
-                    'email' => 'mark@aldmotorshop.com',
-                    'role' => 'Branch Staff',
-                    'branch' => 'Makati Branch',
-                    'status' => 'Active',
-                    'last_active' => '32 min ago',
-                ],
-                [
-                    'id' => 4,
-                    'name' => 'Carlo Staff',
-                    'email' => 'carlo@aldmotorshop.com',
-                    'role' => 'Order Processing Staff',
-                    'branch' => 'Makati Branch',
-                    'status' => 'Active',
-                    'last_active' => '1 hr ago',
-                ],
-                [
-                    'id' => 5,
-                    'name' => 'Maria Staff',
-                    'email' => 'maria@aldmotorshop.com',
-                    'role' => 'Branch Staff',
-                    'branch' => 'Imus Branch',
-                    'status' => 'Active',
-                    'last_active' => '2 hrs ago',
-                ],
-                [
-                    'id' => 6,
-                    'name' => 'Daniel Staff',
-                    'email' => 'daniel@aldmotorshop.com',
-                    'role' => 'Branch Staff',
-                    'branch' => 'Imus Branch',
-                    'status' => 'Active',
-                    'last_active' => 'Today',
-                ],
-                [
-                    'id' => 7,
-                    'name' => 'Paolo Staff',
-                    'email' => 'paolo@aldmotorshop.com',
-                    'role' => 'Order Processing Staff',
-                    'branch' => 'Manila Branch',
-                    'status' => 'Active',
-                    'last_active' => 'Yesterday',
-                ],
-                [
-                    'id' => 8,
-                    'name' => 'Grace Staff',
-                    'email' => 'grace@aldmotorshop.com',
-                    'role' => 'Branch Staff',
-                    'branch' => 'Makati Branch',
-                    'status' => 'Inactive',
-                    'last_active' => 'Aug 3, 2026',
-                ],
-            ],
+            'staff' => $this->presenter->staff($this->service->find($staff)),
+        ]);
+    }
+
+    public function store(StoreAdminStaffRequest $request): JsonResponse
+    {
+        $staff = $this->service->create($request->validated());
+
+        return response()->json([
+            'message' => 'Staff account created successfully.',
+            'staff' => $this->presenter->staff($staff),
+        ], 201);
+    }
+
+    public function update(UpdateAdminStaffRequest $request, User $staff): JsonResponse
+    {
+        $staff = $this->service->update($staff, $request->validated());
+
+        return response()->json([
+            'message' => 'Staff account updated successfully.',
+            'staff' => $this->presenter->staff($staff),
+        ]);
+    }
+
+    public function updatePassword(
+        UpdateAdminStaffPasswordRequest $request,
+        User $staff,
+    ): JsonResponse {
+        $staff = $this->service->updatePassword($staff, $request->validated()['password']);
+
+        return response()->json([
+            'message' => 'Staff password updated successfully. Sign in again with the new password.',
+            'staff' => $this->presenter->staff($staff),
+        ]);
+    }
+
+    public function destroy(User $staff): JsonResponse
+    {
+        if (! $this->service->delete($staff)) {
+            return response()->json([
+                'message' => 'Staff account cannot be deleted while it is referenced by operational or historical records. Set the account to inactive instead.',
+            ], 409);
+        }
+
+        return response()->json([
+            'message' => 'Staff account deleted successfully.',
         ]);
     }
 }
