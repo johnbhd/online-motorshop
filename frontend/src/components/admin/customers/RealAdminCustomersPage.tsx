@@ -54,6 +54,23 @@ function formatDate(value: string | null) {
       }).format(date);
 }
 
+function getPageNumbers(current: number, last: number): Array<number | "ellipsis"> {
+  if (last <= 7) {
+    return Array.from({ length: last }, (_, index) => index + 1);
+  }
+
+  const numbers: Array<number | "ellipsis"> = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(last - 1, current + 1);
+
+  if (start > 2) numbers.push("ellipsis");
+  for (let number = start; number <= end; number += 1) numbers.push(number);
+  if (end < last - 1) numbers.push("ellipsis");
+  numbers.push(last);
+
+  return numbers;
+}
+
 function label(value: string | null | undefined) {
   if (!value) return "Not available";
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -232,6 +249,8 @@ export default function RealAdminCustomersPage() {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -258,6 +277,8 @@ export default function RealAdminCustomersPage() {
       setCustomers(response.customers);
       setSummary(response.summary);
       setLastPage(response.meta.last_page);
+      setPerPage(response.meta.per_page);
+      setTotalCustomers(response.meta.total);
       if (selectedId !== null && !response.customers.some((customer) => customer.id === selectedId)) {
         setSelectedId(null);
         setSelectedCustomer(null);
@@ -309,6 +330,8 @@ export default function RealAdminCustomersPage() {
     [summary ? String(summary.registered) : "—", "Registered", "Linked customer accounts"],
     [summary ? String(summary.guest) : "—", "Guest", "Customer-only records"],
   ], [summary]);
+
+  const pageNumbers = getPageNumbers(page, lastPage);
 
   const openCustomer = useCallback((customer: AdminCustomer) => {
     setSelectedId(customer.id);
@@ -362,7 +385,73 @@ export default function RealAdminCustomersPage() {
       {error && <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><span>{error}</span><button type="button" onClick={() => void loadCustomers()} className="font-semibold underline">Retry</button></div>}
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">{cards.map(([value, title, description]) => <article key={title} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-3xl font-bold text-[#0B1930]">{value}</p><h2 className="mt-1 font-semibold text-[#0B1930]">{title}</h2><p className="mt-1 text-sm text-slate-500">{description}</p></article>)}</section>
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex flex-col gap-3 lg:flex-row"><input aria-label="Search customers" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search name, email, or contact" className="min-h-11 flex-1 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-orange-500" /><select aria-label="Customer type" value={type} onChange={(event) => selectFilter(setType, event.target.value)} className="min-h-11 rounded-lg border border-slate-300 px-3 text-sm"><option value="">All types</option><option value="registered">Registered</option><option value="guest">Guest</option></select><select aria-label="Branch activity" value={branchId} onChange={(event) => { setBranchId(event.target.value ? Number(event.target.value) : ""); setPage(1); }} className="min-h-11 rounded-lg border border-slate-300 px-3 text-sm"><option value="">All branches</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select><select aria-label="Account status" value={status} onChange={(event) => selectFilter(setStatus, event.target.value)} className="min-h-11 rounded-lg border border-slate-300 px-3 text-sm"><option value="">All account status</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div></section>
-      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"><div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-5"><div><h2 className="font-semibold text-[#0B1930]">Customer List</h2><p className="text-sm text-slate-500">{summary ? `${summary.total} matching records` : "Loading records..."}</p></div><span className="text-sm text-slate-500">Page {page} of {lastPage}</span></div><div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-5 py-3">Customer</th><th className="px-5 py-3">Type</th><th className="px-5 py-3">Contact</th><th className="px-5 py-3">Branch activity</th><th className="px-5 py-3">Orders</th><th className="px-5 py-3">Last order</th><th className="px-5 py-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{loading ? <tr><td colSpan={7} className="px-5 py-14 text-center text-slate-500">Loading customer records...</td></tr> : customers.length === 0 ? <tr><td colSpan={7} className="px-5 py-14 text-center text-slate-500">No customer records match these filters.</td></tr> : customers.map((customer) => <tr key={customer.id} tabIndex={0} onClick={() => openCustomer(customer)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") openCustomer(customer); }} className="cursor-pointer transition hover:bg-orange-50/40 focus:bg-orange-50/40 focus:outline-none"><td className="px-5 py-4"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">{customer.initials}</span><span><b className="block text-[#0B1930]">{customer.name}</b><small className="text-slate-500">{customer.email || "No email"}</small></span></div></td><td className="px-5 py-4"><AdminBadge>{label(customer.type)}</AdminBadge></td><td className="px-5 py-4 text-slate-600">{customer.contact || "Not available"}</td><td className="px-5 py-4 text-slate-600">{customer.branches.length ? customer.branches.map((branch) => branch.name).join(", ") : "No activity"}</td><td className="px-5 py-4 font-semibold text-[#0B1930]">{customer.orders}</td><td className="px-5 py-4 text-slate-600">{formatDate(customer.last_order_at)}</td><td className="px-5 py-4"><AdminBadge>{label(customer.account_status ?? "guest")}</AdminBadge></td></tr>)}</tbody></table></div><div className="flex items-center justify-between border-t border-slate-200 px-4 py-3"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-40">Previous</button><span className="text-xs text-slate-500">{summary?.total ?? 0} total</span><button type="button" disabled={page >= lastPage || loading} onClick={() => setPage((value) => Math.min(lastPage, value + 1))} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-40">Next</button></div></section>
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-5">
+          <div>
+            <h2 className="font-semibold text-[#0B1930]">Customer List</h2>
+            <p className="text-sm text-slate-500">
+              {summary ? `${summary.total} matching records` : "Loading records..."}
+            </p>
+          </div>
+          <span className="text-sm text-slate-500">Page {page} of {lastPage}</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[940px] text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th scope="col" className="w-14 px-5 py-3">#</th>
+                <th scope="col" className="px-5 py-3">Customer</th>
+                <th scope="col" className="px-5 py-3">Type</th>
+                <th scope="col" className="px-5 py-3">Contact</th>
+                <th scope="col" className="px-5 py-3">Branch activity</th>
+                <th scope="col" className="px-5 py-3">Orders</th>
+                <th scope="col" className="px-5 py-3">Last order</th>
+                <th scope="col" className="px-5 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr><td colSpan={8} className="px-5 py-14 text-center text-slate-500">Loading customer records...</td></tr>
+              ) : customers.length === 0 ? (
+                <tr><td colSpan={8} className="px-5 py-14 text-center text-slate-500">No customer records match these filters.</td></tr>
+              ) : (
+                customers.map((customer, index) => (
+                  <tr
+                    key={customer.id}
+                    tabIndex={0}
+                    onClick={() => openCustomer(customer)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") openCustomer(customer);
+                    }}
+                    className="cursor-pointer transition hover:bg-orange-50/40 focus:bg-orange-50/40 focus:outline-none"
+                  >
+                    <td className="px-5 py-4 font-semibold text-slate-400">{(page - 1) * perPage + index + 1}</td>
+                    <td className="px-5 py-4"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">{customer.initials}</span><span><b className="block text-[#0B1930]">{customer.name}</b><small className="text-slate-500">{customer.email || "No email"}</small></span></div></td>
+                    <td className="px-5 py-4"><AdminBadge>{label(customer.type)}</AdminBadge></td>
+                    <td className="px-5 py-4 text-slate-600">{customer.contact || "Not available"}</td>
+                    <td className="px-5 py-4 text-slate-600">{customer.branches.length ? customer.branches.map((branch) => branch.name).join(", ") : "No activity"}</td>
+                    <td className="px-5 py-4 font-semibold text-[#0B1930]">{customer.orders}</td>
+                    <td className="px-5 py-4 text-slate-600">{formatDate(customer.last_order_at)}</td>
+                    <td className="px-5 py-4"><AdminBadge>{label(customer.account_status ?? "guest")}</AdminBadge></td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-slate-500">
+            Showing {totalCustomers === 0 ? 0 : (page - 1) * perPage + 1}–{Math.min(page * perPage, totalCustomers)} of {totalCustomers}
+          </span>
+          {lastPage > 1 && (
+            <nav className="flex flex-wrap items-center justify-end gap-1" aria-label="Customer pages">
+              <button type="button" aria-label="Previous customer page" disabled={page <= 1 || loading} onClick={() => setPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+              {pageNumbers.map((pageNumber, index) => pageNumber === "ellipsis" ? <span key={`ellipsis-${index}`} className="px-2 text-slate-400">…</span> : <button key={pageNumber} type="button" aria-current={pageNumber === page ? "page" : undefined} disabled={loading} onClick={() => setPage(pageNumber)} className={`min-w-9 rounded-lg border px-3 py-2 font-semibold ${pageNumber === page ? "border-orange-600 bg-orange-600 text-white" : "border-slate-300 text-slate-700 hover:bg-slate-50"}`}>{pageNumber}</button>)}
+              <button type="button" aria-label="Next customer page" disabled={page >= lastPage || loading} onClick={() => setPage((value) => Math.min(lastPage, value + 1))} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+            </nav>
+          )}
+        </div>
+      </section>
       {selectedId !== null && <CustomerDetailsModal customer={selectedCustomer} loading={detailLoading} error={detailError} onClose={() => { setSelectedId(null); setSelectedCustomer(null); }} onEdit={openEditor} onDelete={() => selectedCustomer && setDeleteTarget(selectedCustomer)} />}
       {editor && <CustomerFormModal customer={editor} form={form} errors={formErrors} saving={saving} onChange={(field, value) => setForm((current) => field === "status" ? { ...current, status: value as "active" | "inactive" } : { ...current, [field]: value })} onSubmit={saveCustomer} onClose={() => setEditor(null)} />}
       {deleteTarget && <BranchModalShell isOpen eyebrow="Customer Management" title="Delete guest customer" description={`Delete ${deleteTarget.name} permanently?`} titleId="admin-customer-delete-title" descriptionId="admin-customer-delete-description" onClose={() => setDeleteTarget(null)} footer={<div className="flex w-full justify-end gap-3"><button type="button" onClick={() => setDeleteTarget(null)} className="admin-order-modal-button admin-order-modal-button-secondary">Cancel</button><button type="button" onClick={() => void removeCustomer()} className="admin-order-modal-button admin-order-modal-button-danger">Delete customer</button></div>}><div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Only an unused guest record can be hard-deleted. Registered accounts and customers referenced by orders or conversations must be retained.</div></BranchModalShell>}
