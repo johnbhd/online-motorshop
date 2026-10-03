@@ -64,7 +64,7 @@ const links: SidebarLink[] = [
   { label: "Customers", href: "/staff/customers" },
   { label: "Reviews", href: "/staff/reviews" },
   { label: "Reports", href: "/staff/reports" },
-  { label: "Profile", href: "#" },
+  { label: "Profile", href: "/staff/profile" },
 ];
 
 function formatSidebarBadge(value: number) {

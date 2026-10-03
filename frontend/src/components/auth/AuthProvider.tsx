@@ -26,6 +26,7 @@ type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   establishSession: (token: string) => Promise<AuthUser>;
+  updateUser: (updates: Pick<AuthUser, "name" | "email">) => void;
   logout: () => Promise<void>;
 };
 
@@ -95,6 +96,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateUser = useCallback(
+    (updates: Pick<AuthUser, "name" | "email">) => {
+      setUser((currentUser) =>
+        currentUser ? { ...currentUser, ...updates } : currentUser,
+      );
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     const token = getAuthToken();
 
@@ -116,9 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: user !== null,
       establishSession,
+      updateUser,
       logout,
     }),
-    [establishSession, isLoading, logout, user],
+    [establishSession, isLoading, logout, updateUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

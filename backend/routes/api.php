@@ -26,6 +26,7 @@ use App\Http\Controllers\Staff\StaffOrdersController;
 use App\Http\Controllers\Staff\StaffPaymentsController;
 use App\Http\Controllers\Staff\StaffPickupRequestsController;
 use App\Http\Controllers\Staff\StaffProductsController;
+use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Controllers\Staff\StaffReportsController;
 use App\Http\Controllers\Staff\StaffReviewsController;
 use App\Http\Controllers\Staff\StaffSidebarController;
@@ -219,6 +220,12 @@ Route::prefix('staff')
 
             Route::get('/products/{partNumber}', [StaffProductsController::class, 'show'])
                 ->name('products.show');
+
+            Route::get('/profile', [StaffProfileController::class, 'show'])
+                ->name('profile.show');
+
+            Route::patch('/profile', [StaffProfileController::class, 'update'])
+                ->name('profile.update');
         });
 
         Route::middleware('role:admin')->group(function () {

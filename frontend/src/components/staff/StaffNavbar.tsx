@@ -119,13 +119,14 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
             </button>
             {menu === "profile" && (
               <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl">
-                <a
-                  href="#"
+                <Link
+                  href="/staff/profile"
                   className="block px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  onClick={() => setMenu(null)}
                 >
                   <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />{" "}
                   &nbsp; Profile
-                </a>
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}
