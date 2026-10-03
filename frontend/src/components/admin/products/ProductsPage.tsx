@@ -1,1 +1,1 @@
-export { ProductsPage as default } from "@/components/admin/AdminPages";
+export { default } from "./RealAdminProductsPage";

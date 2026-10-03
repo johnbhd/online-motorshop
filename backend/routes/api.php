@@ -102,8 +102,23 @@ Route::prefix('admin')
         Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
             ->name('dashboard.data');
 
+        Route::get('/products', [AdminProductController::class, 'index'])
+            ->name('products.index');
+
         Route::get('/products/data', [AdminProductController::class, 'data'])
             ->name('products.data');
+
+        Route::post('/products', [AdminProductController::class, 'store'])
+            ->name('products.store');
+
+        Route::get('/products/{partNumber}', [AdminProductController::class, 'show'])
+            ->name('products.show');
+
+        Route::patch('/products/{partNumber}', [AdminProductController::class, 'update'])
+            ->name('products.update');
+
+        Route::delete('/products/{partNumber}', [AdminProductController::class, 'destroy'])
+            ->name('products.destroy');
 
         Route::get('/orders/data', [AdminOrdersController::class, 'data'])
             ->name('orders.data');
