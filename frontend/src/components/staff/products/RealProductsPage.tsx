@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import Image from "next/image";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalPagination from "@/components/staff/PortalPagination";
 import { Badge } from "@/components/staff/PortalTable";
@@ -284,8 +285,9 @@ export default function RealProductsPage() {
         ) : response?.products.length ? (
           <>
             <div className="hidden overflow-x-auto md:block">
-              <table className="w-full min-w-[1180px] table-fixed border-collapse text-left">
+              <table className="w-full min-w-[1270px] table-fixed border-collapse text-left">
                 <colgroup>
+                  <col className="w-[90px]" />
                   <col className="w-[260px]" />
                   <col className="w-[130px]" />
                   <col className="w-[180px]" />
@@ -297,7 +299,7 @@ export default function RealProductsPage() {
                 </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
-                    {["Product", "Brand", "Category", "Price", "Catalog Status", "Availability", "Inventory", "Action"].map(
+                    {["Image", "Product", "Brand", "Category", "Price", "Catalog Status", "Availability", "Inventory", "Action"].map(
                       (column) => (
                         <th
                           key={column}
@@ -419,6 +421,23 @@ function ProductRow({
 }) {
   return (
     <tr className="transition hover:bg-slate-50/80">
+      <td className="px-5 py-3.5 align-middle">
+        <div className="relative size-14 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+          {product.img_url ? (
+            <Image
+              src={product.img_url}
+              alt=""
+              fill
+              sizes="56px"
+              className="object-contain p-1"
+            />
+          ) : (
+            <span className="grid h-full place-items-center px-1 text-center text-[10px] font-medium text-slate-400">
+              No image
+            </span>
+          )}
+        </div>
+      </td>
       <td className="px-5 py-3.5 align-middle text-sm">
         <span className="block truncate font-bold text-[#0B1930]">{product.name}</span>
         <span className="block text-xs text-slate-400">{product.part_number}</span>
