@@ -471,6 +471,11 @@ export default function RealAdminProductsPage() {
         fieldErrors={formErrors}
         onClose={closeForm}
         onSubmit={saveProduct}
+        onDelete={(product) => {
+          closeForm();
+          setDeleteError(null);
+          setDeleteProduct(product);
+        }}
       />
 
       <DeleteProductDialog
@@ -529,7 +534,7 @@ function Pagination({ meta, onPageChange }: { meta: AdminProductsResponse["meta"
   return <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between"><p>Showing <strong>{(meta.current_page - 1) * meta.per_page + 1}–{Math.min(meta.current_page * meta.per_page, meta.total)}</strong> of <strong>{meta.total}</strong> products</p><div className="flex items-center gap-2"><button type="button" disabled={meta.current_page <= 1} onClick={() => onPageChange(meta.current_page - 1)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"><FontAwesomeIcon icon={faChevronLeft} aria-hidden="true" /> Previous</button><span className="px-2 font-semibold text-[#0B1930]">Page {meta.current_page} of {meta.last_page}</span><button type="button" disabled={meta.current_page >= meta.last_page} onClick={() => onPageChange(meta.current_page + 1)} className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Next <FontAwesomeIcon icon={faChevronRight} aria-hidden="true" /></button></div></div>;
 }
 
-function AdminProductFormModal({ isOpen, isEditing, product, categories, statusOptions, availabilityOptions, detailLoading, submitLoading, error, fieldErrors, onClose, onSubmit }: { isOpen: boolean; isEditing: boolean; product: AdminProduct | null; categories: AdminProductCategoryOption[]; statusOptions: string[]; availabilityOptions: string[]; detailLoading: boolean; submitLoading: boolean; error: string | null; fieldErrors: ProductFormErrors; onClose: () => void; onSubmit: (values: ProductFormValues) => void }) {
+function AdminProductFormModal({ isOpen, isEditing, product, categories, statusOptions, availabilityOptions, detailLoading, submitLoading, error, fieldErrors, onClose, onSubmit, onDelete }: { isOpen: boolean; isEditing: boolean; product: AdminProduct | null; categories: AdminProductCategoryOption[]; statusOptions: string[]; availabilityOptions: string[]; detailLoading: boolean; submitLoading: boolean; error: string | null; fieldErrors: ProductFormErrors; onClose: () => void; onSubmit: (values: ProductFormValues) => void; onDelete: (product: AdminProduct) => void }) {
   const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(categories));
 
   if (!isOpen) return null;
@@ -539,7 +544,7 @@ function AdminProductFormModal({ isOpen, isEditing, product, categories, statusO
   const allErrors = fieldErrors;
   const fieldError = (field: keyof ProductFormValues) => allErrors[field]?.[0];
 
-  return <ModalShell title={isEditing ? "Manage Product" : "Add Product"} description="Persisted catalog fields used by the public product catalog." onClose={onClose} footer={<><button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button><button type="submit" form="admin-product-form" disabled={submitLoading || detailLoading} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><FontAwesomeIcon icon={faCheck} aria-hidden="true" />{submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Product"}</button></>}>
+  return <ModalShell title={isEditing ? "Manage Product" : "Add Product"} description="Persisted catalog fields used by the public product catalog." onClose={onClose} footer={<div className="flex w-full items-center justify-between gap-3"><div>{isEditing && product ? <button type="button" onClick={() => onDelete(product)} disabled={submitLoading || detailLoading} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"><FontAwesomeIcon icon={faTrash} aria-hidden="true" /> Delete product</button> : null}</div><div className="flex items-center gap-3"><button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button><button type="submit" form="admin-product-form" disabled={submitLoading || detailLoading} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><FontAwesomeIcon icon={faCheck} aria-hidden="true" />{submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Product"}</button></div></div>}>
     {detailLoading ? <div className="rounded-lg bg-slate-50 px-4 py-5 text-sm text-slate-600" aria-live="polite">Loading the latest product details...</div> : null}
     {error ? <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</div> : null}
     <form id="admin-product-form" onSubmit={submit} noValidate className="space-y-5">
