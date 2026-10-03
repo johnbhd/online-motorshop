@@ -1,3 +1,6 @@
+export { default } from "./AdminDashboardRealPage";
+
+/*
 "use client";
 
 import Link from "next/link";
@@ -400,3 +403,4 @@ function DashboardList({
     </section>
   );
 }
+*/
