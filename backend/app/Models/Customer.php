@@ -11,10 +11,10 @@ class Customer extends Model
         'full_name',
         'contact_number',
         'email',
-        'address'
+        'address',
     ];
 
-    public function user() 
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -22,5 +22,10 @@ class Customer extends Model
     public function orderRequests()
     {
         return $this->hasMany(OrderRequest::class);
+    }
+
+    public function conversations()
+    {
+        return $this->hasMany(Conversation::class);
     }
 }

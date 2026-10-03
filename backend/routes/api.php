@@ -209,8 +209,23 @@ Route::prefix('admin')
         Route::get('/delivery-requests/data', [AdminDeliveryRequestsController::class, 'data'])
             ->name('deliveries.data');
 
+        Route::get('/customers', [AdminCustomersController::class, 'index'])
+            ->name('customers.index');
+
         Route::get('/customers/data', [AdminCustomersController::class, 'data'])
             ->name('customers.data');
+
+        Route::get('/customers/{customer}', [AdminCustomersController::class, 'show'])
+            ->whereNumber('customer')
+            ->name('customers.show');
+
+        Route::patch('/customers/{customer}', [AdminCustomersController::class, 'update'])
+            ->whereNumber('customer')
+            ->name('customers.update');
+
+        Route::delete('/customers/{customer}', [AdminCustomersController::class, 'destroy'])
+            ->whereNumber('customer')
+            ->name('customers.destroy');
 
         Route::get('/messages/data', [AdminMessagesController::class, 'data'])
             ->name('messages.data');
