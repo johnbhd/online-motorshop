@@ -119,6 +119,40 @@ export default function RealAdminTaxonomyPage() {
   };
   const resetTab = (nextTab: Tab) => { setTab(nextTab); setPage(1); setProductPage(1); setSelected(null); setError(null); };
 
+  useEffect(() => {
+    const tableBody = document.querySelector("table tbody");
+
+    if (!tableBody) {
+      return;
+    }
+
+    const handleRowClick = (event: Event) => {
+      const target = event.target as HTMLElement;
+
+      if (target.closest("button")) {
+        return;
+      }
+
+      const row = target.closest("tr");
+      const rowIndex = row ? Array.from(tableBody.children).indexOf(row) : -1;
+      const item = rowIndex >= 0 ? items[rowIndex] : undefined;
+
+      if (item) {
+        setSelected(item);
+        setProductPage(1);
+      }
+    };
+
+    const rows = Array.from(tableBody.children);
+    rows.forEach((row) => row.classList.add("cursor-pointer"));
+    tableBody.addEventListener("click", handleRowClick);
+
+    return () => {
+      tableBody.removeEventListener("click", handleRowClick);
+      rows.forEach((row) => row.classList.remove("cursor-pointer"));
+    };
+  }, [items]);
+
   return <main className="space-y-6 p-4 sm:p-6 lg:p-8">
     <header className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-600">Catalog structure</p><h1 className="mt-1 text-2xl font-bold text-[#0B1930]">Categories &amp; Brands</h1><p className="mt-1 max-w-2xl text-sm text-slate-500">Manage taxonomy, see assigned products, and keep the public catalog organized.</p></div><button type="button" onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700"><FontAwesomeIcon icon={faPlus} /> Add {singular}</button></header>
     <div className="flex flex-wrap gap-2" role="tablist" aria-label="Taxonomy type">{(["categories", "brands"] as Tab[]).map((value) => <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => resetTab(value)} className={`rounded-lg px-4 py-2 text-sm font-semibold ${tab === value ? "bg-[#0B1930] text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{value === "categories" ? "Categories" : "Brands"}</button>)}</div>
