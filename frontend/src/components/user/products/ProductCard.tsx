@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -11,7 +11,7 @@ import {
   faPlus,
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
-import type { ProductDisplayItem } from "./productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
 import type { ProductViewMode } from "./ProductsToolbar";
@@ -32,8 +32,38 @@ export default function ProductCard({ product, viewMode }: ProductCardProps) {
     }
   };
 
+  const openProductDetails = () => {
+    router.push(`/products/${product.id}`);
+  };
+
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if ((event.target as HTMLElement).closest("button, a")) {
+      return;
+    }
+
+    openProductDetails();
+  };
+
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openProductDetails();
+    }
+  };
+
   return (
-    <article className={`products-card products-card--${viewMode}`}>
+    <article
+      className={`products-card products-card--${viewMode}`}
+      role="link"
+      tabIndex={0}
+      aria-label={`View details for ${product.name}`}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+    >
       <div className="products-card-image">
         <Image
           src={product.image}

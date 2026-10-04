@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
+import type { CustomerOrderSummary } from "@/lib/orders/orderTypes";
 import { formatOrderTimestamp } from "../../checkout/checkoutUtils";
 import OrderStatusBadge from "./OrderStatusBadge";
 import {
@@ -11,7 +11,7 @@ import {
 } from "./customerOrderUtils";
 
 type OrdersMobileListProps = {
-  orders: DemoOrder[];
+  orders: CustomerOrderSummary[];
 };
 
 function getOrderDetailsHref(reference: string): string {

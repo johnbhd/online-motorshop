@@ -1,17 +1,27 @@
-"use client";
 import AboutHero from "./AboutHero";
 import AboutJourney from "./AboutJourney";
 import AboutOffers from "./AboutOffers";
 import AboutBranches from "./AboutBranches";
+import { getCatalogBranches } from "@/lib/catalog/catalogQueries";
+import type { AboutBranch } from "./aboutData";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  let branches: AboutBranch[] = [];
+  let error = "";
+
+  try {
+    branches = await getCatalogBranches();
+  } catch (branchError) {
+    error = branchError instanceof Error ? branchError.message : "Branches unavailable";
+  }
+
   return (
     <>
       <section>
         <AboutHero />
         <AboutJourney />
         <AboutOffers />
-        <AboutBranches />
+        <AboutBranches branches={branches} error={error} />
       </section>
     
     </>

@@ -31,7 +31,7 @@ class UserSeeder extends Seeder
             ['email' => 'staff@gmail.com'],
             [
                 'name' => 'Branch Staff',
-                'password' => 'staf123',
+                'password' => 'staff123',
                 'branch_id' => $branch->id,
                 'status' => 'active',
                 'role' => 'staff',

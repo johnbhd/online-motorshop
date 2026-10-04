@@ -1,16 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { getAuthToken } from "@/lib/auth/authStorage";
 import {
-  appendConversationMessage,
-  CONVERSATIONS_STORAGE_KEY,
-  CONVERSATIONS_UPDATED_EVENT,
-  getConversationById,
-  getCurrentConversationParticipant,
-  getOrCreateConversation,
-} from "@/lib/messages/conversationStorage";
-import type { DemoConversation } from "@/lib/messages/conversationTypes";
+  getCurrentConversation,
+  sendCustomerConversationMessage,
+  startConversation,
+} from "@/lib/messages/conversationApi";
+import {
+  getGuestConversationToken,
+  setGuestConversationToken,
+} from "@/lib/messages/guestTokenStorage";
+import type { Conversation } from "@/lib/messages/conversationTypes";
 import ChatbotLauncher from "./ChatbotLauncher";
 import { OPEN_STAFF_CHAT_EVENT } from "./chatbotEvents";
 import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
@@ -30,13 +32,13 @@ const initialMessages: ChatMessage[] = [
   },
 ];
 
-function toChatMessages(conversation: DemoConversation): ChatMessage[] {
+function toChatMessages(conversation: Conversation): ChatMessage[] {
   return conversation.messages.map((message) => {
     return {
-      id: message.id,
+      id: String(message.id),
       sender: message.sender,
-      text: message.text,
-      createdAt: message.createdAt,
+      text: message.body,
+      createdAt: message.created_at,
     };
   });
 }
@@ -44,15 +46,20 @@ function toChatMessages(conversation: DemoConversation): ChatMessage[] {
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [isAssistantThinking, setIsAssistantThinking] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [mode, setMode] = useState<ChatbotMode>("assistant");
   const [staffConversation, setStaffConversation] =
-    useState<DemoConversation | null>(null);
-  const { isReady, session } = useDemoAuth();
+    useState<Conversation | null>(null);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState<string | null>(null);
+  const { isLoading: isAuthLoading, user } = useAuth();
+  const isAuthReady = !isAuthLoading;
   const launcherRef = useRef<HTMLButtonElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
+  const assistantResponseTimeoutRef = useRef<number | null>(null);
 
   const createMessage = useCallback(
     (sender: ChatSender, text: string): ChatMessage => {
@@ -78,20 +85,28 @@ export default function ChatbotWidget() {
 
   const handleSendAssistant = useCallback(
     (message: string) => {
-      const customerMessage = createMessage("customer", message);
-      const botMessage = createMessage(
-        "bot",
-        resolveChatbotResponse(message).text,
-      );
+      if (isAssistantThinking) {
+        return;
+      }
 
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        customerMessage,
-        botMessage,
-      ]);
+      const customerMessage = createMessage("customer", message);
+
+      setMessages((currentMessages) => [...currentMessages, customerMessage]);
       setShowQuickActions(false);
+
+      setIsAssistantThinking(true);
+      assistantResponseTimeoutRef.current = window.setTimeout(() => {
+        const botMessage = createMessage(
+          "bot",
+          resolveChatbotResponse(message).text,
+        );
+
+        setMessages((currentMessages) => [...currentMessages, botMessage]);
+        setIsAssistantThinking(false);
+        assistantResponseTimeoutRef.current = null;
+      }, 1000);
     },
-    [createMessage],
+    [createMessage, isAssistantThinking],
   );
 
   const handleQuickAction = useCallback(
@@ -101,27 +116,42 @@ export default function ChatbotWidget() {
     [handleSendAssistant],
   );
 
-  const handleRequestStaff = useCallback(() => {
-    if (!isReady) {
+  const handleRequestStaff = useCallback(async () => {
+    if (!isAuthReady) {
       return;
     }
 
-    const participant = getCurrentConversationParticipant(session);
-    const conversation = getOrCreateConversation(participant);
-
-    setStaffConversation(conversation);
     setMode("staff");
     setShowQuickActions(false);
-  }, [isReady, session]);
+    setStaffLoading(true);
+
+    try {
+      setStaffConversation(
+        await getCurrentConversation(
+          getAuthToken(),
+          getGuestConversationToken(),
+        ),
+      );
+      setStaffError(null);
+    } catch (error) {
+      setStaffError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load your staff conversation.",
+      );
+    } finally {
+      setStaffLoading(false);
+    }
+  }, [isAuthReady]);
 
   const openStaffChat = useCallback(() => {
-    if (!isReady) {
+    if (!isAuthReady) {
       return;
     }
 
-    handleRequestStaff();
+    void handleRequestStaff();
     setIsOpen(true);
-  }, [handleRequestStaff, isReady]);
+  }, [handleRequestStaff, isAuthReady]);
 
   useEffect(() => {
     window.addEventListener(OPEN_STAFF_CHAT_EVENT, openStaffChat);
@@ -137,57 +167,85 @@ export default function ChatbotWidget() {
   }, []);
 
   const handleStaffSend = useCallback(
-    (message: string) => {
-      if (!staffConversation) {
-        return;
-      }
+    async (message: string) => {
+      setStaffLoading(true);
 
-      const updatedConversation = appendConversationMessage(
-        staffConversation.id,
-        "customer",
-        message,
-      );
+      try {
+        const guestToken = getGuestConversationToken();
 
-      if (updatedConversation) {
-        setStaffConversation(updatedConversation);
+        if (staffConversation) {
+          setStaffConversation(
+            await sendCustomerConversationMessage(
+              staffConversation.id,
+              message,
+              guestToken,
+            ),
+          );
+        } else {
+          const response = await startConversation(message, guestToken);
+
+          if (response.guest_token) {
+            setGuestConversationToken(response.guest_token);
+          }
+
+          setStaffConversation(response.conversation);
+        }
+
+        setStaffError(null);
+      } catch (error) {
+        setStaffError(
+          error instanceof Error ? error.message : "Unable to send your message.",
+        );
+      } finally {
+        setStaffLoading(false);
       }
     },
     [staffConversation],
   );
 
   useEffect(() => {
-    const refreshStaffConversation = () => {
-      setStaffConversation((currentConversation) => {
-        if (!currentConversation) {
-          return currentConversation;
-        }
-
-        return (
-          getConversationById(currentConversation.id) ?? currentConversation
-        );
-      });
+    return () => {
+      if (assistantResponseTimeoutRef.current !== null) {
+        window.clearTimeout(assistantResponseTimeoutRef.current);
+      }
     };
+  }, []);
 
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === CONVERSATIONS_STORAGE_KEY) {
-        refreshStaffConversation();
+  useEffect(() => {
+    if (!isOpen || mode !== "staff") {
+      return;
+    }
+
+    const refreshStaffConversation = async () => {
+      try {
+        setStaffConversation(
+          await getCurrentConversation(
+            getAuthToken(),
+            getGuestConversationToken(),
+          ),
+        );
+      } catch {
+        // Keep the current thread visible if a background refresh fails.
       }
     };
 
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener(
-      CONVERSATIONS_UPDATED_EVENT,
-      refreshStaffConversation,
-    );
+    const interval = window.setInterval(() => void refreshStaffConversation(), 10000);
+    window.addEventListener("focus", refreshStaffConversation);
 
     return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(
-        CONVERSATIONS_UPDATED_EVENT,
-        refreshStaffConversation,
-      );
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshStaffConversation);
     };
-  }, []);
+  }, [isOpen, mode]);
+
+  useEffect(() => {
+    const resetTimeout = window.setTimeout(() => {
+      setStaffConversation(null);
+      setStaffError(null);
+    }, 0);
+
+    return () => window.clearTimeout(resetTimeout);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -235,7 +293,13 @@ export default function ChatbotWidget() {
     }
 
     messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
-  }, [isOpen, mode, messages.length, staffConversation?.messages.length]);
+  }, [
+    isAssistantThinking,
+    isOpen,
+    mode,
+    messages.length,
+    staffConversation?.messages.length,
+  ]);
 
   const handleSend =
     mode === "staff" ? handleStaffSend : handleSendAssistant;
@@ -258,6 +322,9 @@ export default function ChatbotWidget() {
             setShowQuickActions((currentValue) => !currentValue);
           }}
           onSend={handleSend}
+          isAssistantThinking={isAssistantThinking}
+          staffError={staffError}
+          staffLoading={staffLoading}
         />
       )}
       <ChatbotLauncher

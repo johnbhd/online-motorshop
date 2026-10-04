@@ -8,12 +8,14 @@ import {
   faCheck,
   faCircleInfo,
   faFileLines,
+  faPhone,
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
+import type { OrderConfirmationData } from "@/lib/orders/orderRequestTypes";
 import { formatCartCurrency, isUsablePrice } from "../cart/cartData";
-import { formatOrderTimestamp, getDemoOrderByReference } from "./checkoutUtils";
+import { getOrderConfirmation } from "@/lib/orders/orderConfirmationStorage";
+import { formatOrderTimestamp } from "./checkoutUtils";
 
 type OrderConfirmationPageProps = {
   reference: string;
@@ -22,13 +24,13 @@ type OrderConfirmationPageProps = {
 export default function OrderConfirmationPage({
   reference,
 }: OrderConfirmationPageProps) {
-  const [order, setOrder] = useState<DemoOrder | null>(null);
+  const [order, setOrder] = useState<OrderConfirmationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Browser storage is read after hydration to avoid server/client markup drift.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the saved order request after the client mounts
-    setOrder(getDemoOrderByReference(reference));
+    setOrder(getOrderConfirmation(reference));
     setIsLoading(false);
   }, [reference]);
 
@@ -54,7 +56,7 @@ export default function OrderConfirmationPage({
           </div>
           <h1 id="order-confirmation-missing-title">Order request not found</h1>
           <p>
-            This browser does not have a saved order request with that reference.
+            This browser does not have a saved server confirmation with that reference.
           </p>
           <div className="order-confirmation-actions order-confirmation-actions--centered">
             <Link className="order-confirmation-primary-link" href="/track-order">
@@ -69,12 +71,21 @@ export default function OrderConfirmationPage({
     );
   }
 
-  const isPickup = order.fulfillment.method === "pickup";
+  const isPickup = order.fulfillment_method === "pickup";
   const fulfillmentLabel = isPickup ? "Store Pickup" : "Lalamove Delivery";
-  const fulfillmentValue = order.fulfillment.method === "pickup"
-    ? order.fulfillment.branch.name
-    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
+  const fulfillmentValue = isPickup
+    ? order.branch?.name ?? "Branch details unavailable"
+    : order.delivery?.address ?? "Delivery address unavailable";
   const fulfillmentIcon = isPickup ? faStore : faTruck;
+  const totalQuantity = order.items.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
+  const formatStatus = (status: string) => {
+    return status
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (character) => character.toUpperCase());
+  };
 
   return (
     <div className="order-confirmation-page">
@@ -88,7 +99,7 @@ export default function OrderConfirmationPage({
           <p className="order-confirmation-eyebrow">Request Saved</p>
           <h1 id="order-confirmation-title">Order Request Submitted</h1>
           <p>
-            Your request is saved in this browser and is ready for ALD staff review.
+            Your request was saved by ALD Motorshop and is ready for staff review.
           </p>
         </div>
       </section>
@@ -104,8 +115,8 @@ export default function OrderConfirmationPage({
           <p className="order-confirmation-card-eyebrow">ALD Order Reference</p>
           <h2 id="order-confirmation-reference-title">{order.reference}</h2>
           <div className="order-confirmation-status-row">
-            <span>Status: {order.status}</span>
-            <span>Payment: {order.paymentStatus}</span>
+            <span>Status: {formatStatus(order.status)}</span>
+            <span>Payment: {formatStatus(order.payment_status)}</span>
           </div>
 
           <div className="order-confirmation-details">
@@ -124,7 +135,11 @@ export default function OrderConfirmationPage({
               </span>
               <span>
                 <strong>Submitted</strong>
-                <time dateTime={order.createdAt}>{formatOrderTimestamp(order.createdAt)}</time>
+                <time dateTime={order.created_at ?? undefined}>
+                  {order.created_at
+                    ? formatOrderTimestamp(order.created_at)
+                    : "Date unavailable"}
+                </time>
               </span>
             </div>
             <div>
@@ -133,7 +148,7 @@ export default function OrderConfirmationPage({
               </span>
               <span>
                 <strong>Requested items</strong>
-                {order.totalQuantity} {order.totalQuantity === 1 ? "item" : "items"}
+                {totalQuantity} {totalQuantity === 1 ? "item" : "items"}
               </span>
             </div>
             <div>
@@ -142,7 +157,18 @@ export default function OrderConfirmationPage({
               </span>
               <span>
                 <strong>Customer</strong>
-                {order.customer.fullName} · {order.customer.email}
+                {order.customer
+                  ? `${order.customer.full_name} · ${order.customer.email}`
+                  : "Customer details unavailable"}
+              </span>
+            </div>
+            <div>
+              <span className="order-confirmation-detail-icon" aria-hidden="true">
+                <FontAwesomeIcon icon={faPhone} />
+              </span>
+              <span>
+                <strong>Contact Number</strong>
+                {order.customer?.contact_number || "Contact number unavailable"}
               </span>
             </div>
           </div>
@@ -154,18 +180,20 @@ export default function OrderConfirmationPage({
             </div>
             <ul>
               {order.items.map((item) => {
-                const unitPriceLabel = isUsablePrice(item.unitPrice)
-                  ? formatCartCurrency(item.unitPrice)
+                const unitPriceLabel = isUsablePrice(item.unit_price)
+                  ? formatCartCurrency(item.unit_price)
                   : "Price unavailable";
-                const lineTotalLabel = isUsablePrice(item.lineTotal)
-                  ? formatCartCurrency(item.lineTotal)
+                const lineTotalLabel = isUsablePrice(item.line_total)
+                  ? formatCartCurrency(item.line_total)
                   : "Price unavailable";
 
                 return (
-                  <li key={item.product.id}>
+                  <li key={item.product_id}>
                     <div className="order-confirmation-item-product">
-                      <strong>{item.product.name}</strong>
-                      <span>{item.product.partNumber} · Qty {item.quantity}</span>
+                      <strong>{item.name}</strong>
+                      <span>
+                        {item.part_number ?? "Part number unavailable"} · Qty {item.quantity}
+                      </span>
                     </div>
                     <div className="order-confirmation-item-price">
                       <span>Unit price</span>
@@ -182,30 +210,24 @@ export default function OrderConfirmationPage({
             <div className="order-confirmation-total">
               <span>Subtotal</span>
               <strong>
-                {order.subtotal !== null
-                  ? formatCartCurrency(order.subtotal)
-                  : "Price unavailable"}
+                {formatCartCurrency(order.subtotal)}
               </strong>
             </div>
             <div className="order-confirmation-total">
               <span>Estimated total</span>
               <strong>
-                {order.estimatedTotal !== null
-                  ? formatCartCurrency(order.estimatedTotal)
-                  : "Price unavailable"}
+                {formatCartCurrency(order.estimated_total)}
               </strong>
             </div>
-            {isUsablePrice(order.finalAmount) ? (
-              <div className="order-confirmation-total">
-                <span>Final amount</span>
-                <strong>{formatCartCurrency(order.finalAmount)}</strong>
-              </div>
-            ) : null}
+            <div className="order-confirmation-total">
+              <span>Delivery fee</span>
+              <strong>{formatCartCurrency(order.delivery_fee)}</strong>
+            </div>
           </section>
 
-          {order.orderNotes ? (
+          {order.customer_notes ? (
             <p className="order-confirmation-order-note">
-              <strong>Order notes:</strong> {order.orderNotes}
+              <strong>Order notes:</strong> {order.customer_notes}
             </p>
           ) : null}
 
@@ -219,8 +241,8 @@ export default function OrderConfirmationPage({
           </div>
 
           <p className="order-confirmation-storage-note">
-            This temporary frontend flow stores the request in localStorage on this
-            browser. It is not connected to the ALD backend yet.
+            This confirmation is based on the real Laravel response saved for this
+            browser. Full order retrieval and tracking APIs are planned separately.
           </p>
 
           <div className="order-confirmation-actions">

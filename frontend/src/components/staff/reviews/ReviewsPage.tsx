@@ -1,5 +1,11 @@
 "use client";
 
+import { useCallback, useMemo, useState } from "react";
+import {
+  faEye,
+  faFlag,
+  faReply,
+} from "@fortawesome/free-solid-svg-icons";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalTable, {
   Badge,
@@ -8,52 +14,128 @@ import PortalTable, {
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
 import Summary from "@/components/staff/Summary";
 import { reviews, type Review } from "@/lib/mock/staff";
+import ReviewRating from "./ReviewRating";
+import StaffReviewDetailsModal, {
+  type ReviewModalMode,
+  type StaffReviewReply,
+} from "./StaffReviewDetailsModal";
+
+function getReviewKey(review: Review) {
+  return `${review.customer}:${review.product}:${review.date}`;
+}
 
 export default function ReviewsPage() {
-  const columns: Column<Review>[] = [
-    {
-      label: "Customer",
-      render: (row) => (
-        <span>
-          <b className="text-[#0B1930]">{row.customer}</b>
-        </span>
-      ),
-      search: (row) => row.customer,
+  const [reviewRecords, setReviewRecords] = useState<Review[]>(reviews);
+  const [reviewReplies, setReviewReplies] = useState<
+    Record<string, StaffReviewReply>
+  >({});
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [reviewModalMode, setReviewModalMode] =
+    useState<ReviewModalMode>("view");
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const handleReviewAction = useCallback(
+    (review: Review) => {
+      const hasReply = Boolean(reviewReplies[getReviewKey(review)]);
+
+      setSelectedReview(review);
+      setReviewModalMode(
+        review.action === "Reply" && !hasReply ? "reply" : "view",
+      );
+      setIsReviewModalOpen(true);
     },
-    {
-      label: "Product",
-      render: (row) => row.product,
-      search: (row) => row.product,
+    [reviewReplies],
+  );
+
+  const handleCloseReview = useCallback(() => {
+    setIsReviewModalOpen(false);
+    setSelectedReview(null);
+  }, []);
+
+  const handleSendReply = useCallback(
+    (review: Review, replyText: string) => {
+      const reviewKey = getReviewKey(review);
+
+      setReviewReplies((currentReplies) => ({
+        ...currentReplies,
+        [reviewKey]: {
+          text: replyText,
+          author: "ALD Staff",
+          repliedAt: new Date().toISOString(),
+        },
+      }));
+      setReviewRecords((currentReviews) =>
+        currentReviews.map((currentReview) =>
+          getReviewKey(currentReview) === reviewKey
+            ? { ...currentReview, action: "View Review" }
+            : currentReview,
+        ),
+      );
+      handleCloseReview();
     },
-    {
-      label: "Rating",
-      render: (row) => (
-        <span className="text-orange-500">
-          {"â˜…".repeat(row.rating)}
-          <span className="text-slate-200">{"â˜…".repeat(5 - row.rating)}</span>
-        </span>
-      ),
-    },
-    {
-      label: "Review",
-      render: (row) => (
-        <span className="block max-w-60 truncate">{row.review}</span>
-      ),
-      search: (row) => row.review,
-    },
-    {
-      label: "Branch",
-      render: (row) => row.branch,
-      search: (row) => row.branch,
-    },
-    {
-      label: "Status",
-      render: (row) => <Badge>{row.status}</Badge>,
-      search: (row) => row.status,
-    },
-    { label: "Date", render: (row) => row.date },
-    { label: "Action", render: (row) => <ActionButton label={row.action} /> },
-  ];
+    [handleCloseReview],
+  );
+
+  const columns: Column<Review>[] = useMemo(
+    () => [
+      {
+        label: "Customer",
+        render: (row) => (
+          <span>
+            <b className="text-[#0B1930]">{row.customer}</b>
+          </span>
+        ),
+        search: (row) => row.customer,
+      },
+      {
+        label: "Product",
+        render: (row) => row.product,
+        search: (row) => row.product,
+      },
+      {
+        label: "Rating",
+        render: (row) => <ReviewRating rating={row.rating} />,
+      },
+      {
+        label: "Review",
+        render: (row) => (
+          <span className="block max-w-60 truncate">{row.review}</span>
+        ),
+        search: (row) => row.review,
+      },
+      {
+        label: "Branch",
+        render: (row) => row.branch,
+        search: (row) => row.branch,
+      },
+      {
+        label: "Status",
+        render: (row) => <Badge>{row.status}</Badge>,
+        search: (row) => row.status,
+      },
+      { label: "Date", render: (row) => row.date },
+      {
+        label: "Action",
+        render: (row) => (
+          <ActionButton
+            label={row.action}
+            icon={
+              row.action === "Reply"
+                ? faReply
+                : row.action === "Review Flag"
+                  ? faFlag
+                  : faEye
+            }
+            onClick={() => handleReviewAction(row)}
+          />
+        ),
+      },
+    ],
+    [handleReviewAction],
+  );
+  const selectedReviewKey = selectedReview
+    ? getReviewKey(selectedReview)
+    : "closed";
 
   return (
     <div className="space-y-5">
@@ -73,10 +155,23 @@ export default function ReviewsPage() {
       <PortalTable
         title="Review List"
         description="86 customer reviews"
-        rows={reviews}
+        rows={reviewRecords}
         columns={columns}
         tabs={["All", "Published", "Pending Review", "Flagged", "Hidden"]}
         tabValue={(row, tab) => row.status === tab}
+      />
+      <StaffReviewDetailsModal
+        key={`${selectedReviewKey}-${reviewModalMode}`}
+        isOpen={isReviewModalOpen}
+        review={selectedReview}
+        mode={reviewModalMode}
+        reply={
+          selectedReview
+            ? reviewReplies[getReviewKey(selectedReview)]
+            : undefined
+        }
+        onClose={handleCloseReview}
+        onSendReply={handleSendReply}
       />
     </div>
   );

@@ -16,10 +16,13 @@ import {
 
 export type AboutStat = { value: string; detail: string; icon: IconDefinition };
 export type AboutBranch = {
+  id?: number;
   name: string;
   image: string;
   address: string;
   tags: string[];
+  contactNumber?: string | null;
+  pickupAvailable?: boolean;
 };
 export type AboutJourneyItem = {
   title: string;

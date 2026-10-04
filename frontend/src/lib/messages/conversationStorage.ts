@@ -1,11 +1,33 @@
-import type { DemoAuthSession } from "@/lib/auth/demoAuthTypes";
-import type {
-  ConversationMessage,
-  ConversationMessageSender,
-  ConversationParticipant,
-  ConversationParticipantType,
-  DemoConversation,
-} from "./conversationTypes";
+import type { AuthUser } from "@/lib/auth/authTypes";
+import type { ConversationMessageSender, ConversationParticipantType } from "./conversationTypes";
+
+// Legacy storage parser kept only so existing browser data can be ignored safely.
+// Human conversations are now read and written through the Laravel API.
+type ConversationParticipant = {
+  id: string;
+  name: string;
+  type: ConversationParticipantType;
+  email?: string;
+};
+
+type ConversationMessage = {
+  id: string;
+  sender: ConversationMessageSender;
+  text: string;
+  createdAt: string;
+};
+
+type DemoConversation = {
+  id: string;
+  participantId: string;
+  participantName: string;
+  participantType: ConversationParticipantType;
+  participantEmail?: string;
+  status: "open";
+  messages: ConversationMessage[];
+  createdAt: string;
+  updatedAt: string;
+};
 
 export const CONVERSATIONS_STORAGE_KEY = "ald_conversations";
 export const CONVERSATIONS_UPDATED_EVENT = "ald-conversations-updated";
@@ -130,14 +152,14 @@ export function getConversationByParticipant(
 }
 
 export function getCurrentConversationParticipant(
-  session: DemoAuthSession | null,
+  user: AuthUser | null,
 ): ConversationParticipant {
-  if (session?.role === "customer") {
+  if (user?.role === "customer") {
     return {
-      id: session.id,
-      name: session.name,
+      id: String(user.id),
+      name: user.name,
       type: "customer",
-      email: session.email,
+      email: user.email,
     };
   }
 

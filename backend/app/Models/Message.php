@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Message extends Model
+{
+    public const SENDER_TYPES = ['customer', 'staff'];
+
+    protected $fillable = [
+        'conversation_id',
+        'sender_type',
+        'sender_user_id',
+        'body',
+    ];
+
+    public function conversation()
+    {
+        return $this->belongsTo(Conversation::class);
+    }
+
+    public function senderUser()
+    {
+        return $this->belongsTo(User::class, 'sender_user_id');
+    }
+}

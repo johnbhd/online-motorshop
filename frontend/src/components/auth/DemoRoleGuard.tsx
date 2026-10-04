@@ -1,3 +1,4 @@
+/* Retired role guard. Use RoleGuard.tsx.
 "use client";
 
 import { useEffect, type ReactNode } from "react";
@@ -46,3 +47,4 @@ export default function DemoRoleGuard({
 
   return <>{children}</>;
 }
+*/

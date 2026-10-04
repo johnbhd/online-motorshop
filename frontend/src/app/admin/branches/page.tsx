@@ -1,5 +1,5 @@
-import BranchesPage from "@/components/admin/branches/BranchesPage";
+import RealAdminBranchesPage from "@/components/admin/branches/RealAdminBranchesPage";
 
 export default function Page() {
-  return <BranchesPage />;
+  return <RealAdminBranchesPage />;
 }

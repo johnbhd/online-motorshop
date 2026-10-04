@@ -1,9 +1,9 @@
 import Image from "next/image";
-import type { DemoOrder, OrderItemSnapshot } from "@/lib/orders/orderTypes";
+import type { OrderViewItem, OrderViewModel } from "@/lib/orders/orderTypes";
 import { formatCartCurrency, isUsablePrice } from "../cart/cartData";
 
 type OrderItemsProps = {
-  order: DemoOrder;
+  order: OrderViewModel;
 };
 
 function formatOrderAmount(amount: number | null | undefined): string {
@@ -12,13 +12,13 @@ function formatOrderAmount(amount: number | null | undefined): string {
     : "Price unavailable";
 }
 
-function getUnitPriceLabel(item: OrderItemSnapshot): string {
+function getUnitPriceLabel(item: OrderViewItem): string {
   return isUsablePrice(item.unitPrice)
     ? formatCartCurrency(item.unitPrice)
     : "Price unavailable";
 }
 
-function getLineTotalLabel(item: OrderItemSnapshot): string {
+function getLineTotalLabel(item: OrderViewItem): string {
   return isUsablePrice(item.lineTotal)
     ? formatCartCurrency(item.lineTotal)
     : "Price unavailable";
@@ -47,24 +47,32 @@ export default function OrderItems({ order }: OrderItemsProps) {
           <span>Line Total</span>
         </div>
         <ul>
-          {order.items.map((item) => (
-            <li className="track-order-item" key={item.product.id}>
+          {order.items.map((item, index) => (
+            <li className="track-order-item" key={`${item.product.id}-${index}`}>
               <div className="track-order-item-product">
                 <div className="track-order-item-image">
-                  <Image
-                    src={item.product.image}
-                    alt={item.product.alt}
-                    width={88}
-                    height={88}
-                    sizes="(max-width: 560px) 4.5rem, 5.5rem"
-                  />
+                  {item.product.image ? (
+                    <Image
+                      src={item.product.image}
+                      alt={item.product.alt ?? item.product.name}
+                      width={88}
+                      height={88}
+                      sizes="(max-width: 560px) 4.5rem, 5.5rem"
+                    />
+                  ) : (
+                    <span aria-hidden="true">—</span>
+                  )}
                 </div>
                 <div>
                   <span className="track-order-item-part-number">
-                    {item.product.partNumber}
+                    {item.product.partNumber ?? "Part number unavailable"}
                   </span>
                   <h3>{item.product.name}</h3>
-                  <p>{item.product.brand} product</p>
+                  <p>
+                    {item.product.brand
+                      ? `${item.product.brand} product`
+                      : "Saved order snapshot"}
+                  </p>
                 </div>
               </div>
               <div className="track-order-item-quantity">

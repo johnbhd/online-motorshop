@@ -1,49 +1,76 @@
 "use client";
+
+import { useCallback, useState } from "react";
 import AdminDataTable, { AdminBadge } from "@/components/admin/AdminDataTable";
 import type { Column } from "@/components/staff/PortalTable";
 import { adminCustomers, type AdminCustomer } from "@/lib/mock/admin";
-const cols: Column<AdminCustomer>[] = [
-  {
-    label: "Customer",
-    render: (r) => (
-      <span className="flex items-center gap-3">
-        <i className="grid size-9 place-items-center rounded-full bg-slate-100 text-xs font-bold not-italic text-slate-600">
-          {r.initials}
-        </i>
-        <span>
-          <b className="block text-[#0B1930]">{r.name}</b>
-          <small>{r.email}</small>
-        </span>
-      </span>
-    ),
-    search: (r) => `${r.name} ${r.email}`,
-  },
-  {
-    label: "Type",
-    render: (r) => <AdminBadge>{r.type}</AdminBadge>,
-    search: (r) => r.type,
-  },
-  { label: "Contact", render: (r) => r.contact },
-  { label: "Location", render: (r) => r.location, search: (r) => r.location },
-  { label: "Branch", render: (r) => r.branch, search: (r) => r.branch },
-  { label: "Orders", render: (r) => r.orders },
-  { label: "Total Ordered", render: (r) => <b>{r.totalOrdered}</b> },
-  { label: "Last Order", render: (r) => r.lastOrder },
-  {
-    label: "Activity",
-    render: (r) => <AdminBadge>{r.status}</AdminBadge>,
-    search: (r) => r.status,
-  },
-  {
-    label: "Action",
-    render: () => (
-      <button className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600">
-        View
-      </button>
-    ),
-  },
-];
+import CustomerDetailsModal from "./CustomerDetailsModal";
+
 export default function Customers() {
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<AdminCustomer | null>(null);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+
+  const openCustomerModal = useCallback((customer: AdminCustomer) => {
+    setSelectedCustomer(customer);
+    setIsCustomerModalOpen(true);
+  }, []);
+
+  const closeCustomerModal = useCallback(() => {
+    setIsCustomerModalOpen(false);
+    setSelectedCustomer(null);
+  }, []);
+
+  const columns: Column<AdminCustomer>[] = [
+    {
+      label: "Customer",
+      render: (r) => (
+        <span className="flex items-center gap-3">
+          <i className="grid size-9 place-items-center rounded-full bg-slate-100 text-xs font-bold not-italic text-slate-600">
+            {r.initials}
+          </i>
+          <span>
+            <b className="block text-[#0B1930]">{r.name}</b>
+            <small>{r.email}</small>
+          </span>
+        </span>
+      ),
+      search: (r) => `${r.name} ${r.email}`,
+    },
+    {
+      label: "Type",
+      render: (r) => <AdminBadge>{r.type}</AdminBadge>,
+      search: (r) => r.type,
+    },
+    { label: "Contact", render: (r) => r.contact },
+    {
+      label: "Location",
+      render: (r) => r.location,
+      search: (r) => r.location,
+    },
+    { label: "Branch", render: (r) => r.branch, search: (r) => r.branch },
+    { label: "Orders", render: (r) => r.orders },
+    { label: "Total Ordered", render: (r) => <b>{r.totalOrdered}</b> },
+    { label: "Last Order", render: (r) => r.lastOrder },
+    {
+      label: "Activity",
+      render: (r) => <AdminBadge>{r.status}</AdminBadge>,
+      search: (r) => r.status,
+    },
+    {
+      label: "Action",
+      render: (r) => (
+        <button
+          className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50"
+          type="button"
+          onClick={() => openCustomerModal(r)}
+        >
+          View
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-5">
       <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -81,7 +108,7 @@ export default function Customers() {
         title="Customer List"
         description="124 customer records"
         rows={adminCustomers}
-        columns={cols}
+        columns={columns}
         tabs={["All", "Registered", "Guest", "Returning", "New"]}
         matchTab={(r, t) => r.type === t || r.status === t}
         filters={[
@@ -101,6 +128,12 @@ export default function Customers() {
             options: ["Returning", "New"],
           },
         ]}
+      />
+      <CustomerDetailsModal
+        key={selectedCustomer?.name ?? "closed"}
+        isOpen={isCustomerModalOpen}
+        customer={selectedCustomer}
+        onClose={closeCustomerModal}
       />
     </div>
   );

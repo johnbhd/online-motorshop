@@ -3,27 +3,30 @@ export type ConversationParticipantType = "customer" | "guest";
 export type ConversationMessageSender = "customer" | "staff";
 
 export type ConversationParticipant = {
-  id: string;
+  id: number | null;
   name: string;
-  type: ConversationParticipantType;
-  email?: string;
+  email: string | null;
 };
 
 export type ConversationMessage = {
-  id: string;
+  id: number;
   sender: ConversationMessageSender;
-  text: string;
-  createdAt: string;
+  body: string;
+  created_at: string;
 };
 
-export type DemoConversation = {
-  id: string;
-  participantId: string;
-  participantName: string;
-  participantType: ConversationParticipantType;
-  participantEmail?: string;
+export type Conversation = {
+  id: number;
+  participant_type: ConversationParticipantType;
+  participant: ConversationParticipant;
   status: "open";
   messages: ConversationMessage[];
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
+  last_message_at: string | null;
+};
+
+export type StaffConversationSummary = Omit<Conversation, "messages"> & {
+  message_count: number;
+  last_message: ConversationMessage | null;
 };

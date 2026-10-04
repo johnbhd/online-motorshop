@@ -505,6 +505,37 @@
   font-size: 0.95rem;
 }
 
+.customer-orders-error,
+.customer-order-error {
+  width: min(calc(100% - 3rem), 720px);
+  min-height: 24rem;
+  margin: 0 auto;
+  padding: clamp(4rem, 10vw, 7rem) 0;
+  text-align: center;
+}
+
+.customer-orders-error h2,
+.customer-order-error h1 {
+  margin: 0;
+  color: var(--customer-orders-ink);
+  font-size: clamp(1.6rem, 4vw, 2.35rem);
+}
+
+.customer-orders-error p:not(.customer-orders-eyebrow),
+.customer-order-error p:not(.customer-orders-eyebrow) {
+  max-width: 35rem;
+  margin: 0.75rem auto 1.5rem;
+  color: var(--customer-orders-muted);
+  line-height: 1.65;
+}
+
+.customer-orders-error button,
+.customer-order-error button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
 .customer-order-not-found {
   display: grid;
   min-height: 24rem;

@@ -28,6 +28,9 @@ export type ChatbotPanelProps = {
   onRequestStaff: () => void;
   onToggleQuickActions: () => void;
   onSend: (message: string) => void;
+  isAssistantThinking?: boolean;
+  staffError?: string | null;
+  staffLoading?: boolean;
 };
 
 export default function ChatbotPanel({
@@ -43,6 +46,9 @@ export default function ChatbotPanel({
   onRequestStaff,
   onToggleQuickActions,
   onSend,
+  isAssistantThinking = false,
+  staffError,
+  staffLoading = false,
 }: ChatbotPanelProps) {
   const isStaffMode = mode === "staff";
 
@@ -86,12 +92,24 @@ export default function ChatbotPanel({
         <ChatbotMessageList
           ref={messageListRef}
           messages={messages}
+          isTyping={isAssistantThinking && !isStaffMode}
           ariaLabel={
             isStaffMode
               ? "Conversation with ALD Staff"
               : "ALD Assistant conversation"
           }
         />
+
+        {isStaffMode && staffLoading && (
+          <p className="px-4 py-2 text-xs text-slate-500" role="status">
+            Syncing with ALD Staff...
+          </p>
+        )}
+        {isStaffMode && staffError && (
+          <p className="px-4 py-2 text-xs text-red-600" role="alert">
+            {staffError}
+          </p>
+        )}
 
         {!isStaffMode && showQuickActions && (
           <ChatbotQuickActions actions={quickActions} onSelect={onQuickAction} />
@@ -125,6 +143,7 @@ export default function ChatbotPanel({
         inputRef={composerInputRef}
         isStaffMode={isStaffMode}
         showQuickActions={showQuickActions}
+        isSending={!isStaffMode && isAssistantThinking}
         onSend={onSend}
         onBackToAssistant={onBackToAssistant}
         onToggleQuickActions={onToggleQuickActions}

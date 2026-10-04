@@ -1,5 +1,5 @@
-import RequestsPage from "@/components/staff/requests/RequestsPage";
+import RealDeliveryRequestsPage from "@/components/staff/delivery-requests/RealDeliveryRequestsPage";
 
 export default function DeliveryRequestsPage() {
-  return <RequestsPage type="delivery" />;
+  return <RealDeliveryRequestsPage />;
 }

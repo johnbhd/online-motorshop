@@ -4,18 +4,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { featuredProducts, homeUtilityIcons } from "../../../data/homeData";
-import { getProductById } from "../products/productsData";
+import { homeUtilityIcons } from "../../../data/homeData";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
-export default function FeaturedProducts() {
+type FeaturedProductsProps = {
+  products: ProductDisplayItem[];
+  error?: string;
+};
+
+export default function FeaturedProducts({
+  products,
+  error,
+}: FeaturedProductsProps) {
   const router = useRouter();
 
-  const handleAddToCart = (productId: string) => {
-    const product = getProductById(productId);
-
-    if (product && addProductToCart(product, 1)) {
+  const handleAddToCart = (product: ProductDisplayItem) => {
+    if (addProductToCart(product, 1)) {
       router.push("/cart");
     }
   };
@@ -38,14 +44,14 @@ export default function FeaturedProducts() {
           </p>
         </div>
 
-        <div className="home-product-grid">
-          {featuredProducts.map((featuredProduct) => {
-            const product = getProductById(featuredProduct.id);
-
-            if (!product) {
-              return null;
-            }
-
+        {error ? (
+          <p className="home-product-error" role="status">
+            Featured products are temporarily unavailable. Please try the
+            products page again shortly.
+          </p>
+        ) : (
+          <div className="home-product-grid">
+          {products.map((product) => {
             return (
               <article className="home-product-card" key={product.id}>
                 <span className="home-product-category">{product.category}</span>
@@ -69,7 +75,7 @@ export default function FeaturedProducts() {
                 <button
                   className="home-cart-button"
                   type="button"
-                  onClick={() => handleAddToCart(product.id)}
+                  onClick={() => handleAddToCart(product)}
                 >
                   <FontAwesomeIcon
                     icon={homeUtilityIcons.cart}
@@ -90,7 +96,8 @@ export default function FeaturedProducts() {
               </article>
             );
           })}
-        </div>
+          </div>
+        )}
 
         <Link className="home-primary-cta" href="/products">
           View All Products

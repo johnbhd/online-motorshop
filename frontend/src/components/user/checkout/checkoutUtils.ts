@@ -1,6 +1,6 @@
-import { aboutBranches } from "../about/aboutData";
 import { readStoredCartItems } from "../cart/cartStorage";
 import { formatCartCurrency, getCartSubtotal, isUsablePrice } from "../cart/cartData";
+import type { CheckoutBranch } from "@/lib/branches/branchApi";
 import {
   getBranchId,
   SELECTED_BRANCH_STORAGE_KEY,
@@ -42,8 +42,28 @@ export function getCheckoutCartItems(): CartItemData[] {
   return readStoredCartItems() ?? [];
 }
 
-export function getBranchById(branchId: string) {
-  return aboutBranches.find((branch) => getBranchId(branch.name) === branchId);
+export function getCheckoutBranchById(
+  branches: CheckoutBranch[],
+  branchId: string,
+): CheckoutBranch | null {
+  return (
+    branches.find((branch) => String(branch.id) === branchId) ?? null
+  );
+}
+
+export function resolveSelectedBranchId(
+  branches: CheckoutBranch[],
+  storedBranchId: string,
+): string {
+  const normalizedStoredBranchId = storedBranchId.trim();
+  const selectedBranch = branches.find((branch) => {
+    return (
+      String(branch.id) === normalizedStoredBranchId ||
+      getBranchId(branch.name) === normalizedStoredBranchId
+    );
+  });
+
+  return selectedBranch ? String(selectedBranch.id) : "";
 }
 
 export function readSelectedBranchId(): string {
@@ -62,23 +82,23 @@ export function readSelectedBranchId(): string {
 
     const parsedValue: unknown = JSON.parse(storedValue);
 
-    if (typeof parsedValue === "string" && getBranchById(parsedValue)) {
+    if (typeof parsedValue === "string") {
       return parsedValue;
     }
 
     if (parsedValue && typeof parsedValue === "object") {
       const candidate = parsedValue as { id?: unknown; name?: unknown };
 
-      if (typeof candidate.id === "string" && getBranchById(candidate.id)) {
-        return candidate.id;
+      if (
+        (typeof candidate.id === "string" ||
+          typeof candidate.id === "number") &&
+        String(candidate.id).trim()
+      ) {
+        return String(candidate.id);
       }
 
       if (typeof candidate.name === "string") {
-        const branchId = getBranchId(candidate.name);
-
-        if (getBranchById(branchId)) {
-          return branchId;
-        }
+        return getBranchId(candidate.name);
       }
     }
   } catch {

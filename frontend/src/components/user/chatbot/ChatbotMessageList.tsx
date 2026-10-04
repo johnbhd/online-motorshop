@@ -7,12 +7,13 @@ import type { ChatMessage } from "./chatbotTypes";
 export type ChatbotMessageListProps = {
   messages: ChatMessage[];
   ariaLabel?: string;
+  isTyping?: boolean;
 };
 
 const ChatbotMessageList = forwardRef<
   HTMLDivElement,
   ChatbotMessageListProps
->(function ChatbotMessageList({ messages, ariaLabel }, ref) {
+>(function ChatbotMessageList({ messages, ariaLabel, isTyping }, ref) {
   return (
     <div
       ref={ref}
@@ -62,6 +63,27 @@ const ChatbotMessageList = forwardRef<
           </div>
         );
       })}
+
+      {isTyping && (
+        <div className="ald-chatbot__message-row ald-chatbot__message-row--bot">
+          <Image
+            className="ald-chatbot__message-avatar"
+            src="/branding/logo.png"
+            alt="ALD Motorshop"
+            width={28}
+            height={28}
+          />
+          <div
+            className="ald-chatbot__message ald-chatbot__message--bot ald-chatbot__typing"
+            role="status"
+            aria-label="ALD Assistant is thinking"
+          >
+            <span className="ald-chatbot__typing-dot" />
+            <span className="ald-chatbot__typing-dot" />
+            <span className="ald-chatbot__typing-dot" />
+          </div>
+        </div>
+      )}
     </div>
   );
 });

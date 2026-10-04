@@ -1,0 +1,134 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Conversation;
+use App\Models\Customer;
+use App\Models\Message;
+use App\Models\User;
+
+class ConversationService
+{
+    public function findCurrent(?User $user, ?string $guestToken): ?Conversation
+    {
+        $query = Conversation::query();
+
+        if ($user?->customer) {
+            $query->where('customer_id', $user->customer->id);
+        } elseif ($guestToken !== null && trim($guestToken) !== '') {
+            $query->where('guest_token_hash', $this->hashGuestToken($guestToken));
+        } else {
+            return null;
+        }
+
+        return $this->loadConversation($query->where('status', 'open')->first());
+    }
+
+    /**
+     * @return array{conversation: Conversation, created: bool, guest_token: string|null}
+     */
+    public function start(?User $user, ?string $guestToken, string $body): array
+    {
+        $customer = $user?->customer;
+        $created = false;
+        $rawGuestToken = null;
+
+        if ($customer instanceof Customer) {
+            [$conversation, $created] = $this->findOrCreateForCustomer($customer);
+        } else {
+            $rawGuestToken = trim((string) $guestToken);
+            if ($rawGuestToken === '') {
+                $rawGuestToken = bin2hex(random_bytes(32));
+            }
+
+            [$conversation, $created] = $this->findOrCreateForGuest($rawGuestToken);
+        }
+
+        $this->appendCustomerMessage($conversation, $user, $body);
+
+        return [
+            'conversation' => $this->loadConversation($conversation),
+            'created' => $created,
+            'guest_token' => $customer instanceof Customer ? null : $rawGuestToken,
+        ];
+    }
+
+    public function appendCustomerMessage(
+        Conversation $conversation,
+        ?User $user,
+        string $body,
+    ): Message {
+        return $this->appendMessage($conversation, 'customer', $body, $user?->id);
+    }
+
+    public function appendStaffMessage(
+        Conversation $conversation,
+        User $staff,
+        string $body,
+    ): Message {
+        return $this->appendMessage($conversation, 'staff', $body, $staff->id);
+    }
+
+    public function loadConversation(?Conversation $conversation): ?Conversation
+    {
+        if (! $conversation) {
+            return null;
+        }
+
+        return $conversation->load([
+            'customer.user',
+            'messages' => fn ($query) => $query->orderBy('id'),
+            'latestMessage',
+        ]);
+    }
+
+    private function appendMessage(
+        Conversation $conversation,
+        string $senderType,
+        string $body,
+        ?int $senderUserId,
+    ): Message {
+        $message = $conversation->messages()->create([
+            'sender_type' => $senderType,
+            'sender_user_id' => $senderUserId,
+            'body' => trim($body),
+        ]);
+
+        $conversation->forceFill([
+            'last_message_at' => $message->created_at,
+        ])->save();
+
+        return $message;
+    }
+
+    /** @return array{Conversation, bool} */
+    private function findOrCreateForCustomer(Customer $customer): array
+    {
+        $conversation = Conversation::query()->firstOrCreate([
+            'customer_id' => $customer->id,
+        ], [
+            'participant_type' => 'customer',
+            'status' => 'open',
+        ]);
+
+        return [$conversation, $conversation->wasRecentlyCreated];
+    }
+
+    /** @return array{Conversation, bool} */
+    private function findOrCreateForGuest(string $guestToken): array
+    {
+        $conversation = Conversation::query()->firstOrCreate([
+            'guest_token_hash' => $this->hashGuestToken($guestToken),
+        ], [
+            'participant_type' => 'guest',
+            'status' => 'open',
+        ]);
+
+        return [$conversation, $conversation->wasRecentlyCreated];
+    }
+
+    private function hashGuestToken(string $guestToken): string
+    {
+        return hash('sha256', $guestToken);
+    }
+}

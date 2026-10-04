@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminNavbar from "./AdminNavbar";
-import DemoRoleGuard from "@/components/auth/DemoRoleGuard";
+import RoleGuard from "@/components/auth/RoleGuard";
 
 export default function AdminShell({
   children,
@@ -19,7 +19,7 @@ export default function AdminShell({
   }, []);
 
   return (
-    <DemoRoleGuard allowedRole="admin">
+    <RoleGuard allowedRole="admin">
       <div className="min-h-screen bg-slate-100">
         <AdminSidebar open={open} onClose={() => setOpen(false)} />
         <div className="min-w-0 lg:pl-72">
@@ -31,6 +31,6 @@ export default function AdminShell({
           </main>
         </div>
       </div>
-    </DemoRoleGuard>
+    </RoleGuard>
   );
 }

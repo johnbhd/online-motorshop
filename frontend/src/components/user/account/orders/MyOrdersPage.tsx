@@ -1,101 +1,130 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { getAuthToken } from "@/lib/auth/authStorage";
 import {
-  getDemoOrdersForCustomer,
-  ORDERS_STORAGE_KEY,
-} from "@/lib/orders/orderStorage";
+  getCustomerOrders,
+  getOrderApiErrorMessage,
+} from "@/lib/orders/orderApi";
+import { toCustomerOrderSummary } from "@/lib/orders/orderAdapter";
+import type { CustomerOrderSummary } from "@/lib/orders/orderTypes";
 import OrdersEmptyState from "./OrdersEmptyState";
 import OrdersMobileList from "./OrdersMobileList";
 import OrdersPagination from "./OrdersPagination";
 import OrdersTable from "./OrdersTable";
 import OrdersTabs from "./OrdersTabs";
-import {
-  isActiveOrder,
-  ORDERS_PER_PAGE,
-  sortOrdersNewestFirst,
-  type CustomerOrderTab,
-} from "./customerOrderUtils";
+import { ORDERS_PER_PAGE, type CustomerOrderTab } from "./customerOrderUtils";
+
+type OrderListMeta = {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+};
+
+type TabCounts = Record<CustomerOrderTab, number | null>;
+
+const initialTabCounts: TabCounts = {
+  active: null,
+  history: null,
+};
 
 export default function MyOrdersPage() {
-  const { isReady: isAuthReady, session } = useDemoAuth();
-  const customerAccountId =
-    session?.role === "customer" ? session.id : null;
-  const [ownedOrders, setOwnedOrders] = useState<DemoOrder[]>([]);
+  const { isLoading: isAuthLoading, user } = useAuth();
+  const isCustomer = user?.role === "customer";
+  const [orders, setOrders] = useState<CustomerOrderSummary[]>([]);
   const [activeTab, setActiveTab] = useState<CustomerOrderTab>("active");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isOrdersReady, setIsOrdersReady] = useState(false);
-  const [loadedCustomerAccountId, setLoadedCustomerAccountId] = useState<string | null>(null);
+  const [meta, setMeta] = useState<OrderListMeta | null>(null);
+  const [tabCounts, setTabCounts] = useState<TabCounts>(initialTabCounts);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (!isAuthReady || !customerAccountId) {
+    if (isAuthLoading || !isCustomer) {
       return;
     }
 
-    const syncOrders = () => {
-      const nextOrders = getDemoOrdersForCustomer(customerAccountId);
+    const token = getAuthToken();
 
-      // Browser storage is read after auth hydration; no network loading is simulated.
-      setOwnedOrders(nextOrders);
-      setIsOrdersReady(true);
-      setCurrentPage(1);
-      setLoadedCustomerAccountId(customerAccountId);
-    };
+    if (!token) {
+      // The auth token is external browser state; reflect its absence before starting the request.
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setError("Your session has expired. Please sign in again.");
+      setIsLoading(false);
+      /* eslint-enable react-hooks/set-state-in-effect */
+      return;
+    }
 
-    syncOrders();
+    const controller = new AbortController();
 
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === ORDERS_STORAGE_KEY || event.key === null) {
-        syncOrders();
-      }
-    };
+    setIsLoading(true);
+    setError("");
+    setOrders([]);
+    setMeta(null);
 
-    window.addEventListener("storage", handleStorage);
+    getCustomerOrders(token, {
+      scope: activeTab,
+      page: currentPage,
+      perPage: ORDERS_PER_PAGE,
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (controller.signal.aborted) {
+          return;
+        }
 
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, [customerAccountId, isAuthReady]);
+        setOrders(response.orders.map(toCustomerOrderSummary));
+        setMeta(response.meta);
+        setTabCounts((currentCounts) => ({
+          ...currentCounts,
+          [activeTab]: response.meta.total,
+        }));
+      })
+      .catch((requestError: unknown) => {
+        if (controller.signal.aborted) {
+          return;
+        }
 
-  const sortedOwnedOrders = useMemo(() => {
-    return sortOrdersNewestFirst(ownedOrders);
-  }, [ownedOrders]);
+        setOrders([]);
+        setMeta(null);
+        setError(
+          getOrderApiErrorMessage(
+            requestError,
+            "We could not load your orders. Please try again.",
+          ),
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
 
-  const activeOrders = useMemo(() => {
-    return sortedOwnedOrders.filter((order) => isActiveOrder(order));
-  }, [sortedOwnedOrders]);
-
-  const historyOrders = useMemo(() => {
-    return sortedOwnedOrders;
-  }, [sortedOwnedOrders]);
-
-  const selectedOrders = activeTab === "active" ? activeOrders : historyOrders;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(selectedOrders.length / ORDERS_PER_PAGE),
-  );
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = (safeCurrentPage - 1) * ORDERS_PER_PAGE;
-  const endIndex = startIndex + ORDERS_PER_PAGE;
-  const paginatedOrders = selectedOrders.slice(startIndex, endIndex);
+    return () => controller.abort();
+  }, [activeTab, currentPage, isAuthLoading, isCustomer, retryKey]);
 
   const handleTabChange = (tab: CustomerOrderTab) => {
+    if (tab === activeTab) {
+      return;
+    }
+
     setActiveTab(tab);
     setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
-    const nextPage = Math.min(Math.max(page, 1), totalPages);
-    setCurrentPage(nextPage);
+    const lastPage = meta?.last_page ?? 1;
+    const nextPage = Math.min(Math.max(page, 1), lastPage);
+
+    if (nextPage !== currentPage) {
+      setCurrentPage(nextPage);
+    }
   };
 
-  if (
-    !isOrdersReady ||
-    !customerAccountId ||
-    loadedCustomerAccountId !== customerAccountId
-  ) {
+  if (isAuthLoading || !isCustomer || isLoading) {
     return (
       <div className="customer-orders-page">
         <section className="customer-orders-loading" aria-live="polite">
@@ -104,6 +133,11 @@ export default function MyOrdersPage() {
       </div>
     );
   }
+
+  const totalItems = meta?.total ?? 0;
+  const totalPages = meta?.last_page ?? 1;
+  const startIndex = meta ? (meta.current_page - 1) * meta.per_page : 0;
+  const endIndex = startIndex + orders.length;
 
   return (
     <div className="customer-orders-page">
@@ -123,8 +157,8 @@ export default function MyOrdersPage() {
       <div className="customer-orders-shell customer-orders-content">
         <OrdersTabs
           activeTab={activeTab}
-          activeCount={activeOrders.length}
-          historyCount={historyOrders.length}
+          activeCount={tabCounts.active}
+          historyCount={tabCounts.history}
           onTabChange={handleTabChange}
         />
 
@@ -145,21 +179,32 @@ export default function MyOrdersPage() {
               </h2>
             </div>
             <span className="customer-orders-count">
-              {selectedOrders.length}{" "}
-              {selectedOrders.length === 1 ? "order" : "orders"}
+              {totalItems} {totalItems === 1 ? "order" : "orders"}
             </span>
           </div>
 
-          {selectedOrders.length === 0 ? (
+          {error ? (
+            <section className="customer-orders-error" role="alert">
+              <h2>Orders unavailable</h2>
+              <p>{error}</p>
+              <button
+                className="customer-orders-primary-link"
+                type="button"
+                onClick={() => setRetryKey((currentKey) => currentKey + 1)}
+              >
+                Try again
+              </button>
+            </section>
+          ) : orders.length === 0 ? (
             <OrdersEmptyState tab={activeTab} />
           ) : (
             <>
-              <OrdersTable orders={paginatedOrders} />
-              <OrdersMobileList orders={paginatedOrders} />
+              <OrdersTable orders={orders} />
+              <OrdersMobileList orders={orders} />
               <OrdersPagination
-                currentPage={safeCurrentPage}
+                currentPage={currentPage}
                 totalPages={totalPages}
-                totalItems={selectedOrders.length}
+                totalItems={totalItems}
                 startIndex={startIndex}
                 endIndex={endIndex}
                 onPageChange={handlePageChange}

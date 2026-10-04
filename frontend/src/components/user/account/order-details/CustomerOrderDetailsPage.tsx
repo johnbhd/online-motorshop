@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faRoute } from "@fortawesome/free-solid-svg-icons";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { getAuthToken } from "@/lib/auth/authStorage";
 import {
-  getDemoOrderByReferenceForCustomer,
-} from "@/lib/orders/orderStorage";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
+  getCustomerOrder,
+  getOrderApiErrorMessage,
+  OrderApiError,
+} from "@/lib/orders/orderApi";
+import { toOrderViewModel } from "@/lib/orders/orderAdapter";
+import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import OrderDetailsView from "../../orders/OrderDetailsView";
 
 type CustomerOrderDetailsPageProps = {
@@ -18,30 +22,68 @@ type CustomerOrderDetailsPageProps = {
 export default function CustomerOrderDetailsPage({
   reference,
 }: CustomerOrderDetailsPageProps) {
-  const { isReady: isAuthReady, session } = useDemoAuth();
-  const customerAccountId =
-    session?.role === "customer" ? session.id : null;
-  const [order, setOrder] = useState<DemoOrder | null>(null);
-  const [isOrderReady, setIsOrderReady] = useState(false);
+  const { isLoading: isAuthLoading, user } = useAuth();
+  const isAuthReady = !isAuthLoading;
+  const isCustomer = user?.role === "customer";
+  const [order, setOrder] = useState<OrderViewModel | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
-    if (!isAuthReady || !customerAccountId) {
+    if (!isAuthReady || !isCustomer) {
       return;
     }
 
-    const ownedOrder = getDemoOrderByReferenceForCustomer(
-      reference,
-      customerAccountId,
-    );
+    const token = getAuthToken();
+    const controller = new AbortController();
 
-    // TEMPORARY CUSTOMER ORDER HISTORY DEMO.
-    // Ownership is checked by account ID before the shared detail view renders.
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the owned local order after auth is ready
-    setOrder(ownedOrder);
-    setIsOrderReady(true);
-  }, [customerAccountId, isAuthReady, reference]);
+    if (!token) {
+      // The auth token is external browser state; reflect its absence before starting the request.
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setOrder(null);
+      setError("Your session has expired. Please sign in again.");
+      setNotFound(false);
+      setIsLoading(false);
+      /* eslint-enable react-hooks/set-state-in-effect */
+      return () => controller.abort();
+    }
 
-  if (!isOrderReady || !customerAccountId) {
+    setIsLoading(true);
+    setError("");
+    setNotFound(false);
+
+    getCustomerOrder(token, reference, controller.signal)
+      .then((response) => {
+        setOrder(toOrderViewModel(response.order));
+      })
+      .catch((requestError: unknown) => {
+        if (requestError instanceof Error && requestError.name === "AbortError") {
+          return;
+        }
+
+        setOrder(null);
+        setNotFound(
+          requestError instanceof OrderApiError && requestError.status === 404,
+        );
+        setError(
+          getOrderApiErrorMessage(
+            requestError,
+            "We could not load this order right now. Please try again.",
+          ),
+        );
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [isAuthReady, isCustomer, reference, retryKey]);
+
+  if (isAuthLoading || !isCustomer || isLoading) {
     return (
       <div className="customer-order-details-page">
         <section className="customer-orders-loading" aria-live="polite">
@@ -51,7 +93,32 @@ export default function CustomerOrderDetailsPage({
     );
   }
 
-  if (!order) {
+  if (error && !notFound) {
+    return (
+      <div className="customer-order-details-page">
+        <section className="customer-order-error" role="alert">
+          <p className="customer-orders-eyebrow">Customer Account</p>
+          <h1>Order details unavailable</h1>
+          <p>{error}</p>
+          <div className="customer-order-not-found-actions">
+            <button
+              className="customer-orders-primary-link"
+              type="button"
+              onClick={() => setRetryKey((currentKey) => currentKey + 1)}
+            >
+              Try again
+            </button>
+            <Link className="customer-orders-secondary-link" href="/account/orders">
+              <FontAwesomeIcon icon={faArrowLeft} aria-hidden="true" />
+              <span>Back to My Orders</span>
+            </Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (!order || notFound) {
     return (
       <div className="customer-order-details-page">
         <section className="customer-order-not-found" aria-labelledby="customer-order-not-found-title">

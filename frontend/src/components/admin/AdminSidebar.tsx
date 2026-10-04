@@ -16,12 +16,13 @@ import {
   faLocationDot,
   faStar,
   faStore,
+  faTags,
   faTruck,
   faUser,
   faUserGear,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
-import { useDemoAuth } from "@/components/auth/DemoAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const adminIcons = {
   Dashboard: faGaugeHigh,
@@ -30,6 +31,7 @@ const adminIcons = {
   "Pickup Requests": faStore,
   "Delivery Requests": faTruck,
   Products: faBoxOpen,
+  "Categories & Brands": faTags,
   Customers: faUsers,
   Messages: faComments,
   Reviews: faStar,
@@ -49,6 +51,7 @@ const links = [
   ["Pickup Requests", "/admin/pickup-requests", "⌂"],
   ["Delivery Requests", "/admin/delivery-requests", "♞"],
   ["Products", "/admin/products", "□"],
+  ["Categories & Brands", "/admin/categories-brands", "◆"],
   ["Customers", "/admin/customers", "♧"],
   ["Messages", "/admin/messages", "✉"],
   ["Reviews", "#", "☆"],
@@ -70,10 +73,10 @@ export default function AdminSidebar({
 }) {
   const path = usePathname();
   const router = useRouter();
-  const { logout } = useDemoAuth();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     onClose();
     router.replace("/");
   };

@@ -8,18 +8,18 @@ import {
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import type { DemoOrder } from "@/lib/orders/orderTypes";
+import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import { OPEN_STAFF_CHAT_EVENT } from "../chatbot/chatbotEvents";
 
 type OrderSupportSectionProps = {
-  order: DemoOrder;
+  order: OrderViewModel;
 };
 
 export default function OrderSupportSection({
   order,
 }: OrderSupportSectionProps) {
   const isPickup = order.fulfillment.method === "pickup";
-  const fulfillmentMethod = isPickup ? "Store Pickup" : "Lalamove Delivery";
+  const fulfillmentMethod = isPickup ? "Store Pickup" : "Delivery";
   const fulfillmentInformation = isPickup
     ? "Please wait for ALD staff to confirm that the request is ready before visiting the branch."
     : "ALD staff will confirm the delivery details, fee, and arrangement before dispatch.";
@@ -27,12 +27,12 @@ export default function OrderSupportSection({
     ? "Pickup branch"
     : "Delivery address";
   const fulfillmentDetail = order.fulfillment.method === "pickup"
-    ? order.fulfillment.branch.name
-    : `${order.fulfillment.delivery.address}, ${order.fulfillment.delivery.barangay}, ${order.fulfillment.delivery.city}`;
+    ? order.fulfillment.branch?.name ?? "Branch unavailable"
+    : order.fulfillment.delivery?.address ?? "Delivery address unavailable";
   const paymentInformation =
-    order.paymentStatus === "Paid"
-      ? "Payment is recorded as paid for this order request."
-      : "No payment has been collected. ALD staff will provide instructions after confirming the request and final amount.";
+    order.payment
+      ? "Payment is recorded for this order request."
+      : "No verified payment is recorded for this order request. ALD staff will provide instructions after confirming the request and final amount.";
 
   const handleTalkToStaff = () => {
     window.dispatchEvent(new Event(OPEN_STAFF_CHAT_EVENT));

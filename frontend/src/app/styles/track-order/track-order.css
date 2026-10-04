@@ -261,10 +261,21 @@
   transition: background-color 160ms ease, transform 160ms ease;
 }
 
+.track-order-search-button {
+  align-self: start;
+  margin-top: 1.45rem;
+}
+
 .track-order-search-button:hover,
 .track-order-help-button:hover {
   background: #e07a08;
   transform: translateY(-1px);
+}
+
+.track-order-search-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
 }
 
 .track-order-search-button:focus-visible,
@@ -623,6 +634,9 @@
   border: 1px solid var(--track-order-border);
   border-radius: 0.65rem;
   background: var(--track-order-surface);
+  color: var(--track-order-muted);
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
 .track-order-item-image img {
@@ -902,6 +916,7 @@
   .track-order-search-button {
     grid-column: 1 / -1;
     justify-self: start;
+    margin-top: 0;
   }
 
   .track-order-request-details {

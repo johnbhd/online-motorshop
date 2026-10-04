@@ -1,20 +1,24 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import {
-  productAvailability,
-  productBrands,
-  productCatalog,
-  productCategories,
-  productMaxPrice,
   type ProductAvailability,
   type ProductBrand,
   type ProductCategory,
-  type ProductDisplayItem,
   type ProductFilterState,
-} from "./productsData";
+  productAvailability,
+} from "@/lib/catalog/catalogTypes";
+
+export type ProductFilterOption<Value extends string = string> = {
+  value: Value;
+  count: number;
+};
 
 type ProductFiltersProps = {
   filters: ProductFilterState;
+  brands: ProductFilterOption<ProductBrand>[];
+  categories: ProductFilterOption<ProductCategory>[];
+  availabilityCount: number;
+  priceMax: number;
   onToggleBrand: (brand: ProductBrand) => void;
   onToggleCategory: (category: ProductCategory) => void;
   onToggleAvailability: (availability: ProductAvailability) => void;
@@ -24,12 +28,12 @@ type ProductFiltersProps = {
   onClear: () => void;
 };
 
-function countProducts(matcher: (product: ProductDisplayItem) => boolean) {
-  return productCatalog.filter(matcher).length;
-}
-
 export default function ProductFilters({
   filters,
+  brands,
+  categories,
+  availabilityCount,
+  priceMax,
   onToggleBrand,
   onToggleCategory,
   onToggleAvailability,
@@ -52,7 +56,7 @@ export default function ProductFilters({
           Motorcycle Brand
           <FontAwesomeIcon icon={faChevronUp} aria-hidden="true" />
         </legend>
-        {productBrands.map((brand) => (
+        {brands.map(({ value: brand, count }) => (
           <label className="products-check-option" key={brand}>
             <input
               type="checkbox"
@@ -60,7 +64,7 @@ export default function ProductFilters({
               onChange={() => onToggleBrand(brand)}
             />
             <span>{brand}</span>
-            <small>{countProducts((product) => product.brand === brand)}</small>
+            <small>{count}</small>
           </label>
         ))}
       </fieldset>
@@ -70,7 +74,7 @@ export default function ProductFilters({
           Category
           <FontAwesomeIcon icon={faChevronUp} aria-hidden="true" />
         </legend>
-        {productCategories.map((category) => (
+        {categories.map(({ value: category, count }) => (
           <label className="products-check-option" key={category}>
             <input
               type="checkbox"
@@ -78,9 +82,7 @@ export default function ProductFilters({
               onChange={() => onToggleCategory(category)}
             />
             <span>{category}</span>
-            <small>
-              {countProducts((product) => product.category === category)}
-            </small>
+            <small>{count}</small>
           </label>
         ))}
       </fieldset>
@@ -96,7 +98,7 @@ export default function ProductFilters({
             <input
               type="number"
               min={0}
-              max={productMaxPrice}
+              max={priceMax}
               value={filters.minPrice}
               onChange={(event) => onMinPriceChange(Number(event.target.value))}
               aria-label="Minimum price"
@@ -108,7 +110,7 @@ export default function ProductFilters({
             <input
               type="number"
               min={0}
-              max={productMaxPrice}
+              max={priceMax}
               value={filters.maxPrice}
               onChange={(event) => onMaxPriceChange(Number(event.target.value))}
               aria-label="Maximum price"
@@ -123,7 +125,7 @@ export default function ProductFilters({
           className="products-price-slider"
           type="range"
           min={0}
-          max={productMaxPrice}
+          max={priceMax}
           step={50}
           value={filters.maxPrice}
           onChange={(event) => onMaxPriceChange(Number(event.target.value))}
@@ -143,7 +145,7 @@ export default function ProductFilters({
               onChange={() => onToggleAvailability(availability)}
             />
             <span>{availability}</span>
-            <small>{countProducts((product) => product.status === "active")}</small>
+            <small>{availabilityCount}</small>
           </label>
         ))}
       </fieldset>

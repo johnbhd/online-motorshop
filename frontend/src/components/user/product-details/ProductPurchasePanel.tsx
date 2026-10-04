@@ -11,7 +11,7 @@ import {
   faMinus,
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-import type { ProductDisplayItem } from "../products/productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
 
@@ -67,8 +67,8 @@ export default function ProductPurchasePanel({
       </div>
 
       <p className="product-details-purchase-note">
-        Displayed prices are temporary Philippine peso demo estimates and are not connected
-to live ALD pricing.
+        This price comes from the current ALD catalog. Final availability and
+        compatibility are confirmed by staff.
       </p>
 
       <div className="product-details-quantity-field">

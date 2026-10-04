@@ -1,80 +1,39 @@
 import { formatCartCurrency, isUsablePrice } from "../../cart/cartData";
-import type { DemoOrder, OrderStatus } from "@/lib/orders/orderTypes";
+import type { CustomerOrderSummary } from "@/lib/orders/orderTypes";
 
 export type CustomerOrderTab = "active" | "history";
 
 export const ORDERS_PER_PAGE = 10;
 
-const HISTORICAL_ORDER_STATUSES = new Set<OrderStatus>([
-  "Completed",
-  "Rejected",
-  "Cancelled",
-]);
-
-export function getOrderLifecycleGroup(
-  status: OrderStatus,
-): CustomerOrderTab {
-  return HISTORICAL_ORDER_STATUSES.has(status) ? "history" : "active";
+export function getOrderItemCount(order: CustomerOrderSummary): number {
+  return order.itemCount;
 }
 
-export function isActiveOrder(order: DemoOrder): boolean {
-  return getOrderLifecycleGroup(order.status) === "active";
-}
-
-export function isHistoricalOrder(order: DemoOrder): boolean {
-  return getOrderLifecycleGroup(order.status) === "history";
-}
-
-export function sortOrdersNewestFirst(orders: DemoOrder[]): DemoOrder[] {
-  return [...orders].sort((leftOrder, rightOrder) => {
-    const leftTime = new Date(leftOrder.createdAt).getTime();
-    const rightTime = new Date(rightOrder.createdAt).getTime();
-    const leftHasValidDate = Number.isFinite(leftTime);
-    const rightHasValidDate = Number.isFinite(rightTime);
-
-    if (leftHasValidDate && rightHasValidDate && leftTime !== rightTime) {
-      return rightTime - leftTime;
-    }
-
-    if (leftHasValidDate !== rightHasValidDate) {
-      return rightHasValidDate ? 1 : -1;
-    }
-
-    return rightOrder.reference.localeCompare(leftOrder.reference);
-  });
-}
-
-export function getOrderItemCount(order: DemoOrder): number {
-  return order.items.reduce((total, item) => {
-    return total + item.quantity;
-  }, 0);
-}
-
-export function getOrderItemLabel(order: DemoOrder): string {
+export function getOrderItemLabel(order: CustomerOrderSummary): string {
   const count = getOrderItemCount(order);
   return `${count} ${count === 1 ? "item" : "items"}`;
 }
 
-export function getOrderFulfillmentSummary(order: DemoOrder): {
+export function getOrderFulfillmentSummary(order: CustomerOrderSummary): {
   label: string;
   detail: string;
 } {
-  if (order.fulfillment.method === "pickup") {
+  if (order.fulfillmentMethod === "pickup") {
     return {
       label: "Store Pickup",
-      detail: order.fulfillment.branch.name,
+      detail: order.branch?.name ?? "Branch unavailable",
     };
   }
 
   return {
-    label: "Lalamove Delivery",
-    detail: order.fulfillment.delivery.city,
+    label: "Delivery",
+    detail: order.branch?.name ?? "Delivery details pending",
   };
 }
 
-export function getOrderAmountDisplay(order: DemoOrder): string {
-  const amount = isUsablePrice(order.finalAmount)
-    ? order.finalAmount
+export function getOrderAmountDisplay(order: CustomerOrderSummary): string {
+  const amount = isUsablePrice(order.totalAmount)
+    ? order.totalAmount
     : order.estimatedTotal;
 
   return isUsablePrice(amount)

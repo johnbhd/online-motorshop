@@ -1,4 +1,4 @@
-import { getProductById, type ProductDisplayItem } from "../products/productsData";
+import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import { isUsablePrice } from "./cartData";
 import type { CartItemData, CartProduct } from "./cartTypes";
 
@@ -108,38 +108,10 @@ export function addProductToCart(
 }
 
 function normalizeStoredCartItems(items: CartItemData[]): CartItemData[] {
-  let didNormalize = false;
-
-  const normalizedItems = items.map((item) => {
-    const currentProduct = getProductById(item.product.id);
-
-    if (
-      currentProduct &&
-      !isUsablePrice(item.price) &&
-      isUsablePrice(currentProduct.price)
-    ) {
-      didNormalize = true;
-      return {
-        ...item,
-        price: currentProduct.price,
-      };
-    }
-
-    return item;
-  });
-
-  if (didNormalize) {
-    try {
-      window.localStorage.setItem(
-        CART_STORAGE_KEY,
-        JSON.stringify(normalizedItems),
-      );
-    } catch {
-      // Keep the normalized in-memory values if persistence is unavailable.
-    }
-  }
-
-  return normalizedItems;
+  return items.map((item) => ({
+    ...item,
+    price: isUsablePrice(item.price) ? item.price : 0,
+  }));
 }
 
 function parseStoredCartItem(value: unknown): CartItemData | null {
