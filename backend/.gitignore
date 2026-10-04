@@ -27,3 +27,4 @@ Thumbs.db
 AGENTS.md
 Project Context.md
 Workflows/
+.env.prod
