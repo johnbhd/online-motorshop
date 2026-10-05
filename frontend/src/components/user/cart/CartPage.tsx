@@ -3,13 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft,
-  faCircleInfo,
-  faTrashCan,
-} from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import CartItems from "./CartItems";
-import CartOrderRequestNotice from "./CartOrderRequestNotice";
 import CartSummary from "./CartSummary";
 import {
   CART_UPDATED_EVENT,
@@ -164,17 +159,6 @@ export default function CartPage() {
 
           {hasItems ? (
             <>
-              <div className="cart-info-banner" role="note">
-                <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
-                <p>
-                  Product availability, compatibility, and final pricing will
-                  be confirmed by ALD Motorshop staff <em>after</em> the order
-                  request is submitted.
-                </p>
-              </div>
-
-              <CartOrderRequestNotice />
-
               <div className="cart-continue-shopping-row">
                 <Link
                   className="cart-button cart-button--secondary"

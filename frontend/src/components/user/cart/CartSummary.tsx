@@ -2,13 +2,9 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
-  faCircleInfo,
-  faFileLines,
   faIdCard,
-  faLock,
   faStore,
   faTruck,
-  faUserCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatCartCurrency } from "./cartData";
 import type { FulfillmentMethod } from "./cartTypes";
@@ -38,15 +34,6 @@ export default function CartSummary({
       <p className="cart-items-count">
         {totalQuantity} {itemLabel} in your cart
       </p>
-
-      <div className="cart-mini-info" role="note">
-        <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
-        <p>
-          Adding products to your cart does not confirm availability or
-          complete the order. ALD staff will review your request after
-          checkout.
-        </p>
-      </div>
 
       <div className="cart-summary-card">
         <h2 id="cart-summary-title">Order Summary</h2>
@@ -140,31 +127,10 @@ export default function CartSummary({
         <Link
           className="cart-checkout-button"
           href="/checkout"
-          aria-describedby="cart-checkout-note"
         >
           <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
           Proceed to Checkout
         </Link>
-
-        <p className="cart-checkout-note" id="cart-checkout-note">
-          Checkout submits an order request for staff confirmation; it does not
-          finalize a sale automatically.
-        </p>
-
-        <ul className="cart-assurance-list">
-          <li>
-            <FontAwesomeIcon icon={faLock} aria-hidden="true" />
-            Secure customer information
-          </li>
-          <li>
-            <FontAwesomeIcon icon={faUserCheck} aria-hidden="true" />
-            Guest ordering supported
-          </li>
-          <li>
-            <FontAwesomeIcon icon={faFileLines} aria-hidden="true" />
-            Order reference provided after submission
-          </li>
-        </ul>
       </div>
     </aside>
   );

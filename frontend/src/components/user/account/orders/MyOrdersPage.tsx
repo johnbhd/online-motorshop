@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
@@ -142,10 +144,25 @@ export default function MyOrdersPage() {
   return (
     <div className="customer-orders-page">
       <section
-        className="customer-orders-hero"
+        className="customer-orders-hero customer-orders-hero--image"
         aria-labelledby="customer-orders-page-title"
       >
-        <div className="customer-orders-shell">
+        <div className="customer-orders-hero-image" aria-hidden="true">
+          <Image
+            src="/branches/manila.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+          />
+        </div>
+        <div className="customer-orders-hero-overlay" aria-hidden="true" />
+        <div className="customer-orders-shell customer-orders-hero-content">
+          <p className="customer-orders-breadcrumb">
+            <Link href="/">Home</Link>
+            <span aria-hidden="true">/</span>
+            <span>My Orders</span>
+          </p>
           <p className="customer-orders-eyebrow">Customer Account</p>
           <h1 id="customer-orders-page-title">My Orders</h1>
           <p>
