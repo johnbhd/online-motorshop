@@ -199,6 +199,8 @@ export function Navbar() {
     : "Sign In or Continue as Guest";
 
   const sessionPhone = user?.customer?.contact_number ?? "";
+  const isCustomerOrdersPath =
+    pathname === "/account/orders" || pathname.startsWith("/account/orders/");
 
   const cartLabel =
     cartQuantity === 1
@@ -244,6 +246,15 @@ export function Navbar() {
             <Link className="site-header-track" href="/track-order">
               Track Order
             </Link>
+            {user?.role === "customer" ? (
+              <Link
+                className="site-header-track"
+                href="/account/orders"
+                aria-current={isCustomerOrdersPath ? "page" : undefined}
+              >
+                My Orders
+              </Link>
+            ) : null}
             <span className="site-header-divider" aria-hidden="true" />
             <Link
               className="site-header-cart"
@@ -286,6 +297,31 @@ export function Navbar() {
                       <span>{user.email}</span>
                       {sessionPhone ? <span>{sessionPhone}</span> : null}
                     </div>
+                    {user.role === "customer" ? (
+                      <>
+                        <Link
+                          href="/account/orders"
+                          className="site-header-account-menu-link"
+                          role="menuitem"
+                          onClick={() => setIsAccountMenuOpen(false)}
+                        >
+                          <FontAwesomeIcon
+                            icon={faClipboardList}
+                            aria-hidden="true"
+                          />
+                          <span>My Orders</span>
+                        </Link>
+                        <Link
+                          href="/account/profile"
+                          className="site-header-account-menu-link"
+                          role="menuitem"
+                          onClick={() => setIsAccountMenuOpen(false)}
+                        >
+                          <FontAwesomeIcon icon={faUser} aria-hidden="true" />
+                          <span>Profile</span>
+                        </Link>
+                      </>
+                    ) : (
                       <Link
                         href={sessionLink}
                         className="site-header-account-menu-link"
@@ -294,6 +330,7 @@ export function Navbar() {
                       >
                         {sessionLabel}
                       </Link>
+                    )}
                     <button
                       type="button"
                       className="site-header-account-logout"
@@ -379,6 +416,17 @@ export function Navbar() {
                 <FontAwesomeIcon icon={faClipboardList} aria-hidden="true" />
                 <span>Track Order</span>
               </Link>
+              {user?.role === "customer" ? (
+                <Link
+                  className="site-mobile-nav-action"
+                  href="/account/orders"
+                  aria-current={isCustomerOrdersPath ? "page" : undefined}
+                  onClick={closeMobileMenu}
+                >
+                  <FontAwesomeIcon icon={faClipboardList} aria-hidden="true" />
+                  <span>My Orders</span>
+                </Link>
+              ) : null}
               <Link
                 className="site-mobile-nav-action"
                 href="/cart"
@@ -399,14 +447,25 @@ export function Navbar() {
                 </span>
               ) : user ? (
                 <>
-                  <Link
-                    className="site-mobile-nav-action"
-                    href={sessionLink}
-                    onClick={closeMobileMenu}
-                  >
-                    <FontAwesomeIcon icon={faUser} aria-hidden="true" />
-                    <span>{sessionLabel}</span>
-                  </Link>
+                  {user.role === "customer" ? (
+                    <Link
+                      className="site-mobile-nav-action"
+                      href="/account/profile"
+                      onClick={closeMobileMenu}
+                    >
+                      <FontAwesomeIcon icon={faUser} aria-hidden="true" />
+                      <span>Profile</span>
+                    </Link>
+                  ) : (
+                    <Link
+                      className="site-mobile-nav-action"
+                      href={sessionLink}
+                      onClick={closeMobileMenu}
+                    >
+                      <FontAwesomeIcon icon={faUser} aria-hidden="true" />
+                      <span>{sessionLabel}</span>
+                    </Link>
+                  )}
                   <button
                     type="button"
                     className="site-mobile-nav-action site-mobile-nav-button"
