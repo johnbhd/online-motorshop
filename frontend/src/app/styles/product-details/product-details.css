@@ -76,10 +76,8 @@
 
 .product-details-layout {
   display: grid;
-  grid-template-columns:
-    minmax(0, 1.05fr)
-    minmax(0, 1.2fr);
-  align-items: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   gap: clamp(1rem, 2.5vw, 1.75rem);
   padding-bottom: clamp(2.5rem, 5vw, 4.5rem);
 }
@@ -444,7 +442,9 @@
 }
 
 .product-details-information {
-  margin-bottom: 1.25rem;
+  grid-column: 2;
+  grid-row: 2;
+  margin-bottom: 0;
   padding: clamp(1.25rem, 3vw, 1.75rem);
 }
 
@@ -535,25 +535,12 @@
 
 @media (max-width: 1180px) {
   .product-details-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .product-details-fulfillment {
-    display: grid;
-    grid-column: 1 / -1;
-    grid-row: auto;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 1.5rem;
-  }
-
-  .product-details-fulfillment h2,
-  .product-details-fulfillment-list,
-  .product-details-fulfillment-note {
-    grid-column: 1 / -1;
-  }
-
-  .product-details-fulfillment-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 1;
+    grid-row: 2;
   }
 }
 
@@ -562,8 +549,10 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .product-details-fulfillment {
-    display: block;
+  .product-details-fulfillment,
+  .product-details-information {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .product-details-fulfillment-list {

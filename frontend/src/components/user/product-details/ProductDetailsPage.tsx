@@ -40,9 +40,9 @@ export default function ProductDetailsPage({
           </section>
 
           <ProductFulfillmentInfo />
-        </div>
 
-        <ProductInformation product={product} />
+          <ProductInformation product={product} />
+        </div>
 
         <div className="product-details-back-link-wrap">
           <Link className="product-details-back-link" href="/products">
