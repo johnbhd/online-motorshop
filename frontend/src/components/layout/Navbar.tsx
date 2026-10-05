@@ -4,12 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
+  faBell,
   faCartShopping,
   faCircleUser,
+  faClipboardCheck,
   faClipboardList,
+  faHeadset,
   faRightFromBracket,
   faUser,
   faXmark,
@@ -31,6 +35,78 @@ const navigationItems = [
 const FLOAT_THRESHOLD = 64;
 const SCROLL_DIRECTION_TOLERANCE = 8;
 
+type NotificationPreview = {
+  id: string;
+  title: string;
+  description: string;
+  time: string;
+  icon: IconDefinition;
+};
+
+const customerNotificationPreviews: NotificationPreview[] = [
+  {
+    id: "order-updates",
+    title: "Order request updates",
+    description: "Status changes from ALD staff will appear here.",
+    time: "Preview",
+    icon: faClipboardCheck,
+  },
+  {
+    id: "staff-confirmation",
+    title: "Staff confirmation",
+    description: "Availability and final pricing updates will appear here.",
+    time: "Preview",
+    icon: faBell,
+  },
+  {
+    id: "customer-support",
+    title: "Customer support",
+    description: "Support updates from ALD staff will appear here.",
+    time: "Preview",
+    icon: faHeadset,
+  },
+];
+
+function NotificationDropdown({
+  id,
+  isMobile = false,
+}: {
+  id: string;
+  isMobile?: boolean;
+}) {
+  return (
+    <div
+      className={
+        isMobile
+          ? "site-mobile-notifications"
+          : "site-header-notifications-menu"
+      }
+      id={id}
+      role="region"
+      aria-label="Notifications"
+    >
+      <div className="site-notifications-heading">
+        <strong>Notifications</strong>
+        <span>UI preview</span>
+      </div>
+      <ul className="site-notifications-list">
+        {customerNotificationPreviews.map((notification) => (
+          <li className="site-notification-item" key={notification.id}>
+            <span className="site-notification-icon" aria-hidden="true">
+              <FontAwesomeIcon icon={notification.icon} />
+            </span>
+            <span className="site-notification-copy">
+              <strong>{notification.title}</strong>
+              <span>{notification.description}</span>
+              <small>{notification.time}</small>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function getSessionLinkLabel(role: "customer" | "staff" | "admin") {
   if (role === "admin") {
     return "Admin Portal";
@@ -49,11 +125,14 @@ export function Navbar() {
   const { isLoading: isAuthLoading, logout, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [cartQuantity, setCartQuantity] = useState(0);
   const lastScrollY = useRef(0);
   const accountRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const mobileNotificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const syncCartQuantity = () => {
@@ -110,19 +189,32 @@ export function Navbar() {
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
-    if (!isAccountMenuOpen) {
+    if (!isAccountMenuOpen && !isNotificationsOpen) {
       return;
     }
 
     const closeOnOutsideClick = (event: MouseEvent) => {
-      if (!accountRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isInsideAccountMenu = accountRef.current?.contains(target);
+      const isInsideNotifications = notificationsRef.current?.contains(target);
+      const isInsideMobileNotifications = mobileNotificationsRef.current?.contains(
+        target,
+      );
+
+      if (
+        !isInsideAccountMenu &&
+        !isInsideNotifications &&
+        !isInsideMobileNotifications
+      ) {
         setIsAccountMenuOpen(false);
+        setIsNotificationsOpen(false);
       }
     };
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsAccountMenuOpen(false);
+        setIsNotificationsOpen(false);
       }
     };
 
@@ -133,7 +225,7 @@ export function Navbar() {
       document.removeEventListener("mousedown", closeOnOutsideClick);
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [isAccountMenuOpen]);
+  }, [isAccountMenuOpen, isNotificationsOpen]);
 
   useEffect(() => {
     if (!isMobileMenuOpen) {
@@ -143,12 +235,14 @@ export function Navbar() {
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsMobileMenuOpen(false);
+        setIsNotificationsOpen(false);
       }
     };
 
     const closeOnDesktopResize = () => {
       if (window.innerWidth > 900) {
         setIsMobileMenuOpen(false);
+        setIsNotificationsOpen(false);
       }
     };
 
@@ -166,19 +260,27 @@ export function Navbar() {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+    setIsNotificationsOpen(false);
   };
 
   const openMobileMenu = () => {
     setIsVisible(true);
     setIsAccountMenuOpen(false);
+    setIsNotificationsOpen(false);
     setIsMobileMenuOpen(true);
   };
 
   const handleLogout = async () => {
     await logout();
     setIsAccountMenuOpen(false);
+    setIsNotificationsOpen(false);
     closeMobileMenu();
     router.replace("/");
+  };
+
+  const openNotifications = () => {
+    setIsAccountMenuOpen(false);
+    setIsNotificationsOpen(true);
   };
 
   const isActiveNavigationItem = (href: string) => {
@@ -255,6 +357,30 @@ export function Navbar() {
                 My Orders
               </Link>
             ) : null}
+            {user?.role === "customer" ? (
+              <div className="site-header-notifications" ref={notificationsRef}>
+                <button
+                  type="button"
+                  className="site-header-notifications-trigger"
+                  aria-label={
+                    isNotificationsOpen
+                      ? "Close notifications"
+                      : "Open notifications"
+                  }
+                  aria-expanded={isNotificationsOpen}
+                  aria-controls="site-header-notifications-menu"
+                  onClick={() => {
+                    setIsAccountMenuOpen(false);
+                    setIsNotificationsOpen((open) => !open);
+                  }}
+                >
+                  <FontAwesomeIcon icon={faBell} aria-hidden="true" />
+                </button>
+                {isNotificationsOpen ? (
+                  <NotificationDropdown id="site-header-notifications-menu" />
+                ) : null}
+              </div>
+            ) : null}
             <span className="site-header-divider" aria-hidden="true" />
             <Link
               className="site-header-cart"
@@ -282,7 +408,10 @@ export function Navbar() {
                   }
                   aria-haspopup="menu"
                   aria-expanded={isAccountMenuOpen}
-                  onClick={() => setIsAccountMenuOpen((open) => !open)}
+                  onClick={() => {
+                    setIsNotificationsOpen(false);
+                    setIsAccountMenuOpen((open) => !open);
+                  }}
                 >
                   <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" />
                 </button>
@@ -311,6 +440,15 @@ export function Navbar() {
                           />
                           <span>My Orders</span>
                         </Link>
+                        <button
+                          type="button"
+                          className="site-header-account-menu-link"
+                          role="menuitem"
+                          onClick={openNotifications}
+                        >
+                          <FontAwesomeIcon icon={faBell} aria-hidden="true" />
+                          <span>Notifications</span>
+                        </button>
                         <Link
                           href="/account/profile"
                           className="site-header-account-menu-link"
@@ -426,6 +564,31 @@ export function Navbar() {
                   <FontAwesomeIcon icon={faClipboardList} aria-hidden="true" />
                   <span>My Orders</span>
                 </Link>
+              ) : null}
+              {user?.role === "customer" ? (
+                <div
+                  className="site-mobile-notifications-container"
+                  ref={mobileNotificationsRef}
+                >
+                  <button
+                    type="button"
+                    className="site-mobile-nav-action site-mobile-nav-button"
+                    aria-expanded={isNotificationsOpen}
+                    aria-controls="site-mobile-notifications"
+                    onClick={() => {
+                      setIsNotificationsOpen((open) => !open);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faBell} aria-hidden="true" />
+                    <span>Notifications</span>
+                  </button>
+                  {isNotificationsOpen ? (
+                    <NotificationDropdown
+                      id="site-mobile-notifications"
+                      isMobile
+                    />
+                  ) : null}
+                </div>
               ) : null}
               <Link
                 className="site-mobile-nav-action"

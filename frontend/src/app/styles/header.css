@@ -45,7 +45,8 @@
 .site-header--scrolled .site-header-brand-text strong,
 .site-header--scrolled .site-header-nav-link,
 .site-header--scrolled .site-header-track,
-.site-header--scrolled .site-header-cart {
+.site-header--scrolled .site-header-cart,
+.site-header--scrolled .site-header-notifications-trigger {
   color: #ffffff;
 }
 
@@ -56,7 +57,8 @@
 .site-header--scrolled .site-header-nav-link:hover,
 .site-header--scrolled .site-header-nav-link.is-active,
 .site-header--scrolled .site-header-track:hover,
-.site-header--scrolled .site-header-cart:hover {
+.site-header--scrolled .site-header-cart:hover,
+.site-header--scrolled .site-header-notifications-trigger:hover {
   color: #fdb813;
 }
 
@@ -216,6 +218,120 @@
   font-size: 0.64rem;
   font-weight: 800;
   line-height: 1;
+}
+
+.site-header-notifications {
+  position: relative;
+  display: flex;
+  min-width: max-content;
+  align-items: center;
+}
+
+.site-header-notifications-trigger {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #d8dee7;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #1b1c1f;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.site-header-notifications-trigger:hover {
+  border-color: #fdb813;
+  color: #e07a08;
+}
+
+.site-header-notifications-menu {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  z-index: 60;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.18);
+}
+
+.site-notifications-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.site-notifications-heading strong {
+  color: #0b1930;
+  font-size: 0.88rem;
+}
+
+.site-notifications-heading span {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.site-notifications-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0.5rem 0 0;
+  list-style: none;
+}
+
+.site-notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.45rem;
+  background: #f8fafc;
+}
+
+.site-notification-icon {
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.45rem;
+  background: #fff3ec;
+  color: #e07a08;
+  font-size: 0.78rem;
+}
+
+.site-notification-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.site-notification-copy strong {
+  color: #0b1930;
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.site-notification-copy > span {
+  color: #64748b;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.site-notification-copy small {
+  color: #94a3b8;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .site-header-guest {
@@ -544,6 +660,48 @@
     width: 1.1em;
     flex: 0 0 auto;
     color: #fdb813;
+  }
+
+  .site-mobile-notifications-container {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .site-mobile-notifications {
+    margin: 0 0.25rem;
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.55rem;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .site-mobile-notifications .site-notifications-heading {
+    padding: 0.55rem 0.6rem;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .site-mobile-notifications .site-notifications-heading strong {
+    color: #ffffff;
+  }
+
+  .site-mobile-notifications .site-notifications-heading span {
+    color: #94a3b8;
+  }
+
+  .site-mobile-notifications .site-notification-item {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .site-mobile-notifications .site-notification-copy strong {
+    color: #ffffff;
+  }
+
+  .site-mobile-notifications .site-notification-copy > span {
+    color: #cbd5e1;
+  }
+
+  .site-mobile-notifications .site-notification-copy small {
+    color: #94a3b8;
   }
 
   .site-mobile-nav-cart-badge {
