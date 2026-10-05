@@ -6,14 +6,18 @@ import ProductGallery from "./ProductGallery";
 import ProductInformation from "./ProductInformation";
 import ProductOverview from "./ProductOverview";
 import ProductPurchasePanel from "./ProductPurchasePanel";
+import ProductRecommendations from "./ProductRecommendations";
+import ProductReviews from "./ProductReviews";
 import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
 type ProductDetailsPageProps = {
   product: ProductDisplayItem;
+  suggestedProducts: ProductDisplayItem[];
 };
 
 export default function ProductDetailsPage({
   product,
+  suggestedProducts,
 }: ProductDetailsPageProps) {
   return (
     <div className="product-details-page">
@@ -43,6 +47,9 @@ export default function ProductDetailsPage({
 
           <ProductInformation product={product} />
         </div>
+
+        <ProductRecommendations products={suggestedProducts} />
+        <ProductReviews productName={product.name} />
 
         <div className="product-details-back-link-wrap">
           <Link className="product-details-back-link" href="/products">

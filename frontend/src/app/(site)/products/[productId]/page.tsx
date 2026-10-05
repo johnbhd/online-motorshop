@@ -4,6 +4,7 @@ import ProductDetailsPage from "@/components/user/product-details/ProductDetails
 import {
   CatalogApiError,
   getCatalogProduct,
+  getCatalogProducts,
 } from "@/lib/catalog/catalogQueries";
 import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 
@@ -14,6 +15,30 @@ type ProductDetailsRouteProps = {
     productId: string;
   }>;
 };
+
+async function getSuggestedProducts(product: ProductDisplayItem) {
+  const queries = [
+    { category: product.category, perPage: 8, sort: "featured" as const },
+    { perPage: 12, sort: "featured" as const },
+  ];
+
+  for (const query of queries) {
+    try {
+      const response = await getCatalogProducts(query);
+      const suggestions = response.products
+        .filter((candidate) => candidate.id !== product.id)
+        .slice(0, 6);
+
+      if (suggestions.length > 0) {
+        return suggestions;
+      }
+    } catch {
+      // Suggestions are optional; the product details page remains usable.
+    }
+  }
+
+  return [];
+}
 
 export async function generateMetadata({
   params,
@@ -48,5 +73,12 @@ export default async function ProductDetailsRoute({
     throw error;
   }
 
-  return <ProductDetailsPage product={product} />;
+  const suggestedProducts = await getSuggestedProducts(product);
+
+  return (
+    <ProductDetailsPage
+      product={product}
+      suggestedProducts={suggestedProducts}
+    />
+  );
 }
