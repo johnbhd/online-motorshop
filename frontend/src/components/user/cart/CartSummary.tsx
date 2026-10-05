@@ -2,7 +2,6 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
-  faIdCard,
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
@@ -99,30 +98,6 @@ export default function CartSummary({
             </span>
           </label>
         </fieldset>
-
-        <section
-          className="cart-customer-block"
-          aria-labelledby="cart-customer-title"
-        >
-          <FontAwesomeIcon
-            className="cart-customer-icon"
-            icon={faIdCard}
-            aria-hidden="true"
-          />
-          <div>
-            <h3 id="cart-customer-title">Customer details</h3>
-            <p>
-              <strong>Customer:</strong> Guest checkout
-            </p>
-            <p>
-              <strong>Status:</strong> Details collected during checkout
-            </p>
-            <p className="cart-customer-note">
-              You can review or update your contact and fulfillment details
-              during checkout.
-            </p>
-          </div>
-        </section>
 
         <Link
           className="cart-checkout-button"

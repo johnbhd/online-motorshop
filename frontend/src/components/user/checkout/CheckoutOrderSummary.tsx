@@ -1,10 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCircleInfo,
-  faPaperPlane,
-} from "@fortawesome/free-solid-svg-icons";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import {
   calculateLineTotal,
   formatCartCurrency,
@@ -116,17 +113,6 @@ export default function CheckoutOrderSummary({
           Final amount may change after ALD staff confirms product availability,
           compatibility, and fulfillment details.
         </p>
-
-        <div className="checkout-order-request-box" role="note">
-          <strong>
-            <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
-            Order Request
-          </strong>
-          <p>
-            Submitting this form saves a request for staff review. It does not
-            finalize a guaranteed sale.
-          </p>
-        </div>
 
         <label className="checkout-confirmation-check">
           <input

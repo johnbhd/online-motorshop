@@ -7,11 +7,9 @@ import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleInfo,
-  faCreditCard,
   faFileLines,
 } from "@fortawesome/free-solid-svg-icons";
 import CustomerInformation from "./CustomerInformation";
-import CheckoutNextSteps from "./CheckoutNextSteps";
 import CheckoutOrderSummary from "./CheckoutOrderSummary";
 import DeliveryFields from "./DeliveryFields";
 import FulfillmentMethod from "./FulfillmentMethod";
@@ -431,26 +429,6 @@ export default function CheckoutPage() {
               />
             ) : null}
 
-            <section className="checkout-section checkout-section--payment" aria-labelledby="checkout-payment-title">
-              <div className="checkout-section-heading">
-                <div className="checkout-section-icon" aria-hidden="true">
-                  <FontAwesomeIcon icon={faCreditCard} />
-                </div>
-                <div>
-                  <h2 id="checkout-payment-title">Payment and Final Amount</h2>
-                  <p>No payment is collected during this demo order request.</p>
-                </div>
-              </div>
-              <div className="checkout-neutral-notice" role="note">
-                <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
-                <p>
-                  ALD staff will confirm product availability, compatibility, the final
-                  amount, payment instructions, and preparation details before any
-                  payment is made.
-                </p>
-              </div>
-            </section>
-
             <section className="checkout-section checkout-section--notes" aria-labelledby="checkout-notes-title">
               <div className="checkout-section-heading">
                 <div className="checkout-section-icon" aria-hidden="true">
@@ -484,7 +462,6 @@ export default function CheckoutPage() {
           />
         </form>
 
-        <CheckoutNextSteps />
       </div>
     </div>
   );
