@@ -14,16 +14,16 @@ export type BranchMapModalProps = {
   onClose: () => void;
 };
 
-function getMapEmbedUrl(address: string) {
-  const encodedAddress = encodeURIComponent(address);
+function getMapEmbedUrl(query: string) {
+  const encodedQuery = encodeURIComponent(query);
 
-  return `https://www.google.com/maps?q=${encodedAddress}&output=embed`;
+  return `https://www.google.com/maps?q=${encodedQuery}&output=embed`;
 }
 
-function getGoogleMapsUrl(address: string) {
-  const encodedAddress = encodeURIComponent(address);
+function getGoogleMapsUrl(query: string) {
+  const encodedQuery = encodeURIComponent(query);
 
-  return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodedQuery}`;
 }
 
 export default function BranchMapModal({
@@ -65,8 +65,10 @@ export default function BranchMapModal({
 
   const titleId = "about-map-modal-title";
   const addressId = "about-map-modal-address";
-  const mapEmbedUrl = getMapEmbedUrl(branch.address);
-  const googleMapsUrl = getGoogleMapsUrl(branch.address);
+  const mapQuery =
+    branch.mapQuery ?? `ALD Motorshop ${branch.name}, ${branch.address}`;
+  const mapEmbedUrl = getMapEmbedUrl(mapQuery);
+  const googleMapsUrl = getGoogleMapsUrl(mapQuery);
 
   return (
     <div className="about-map-modal-overlay">

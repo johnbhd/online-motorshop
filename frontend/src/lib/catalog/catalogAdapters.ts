@@ -7,7 +7,7 @@ import type {
 
 const branchPresentation: Record<
   string,
-  { image: string; tags: string[] }
+  { image: string; tags: string[]; mapQuery?: string }
 > = {
   manila: {
     image: "/branches/manila.png",
@@ -20,6 +20,7 @@ const branchPresentation: Record<
   imus: {
     image: "/branches/imus.png",
     tags: ["Motorcycle Parts", "Maintenance and Repair", "Store Pickup"],
+    mapQuery: "ALD Motorshop Imus Branch, General Aguinaldo Highway, Imus, Cavite",
   },
 };
 
@@ -69,6 +70,8 @@ export function toAboutBranch(branch: CatalogBranch): AboutBranch {
     name: branch.name,
     image: presentation.image,
     address: branch.address,
+    mapQuery:
+      presentation.mapQuery ?? `ALD Motorshop ${branch.name}, ${branch.address}`,
     tags: branch.pickup_available
       ? presentation.tags
       : presentation.tags.filter((tag) => tag !== "Store Pickup"),

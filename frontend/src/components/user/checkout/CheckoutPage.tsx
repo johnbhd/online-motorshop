@@ -15,6 +15,7 @@ import DeliveryFields from "./DeliveryFields";
 import FulfillmentMethod from "./FulfillmentMethod";
 import StorePickupFields from "./StorePickupFields";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   getCheckoutBranches,
@@ -70,6 +71,7 @@ const initialFormData: CheckoutFormData = {
 export default function CheckoutPage() {
   const router = useRouter();
   const { isLoading: isAuthLoading, user } = useAuth();
+  const { showToast } = useToast();
   const isAuthReady = !isAuthLoading;
   const [cartItems, setCartItems] = useState<CartItemData[]>([]);
   const [branches, setBranches] = useState<CheckoutBranch[]>([]);
@@ -259,6 +261,10 @@ export default function CheckoutPage() {
       }
 
       clearStoredCart();
+      showToast({
+        title: "Checkout successful",
+        message: `Order request ${response.order.reference} was submitted successfully.`,
+      });
       router.push(
         `/order-confirmation/${encodeURIComponent(response.order.reference)}`,
       );

@@ -20,6 +20,7 @@ export type AboutBranch = {
   name: string;
   image: string;
   address: string;
+  mapQuery?: string;
   tags: string[];
   contactNumber?: string | null;
   pickupAvailable?: boolean;
@@ -131,6 +132,7 @@ export const aboutBranches: AboutBranch[] = [
     name: "Imus Branch",
     image: "/branches/imus.png",
     address: "LYS Building, General Aguinaldo Highway, Imus, 4103 Cavite",
+    mapQuery: "ALD Motorshop Imus Branch, General Aguinaldo Highway, Imus, Cavite",
     tags: ["Motorcycle Parts", "Maintenance and Repair", "Store Pickup"],
   },
 ];

@@ -15,6 +15,7 @@ import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
 import type { ProductViewMode } from "./ProductsToolbar";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 type ProductCardProps = {
   product: ProductDisplayItem;
@@ -24,10 +25,15 @@ type ProductCardProps = {
 export default function ProductCard({ product, viewMode }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const router = useRouter();
+  const { showToast } = useToast();
   const statusLabel = product.status === "active" ? "Listed" : "Unavailable";
 
   const handleAddToCart = () => {
     if (addProductToCart(product, quantity)) {
+      showToast({
+        title: "Added to cart",
+        message: `${product.name} was added to your cart.`,
+      });
       router.push("/cart");
     }
   };

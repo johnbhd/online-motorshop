@@ -1,0 +1,126 @@
+.ald-toast-viewport {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 120;
+  width: min(24rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.ald-toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 0.85rem 0.9rem 0.9rem;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid var(--ald-orange);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2.5rem rgb(15 23 42 / 18%);
+  color: var(--ald-navy);
+  pointer-events: auto;
+  animation: ald-toast-enter 180ms ease-out both;
+}
+
+.ald-toast--success {
+  border-left-color: #15803d;
+}
+
+.ald-toast--error {
+  border-left-color: #dc2626;
+}
+
+.ald-toast--info {
+  border-left-color: var(--ald-orange);
+}
+
+.ald-toast__icon {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: var(--ald-orange-dark);
+  font-size: 0.85rem;
+}
+
+.ald-toast--success .ald-toast__icon {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.ald-toast--error .ald-toast__icon {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.ald-toast__copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  padding-top: 0.05rem;
+}
+
+.ald-toast__copy strong {
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+.ald-toast__copy span {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.ald-toast__close {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  margin: -0.25rem -0.25rem 0 0;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.ald-toast__close:hover {
+  background: #f8fafc;
+  color: var(--ald-navy);
+}
+
+.ald-toast__close:focus-visible {
+  outline: 3px solid rgb(224 122 8 / 32%);
+  outline-offset: 2px;
+}
+
+@keyframes ald-toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .ald-toast-viewport {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: calc(100vw - 1.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ald-toast {
+    animation: none;
+  }
+}

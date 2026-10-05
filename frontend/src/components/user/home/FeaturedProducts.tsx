@@ -8,6 +8,7 @@ import { homeUtilityIcons } from "../../../data/homeData";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
 import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 type FeaturedProductsProps = {
   products: ProductDisplayItem[];
@@ -19,9 +20,14 @@ export default function FeaturedProducts({
   error,
 }: FeaturedProductsProps) {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const handleAddToCart = (product: ProductDisplayItem) => {
     if (addProductToCart(product, 1)) {
+      showToast({
+        title: "Added to cart",
+        message: `${product.name} was added to your cart.`,
+      });
       router.push("/cart");
     }
   };

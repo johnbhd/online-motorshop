@@ -14,6 +14,7 @@ import {
 import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 type ProductPurchasePanelProps = {
   product: ProductDisplayItem;
@@ -24,6 +25,7 @@ export default function ProductPurchasePanel({
 }: ProductPurchasePanelProps) {
   const [quantity, setQuantity] = useState(1);
   const router = useRouter();
+  const { showToast } = useToast();
   const [cartMessage, setCartMessage] = useState("");
   const priceLabel =
     product.price > 0
@@ -47,6 +49,10 @@ export default function ProductPurchasePanel({
     const didSave = addProductToCart(product, quantity);
 
     if (didSave) {
+      showToast({
+        title: "Added to cart",
+        message: `${product.name} was added to your cart.`,
+      });
       router.push("/cart");
       return;
     }

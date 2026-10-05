@@ -17,6 +17,7 @@ import {
   getRedirectPathForRole,
   login,
 } from "@/lib/auth/authApi";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 import { useAuth } from "./AuthProvider";
 
 export function LoginForm() {
@@ -26,6 +27,7 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { establishSession } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!window.location.search.includes("registered=1")) {
@@ -58,6 +60,20 @@ export function LoginForm() {
       const user = await establishSession(response.token);
 
       setSuccess("");
+      showToast({
+        title:
+          user.role === "admin"
+            ? "Admin login successful"
+            : user.role === "staff"
+              ? "Staff login successful"
+              : "Customer login successful",
+        message:
+          user.role === "admin"
+            ? "Welcome to the Admin Portal."
+            : user.role === "staff"
+              ? "Welcome to the Staff Portal."
+              : "Welcome back to ALD Motorshop.",
+      });
       router.replace(getRedirectPathForRole(user.role));
     } catch (requestError) {
       setSuccess("");

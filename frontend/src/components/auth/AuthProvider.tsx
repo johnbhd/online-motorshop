@@ -20,6 +20,7 @@ import {
   setAuthToken,
 } from "@/lib/auth/authStorage";
 import type { AuthUser } from "@/lib/auth/authTypes";
+import { useToast } from "@/components/ui/toast/ToastProvider";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
     let isCancelled = false;
@@ -107,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     const token = getAuthToken();
+    const role = user?.role;
 
     try {
       if (token) {
@@ -117,8 +120,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       clearAuthToken();
       setUser(null);
+      showToast({
+        title: "Logout successful",
+        message:
+          role === "admin"
+            ? "You have been safely signed out of the Admin Portal."
+            : role === "staff"
+              ? "You have been safely signed out of the Staff Portal."
+              : "You have been safely signed out of ALD Motorshop.",
+      });
     }
-  }, []);
+  }, [showToast, user?.role]);
 
   const value = useMemo(
     () => ({
