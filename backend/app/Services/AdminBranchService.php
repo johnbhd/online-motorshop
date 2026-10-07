@@ -26,7 +26,7 @@ class AdminBranchService
             'summary' => [
                 'total_branches' => (clone $summaryQuery)->count(),
                 'active_branches' => (clone $summaryQuery)->where('status', 'active')->count(),
-                'pickup_available_branches' => (clone $summaryQuery)->where('pickup_available', true)->count(),
+                'pickup_available_branches' => (clone $summaryQuery)->where('pickup_available', '1')->count(),
                 'active_staff' => $this->activeStaffCount(),
             ],
             'branches' => $branches->getCollection()
@@ -112,7 +112,12 @@ class AdminBranchService
         }
 
         if (array_key_exists('pickup_available', $filters)) {
-            $query->where('pickup_available', (bool) $filters['pickup_available']);
+            $pickupAvailable = filter_var(
+                $filters['pickup_available'],
+                FILTER_VALIDATE_BOOLEAN,
+            );
+
+            $query->where('pickup_available', $pickupAvailable ? '1' : '0');
         }
     }
 
