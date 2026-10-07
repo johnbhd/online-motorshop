@@ -96,6 +96,7 @@ class OrderRequestPresenter
             'items' => $order->items->map(fn ($item): array => [
                 'product_id' => $item->product_id,
                 'part_number' => $item->product?->part_number,
+                'image' => $item->product?->img_url,
                 'name' => $item->product_name,
                 'unit_price' => (float) $item->unit_price,
                 'quantity' => $item->quantity,

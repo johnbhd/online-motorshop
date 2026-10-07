@@ -34,6 +34,7 @@ export type OrderApiCustomer = {
 export type OrderApiItem = {
   product_id: number;
   part_number: string | null;
+  image: string | null;
   name: string;
   unit_price: number;
   quantity: number;

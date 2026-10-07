@@ -58,6 +58,7 @@ class OrderRequestApiTest extends TestCase
             ->assertJsonPath('order.fulfillment_method', 'pickup')
             ->assertJsonPath('order.subtotal', 360)
             ->assertJsonPath('order.estimated_total', 360)
+            ->assertJsonPath('order.items.0.image', 'https://example.com/test-product.png')
             ->assertJsonPath('order.items.0.unit_price', 180)
             ->assertJsonPath('order.items.0.line_total', 360)
             ->assertJsonPath('order.pickup.status', 'pending');

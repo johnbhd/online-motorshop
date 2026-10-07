@@ -83,7 +83,7 @@ class CustomerOrderController extends Controller
             ->with([
                 'branch',
                 'customer',
-                'items.product:id,part_number',
+                'items.product:id,part_number,img_url',
                 'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
                 'pickupRequest.branch',
                 'deliveryRequest.branch',
@@ -117,7 +117,7 @@ class CustomerOrderController extends Controller
             ->with([
                 'branch',
                 'customer',
-                'items.product:id,part_number',
+                'items.product:id,part_number,img_url',
                 'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
                 'pickupRequest.branch',
                 'deliveryRequest.branch',
@@ -215,7 +215,7 @@ class CustomerOrderController extends Controller
         $order->load([
             'branch',
             'customer',
-            'items.product:id,part_number',
+            'items.product:id,part_number,img_url',
             'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
             'pickupRequest.branch',
             'deliveryRequest.branch',

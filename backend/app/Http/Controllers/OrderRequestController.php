@@ -49,7 +49,7 @@ class OrderRequestController extends Controller
             ->whereRaw('LOWER(order_reference) = ?', [strtolower($data['order_reference'])])
             ->with([
                 'branch',
-                'items.product:id,part_number',
+                'items.product:id,part_number,img_url',
                 'customer',
                 'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
                 'pickupRequest.branch',

@@ -118,6 +118,7 @@ class OrderRetrievalApiTest extends TestCase
             ->getJson('/api/customer/orders/'.strtolower($order->order_reference))
             ->assertOk()
             ->assertJsonPath('order.reference', $order->order_reference)
+            ->assertJsonPath('order.items.0.image', 'https://example.com/test-product.png')
             ->assertJsonPath('order.items.0.unit_price', 180)
             ->assertJsonPath('order.items.0.line_total', 360)
             ->assertJsonPath('order.total_amount', 360)
