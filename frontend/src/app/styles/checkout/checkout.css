@@ -350,27 +350,51 @@
 
 .checkout-option-card {
   display: grid;
-  grid-template-columns: auto 2rem minmax(0, 1fr);
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
   align-items: start;
-  gap: 0.65rem;
+  gap: 0.75rem;
   min-width: 0;
+  min-height: 6rem;
   border: 1px solid var(--checkout-border);
   border-radius: 0.6rem;
-  padding: 0.85rem;
+  padding: 1rem;
   background: #ffffff;
   cursor: pointer;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
-.checkout-section--payment .checkout-option-card {
-  align-items: center;
-  min-height: 5.75rem;
+.checkout-option-card:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
 }
 
-.checkout-option-card:hover,
-.checkout-option-card--active {
+.checkout-option-card--active,
+.checkout-option-card--active:hover {
   border-color: #f4b36b;
   background: #fffaf5;
+  box-shadow: 0 0.2rem 0.7rem rgba(224, 122, 8, 0.08);
+}
+
+.checkout-option-card--active .checkout-option-icon {
+  background: #ffead9;
+}
+
+.checkout-option-card--active .checkout-option-copy strong {
+  color: var(--checkout-orange);
+}
+
+.checkout-option-card--disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.checkout-option-card--disabled:hover {
+  border-color: var(--checkout-border);
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .checkout-option-card:focus-within {
@@ -379,20 +403,27 @@
 }
 
 .checkout-option-card input {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: start;
+  justify-self: end;
   width: 1rem;
   height: 1rem;
-  margin: 0.25rem 0 0;
+  margin: 0.15rem 0 0;
   accent-color: var(--checkout-orange);
 }
 
-.checkout-section--payment .checkout-option-card input {
-  margin-top: 0;
+.checkout-option-card--disabled input {
+  cursor: not-allowed;
 }
 
 .checkout-option-icon {
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  grid-column: 1;
+  grid-row: 1;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-top: 0.05rem;
   place-items: center;
   border-radius: 0.45rem;
   background: #fff3ec;
@@ -401,20 +432,22 @@
 
 .checkout-option-copy {
   display: grid;
+  grid-column: 2;
+  grid-row: 1;
   gap: 0.25rem;
   min-width: 0;
 }
 
 .checkout-option-copy strong {
   color: var(--checkout-navy);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   line-height: 1.4;
 }
 
 .checkout-option-copy span {
   color: var(--checkout-muted);
-  font-size: 0.74rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .checkout-sub-panel {

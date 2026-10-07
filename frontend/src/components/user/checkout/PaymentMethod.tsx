@@ -8,6 +8,7 @@ import {
   PAYMENT_METHOD_LABELS,
   type PaymentMethod as PaymentMethodValue,
 } from "@/lib/orders/orderRequestTypes";
+import CheckoutOptionCard from "./CheckoutOptionCard";
 
 type PaymentMethodProps = {
   fulfillmentMethod: FulfillmentMethod;
@@ -80,32 +81,21 @@ export default function PaymentMethod({
         aria-labelledby="checkout-payment-method-title"
       >
         {options.map((option) => (
-          <label
-            className={`checkout-option-card${
-              value === option.value ? " checkout-option-card--active" : ""
-            }`}
+          <CheckoutOptionCard
             key={option.value}
-          >
-            <input
-              type="radio"
-              name="checkout-payment-method"
-              value={option.value}
-              checked={value === option.value}
-              aria-describedby={
-                error ? "checkout-payment-method-error" : undefined
-              }
-              onChange={() => {
-                onChange(option.value);
-              }}
-            />
-            <span className="checkout-option-icon" aria-hidden="true">
-              <FontAwesomeIcon icon={option.icon} />
-            </span>
-            <span className="checkout-option-copy">
-              <strong>{PAYMENT_METHOD_LABELS[option.value]}</strong>
-              <span>{option.description}</span>
-            </span>
-          </label>
+            name="checkout-payment-method"
+            value={option.value}
+            title={PAYMENT_METHOD_LABELS[option.value]}
+            description={option.description}
+            icon={option.icon}
+            selected={value === option.value}
+            describedBy={
+              error ? "checkout-payment-method-error" : undefined
+            }
+            onSelect={() => {
+              onChange(option.value);
+            }}
+          />
         ))}
       </div>
 
