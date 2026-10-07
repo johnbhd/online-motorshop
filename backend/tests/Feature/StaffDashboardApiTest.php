@@ -131,6 +131,7 @@ class StaffDashboardApiTest extends TestCase
             ->assertJsonPath('recent_orders.0.reference', 'ALD-DASH-005');
 
         $response->assertJsonMissingPath('recent_orders.0.customer.password');
+        $response->assertJsonMissing(['reference' => 'ALD-DASH-006']);
 
         $this->withToken($staff->createToken('dashboard-sidebar-test')->plainTextToken)
             ->getJson('/api/staff/sidebar-summary')
