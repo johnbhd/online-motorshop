@@ -10,6 +10,7 @@ export type OrderApiSummary = {
   reference: string;
   status: string;
   payment_status: string;
+  payment: OrderApiPayment | null;
   fulfillment_method: string;
   branch: OrderApiBranch | null;
   item_count: number;

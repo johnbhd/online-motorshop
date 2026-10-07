@@ -19,6 +19,7 @@ class OrderRequestPresenter
             'reference' => $order->order_reference,
             'status' => $order->order_status,
             'payment_status' => $this->paymentStatus($order),
+            'payment' => $this->paymentPayload($order),
             'fulfillment_method' => $order->fulfillment_type,
             'branch' => $this->branchPayload($order),
             'item_count' => (int) ($order->getAttribute('items_sum_quantity') ?? 0),

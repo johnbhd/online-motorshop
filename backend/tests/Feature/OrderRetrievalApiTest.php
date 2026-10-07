@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Customer;
 use App\Models\DeliveryRequest;
 use App\Models\OrderRequest;
+use App\Models\Payment;
 use App\Models\PickupRequest;
 use App\Models\Product;
 use App\Models\User;
@@ -37,7 +38,13 @@ class OrderRetrievalApiTest extends TestCase
         $this->createOrder($customer, $product, 'ALD-2026-000001', quantity: 2);
         $this->createOrder($otherCustomer, $product, 'ALD-2026-000002');
         $this->createOrder($customer, $product, 'ALD-2026-000003', status: 'completed');
-        $this->createOrder($customer, $product, 'ALD-2026-000004');
+        $latestOrder = $this->createOrder($customer, $product, 'ALD-2026-000004');
+        Payment::create([
+            'order_id' => $latestOrder->id,
+            'payment_method' => 'online_payment',
+            'amount' => $latestOrder->total_amount,
+            'payment_status' => 'unpaid',
+        ]);
 
         $token = $user->createToken('retrieval-test')->plainTextToken;
 
@@ -47,6 +54,8 @@ class OrderRetrievalApiTest extends TestCase
             ->assertJsonCount(1, 'orders')
             ->assertJsonPath('orders.0.reference', 'ALD-2026-000004')
             ->assertJsonPath('orders.0.item_count', 1)
+            ->assertJsonPath('orders.0.payment.method', 'online_payment')
+            ->assertJsonPath('orders.0.payment.status', 'unpaid')
             ->assertJsonPath('meta.current_page', 1)
             ->assertJsonPath('meta.last_page', 3)
             ->assertJsonPath('meta.total', 3);

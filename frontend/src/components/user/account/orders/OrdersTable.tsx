@@ -62,10 +62,15 @@ export default function OrdersTable({ orders }: OrdersTableProps) {
                   </span>
                 </td>
                 <td>
-                  <OrderStatusBadge
-                    kind="payment"
-                    value={order.paymentStatus}
-                  />
+                  <strong className="customer-order-primary-text">
+                    {order.payment?.method ?? "Payment method unavailable"}
+                  </strong>
+                  <span className="customer-order-secondary-text customer-order-payment-status">
+                    <OrderStatusBadge
+                      kind="payment"
+                      value={order.paymentStatus}
+                    />
+                  </span>
                 </td>
                 <td>
                   <OrderStatusBadge kind="status" value={order.status} />

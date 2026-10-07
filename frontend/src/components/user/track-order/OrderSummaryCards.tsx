@@ -30,8 +30,8 @@ export default function OrderSummaryCards({ order }: OrderSummaryCardsProps) {
       icon: faLocationDot,
     },
     {
-      label: "Payment Status",
-      value: order.paymentStatus,
+      label: "Payment Method",
+      value: order.payment?.method ?? "Payment method unavailable",
       icon: faCreditCard,
     },
     {

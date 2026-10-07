@@ -58,10 +58,13 @@ export default function OrdersMobileList({ orders }: OrdersMobileListProps) {
               <div>
                 <dt>Payment</dt>
                 <dd>
-                  <OrderStatusBadge
-                    kind="payment"
-                    value={order.paymentStatus}
-                  />
+                  <span>{order.payment?.method ?? "Payment method unavailable"}</span>
+                  <small className="customer-order-payment-status">
+                    <OrderStatusBadge
+                      kind="payment"
+                      value={order.paymentStatus}
+                    />
+                  </small>
                 </dd>
               </div>
               <div>

@@ -24,6 +24,7 @@ export function toCustomerOrderSummary(
     reference: order.reference,
     status: toStatusLabel(order.status),
     paymentStatus: toStatusLabel(order.payment_status),
+    payment: toPayment(order.payment),
     fulfillmentMethod: order.fulfillment_method,
     branch: toBranch(order.branch),
     itemCount: order.item_count,
