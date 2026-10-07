@@ -214,8 +214,19 @@ Route::prefix('admin')
         Route::patch('/orders/{reference}/assignment', [AdminOrdersController::class, 'updateAssignment'])
             ->name('orders.assignment');
 
+        Route::get('/payments', [AdminPaymentsController::class, 'index'])
+            ->name('payments.index');
+
         Route::get('/payments/data', [AdminPaymentsController::class, 'data'])
             ->name('payments.data');
+
+        Route::get('/payments/{payment}', [AdminPaymentsController::class, 'show'])
+            ->whereNumber('payment')
+            ->name('payments.show');
+
+        Route::patch('/payments/{payment}/status', [AdminPaymentsController::class, 'updateStatus'])
+            ->whereNumber('payment')
+            ->name('payments.status');
 
         Route::get('/pickup-requests/data', [AdminPickupRequestsController::class, 'data'])
             ->name('pickups.data');
