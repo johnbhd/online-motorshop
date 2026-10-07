@@ -102,18 +102,20 @@ class AdminProductService
                 ->values(),
             'brand_options' => Brand::query()
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'status'])
                 ->map(fn (Brand $brand): array => [
                     'id' => $brand->id,
                     'name' => $brand->name,
+                    'status' => $brand->status,
                 ])
                 ->values(),
             'categories' => Category::query()
                 ->orderBy('name')
-                ->get(['id', 'name'])
+                ->get(['id', 'name', 'status'])
                 ->map(fn (Category $category): array => [
                     'id' => $category->id,
                     'name' => $category->name,
+                    'status' => $category->status,
                 ])
                 ->values(),
             'statuses' => Product::query()

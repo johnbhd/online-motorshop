@@ -217,6 +217,77 @@ class AdminProductsApiTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_inactive_taxonomy_is_preserved_for_existing_products_but_not_new_assignments(): void
+    {
+        $admin = $this->createUser('admin');
+        $inactiveCategory = $this->createCategory('Inactive Category');
+        $inactiveCategory->update(['status' => 'inactive']);
+        $anotherInactiveCategory = $this->createCategory('Another Inactive Category');
+        $anotherInactiveCategory->update(['status' => 'inactive']);
+        $activeCategory = $this->createCategory('Active Category');
+        $inactiveBrand = $this->createBrand('Inactive Brand');
+        $inactiveBrand->update(['status' => 'inactive']);
+        $anotherInactiveBrand = $this->createBrand('Another Inactive Brand');
+        $anotherInactiveBrand->update(['status' => 'inactive']);
+        $activeBrand = $this->createBrand('Active Brand');
+
+        $payload = [
+            'category_id' => $inactiveCategory->id,
+            'name' => 'New Inactive Assignment',
+            'part_number' => 'INACTIVE-TAXONOMY-001',
+            'brand_id' => $activeBrand->id,
+            'price' => 100,
+            'img_url' => 'https://example.com/inactive.png',
+            'availability_status' => 'active',
+            'status' => 'active',
+        ];
+
+        $this->adminRequest($admin)
+            ->postJson('/api/admin/products', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['category_id']);
+
+        $payload['category_id'] = $activeCategory->id;
+        $payload['brand_id'] = $inactiveBrand->id;
+
+        $this->adminRequest($admin)
+            ->postJson('/api/admin/products', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['brand_id']);
+
+        $product = $this->createProduct($inactiveCategory, [
+            'part_number' => 'EXISTING-INACTIVE-TAXONOMY-001',
+            'brand_id' => $inactiveBrand->id,
+            'brand' => $inactiveBrand->name,
+        ]);
+
+        $this->adminRequest($admin)
+            ->patchJson('/api/admin/products/'.$product->part_number, ['name' => 'Still Assigned'])
+            ->assertOk()
+            ->assertJsonPath('product.category', $inactiveCategory->name)
+            ->assertJsonPath('product.brand', $inactiveBrand->name);
+
+        $this->adminRequest($admin)
+            ->patchJson('/api/admin/products/'.$product->part_number, [
+                'category_id' => $anotherInactiveCategory->id,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['category_id']);
+
+        $this->adminRequest($admin)
+            ->patchJson('/api/admin/products/'.$product->part_number, [
+                'brand_id' => $anotherInactiveBrand->id,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['brand_id']);
+
+        $this->adminRequest($admin)
+            ->getJson('/api/admin/products')
+            ->assertOk()
+            ->assertJsonPath('filters.categories.0.status', 'active')
+            ->assertJsonPath('filters.brand_options.0.status', 'active');
+    }
+
     private function adminRequest(User $admin)
     {
         return $this->withToken($admin->createToken('admin-products-test')->plainTextToken);

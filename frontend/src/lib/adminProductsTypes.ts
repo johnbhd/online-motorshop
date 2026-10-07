@@ -18,11 +18,13 @@ export type AdminProduct = {
 export type AdminProductCategoryOption = {
   id: number;
   name: string;
+  status?: string;
 };
 
 export type AdminProductBrandOption = {
   id: number;
   name: string;
+  status?: string;
 };
 
 export type AdminProductsResponse = {

@@ -56,6 +56,10 @@ type ProductFormValues = {
 
 type ProductFormErrors = Record<string, string[]>;
 
+function isSelectableTaxonomyOption(option: { status?: string }) {
+  return option.status === undefined || option.status === "active";
+}
+
 function formatCurrency(value: number) {
   return currencyFormatter.format(value);
 }
@@ -74,16 +78,19 @@ function emptyForm(
   initialCategoryId?: number,
   initialBrandId?: number,
 ): ProductFormValues {
+  const activeCategories = categories.filter(isSelectableTaxonomyOption);
+  const activeBrands = brands.filter(isSelectableTaxonomyOption);
+
   return {
-    category_id: initialCategoryId
+    category_id: initialCategoryId && activeCategories.some((category) => category.id === initialCategoryId)
       ? String(initialCategoryId)
-      : categories[0]
-        ? String(categories[0].id)
+      : activeCategories[0]
+        ? String(activeCategories[0].id)
         : "",
-    brand_id: initialBrandId
+    brand_id: initialBrandId && activeBrands.some((brand) => brand.id === initialBrandId)
       ? String(initialBrandId)
-      : brands[0]
-        ? String(brands[0].id)
+      : activeBrands[0]
+        ? String(activeBrands[0].id)
         : "",
     name: "",
     part_number: "",
@@ -551,7 +558,17 @@ function Pagination({ meta, onPageChange }: { meta: AdminProductsResponse["meta"
 }
 
 export function AdminProductFormModal({ isOpen, isEditing, product, categories, brands, initialCategoryId, initialBrandId, statusOptions, availabilityOptions, detailLoading, submitLoading, error, fieldErrors, onClose, onSubmit, onDelete }: { isOpen: boolean; isEditing: boolean; product: AdminProduct | null; categories: AdminProductCategoryOption[]; brands: AdminProductBrandOption[]; initialCategoryId?: number; initialBrandId?: number; statusOptions: string[]; availabilityOptions: string[]; detailLoading: boolean; submitLoading: boolean; error: string | null; fieldErrors: ProductFormErrors; onClose: () => void; onSubmit: (values: ProductFormValues) => void; onDelete: (product: AdminProduct) => void }) {
-  const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(categories, brands, initialCategoryId, initialBrandId));
+  const activeCategories = categories.filter(isSelectableTaxonomyOption);
+  const activeBrands = brands.filter(isSelectableTaxonomyOption);
+  const productCategory = product?.category_id && product.category && !activeCategories.some((category) => category.id === product.category_id)
+    ? { id: product.category_id, name: `${product.category} (inactive — current)`, status: "inactive" }
+    : null;
+  const productBrand = product?.brand_id && product.brand && !activeBrands.some((brand) => brand.id === product.brand_id)
+    ? { id: product.brand_id, name: `${product.brand} (inactive — current)`, status: "inactive" }
+    : null;
+  const categoryOptions = productCategory ? [...activeCategories, productCategory] : activeCategories;
+  const brandOptions = productBrand ? [...activeBrands, productBrand] : activeBrands;
+  const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(activeCategories, activeBrands, initialCategoryId, initialBrandId));
 
   if (!isOpen) return null;
 
@@ -567,8 +584,8 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField label="Product name" value={values.name} error={fieldError("name")} onChange={(value) => update("name", value)} required />
         <TextField label="Part number" value={values.part_number} error={fieldError("part_number")} onChange={(value) => update("part_number", value)} required />
-        <SelectField label="Brand" value={values.brand_id} error={fieldError("brand_id")} options={brands.map((brand) => ({ value: String(brand.id), label: brand.name }))} placeholder="Select a brand" onChange={(value) => update("brand_id", value)} required />
-        <SelectField label="Category" value={values.category_id} error={fieldError("category_id")} options={categories.map((category) => ({ value: String(category.id), label: category.name }))} placeholder="Select a category" onChange={(value) => update("category_id", value)} required />
+        <SelectField label="Brand" value={values.brand_id} error={fieldError("brand_id")} options={brandOptions.map((brand) => ({ value: String(brand.id), label: brand.name }))} placeholder="Select a brand" onChange={(value) => update("brand_id", value)} required />
+        <SelectField label="Category" value={values.category_id} error={fieldError("category_id")} options={categoryOptions.map((category) => ({ value: String(category.id), label: category.name }))} placeholder="Select a category" onChange={(value) => update("category_id", value)} required />
         <TextField label="Price" type="number" min="0" step="0.01" value={values.price} error={fieldError("price")} onChange={(value) => update("price", value)} required />
         <SelectField label="Availability" value={values.availability_status} error={fieldError("availability_status")} options={availabilityOptions.map((option) => ({ value: option, label: formatLabel(option) }))} onChange={(value) => update("availability_status", value)} required />
         <SelectField label="Catalog status" value={values.status} error={fieldError("status")} options={statusOptions.map((option) => ({ value: option, label: formatLabel(option) }))} onChange={(value) => update("status", value)} required />
