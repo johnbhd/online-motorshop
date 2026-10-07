@@ -1,4 +1,4 @@
-import OrdersPage from "@/components/admin/orders/OrdersPage";
+import OrdersPage from "@/components/admin/orders/RealAdminOrdersPage";
 
 export default function Page() {
   return <OrdersPage />;

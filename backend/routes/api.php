@@ -199,8 +199,20 @@ Route::prefix('admin')
         Route::delete('/staff/{staff}', [AdminStaffController::class, 'destroy'])
             ->name('staff.destroy');
 
+        Route::get('/orders', [AdminOrdersController::class, 'index'])
+            ->name('orders.index');
+
         Route::get('/orders/data', [AdminOrdersController::class, 'data'])
             ->name('orders.data');
+
+        Route::get('/orders/{reference}', [AdminOrdersController::class, 'show'])
+            ->name('orders.show');
+
+        Route::patch('/orders/{reference}/status', [AdminOrdersController::class, 'updateStatus'])
+            ->name('orders.status');
+
+        Route::patch('/orders/{reference}/assignment', [AdminOrdersController::class, 'updateAssignment'])
+            ->name('orders.assignment');
 
         Route::get('/payments/data', [AdminPaymentsController::class, 'data'])
             ->name('payments.data');

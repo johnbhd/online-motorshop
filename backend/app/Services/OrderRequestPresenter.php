@@ -73,6 +73,38 @@ class OrderRequestPresenter
         return $payload;
     }
 
+    public function adminSummary(OrderRequest $order): array
+    {
+        return [
+            'id' => $order->id,
+            'reference' => $order->order_reference,
+            'customer' => $order->customer?->only(['id', 'full_name', 'contact_number', 'email']),
+            'status' => $order->order_status,
+            'payment_status' => $this->paymentStatus($order),
+            'payment_method' => $this->latestPayment($order)?->payment_method,
+            'fulfillment_method' => $order->fulfillment_type,
+            'fulfillment_status' => $order->fulfillment_type === 'pickup'
+                ? $order->pickupRequest?->pickup_status
+                : $order->deliveryRequest?->delivery_status,
+            'branch' => $this->branchPayload($order),
+            'assigned_staff' => $order->assignedStaff?->only(['id', 'name', 'email', 'branch_id']),
+            'item_count' => (int) ($order->getAttribute('items_sum_quantity') ?? 0),
+            'line_item_count' => (int) ($order->getAttribute('items_count') ?? 0),
+            'total_amount' => (float) $order->total_amount,
+            'created_at' => $order->created_at?->toISOString(),
+            'updated_at' => $order->updated_at?->toISOString(),
+        ];
+    }
+
+    public function adminDetail(OrderRequest $order, array $allowedStatuses): array
+    {
+        $payload = $this->staffDetail($order);
+        $payload['allowed_statuses'] = $allowedStatuses;
+        $payload['payment_method'] = $this->latestPayment($order)?->payment_method;
+
+        return $payload;
+    }
+
     public function detail(
         OrderRequest $order,
         bool $includeCustomer = true,
