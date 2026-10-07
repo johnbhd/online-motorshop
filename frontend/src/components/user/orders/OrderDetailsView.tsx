@@ -14,9 +14,15 @@ import {
 
 type OrderDetailsViewProps = {
   order: OrderViewModel;
+  paymentToken?: string | null;
+  onOrderUpdated?: (order: OrderViewModel) => void;
 };
 
-export default function OrderDetailsView({ order }: OrderDetailsViewProps) {
+export default function OrderDetailsView({
+  order,
+  paymentToken,
+  onOrderUpdated,
+}: OrderDetailsViewProps) {
   const statusPresentation = getOrderStatusPresentation(order.status);
   const progress = getOrderProgressSteps(order);
 
@@ -41,7 +47,11 @@ export default function OrderDetailsView({ order }: OrderDetailsViewProps) {
             <OrderItems order={order} />
             <OrderActivity activity={order.activities} />
           </div>
-          <OrderSupportSection order={order} />
+          <OrderSupportSection
+            order={order}
+            paymentToken={paymentToken}
+            onOrderUpdated={onOrderUpdated}
+          />
         </div>
       </div>
     </section>

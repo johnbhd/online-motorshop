@@ -174,6 +174,7 @@ export type OrderViewPayment = {
   method: string;
   amount: number | null;
   reference: string | null;
+  proofImageUrl: string | null;
   status: string;
   verifiedAt: string | null;
 };

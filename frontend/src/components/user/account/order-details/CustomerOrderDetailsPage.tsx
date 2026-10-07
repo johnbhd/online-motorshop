@@ -158,7 +158,11 @@ export default function CustomerOrderDetailsPage({
           <p>{order.reference}</p>
         </div>
       </section>
-      <OrderDetailsView order={order} />
+      <OrderDetailsView
+        order={order}
+        paymentToken={getAuthToken()}
+        onOrderUpdated={(updatedOrder) => setOrder(updatedOrder)}
+      />
     </div>
   );
 }

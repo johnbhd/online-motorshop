@@ -75,6 +75,8 @@ Route::prefix('customer')
             ->name('orders.index');
         Route::get('/orders/{reference}', [CustomerOrderController::class, 'show'])
             ->name('orders.show');
+        Route::post('/orders/{reference}/payment-proof', [CustomerOrderController::class, 'storePaymentProof'])
+            ->name('orders.payment-proof.store');
     });
 
 // Auth

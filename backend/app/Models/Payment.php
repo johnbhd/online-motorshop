@@ -17,6 +17,12 @@ class Payment extends Model
 
     public const STATUS_UNPAID = 'unpaid';
 
+    public const STATUS_WAITING_FOR_VERIFICATION = 'waiting_for_verification';
+
+    public const STATUS_PAID = 'paid';
+
+    public const STATUS_FAILED = 'failed';
+
     public const STATUS_VALUES = [
         'unpaid',
         'waiting_for_payment',

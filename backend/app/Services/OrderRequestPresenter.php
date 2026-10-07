@@ -201,6 +201,7 @@ class OrderRequestPresenter
             'method' => $payment->payment_method,
             'amount' => (float) $payment->amount,
             'reference' => $payment->payment_reference,
+            'proof_image_url' => $payment->proof_image_url,
             'status' => $payment->payment_status,
             'verified_at' => $payment->verified_at?->toISOString(),
         ];

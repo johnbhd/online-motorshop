@@ -91,6 +91,7 @@ export function toStatusLabel(value: string): string {
     confirmed: "Confirmed",
     waiting_for_payment: "Waiting for Payment",
     payment_verification: "Payment Verification",
+    waiting_for_verification: "Waiting for Verification",
     preparing_order: "Preparing Order",
     ready_for_pickup: "Ready for Pickup",
     booked_for_delivery: "Booked for Delivery",
@@ -101,6 +102,8 @@ export function toStatusLabel(value: string): string {
     cancelled: "Cancelled",
     unpaid: "Unpaid",
     paid: "Paid",
+    failed: "Failed",
+    refunded: "Refunded",
   };
 
   return (
@@ -190,6 +193,7 @@ function toPayment(payment: OrderApiPayment | null): OrderViewPayment | null {
     method: getPaymentMethodLabel(payment.method),
     amount: payment.amount,
     reference: payment.reference,
+    proofImageUrl: payment.proof_image_url,
     status: toStatusLabel(payment.status),
     verifiedAt: payment.verified_at,
   };
