@@ -362,6 +362,11 @@
   transition: border-color 150ms ease, background-color 150ms ease;
 }
 
+.checkout-section--payment .checkout-option-card {
+  align-items: center;
+  min-height: 5.75rem;
+}
+
 .checkout-option-card:hover,
 .checkout-option-card--active {
   border-color: #f4b36b;
@@ -378,6 +383,10 @@
   height: 1rem;
   margin: 0.25rem 0 0;
   accent-color: var(--checkout-orange);
+}
+
+.checkout-section--payment .checkout-option-card input {
+  margin-top: 0;
 }
 
 .checkout-option-icon {
