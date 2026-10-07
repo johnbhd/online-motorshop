@@ -50,25 +50,35 @@ export default function PaymentMethod({
       : deliveryPaymentOptions;
 
   return (
-    <fieldset
+    <section
       className="checkout-section checkout-section--payment"
+      aria-labelledby="checkout-payment-method-title"
       aria-describedby={`checkout-payment-method-note${
         error ? " checkout-payment-method-error" : ""
       }`}
     >
-      <legend className="checkout-section-heading checkout-section-heading--legend">
+      <div className="checkout-section-heading">
         <span className="checkout-section-icon" aria-hidden="true">
           <FontAwesomeIcon icon={faCreditCard} />
         </span>
         <span className="checkout-section-heading-copy">
-          <span className="checkout-section-title">Payment Method</span>
+          <span
+            className="checkout-section-title"
+            id="checkout-payment-method-title"
+          >
+            Payment Method
+          </span>
           <span className="checkout-section-description">
             Choose how you would like to pay after ALD confirms your request.
           </span>
         </span>
-      </legend>
+      </div>
 
-      <div className="checkout-option-grid">
+      <div
+        className="checkout-option-grid"
+        role="radiogroup"
+        aria-labelledby="checkout-payment-method-title"
+      >
         {options.map((option) => (
           <label
             className={`checkout-option-card${
@@ -113,6 +123,6 @@ export default function PaymentMethod({
         Submitting this request does not charge you yet. ALD will review and
         confirm your order first.
       </p>
-    </fieldset>
+    </section>
   );
 }
