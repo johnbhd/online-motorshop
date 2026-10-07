@@ -9,6 +9,8 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { formatPeso } from "../cart/cartData";
+import { getPublicPaymentInstructions } from "@/lib/paymentInstructionsApi";
+import type { PublicPaymentInstructions } from "@/lib/adminSettingsTypes";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -41,6 +43,26 @@ export default function PaymentInstructionsModal({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
+  const [instructions, setInstructions] = useState<PublicPaymentInstructions | null>(null);
+  const [instructionsError, setInstructionsError] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void getPublicPaymentInstructions(controller.signal)
+      .then((response) => {
+        if (!controller.signal.aborted) {
+          setInstructions(response.payment_instructions);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setInstructionsError(true);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const previousActiveElement = document.activeElement as HTMLElement | null;
@@ -170,14 +192,57 @@ export default function PaymentInstructionsModal({
               <FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" />
               <h3 id="payment-instructions-title">Payment instructions</h3>
             </div>
-            <p>
-              Payment destination configuration is currently missing. Contact ALD Staff for current payment instructions.
-            </p>
-            <ol>
-              <li>Send the exact amount shown above using the instructions from ALD Staff.</li>
-              <li>Keep your payment receipt or screenshot.</li>
-              <li>Upload the proof below for staff verification.</li>
-            </ol>
+            {instructionsError ? (
+              <p role="alert">
+                Payment details could not be loaded. Please contact ALD Staff before
+                sending payment.
+              </p>
+            ) : !instructions ? (
+              <p aria-live="polite">Loading current payment details…</p>
+            ) : !instructions.configured ? (
+              <p>
+                Online payment details have not been configured. Contact ALD Staff
+                before sending payment.
+              </p>
+            ) : (
+              <>
+                <p>Send the exact amount due using the current details below.</p>
+                <dl className="track-order-payment-destination">
+                  {instructions.gcash_account_name ? (
+                    <div>
+                      <dt>Account name</dt>
+                      <dd>{instructions.gcash_account_name}</dd>
+                    </div>
+                  ) : null}
+                  {instructions.gcash_number ? (
+                    <div>
+                      <dt>GCash number</dt>
+                      <dd>{instructions.gcash_number}</dd>
+                    </div>
+                  ) : null}
+                  {instructions.payment_instructions ? (
+                    <div className="track-order-payment-destination-note">
+                      <dt>Instructions</dt>
+                      <dd>{instructions.payment_instructions}</dd>
+                    </div>
+                  ) : null}
+                  {instructions.qr_image_url ? (
+                    <div className="track-order-payment-destination-qr">
+                      <dt>Scan to pay</dt>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={instructions.qr_image_url}
+                        alt="ALD Motorshop payment QR code"
+                      />
+                    </div>
+                  ) : null}
+                </dl>
+                <ol>
+                  <li>Keep your payment receipt or screenshot.</li>
+                  <li>Upload the proof below for staff verification.</li>
+                </ol>
+              </>
+            )}
           </section>
 
           {proofImageUrl && !canUpload ? (

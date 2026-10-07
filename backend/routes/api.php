@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\AdminOrdersController;
 use App\Http\Controllers\Admin\AdminPaymentsController;
 use App\Http\Controllers\Admin\AdminPickupRequestsController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Auth\LoginController;
@@ -19,6 +21,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\OrderRequestController;
+use App\Http\Controllers\PaymentInstructionsController;
 use App\Http\Controllers\Staff\StaffConversationsController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
@@ -51,6 +54,8 @@ Route::get('/categories', [CatalogController::class, 'categories'])
     ->name('catalog.categories.index');
 Route::get('/branches', [CatalogController::class, 'branches'])
     ->name('catalog.branches.index');
+Route::get('/payment-instructions', [PaymentInstructionsController::class, 'show'])
+    ->name('payment-instructions.show');
 Route::post('/order-requests', [OrderRequestController::class, 'store'])
     ->name('order-requests.store');
 Route::post('/order-requests/track', [OrderRequestController::class, 'track'])
@@ -105,6 +110,21 @@ Route::prefix('admin')
     ->group(function () {
         Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
             ->name('dashboard.data');
+
+        Route::get('/settings', [AdminSettingsController::class, 'show'])
+            ->name('settings.show');
+
+        Route::patch('/settings', [AdminSettingsController::class, 'update'])
+            ->name('settings.update');
+
+        Route::get('/profile', [AdminProfileController::class, 'show'])
+            ->name('profile.show');
+
+        Route::patch('/profile', [AdminProfileController::class, 'update'])
+            ->name('profile.update');
+
+        Route::patch('/profile/password', [AdminProfileController::class, 'updatePassword'])
+            ->name('profile.password');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');

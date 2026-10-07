@@ -1089,6 +1089,52 @@
   line-height: 1.5;
 }
 
+.track-order-payment-destination {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.9rem 0 0;
+  border: 1px solid var(--track-order-border);
+  border-radius: 0.625rem;
+  padding: 0.9rem;
+  background: var(--track-order-surface);
+}
+
+.track-order-payment-destination > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.track-order-payment-destination dt {
+  color: var(--track-order-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.track-order-payment-destination dd {
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--track-order-ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.track-order-payment-destination-note dd {
+  white-space: pre-wrap;
+  font-weight: 500;
+}
+
+.track-order-payment-destination-qr img {
+  width: min(100%, 15rem);
+  max-height: 18rem;
+  margin-top: 0.35rem;
+  border-radius: 0.5rem;
+  object-fit: contain;
+  background: #fff;
+}
+
 .track-order-payment-file-picker {
   display: inline-flex;
   min-height: 2.7rem;
