@@ -248,8 +248,15 @@ Route::prefix('admin')
             ->whereNumber('payment')
             ->name('payments.status');
 
+        Route::get('/pickup-requests', [AdminPickupRequestsController::class, 'index'])
+            ->name('pickups.index');
+
         Route::get('/pickup-requests/data', [AdminPickupRequestsController::class, 'data'])
             ->name('pickups.data');
+
+        Route::get('/pickup-requests/{pickup}', [AdminPickupRequestsController::class, 'show'])
+            ->whereNumber('pickup')
+            ->name('pickups.show');
 
         Route::get('/delivery-requests/data', [AdminDeliveryRequestsController::class, 'data'])
             ->name('deliveries.data');
