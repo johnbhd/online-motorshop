@@ -6,6 +6,7 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import { toStatusLabel } from "@/lib/orders/orderAdapter";
+import { getPaymentMethodLabel } from "@/lib/orders/orderRequestTypes";
 import ActionButton from "@/components/staff/ActionButton";
 import PortalPagination from "@/components/staff/PortalPagination";
 import { Badge } from "@/components/staff/PortalTable";
@@ -335,7 +336,7 @@ export default function RealPaymentsPage() {
                         <span className="block truncate text-xs text-slate-400">{payment.customer?.contact_number ?? "No phone"}</span>
                       </td>
                       <td className="whitespace-nowrap px-5 py-3.5 text-right align-middle text-sm font-semibold text-slate-700">{formatCurrency(payment.amount)}</td>
-                      <td className="px-5 py-3.5 align-middle text-sm text-slate-600"><span className="block truncate">{payment.method}</span></td>
+                      <td className="px-5 py-3.5 align-middle text-sm text-slate-600"><span className="block truncate">{getPaymentMethodLabel(payment.method)}</span></td>
                       <td className="px-5 py-3.5 text-center align-middle text-sm text-slate-600"><span className="flex justify-center"><Badge>{toStatusLabel(payment.status)}</Badge></span></td>
                       <td className="whitespace-nowrap px-5 py-3.5 align-middle text-sm text-slate-600">{formatDate(payment.created_at)}</td>
                       <td className="px-5 py-3.5 text-right align-middle text-sm text-slate-600">
@@ -359,7 +360,7 @@ export default function RealPaymentsPage() {
                   </div>
                   <dl className="grid grid-cols-2 gap-3 text-sm">
                     <div><dt className="text-xs uppercase tracking-wide text-slate-400">Amount</dt><dd className="mt-1 font-semibold text-slate-700">{formatCurrency(payment.amount)}</dd></div>
-                    <div><dt className="text-xs uppercase tracking-wide text-slate-400">Method</dt><dd className="mt-1 text-slate-600">{payment.method}</dd></div>
+                    <div><dt className="text-xs uppercase tracking-wide text-slate-400">Method</dt><dd className="mt-1 text-slate-600">{getPaymentMethodLabel(payment.method)}</dd></div>
                     <div><dt className="text-xs uppercase tracking-wide text-slate-400">Submitted</dt><dd className="mt-1 text-slate-600">{formatDate(payment.created_at)}</dd></div>
                     <div><dt className="text-xs uppercase tracking-wide text-slate-400">Reference</dt><dd className="mt-1 text-slate-600">{payment.reference ?? "Not available"}</dd></div>
                   </dl>

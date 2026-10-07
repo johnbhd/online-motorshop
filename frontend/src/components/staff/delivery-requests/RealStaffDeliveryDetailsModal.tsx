@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import { toStatusLabel } from "@/lib/orders/orderAdapter";
+import { getPaymentMethodLabel } from "@/lib/orders/orderRequestTypes";
 import { Badge } from "@/components/staff/PortalTable";
 import {
   getStaffDeliveriesErrorMessage,
@@ -490,7 +491,11 @@ export default function RealStaffDeliveryDetailsModal({
                   </div>
                   <div>
                     <dt className="text-slate-500">Payment Method</dt>
-                    <dd className="mt-1 text-slate-700">{displayValue(delivery.payment?.method)}</dd>
+                    <dd className="mt-1 text-slate-700">
+                      {delivery.payment
+                        ? getPaymentMethodLabel(delivery.payment.method)
+                        : "Not available"}
+                    </dd>
                   </div>
                 </dl>
                 <p className="mt-4 text-xs leading-5 text-slate-500">

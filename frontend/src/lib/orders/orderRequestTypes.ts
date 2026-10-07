@@ -3,6 +3,31 @@ export type OrderRequestItemInput = {
   quantity: number;
 };
 
+export type PaymentMethod = "pay_at_pickup" | "online_payment";
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  pay_at_pickup: "Pay at Pickup",
+  online_payment: "GCash / Online Payment",
+};
+
+export function getPaymentMethodLabel(
+  value: string | null | undefined,
+): string {
+  if (!value) {
+    return "Payment method unavailable";
+  }
+
+  const label = PAYMENT_METHOD_LABELS[value as PaymentMethod];
+
+  if (label) {
+    return label;
+  }
+
+  return value
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
 export type OrderRequestPayload = {
   customer: {
     name: string;
@@ -10,6 +35,7 @@ export type OrderRequestPayload = {
     contact_number: string;
   };
   items: OrderRequestItemInput[];
+  payment_method: PaymentMethod;
   fulfillment:
     | {
         method: "pickup";
@@ -61,6 +87,14 @@ export type OrderConfirmationData = {
   estimated_total: number;
   customer_notes: string | null;
   created_at: string | null;
+  payment?: {
+    id: number;
+    method: string;
+    amount: number;
+    reference: string | null;
+    status: string;
+    verified_at: string | null;
+  } | null;
   pickup?: {
     branch_id: number | null;
     status: string | null;

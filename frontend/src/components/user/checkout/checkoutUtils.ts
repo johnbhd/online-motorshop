@@ -223,6 +223,16 @@ export function validateCheckoutForm(
     }
   }
 
+  if (!formData.paymentMethod) {
+    errors.paymentMethod = "Please select a payment method.";
+  } else if (
+    formData.fulfillmentMethod === "delivery" &&
+    formData.paymentMethod === "pay_at_pickup"
+  ) {
+    errors.paymentMethod =
+      "Pay at Pickup is only available for Store Pickup orders.";
+  }
+
   if (!formData.confirmDetails) {
     errors.confirmDetails =
       "Confirm that your order and contact information are correct.";

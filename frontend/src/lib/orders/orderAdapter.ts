@@ -14,6 +14,7 @@ import type {
   OrderViewPayment,
   OrderViewPickup,
 } from "./orderTypes";
+import { getPaymentMethodLabel } from "./orderRequestTypes";
 
 export function toCustomerOrderSummary(
   order: OrderApiSummary,
@@ -185,7 +186,7 @@ function toPayment(payment: OrderApiPayment | null): OrderViewPayment | null {
 
   return {
     id: payment.id,
-    method: payment.method,
+    method: getPaymentMethodLabel(payment.method),
     amount: payment.amount,
     reference: payment.reference,
     status: toStatusLabel(payment.status),

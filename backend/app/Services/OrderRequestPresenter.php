@@ -9,7 +9,7 @@ class OrderRequestPresenter
 {
     public function confirmation(OrderRequest $order): array
     {
-        return $this->payload($order, includeCustomer: true, includePayment: false);
+        return $this->payload($order, includeCustomer: true, includePayment: true);
     }
 
     public function summary(OrderRequest $order): array

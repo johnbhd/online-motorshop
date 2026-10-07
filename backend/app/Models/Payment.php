@@ -6,6 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    public const METHOD_PAY_AT_PICKUP = 'pay_at_pickup';
+
+    public const METHOD_ONLINE_PAYMENT = 'online_payment';
+
+    public const METHOD_VALUES = [
+        self::METHOD_PAY_AT_PICKUP,
+        self::METHOD_ONLINE_PAYMENT,
+    ];
+
+    public const STATUS_UNPAID = 'unpaid';
+
     public const STATUS_VALUES = [
         'unpaid',
         'waiting_for_payment',

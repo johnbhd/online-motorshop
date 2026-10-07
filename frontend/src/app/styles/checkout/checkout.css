@@ -256,6 +256,13 @@
   line-height: 1.55;
 }
 
+.checkout-payment-note {
+  margin: 0.9rem 0 0;
+  color: var(--checkout-muted);
+  font-size: 0.74rem;
+  line-height: 1.55;
+}
+
 .checkout-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

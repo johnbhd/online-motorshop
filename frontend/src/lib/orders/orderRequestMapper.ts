@@ -16,6 +16,20 @@ export function buildOrderRequestPayload(
     return null;
   }
 
+  if (
+    formData.paymentMethod !== "pay_at_pickup" &&
+    formData.paymentMethod !== "online_payment"
+  ) {
+    return null;
+  }
+
+  if (
+    formData.fulfillmentMethod === "delivery" &&
+    formData.paymentMethod === "pay_at_pickup"
+  ) {
+    return null;
+  }
+
   const itemPartNumbers = cartItems.map((item) => item.product.partNumber);
 
   if (
@@ -41,6 +55,7 @@ export function buildOrderRequestPayload(
       part_number: item.product.partNumber,
       quantity: item.quantity,
     })),
+    payment_method: formData.paymentMethod,
     order_notes: formData.orderNotes.trim() || undefined,
   };
 

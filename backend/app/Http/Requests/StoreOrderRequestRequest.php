@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Payment;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreOrderRequestRequest extends FormRequest
 {
@@ -29,6 +31,12 @@ class StoreOrderRequestRequest extends FormRequest
             'items.*' => ['required', 'array'],
             'items.*.part_number' => ['required', 'string', 'max:255', 'distinct'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:1000'],
+
+            'payment_method' => [
+                'required',
+                'string',
+                Rule::in(Payment::METHOD_VALUES),
+            ],
 
             'fulfillment' => ['required', 'array'],
             'fulfillment.method' => [
@@ -74,6 +82,26 @@ class StoreOrderRequestRequest extends FormRequest
             ],
 
             'order_notes' => ['sometimes', 'nullable', 'string', 'max:255'],
+        ];
+    }
+
+    /**
+     * @return array<int, callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                if (
+                    $this->input('fulfillment.method') === 'delivery' &&
+                    $this->input('payment_method') === Payment::METHOD_PAY_AT_PICKUP
+                ) {
+                    $validator->errors()->add(
+                        'payment_method',
+                        'Pay at Pickup is only available for Store Pickup orders.',
+                    );
+                }
+            },
         ];
     }
 }

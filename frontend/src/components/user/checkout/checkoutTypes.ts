@@ -6,6 +6,7 @@ import type {
   OrderFulfillment,
   OrderItemSnapshot,
 } from "@/lib/orders/orderTypes";
+import type { PaymentMethod } from "@/lib/orders/orderRequestTypes";
 
 export type CheckoutCustomerData = OrderCustomerSnapshot;
 
@@ -15,6 +16,7 @@ export type CheckoutFormData = CheckoutCustomerData & {
   fulfillmentMethod: FulfillmentMethod;
   branchId: string;
   delivery: CheckoutDeliveryData;
+  paymentMethod: PaymentMethod | "";
   orderNotes: string;
   confirmDetails: boolean;
 };
@@ -37,6 +39,7 @@ export type CheckoutFieldErrorKey =
   | "barangay"
   | "city"
   | "contactPerson"
+  | "paymentMethod"
   | "confirmDetails";
 
 export type CheckoutFieldErrors = Partial<

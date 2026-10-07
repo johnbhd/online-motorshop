@@ -7,12 +7,16 @@ import {
   faArrowRight,
   faCheck,
   faCircleInfo,
+  faCreditCard,
   faFileLines,
   faPhone,
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
-import type { OrderConfirmationData } from "@/lib/orders/orderRequestTypes";
+import {
+  getPaymentMethodLabel,
+  type OrderConfirmationData,
+} from "@/lib/orders/orderRequestTypes";
 import { formatCartCurrency, isUsablePrice } from "../cart/cartData";
 import { getOrderConfirmation } from "@/lib/orders/orderConfirmationStorage";
 import { formatOrderTimestamp } from "./checkoutUtils";
@@ -140,6 +144,15 @@ export default function OrderConfirmationPage({
                     ? formatOrderTimestamp(order.created_at)
                     : "Date unavailable"}
                 </time>
+              </span>
+            </div>
+            <div>
+              <span className="order-confirmation-detail-icon" aria-hidden="true">
+                <FontAwesomeIcon icon={faCreditCard} />
+              </span>
+              <span>
+                <strong>Payment method</strong>
+                {getPaymentMethodLabel(order.payment?.method)}
               </span>
             </div>
             <div>

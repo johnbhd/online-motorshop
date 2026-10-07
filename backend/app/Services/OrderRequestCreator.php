@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\DeliveryRequest;
 use App\Models\OrderRequest;
+use App\Models\Payment;
 use App\Models\PickupRequest;
 use App\Models\Product;
 use App\Models\User;
@@ -23,6 +24,7 @@ class OrderRequestCreator
     public function create(array $payload, ?User $user = null): OrderRequest
     {
         $method = data_get($payload, 'fulfillment.method');
+        $paymentMethod = (string) ($payload['payment_method'] ?? '');
         $branch = $this->resolveBranch(
             (int) data_get($payload, 'fulfillment.branch_id'),
             (string) $method,
@@ -95,6 +97,7 @@ class OrderRequestCreator
             $user,
             $branch,
             $method,
+            $paymentMethod,
             $deliveryAddress,
             $deliveryRemarks,
             $calculatedItems,
@@ -118,6 +121,12 @@ class OrderRequestCreator
                 'delivery_fee' => '0.00',
                 'total_amount' => $subtotal,
                 'customer_notes' => $payload['order_notes'] ?? null,
+            ]);
+
+            $order->payments()->create([
+                'payment_method' => $paymentMethod,
+                'amount' => $subtotal,
+                'payment_status' => Payment::STATUS_UNPAID,
             ]);
 
             foreach ($calculatedItems as $calculatedItem) {
@@ -151,6 +160,7 @@ class OrderRequestCreator
                 'branch',
                 'customer',
                 'items.product',
+                'payments',
                 'pickupRequest',
                 'deliveryRequest',
             ]);
