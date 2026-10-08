@@ -1,1 +1,1 @@
-export { DeliveriesPage as default } from "@/components/admin/AdminPages";
+export { default } from "./RealAdminDeliveryRequestsPage";

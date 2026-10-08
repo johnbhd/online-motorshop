@@ -160,8 +160,8 @@ class StaffDeliveryRequestsApiTest extends TestCase
             ->assertJsonPath('delivery_request.order.items.0.part_number', 'DELIVERY-002')
             ->assertJsonPath('delivery_request.booking_reference', 'LAL-225')
             ->assertJsonPath('delivery_request.rider_name', 'Rider One')
-            ->assertJsonPath('delivery_request.allowed_statuses.0', 'booked')
-            ->assertJsonPath('delivery_request.allowed_statuses.1', 'cancelled');
+            ->assertJsonCount(1, 'delivery_request.allowed_statuses')
+            ->assertJsonPath('delivery_request.allowed_statuses.0', 'cancelled');
     }
 
     public function test_staff_can_progress_delivery_with_manual_booking_and_rider_data(): void
@@ -179,9 +179,10 @@ class StaffDeliveryRequestsApiTest extends TestCase
         );
         $payment = Payment::create([
             'order_id' => $order->id,
-            'payment_method' => 'Pay at Delivery',
+            'payment_method' => Payment::METHOD_ONLINE_PAYMENT,
             'amount' => 200.00,
-            'payment_status' => 'unpaid',
+            'payment_status' => Payment::STATUS_PAID,
+            'verified_at' => now(),
         ]);
         $pickupCount = PickupRequest::count();
         $token = $staff->createToken('staff-delivery-test')->plainTextToken;
@@ -237,8 +238,111 @@ class StaffDeliveryRequestsApiTest extends TestCase
         ]);
         $this->assertDatabaseHas('payments', [
             'id' => $payment->id,
-            'payment_status' => 'unpaid',
+            'payment_status' => Payment::STATUS_PAID,
         ]);
+    }
+
+    public function test_staff_cannot_book_unpaid_or_unverified_deliveries(): void
+    {
+        $branch = $this->createBranch('Payment Gate Delivery Branch');
+        $staff = $this->createStaff($branch);
+        $customer = $this->createCustomer('Payment Gate Delivery Customer', '09175555555');
+        $product = $this->createProduct('DELIVERY-006', 230.00);
+        $order = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000221',
+            $branch,
+        );
+        $token = $staff->createToken('staff-delivery-payment-gate-test')->plainTextToken;
+        $url = '/api/staff/delivery-requests/'.$order->deliveryRequest->id;
+
+        $this->withToken($token)
+            ->patchJson($url.'/status', [
+                'status' => 'booked',
+                'booking_reference' => 'LAL-221',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status');
+
+        $payment = Payment::create([
+            'order_id' => $order->id,
+            'payment_method' => Payment::METHOD_ONLINE_PAYMENT,
+            'amount' => 230.00,
+            'payment_status' => Payment::STATUS_UNPAID,
+        ]);
+
+        $this->withToken($token)
+            ->getJson($url)
+            ->assertOk()
+            ->assertJsonPath('delivery_request.allowed_statuses', ['cancelled']);
+
+        $this->withToken($token)
+            ->patchJson($url.'/status', [
+                'status' => 'booked',
+                'booking_reference' => 'LAL-221',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status');
+
+        $payment->update([
+            'payment_status' => 'waiting_for_verification',
+        ]);
+
+        $this->withToken($token)
+            ->patchJson($url.'/status', [
+                'status' => 'booked',
+                'booking_reference' => 'LAL-221',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status');
+
+        $this->assertDatabaseHas('delivery_requests', [
+            'id' => $order->deliveryRequest->id,
+            'delivery_status' => 'waiting_for_booking',
+        ]);
+    }
+
+    public function test_staff_cannot_advance_delivery_for_terminal_orders(): void
+    {
+        $branch = $this->createBranch('Terminal Order Delivery Branch');
+        $staff = $this->createStaff($branch);
+        $product = $this->createProduct('DELIVERY-007', 240.00);
+        $token = $staff->createToken('staff-terminal-delivery-test')->plainTextToken;
+
+        foreach (['cancelled', 'rejected'] as $terminalStatus) {
+            $customer = $this->createCustomer('Terminal '.$terminalStatus, '09176666666');
+            $reference = $terminalStatus === 'cancelled'
+                ? 'ALD-2026-000220'
+                : 'ALD-2026-000219';
+            $order = $this->createOrder($customer, $product, $reference, $branch, $terminalStatus);
+            Payment::create([
+                'order_id' => $order->id,
+                'payment_method' => Payment::METHOD_ONLINE_PAYMENT,
+                'amount' => 240,
+                'payment_status' => Payment::STATUS_PAID,
+                'verified_at' => now(),
+            ]);
+            $url = '/api/staff/delivery-requests/'.$order->deliveryRequest->id;
+
+            $this->withToken($token)
+                ->getJson($url)
+                ->assertOk()
+                ->assertJsonPath('delivery_request.allowed_statuses', ['cancelled']);
+
+            $this->withToken($token)
+                ->patchJson($url.'/status', [
+                    'status' => 'booked',
+                    'booking_reference' => 'LAL-TERMINAL',
+                ])
+                ->assertUnprocessable()
+                ->assertJsonValidationErrors('status');
+
+            $this->assertDatabaseHas('delivery_requests', [
+                'id' => $order->deliveryRequest->id,
+                'delivery_status' => 'waiting_for_booking',
+            ]);
+        }
     }
 
     public function test_booking_reference_and_invalid_transitions_are_rejected(): void
