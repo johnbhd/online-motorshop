@@ -336,6 +336,10 @@ export default function ChatbotWidget() {
             return;
           }
 
+          if (mode === "assistant") {
+            setShowQuickActions(true);
+          }
+
           setIsOpen(true);
         }}
       />
