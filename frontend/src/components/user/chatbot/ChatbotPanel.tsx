@@ -3,11 +3,7 @@
 import Image from "next/image";
 import type { RefObject } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faArrowLeft,
-  faHeadset,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ChatbotComposer from "./ChatbotComposer";
 import ChatbotMessageList from "./ChatbotMessageList";
 import ChatbotQuickActions from "./ChatbotQuickActions";
@@ -23,7 +19,7 @@ export type ChatbotPanelProps = {
   quickActions: ChatQuickAction[];
   showQuickActions: boolean;
   onClose: () => void;
-  onBackToAssistant: () => void;
+  onBackToHelp: () => void;
   onQuickAction: (action: ChatQuickAction) => void;
   onRequestStaff: () => void;
   onToggleQuickActions: () => void;
@@ -41,7 +37,7 @@ export default function ChatbotPanel({
   quickActions,
   showQuickActions,
   onClose,
-  onBackToAssistant,
+  onBackToHelp,
   onQuickAction,
   onRequestStaff,
   onToggleQuickActions,
@@ -70,22 +66,31 @@ export default function ChatbotPanel({
           />
           <div>
             <h2 id="ald-chatbot-title">
-              {isStaffMode ? "ALD Staff" : "ALD Assistant"}
+              {isStaffMode ? "ALD Support" : "ALD Assistant"}
             </h2>
             <p>
               <span className="ald-chatbot__status-dot" aria-hidden="true" />
-              {isStaffMode ? "Staff Conversation" : "How can we help?"}
+              {isStaffMode ? "Staff conversation" : "How can we help?"}
             </p>
           </div>
         </div>
-        <button
-          className="ald-chatbot__close"
-          type="button"
-          aria-label="Close chatbot"
-          onClick={onClose}
-        >
-          <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
-        </button>
+        <div className="ald-chatbot__header-actions">
+          <button
+            className="ald-chatbot__mode-toggle"
+            type="button"
+            onClick={isStaffMode ? onBackToHelp : onRequestStaff}
+          >
+            {isStaffMode ? "Back to Help" : "Talk to Staff"}
+          </button>
+          <button
+            className="ald-chatbot__close"
+            type="button"
+            aria-label="Close chat"
+            onClick={onClose}
+          >
+            <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       <div className="ald-chatbot__content">
@@ -114,29 +119,6 @@ export default function ChatbotPanel({
         {!isStaffMode && showQuickActions && (
           <ChatbotQuickActions actions={quickActions} onSelect={onQuickAction} />
         )}
-
-        <button
-          className="ald-chatbot__staff-action"
-          type="button"
-          onClick={isStaffMode ? onBackToAssistant : onRequestStaff}
-        >
-          <span className="ald-chatbot__staff-action-icon" aria-hidden="true">
-            <FontAwesomeIcon icon={isStaffMode ? faArrowLeft : faHeadset} />
-          </span>
-          <span className="ald-chatbot__staff-action-copy">
-            <strong>
-              {isStaffMode ? "Back to ALD Assistant" : "Talk to ALD Staff"}
-            </strong>
-            <small>
-              {isStaffMode
-                ? "Return to the automated assistant"
-                : "Request assistance from the team"}
-            </small>
-          </span>
-          <span className="ald-chatbot__staff-action-arrow" aria-hidden="true">
-            {isStaffMode ? "←" : "→"}
-          </span>
-        </button>
       </div>
 
       <ChatbotComposer
@@ -145,7 +127,6 @@ export default function ChatbotPanel({
         showQuickActions={showQuickActions}
         isSending={!isStaffMode && isAssistantThinking}
         onSend={onSend}
-        onBackToAssistant={onBackToAssistant}
         onToggleQuickActions={onToggleQuickActions}
       />
     </section>
