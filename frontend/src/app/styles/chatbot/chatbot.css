@@ -168,6 +168,11 @@
   background: #ffffff;
 }
 
+.ald-chatbot__content--topics-hidden .ald-chatbot__messages {
+  flex: 1 1 auto;
+  max-height: none;
+}
+
 .ald-chatbot__messages {
   min-height: 0;
   flex: 0 1 auto;

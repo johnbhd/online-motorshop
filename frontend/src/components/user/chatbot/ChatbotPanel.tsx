@@ -47,6 +47,14 @@ export default function ChatbotPanel({
   staffLoading = false,
 }: ChatbotPanelProps) {
   const isStaffMode = mode === "staff";
+  const contentClassName = [
+    "ald-chatbot__content",
+    !showQuickActions || isStaffMode
+      ? "ald-chatbot__content--topics-hidden"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <section
@@ -93,7 +101,7 @@ export default function ChatbotPanel({
         </div>
       </header>
 
-      <div className="ald-chatbot__content">
+      <div className={contentClassName}>
         <ChatbotMessageList
           ref={messageListRef}
           messages={messages}
