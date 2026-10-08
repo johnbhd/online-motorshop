@@ -32,31 +32,36 @@ const ChatbotMessageList = forwardRef<
       {messages.map((message) => {
         const isBotMessage = message.sender === "bot";
         const isStaffMessage = message.sender === "staff";
+        const isAdminMessage = message.sender === "admin";
+        const isSupportMessage = isStaffMessage || isAdminMessage;
+        const displaySender = isAdminMessage ? "staff" : message.sender;
 
         return (
           <div
             className={
               "ald-chatbot__message-row ald-chatbot__message-row--" +
-              message.sender
+              displaySender
             }
             key={message.id}
           >
-            {(isBotMessage || isStaffMessage) && (
+            {(isBotMessage || isSupportMessage) && (
               <Image
                 className="ald-chatbot__message-avatar"
                 src="/branding/logo.png"
-                alt={isStaffMessage ? "ALD Staff" : "ALD Motorshop"}
+                alt={isAdminMessage ? "ALD Administrator" : isStaffMessage ? "ALD Staff" : "ALD Motorshop"}
                 width={28}
                 height={28}
               />
             )}
             <p
               className={
-                "ald-chatbot__message ald-chatbot__message--" + message.sender
+                "ald-chatbot__message ald-chatbot__message--" + displaySender
               }
             >
-              {isStaffMessage && (
-                <span className="ald-chatbot__message-label">ALD Staff</span>
+              {isSupportMessage && (
+                <span className="ald-chatbot__message-label">
+                  {isAdminMessage ? "ALD Administrator" : "ALD Staff"}
+                </span>
               )}
               {message.text}
             </p>

@@ -1,6 +1,6 @@
 export type ConversationParticipantType = "customer" | "guest";
 
-export type ConversationMessageSender = "customer" | "staff";
+export type ConversationMessageSender = "customer" | "staff" | "admin";
 
 export type ConversationParticipant = {
   id: number | null;
@@ -11,6 +11,7 @@ export type ConversationParticipant = {
 export type ConversationMessage = {
   id: number;
   sender: ConversationMessageSender;
+  sender_name?: string | null;
   body: string;
   created_at: string;
 };
@@ -30,3 +31,5 @@ export type StaffConversationSummary = Omit<Conversation, "messages"> & {
   message_count: number;
   last_message: ConversationMessage | null;
 };
+
+export type AdminConversationSummary = StaffConversationSummary;

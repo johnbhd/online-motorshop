@@ -1,5 +1,6 @@
 import { getAuthToken } from "@/lib/auth/authStorage";
 import type {
+  AdminConversationSummary,
   Conversation,
   StaffConversationSummary,
 } from "./conversationTypes";
@@ -17,6 +18,21 @@ type StaffConversationsResponse = {
     needs_reply: number;
   };
   conversations: StaffConversationSummary[];
+  meta: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+};
+
+export type AdminConversationsResponse = {
+  summary: {
+    total: number;
+    open: number;
+    needs_reply: number;
+  };
+  conversations: AdminConversationSummary[];
   meta: {
     current_page: number;
     last_page: number;
@@ -70,6 +86,7 @@ async function request<T>(
     token?: string | null;
     guestToken?: string | null;
     body?: unknown;
+    signal?: AbortSignal;
   } = {},
 ): Promise<T> {
   const headers = new Headers({ Accept: "application/json" });
@@ -91,6 +108,7 @@ async function request<T>(
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     cache: "no-store",
+    signal: options.signal,
   });
   const payload = await readPayload(response);
 
@@ -197,6 +215,69 @@ export async function getStaffConversations(
     `/api/staff/conversations${query ? `?${query}` : ""}`,
     { token },
   );
+}
+
+export async function getAdminConversations(
+  token: string,
+  options: {
+    search?: string;
+    needsReply?: boolean;
+    page?: number;
+    perPage?: number;
+    signal?: AbortSignal;
+  } = {},
+): Promise<AdminConversationsResponse> {
+  const params = new URLSearchParams();
+
+  if (options.search) {
+    params.set("search", options.search);
+  }
+
+  if (options.needsReply) {
+    params.set("needs_reply", "1");
+  }
+
+  if (options.page) {
+    params.set("page", String(options.page));
+  }
+
+  if (options.perPage) {
+    params.set("per_page", String(options.perPage));
+  }
+
+  const query = params.toString();
+
+  return request<AdminConversationsResponse>(
+    `/api/admin/conversations${query ? `?${query}` : ""}`,
+    { token, signal: options.signal },
+  );
+}
+
+export async function getAdminConversation(
+  token: string,
+  conversationId: number,
+  signal?: AbortSignal,
+): Promise<Conversation> {
+  const response = await request<ConversationResponse>(
+    `/api/admin/conversations/${conversationId}`,
+    { token, signal },
+  );
+
+  return response.conversation;
+}
+
+export async function sendAdminConversationMessage(
+  token: string,
+  conversationId: number,
+  body: string,
+): Promise<Conversation> {
+  const response = await request<ConversationResponse>(
+    `/api/admin/conversations/${conversationId}/messages`,
+    { method: "POST", token, body: { body } },
+  );
+
+  notifyStaffSidebar();
+  return response.conversation;
 }
 
 export async function getStaffConversation(

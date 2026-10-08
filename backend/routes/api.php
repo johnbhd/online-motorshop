@@ -286,7 +286,18 @@ Route::prefix('admin')
             ->whereNumber('customer')
             ->name('customers.destroy');
 
-        Route::get('/messages/data', [AdminMessagesController::class, 'data'])
+        Route::get('/conversations', [AdminMessagesController::class, 'index'])
+            ->name('conversations.index');
+
+        Route::get('/conversations/{conversation}', [AdminMessagesController::class, 'show'])
+            ->whereNumber('conversation')
+            ->name('conversations.show');
+
+        Route::post('/conversations/{conversation}/messages', [AdminMessagesController::class, 'storeMessage'])
+            ->whereNumber('conversation')
+            ->name('conversations.messages.store');
+
+        Route::get('/messages/data', [AdminMessagesController::class, 'index'])
             ->name('messages.data');
 
         Route::get('/staff-management/data', [AdminStaffController::class, 'data'])
