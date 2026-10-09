@@ -12,7 +12,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors, Spacing } from '@/constants/theme';
 
 const tabIcons: Record<string, SymbolViewProps['name']> = {
-  cart: { ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' },
   categories: {
     ios: 'square.grid.2x2',
     android: 'category',
@@ -20,6 +19,11 @@ const tabIcons: Record<string, SymbolViewProps['name']> = {
   },
   home: { ios: 'house', android: 'home', web: 'home' },
   messages: { ios: 'message', android: 'chat', web: 'chat' },
+  orders: {
+    ios: 'list.bullet.rectangle',
+    android: 'receipt_long',
+    web: 'receipt_long',
+  },
   settings: { ios: 'gearshape', android: 'settings', web: 'settings' },
 };
 
@@ -38,8 +42,8 @@ export default function AppTabs() {
           <TabTrigger name="messages" href="/messages" asChild>
             <TabButton icon={tabIcons.messages}>Messages</TabButton>
           </TabTrigger>
-          <TabTrigger name="cart" href="/cart" asChild>
-            <TabButton icon={tabIcons.cart}>Cart</TabButton>
+          <TabTrigger name="orders" href="/orders" asChild>
+            <TabButton icon={tabIcons.orders}>Orders</TabButton>
           </TabTrigger>
           <TabTrigger name="settings" href="/settings" asChild>
             <TabButton icon={tabIcons.settings}>Settings</TabButton>

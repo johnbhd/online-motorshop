@@ -4,7 +4,7 @@ import { StyleSheet, Text } from 'react-native';
 
 export default function ProductsScreen() {
   return (
-    <CustomerScreen showSearch>
+    <CustomerScreen>
       <Text style={styles.eyebrow}>PRODUCT DISCOVERY</Text>
       <Text style={styles.title}>Motorcycle Parts</Text>
       <Text style={styles.description}>

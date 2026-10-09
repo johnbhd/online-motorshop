@@ -5,7 +5,7 @@ import { Colors, Spacing } from '@/constants/theme';
 
 export default function CategoriesScreen() {
   return (
-    <CustomerScreen showSearch>
+    <CustomerScreen>
       <Text style={styles.eyebrow}>DISCOVER YOUR OPTIONS</Text>
       <Text style={styles.title}>Categories & Brands</Text>
       <Text style={styles.description}>

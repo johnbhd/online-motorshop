@@ -6,7 +6,7 @@ import { Colors, Spacing } from '@/constants/theme';
 
 export function HomeScreen() {
   return (
-    <CustomerScreen showSearch>
+    <CustomerScreen>
       <View style={styles.introSection}>
         <Text style={styles.eyebrow}>GENUINE MOTORCYCLE PARTS</Text>
         <Text style={styles.title}>Ride ready with the right parts.</Text>

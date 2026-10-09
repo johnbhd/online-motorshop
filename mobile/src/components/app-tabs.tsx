@@ -39,12 +39,15 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Messages</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="cart">
+      <NativeTabs.Trigger name="orders">
         <NativeTabs.Trigger.Icon
-          md={{ default: 'shopping_cart', selected: 'shopping_cart' }}
-          sf={{ default: 'cart', selected: 'cart.fill' }}
+          md={{ default: 'receipt_long', selected: 'receipt_long' }}
+          sf={{
+            default: 'list.bullet.rectangle',
+            selected: 'list.bullet.rectangle.fill',
+          }}
         />
-        <NativeTabs.Trigger.Label>Cart</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Orders</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="settings">

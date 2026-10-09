@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { useEffect, useRef, useState } from 'react';
 import {
   Image,
   Keyboard,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -12,59 +15,159 @@ import { Colors, Spacing } from '@/constants/theme';
 
 const logo = require('@/assets/images/ald-logo.png');
 
-type CustomerHeaderProps = {
-  showSearch?: boolean;
+const icons: Record<string, SymbolViewProps['name']> = {
+  cart: { ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' },
+  close: { ios: 'xmark', android: 'close', web: 'close' },
+  notification: {
+    ios: 'bell',
+    android: 'notifications_none',
+    web: 'notifications_none',
+  },
+  search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
 };
 
-export function CustomerHeader({ showSearch = false }: CustomerHeaderProps) {
+export function CustomerHeader() {
+  const router = useRouter();
+  const inputRef = useRef<TextInput>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
-  return (
-    <>
-      <View style={styles.header}>
-        <View style={styles.brandGroup}>
-          <View style={styles.logoFrame}>
-            <Image
-              accessibilityLabel="ALD Motorshop logo"
-              source={logo}
-              style={styles.logoImage}
-            />
-          </View>
+  useEffect(() => {
+    if (isSearchOpen) {
+      inputRef.current?.focus();
+    }
 
-          <View style={styles.brandCopy}>
-            <Text style={styles.brandName}>ALD Motorshop</Text>
-            <Text style={styles.brandTagline}>Motorcycle Parts Trading</Text>
-          </View>
+    return () => {
+      Keyboard.dismiss();
+    };
+  }, [isSearchOpen]);
+
+  const openSearch = () => {
+    setIsSearchOpen(true);
+  };
+
+  const closeSearch = () => {
+    Keyboard.dismiss();
+    setIsSearchOpen(false);
+    setQuery('');
+  };
+
+  if (isSearchOpen) {
+    return (
+      <View style={styles.header}>
+        <View style={styles.searchModeField}>
+          <SymbolView
+            accessibilityLabel="Search products"
+            name={icons.search}
+            size={20}
+            tintColor={Colors.light.primary}
+          />
+          <TextInput
+            ref={inputRef}
+            accessibilityLabel="Search motorcycle parts"
+            accessibilityHint="Search is visual only until the catalog feature is connected."
+            autoCapitalize="none"
+            autoCorrect={false}
+            blurOnSubmit
+            onChangeText={setQuery}
+            onSubmitEditing={Keyboard.dismiss}
+            placeholder="Search motorcycle parts"
+            placeholderTextColor={Colors.light.textSecondary}
+            returnKeyType="search"
+            style={styles.searchInput}
+            value={query}
+          />
+        </View>
+
+        <Pressable
+          accessibilityLabel="Close search"
+          accessibilityRole="button"
+          onPress={closeSearch}
+          style={({ pressed }) => [
+            styles.utilityButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <SymbolView
+            name={icons.close}
+            size={21}
+            tintColor={Colors.light.text}
+          />
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.header}>
+      <View style={styles.brandGroup}>
+        <View style={styles.logoFrame}>
+          <Image
+            accessibilityLabel="ALD Motorshop logo"
+            source={logo}
+            style={styles.logoImage}
+          />
+        </View>
+
+        <View style={styles.brandCopy}>
+          <Text numberOfLines={1} style={styles.brandName}>
+            ALD Motorshop
+          </Text>
+          <Text numberOfLines={1} style={styles.brandTagline}>
+            Motorcycle Parts Trading
+          </Text>
         </View>
       </View>
 
-      {showSearch ? (
-        <View style={styles.searchContainer}>
-          <View style={styles.searchField}>
-            <View
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-              style={styles.searchGlyph}
-            >
-              <View style={styles.searchGlyphCircle} />
-              <View style={styles.searchGlyphHandle} />
-            </View>
-            <TextInput
-              accessibilityHint="Search is visual only until the catalog feature is connected."
-              accessibilityLabel="Search motorcycle parts"
-              blurOnSubmit
-              onChangeText={setQuery}
-              onSubmitEditing={Keyboard.dismiss}
-              placeholder="Search motorcycle parts"
-              placeholderTextColor={Colors.light.textSecondary}
-              returnKeyType="search"
-              style={styles.searchInput}
-              value={query}
-            />
-          </View>
-        </View>
-      ) : null}
-    </>
+      <View style={styles.utilityActions}>
+        <Pressable
+          accessibilityLabel="Search products"
+          accessibilityRole="button"
+          onPress={openSearch}
+          style={({ pressed }) => [
+            styles.utilityButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <SymbolView
+            name={icons.search}
+            size={21}
+            tintColor={Colors.light.text}
+          />
+        </Pressable>
+
+        <Pressable
+          accessibilityHint="Notifications are not available yet."
+          accessibilityLabel="Notifications"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: true }}
+          disabled
+          style={styles.utilityButton}
+        >
+          <SymbolView
+            name={icons.notification}
+            size={21}
+            tintColor={Colors.light.text}
+          />
+        </Pressable>
+
+        <Pressable
+          accessibilityLabel="Cart"
+          accessibilityRole="button"
+          onPress={() => router.push('/cart')}
+          style={({ pressed }) => [
+            styles.utilityButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <SymbolView
+            name={icons.cart}
+            size={21}
+            tintColor={Colors.light.text}
+          />
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -76,12 +179,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     flexDirection: 'row',
     minHeight: 68,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.three,
   },
   brandGroup: {
     alignItems: 'center',
+    flex: 1,
     flexDirection: 'row',
-    flexShrink: 1,
+    minWidth: 0,
   },
   logoFrame: {
     alignItems: 'center',
@@ -97,6 +201,7 @@ const styles = StyleSheet.create({
     width: 36,
   },
   brandCopy: {
+    flexShrink: 1,
     marginLeft: Spacing.two,
   },
   brandName: {
@@ -109,53 +214,37 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 2,
   },
-  searchContainer: {
-    backgroundColor: Colors.light.backgroundElement,
-    paddingBottom: Spacing.three,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+  utilityActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.one,
   },
-  searchField: {
+  utilityButton: {
+    alignItems: 'center',
+    borderRadius: 22,
+    height: 44,
+    justifyContent: 'center',
+    width: 40,
+  },
+  pressed: {
+    opacity: 0.6,
+  },
+  searchModeField: {
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
     borderRadius: 8,
     borderWidth: 1,
+    flex: 1,
     flexDirection: 'row',
     minHeight: 44,
     paddingHorizontal: Spacing.three,
-  },
-  searchGlyph: {
-    height: 24,
-    marginRight: Spacing.two,
-    position: 'relative',
-    width: 24,
-  },
-  searchGlyphCircle: {
-    borderColor: Colors.light.primary,
-    borderRadius: 8,
-    borderWidth: 2,
-    height: 15,
-    left: 1,
-    position: 'absolute',
-    top: 1,
-    width: 15,
-  },
-  searchGlyphHandle: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 2,
-    height: 2,
-    left: 14,
-    position: 'absolute',
-    top: 16,
-    transform: [{ rotate: '45deg' }],
-    width: 9,
   },
   searchInput: {
     color: Colors.light.text,
     flex: 1,
     fontSize: 15,
     minHeight: 42,
-    paddingHorizontal: 0,
+    paddingHorizontal: Spacing.two,
   },
 });
