@@ -16,7 +16,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ProductModalShell from "@/components/admin/products/ProductModalShell";
 import { Badge } from "@/components/staff/PortalTable";
-import type { Review } from "@/lib/mock/staff";
+import type { ManagedReview } from "./ReviewsPage";
 import ReviewRating from "./ReviewRating";
 
 export type ReviewModalMode = "view" | "reply";
@@ -29,11 +29,12 @@ export type StaffReviewReply = {
 
 export type StaffReviewDetailsModalProps = {
   isOpen: boolean;
-  review: Review | null;
+  review: ManagedReview | null;
   mode: ReviewModalMode;
   reply?: StaffReviewReply;
   onClose: () => void;
-  onSendReply?: (review: Review, replyText: string) => void;
+  onSendReply?: (review: ManagedReview, replyText: string) => void;
+  onFlagReview?: (review: ManagedReview) => void;
 };
 
 function formatReplyDate(value?: string) {
@@ -76,6 +77,7 @@ export default function StaffReviewDetailsModal({
   reply,
   onClose,
   onSendReply,
+  onFlagReview,
 }: StaffReviewDetailsModalProps) {
   const [replyDraft, setReplyDraft] = useState("");
   const [replyError, setReplyError] = useState("");
@@ -151,13 +153,15 @@ export default function StaffReviewDetailsModal({
                 </button>
               </>
             ) : (
-              <button
-                className="admin-order-modal-button admin-order-modal-button-secondary"
-                type="button"
-                onClick={handleClose}
-              >
-                Close
-              </button>
+              <>
+                {onFlagReview && review.status !== "Hidden" ? (
+                  <button className="admin-order-modal-button admin-order-modal-button-secondary" type="button" onClick={() => onFlagReview(review)}>
+                    <FontAwesomeIcon icon={faFlag} aria-hidden="true" />
+                    Flag for Admin
+                  </button>
+                ) : null}
+                <button className="admin-order-modal-button admin-order-modal-button-secondary" type="button" onClick={handleClose}>Close</button>
+              </>
             )}
           </div>
         </>

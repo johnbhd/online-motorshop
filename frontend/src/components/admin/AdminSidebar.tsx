@@ -57,7 +57,7 @@ const links = [
   ["Categories & Brands", "/admin/categories-brands", "◆"],
   ["Customers", "/admin/customers", "♧"],
   ["Messages", "/admin/messages", "✉"],
-  ["Reviews", "#", "☆"],
+  ["Reviews", "/admin/reviews", "☆"],
   ["Branches", "/admin/branches", "▧"],
   ["Staff Management", "/admin/staff-management", "♙"],
   ["Website Content", "/admin/website-content", "▤"],

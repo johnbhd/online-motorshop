@@ -49,7 +49,7 @@ export default function ProductDetailsPage({
         </div>
 
         <ProductRecommendations products={suggestedProducts} />
-        <ProductReviews productName={product.name} />
+        <ProductReviews productName={product.name} partNumber={product.partNumber} />
 
         <div className="product-details-back-link-wrap">
           <Link className="product-details-back-link" href="/products">

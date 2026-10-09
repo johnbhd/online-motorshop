@@ -1,45 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane, faStar } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthProvider";
-
-type ProductReview = {
-  id: string;
-  author: string;
-  rating: number;
-  comment: string;
-  date: string;
-};
-
-const initialReviews: ProductReview[] = [
-  {
-    id: "review-1",
-    author: "Mark Reyes",
-    rating: 5,
-    comment:
-      "The part arrived in good condition and the fit was easy to confirm with ALD staff.",
-    date: "2 weeks ago",
-  },
-  {
-    id: "review-2",
-    author: "Angela Cruz",
-    rating: 4,
-    comment:
-      "Helpful service and clear updates while I was checking compatibility for my motorcycle.",
-    date: "1 month ago",
-  },
-  {
-    id: "review-3",
-    author: "Paolo Santos",
-    rating: 5,
-    comment:
-      "Good quality product and a smooth pickup request from the branch.",
-    date: "1 month ago",
-  },
-];
+import { getAuthToken } from "@/lib/auth/authStorage";
+import {
+  getProductReviews,
+  getReviewEligibility,
+  getReviewErrorMessage,
+  submitProductReview,
+  type ProductReview,
+  type ReviewSummary,
+} from "@/lib/reviews/reviewApi";
 
 function ReviewStars({ rating }: { rating: number }) {
   return (
@@ -62,49 +36,100 @@ function ReviewStars({ rating }: { rating: number }) {
 
 export default function ProductReviews({
   productName,
+  partNumber,
 }: {
   productName: string;
+  partNumber: string;
 }) {
   const { isLoading: isAuthLoading, user } = useAuth();
-  const [reviews, setReviews] = useState<ProductReview[]>(initialReviews);
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [summary, setSummary] = useState<ReviewSummary | null>(null);
+  const [eligibility, setEligibility] = useState<{
+    eligible: boolean;
+    reason: string | null;
+    existing_review: ProductReview | null;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [rating, setRating] = useState("5");
   const [comment, setComment] = useState("");
   const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const averageRating = reviews.length
-    ? (
-        reviews.reduce((total, review) => total + review.rating, 0) /
-        reviews.length
-      ).toFixed(1)
-    : "0.0";
+  useEffect(() => {
+    const controller = new AbortController();
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedComment = comment.trim();
+    getProductReviews(partNumber, controller.signal)
+      .then((response) => {
+        setReviews(response.reviews);
+        setSummary(response.summary);
+        setError("");
+      })
+      .catch((loadError) => {
+        if (!controller.signal.aborted) {
+          setError(getReviewErrorMessage(loadError, "Reviews could not be loaded right now."));
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
 
-    if (!user) {
+    return () => controller.abort();
+  }, [partNumber]);
+
+  useEffect(() => {
+    const token = getAuthToken();
+
+    if (isAuthLoading || !user || !token) {
       return;
     }
+
+    getReviewEligibility(partNumber, token)
+      .then(setEligibility)
+      .catch((eligibilityError) => {
+        setFormError(
+          getReviewErrorMessage(
+            eligibilityError,
+            "Review eligibility is unavailable right now.",
+          ),
+        );
+      });
+  }, [isAuthLoading, partNumber, user]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedComment = comment.trim();
+    const token = getAuthToken();
+
+    if (!user || !token) return;
 
     if (!trimmedComment) {
       setFormError("Write a comment before posting your review.");
       return;
     }
 
-    setReviews((currentReviews) => [
-      {
-        id: `review-${Date.now()}`,
-        author: user.name,
-        rating: Number(rating),
-        comment: trimmedComment,
-        date: "Just now",
-      },
-      ...currentReviews,
-    ]);
-    setComment("");
-    setRating("5");
+    setIsSubmitting(true);
     setFormError("");
+    setSuccessMessage("");
+
+    try {
+      await submitProductReview(partNumber, token, {
+        rating: Number(rating),
+        review_text: trimmedComment,
+      });
+      setComment("");
+      setRating("5");
+      setEligibility({ eligible: false, reason: "already_reviewed", existing_review: null });
+      setSuccessMessage("Your review was submitted and is waiting for moderation.");
+    } catch (submitError) {
+      setFormError(getReviewErrorMessage(submitError, "We could not submit your review."));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const averageRating = summary?.average_rating ?? 0;
 
   return (
     <section
@@ -115,22 +140,33 @@ export default function ProductReviews({
         <p className="product-details-section-eyebrow">Customer feedback</p>
         <h2 id="product-details-reviews-title">Reviews &amp; Ratings</h2>
         <p className="product-details-review-intro">
-          See what customers are saying about products and service from ALD
+          See published customer feedback about products and service from ALD
           Motorshop.
         </p>
       </div>
 
       <div className="product-details-review-summary">
         <div className="product-details-review-average">
-          <strong>{averageRating}</strong>
-          <ReviewStars rating={Math.round(Number(averageRating))} />
-          <span>Based on {reviews.length} reviews</span>
+          <strong>{averageRating.toFixed(1)}</strong>
+          <ReviewStars rating={Math.round(averageRating)} />
+          <span>Based on {summary?.published ?? 0} reviews</span>
         </div>
-        <p>
-          Reviews are currently shown as a frontend preview. New comments are
-          visible in this session only.
-        </p>
+        <p>Reviews are published after ALD moderation.</p>
       </div>
+
+      {isLoading ? (
+        <p className="product-details-review-auth-note" role="status">
+          Loading reviews…
+        </p>
+      ) : null}
+      {error ? (
+        <p className="product-details-review-form-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {!isLoading && !error && reviews.length === 0 ? (
+        <p className="product-details-review-auth-note">No published reviews yet.</p>
+      ) : null}
 
       <div className="product-details-review-list">
         {reviews.map((review) => (
@@ -138,18 +174,24 @@ export default function ProductReviews({
             <header className="product-details-review-header">
               <div className="product-details-review-author">
                 <span aria-hidden="true">
-                  {review.author.charAt(0).toUpperCase()}
+                  {review.customer.initials}
                 </span>
                 <div>
-                  <h3>{review.author}</h3>
-                  <p>{review.date}</p>
+                  <h3>{review.customer.name}</h3>
+                  <p>{review.published_at ?? review.created_at ?? ""}</p>
                 </div>
               </div>
               <div className="product-details-review-rating">
                 <ReviewStars rating={review.rating} />
               </div>
             </header>
-            <p className="product-details-review-comment">{review.comment}</p>
+            <p className="product-details-review-comment">{review.review_text}</p>
+            {review.response ? (
+              <div className="mt-3 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <strong className="block text-[#0B1930]">ALD response</strong>
+                {review.response.text}
+              </div>
+            ) : null}
           </article>
         ))}
       </div>
@@ -160,6 +202,11 @@ export default function ProductReviews({
             Checking your sign-in status…
           </p>
         ) : user ? (
+          eligibility === null ? (
+            <p className="product-details-review-auth-note" role="status">
+              Checking review eligibility…
+            </p>
+          ) : eligibility.eligible ? (
           <form className="product-details-review-form" onSubmit={handleSubmit}>
             <div className="product-details-review-form-heading">
               <div>
@@ -205,20 +252,32 @@ export default function ProductReviews({
                 {formError}
               </p>
             ) : null}
+            {successMessage ? (
+              <p className="product-details-review-auth-note" role="status">
+                {successMessage}
+              </p>
+            ) : null}
 
             <div className="product-details-review-form-actions">
-              <p>For now, your comment is kept in this browser session.</p>
-              <button type="submit">
+              <p>Your review will be visible after moderation.</p>
+              <button type="submit" disabled={isSubmitting}>
                 <FontAwesomeIcon icon={faPaperPlane} aria-hidden="true" />
-                Post Review
+                {isSubmitting ? "Submitting…" : "Post Review"}
               </button>
             </div>
           </form>
+          ) : (
+            <p className="product-details-review-auth-note">
+              {eligibility?.reason === "already_reviewed"
+                ? "You have already reviewed this product."
+                : "A completed purchase is required before reviewing this product."}
+            </p>
+          )
         ) : (
           <div className="product-details-review-auth-note">
             <div>
               <h3>Want to share a review?</h3>
-              <p>Sign in to comment on this product.</p>
+              <p>Sign in and complete a purchase to comment on this product.</p>
             </div>
             <Link href="/auth/login">Sign In to Review</Link>
           </div>

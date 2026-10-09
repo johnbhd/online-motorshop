@@ -25,6 +25,7 @@ use App\Http\Controllers\CustomerProfileController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PortalNotificationController;
 use App\Http\Controllers\PaymentInstructionsController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Staff\StaffConversationsController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
@@ -36,7 +37,6 @@ use App\Http\Controllers\Staff\StaffPickupRequestsController;
 use App\Http\Controllers\Staff\StaffProductsController;
 use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Controllers\Staff\StaffReportsController;
-use App\Http\Controllers\Staff\StaffReviewsController;
 use App\Http\Controllers\Staff\StaffSidebarController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +53,8 @@ Route::get('/products', [CatalogController::class, 'products'])
     ->name('catalog.products.index');
 Route::get('/products/{identifier}', [CatalogController::class, 'product'])
     ->name('catalog.products.show');
+Route::get('/products/{identifier}/reviews', [ReviewController::class, 'publicIndex'])
+    ->name('catalog.products.reviews');
 Route::get('/categories', [CatalogController::class, 'categories'])
     ->name('catalog.categories.index');
 Route::get('/branches', [CatalogController::class, 'branches'])
@@ -97,6 +99,10 @@ Route::prefix('customer')
             ->name('orders.show');
         Route::post('/orders/{reference}/payment-proof', [CustomerOrderController::class, 'storePaymentProof'])
             ->name('orders.payment-proof.store');
+        Route::get('/products/{identifier}/reviews/eligibility', [ReviewController::class, 'eligibility'])
+            ->name('products.reviews.eligibility');
+        Route::post('/products/{identifier}/reviews', [ReviewController::class, 'store'])
+            ->name('products.reviews.store');
     });
 
 // Auth
@@ -147,6 +153,16 @@ Route::prefix('admin')
             ->name('notifications.read-all');
         Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
             ->name('notifications.read');
+
+        Route::get('/reviews', [ReviewController::class, 'adminIndex'])
+            ->name('reviews.index');
+        Route::get('/reviews/{review}', [ReviewController::class, 'adminShow'])
+            ->whereNumber('review')
+            ->name('reviews.show');
+        Route::patch('/reviews/{review}/{action}', [ReviewController::class, 'moderate'])
+            ->whereNumber('review')
+            ->whereIn('action', ['publish', 'hide', 'restore', 'resolve-flag'])
+            ->name('reviews.moderate');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');
@@ -429,6 +445,17 @@ Route::prefix('staff')
                 ->name('notifications.read-all');
             Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
                 ->name('notifications.read');
+            Route::get('/reviews', [ReviewController::class, 'staffIndex'])
+                ->name('reviews.index');
+            Route::get('/reviews/{review}', [ReviewController::class, 'staffShow'])
+                ->whereNumber('review')
+                ->name('reviews.show');
+            Route::post('/reviews/{review}/response', [ReviewController::class, 'staffResponse'])
+                ->whereNumber('review')
+                ->name('reviews.response');
+            Route::patch('/reviews/{review}/flag', [ReviewController::class, 'staffFlag'])
+                ->whereNumber('review')
+                ->name('reviews.flag');
         });
 
         Route::middleware('role:admin')->group(function () {
@@ -438,7 +465,5 @@ Route::prefix('staff')
             Route::get('/reports/data', [StaffReportsController::class, 'data'])
                 ->name('reports.data');
 
-            Route::get('/reviews/data', [StaffReviewsController::class, 'data'])
-                ->name('reviews.data');
         });
     });
