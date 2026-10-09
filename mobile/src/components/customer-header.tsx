@@ -264,6 +264,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     borderWidth: 0,
     outlineColor: 'transparent',
+    // React Native's shared type omits the web-only "none" value; RN Web uses it to remove the focus ring.
+    outlineStyle: 'none' as never,
     outlineWidth: 0,
     paddingHorizontal: Spacing.two,
   },
