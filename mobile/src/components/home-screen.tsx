@@ -1,13 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { CustomerScreen } from '@/components/customer-screen';
-import {
-  CatalogFeedback,
-  ProductGrid,
-  ProductSkeletonGrid,
-} from '@/components/product-catalog';
+import { CustomerHeader } from '@/components/customer-header';
+import { ProductCatalog } from '@/components/product-catalog';
 import { Colors, Spacing } from '@/constants/theme';
 import { useProductCatalog } from '@/hooks/use-product-catalog';
 
@@ -22,11 +19,11 @@ export function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const catalog = useProductCatalog({
     filters: { search: searchQuery },
-    perPage: 4,
+    perPage: 20,
   });
 
-  return (
-    <CustomerScreen onSearchChange={setSearchQuery}>
+  const homeHeader = (
+    <>
       <View style={styles.heroCard}>
         <View style={styles.heroCopy}>
           <Text style={styles.heroEyebrow}>GENUINE MOTORCYCLE PARTS</Text>
@@ -78,151 +75,34 @@ export function HomeScreen() {
           </Pressable>
         ))}
       </View>
+    </>
+  );
 
-      <View style={styles.productPreview}>
-        {catalog.isInitialLoading ? <ProductSkeletonGrid /> : null}
-        {!catalog.isInitialLoading && catalog.error && catalog.products.length === 0 ? (
-          <CatalogFeedback
-            description="Check your connection and try again."
-            onRetry={catalog.retry}
-            title="Unable to load products"
-          />
-        ) : null}
-        {!catalog.isInitialLoading &&
-        !catalog.error &&
-        catalog.products.length === 0 ? (
-          <View style={styles.emptyPreview}>
-            <Text style={styles.emptyPreviewTitle}>
-              {searchQuery.trim()
-                ? 'No products match your search.'
-                : 'No products found.'}
-            </Text>
-          </View>
-        ) : null}
-        {catalog.products.length > 0 ? (
-          <ProductGrid products={catalog.products} />
-        ) : null}
-        {catalog.error && catalog.products.length > 0 ? (
-          <CatalogFeedback
-            description="Your current products are still shown."
-            onRetry={catalog.retry}
-            title="Could not refresh products"
-          />
-        ) : null}
-      </View>
-    </CustomerScreen>
+  return (
+    <View style={styles.container}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+        <CustomerHeader onSearchChange={setSearchQuery} />
+        <ProductCatalog
+          error={catalog.error}
+          headerContent={homeHeader}
+          hasNextPage={catalog.hasNextPage}
+          isInitialLoading={catalog.isInitialLoading}
+          isLoadingMore={catalog.isLoadingMore}
+          isRefreshing={catalog.isRefreshing}
+          loadMore={catalog.loadMore}
+          onRefresh={catalog.refresh}
+          onRetry={catalog.retry}
+          paginationError={catalog.paginationError}
+          products={catalog.products}
+          searchQuery={searchQuery}
+          showTitle={false}
+        />
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  heroCard: {
-    backgroundColor: Colors.light.text,
-    borderRadius: 18,
-    flexDirection: 'row',
-    minHeight: 224,
-    overflow: 'hidden',
-    padding: Spacing.four,
-    position: 'relative',
-  },
-  heroCopy: {
-    flex: 1,
-    zIndex: 1,
-  },
-  heroEyebrow: {
-    color: Colors.light.primary,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  heroTitle: {
-    color: '#FFFFFF',
-    fontSize: 29,
-    fontWeight: '800',
-    lineHeight: 34,
-    marginTop: Spacing.two,
-    maxWidth: 250,
-  },
-  heroDescription: {
-    color: '#CBD5E1',
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: Spacing.two,
-    maxWidth: 255,
-  },
-  heroBrandRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginTop: Spacing.three,
-  },
-  heroBrandLabel: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  heroBrandSeparator: {
-    color: Colors.light.primary,
-    fontSize: 13,
-    marginHorizontal: Spacing.one,
-  },
-  heroGraphic: {
-    height: 170,
-    position: 'absolute',
-    right: -20,
-    top: 25,
-    width: 140,
-  },
-  heroGraphicRing: {
-    borderColor: Colors.light.primary,
-    borderRadius: 75,
-    borderWidth: 18,
-    height: 150,
-    opacity: 0.85,
-    position: 'absolute',
-    right: -18,
-    top: 4,
-    width: 150,
-  },
-  heroGraphicBlock: {
-    backgroundColor: '#16234A',
-    borderColor: '#33436D',
-    borderRadius: 12,
-    borderWidth: 1,
-    height: 74,
-    position: 'absolute',
-    right: 35,
-    top: 47,
-    transform: [{ rotate: '-14deg' }],
-    width: 52,
-  },
-  heroGraphicDot: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 7,
-    height: 14,
-    position: 'absolute',
-    right: 47,
-    top: 77,
-    width: 14,
-  },
-  sectionHeaderCompact: {
-    marginTop: Spacing.four,
-  },
-  sectionEyebrow: {
-    color: Colors.light.primary,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-  },
-  sectionTitle: {
-    color: Colors.light.text,
-    fontSize: 22,
-    fontWeight: '800',
-    marginTop: Spacing.one,
-  },
-  brandRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-  },
   brandCard: {
     alignItems: 'center',
     backgroundColor: Colors.light.backgroundElement,
@@ -248,25 +128,122 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-  productPreview: {
-    marginTop: Spacing.four,
+  brandRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    marginTop: Spacing.two,
   },
-  emptyPreview: {
+  container: {
+    backgroundColor: Colors.light.background,
+    flex: 1,
+  },
+  heroBrandLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  heroBrandRow: {
     alignItems: 'center',
-    backgroundColor: Colors.light.backgroundElement,
-    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    marginTop: Spacing.three,
+  },
+  heroBrandSeparator: {
+    color: Colors.light.primary,
+    fontSize: 13,
+    marginHorizontal: Spacing.one,
+  },
+  heroCard: {
+    backgroundColor: Colors.light.text,
+    borderRadius: 18,
+    flexDirection: 'row',
+    minHeight: 224,
+    overflow: 'hidden',
+    padding: Spacing.four,
+    position: 'relative',
+  },
+  heroCopy: {
+    flex: 1,
+    zIndex: 1,
+  },
+  heroDescription: {
+    color: '#CBD5E1',
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: Spacing.two,
+    maxWidth: 255,
+  },
+  heroEyebrow: {
+    color: Colors.light.primary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  heroGraphic: {
+    height: 170,
+    position: 'absolute',
+    right: -20,
+    top: 25,
+    width: 140,
+  },
+  heroGraphicBlock: {
+    backgroundColor: '#16234A',
+    borderColor: '#33436D',
     borderRadius: 12,
     borderWidth: 1,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
+    height: 74,
+    position: 'absolute',
+    right: 35,
+    top: 47,
+    transform: [{ rotate: '-14deg' }],
+    width: 52,
   },
-  emptyPreviewTitle: {
-    color: Colors.light.text,
-    fontSize: 15,
+  heroGraphicDot: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 7,
+    height: 14,
+    position: 'absolute',
+    right: 47,
+    top: 77,
+    width: 14,
+  },
+  heroGraphicRing: {
+    borderColor: Colors.light.primary,
+    borderRadius: 75,
+    borderWidth: 18,
+    height: 150,
+    opacity: 0.85,
+    position: 'absolute',
+    right: -18,
+    top: 4,
+    width: 150,
+  },
+  heroTitle: {
+    color: '#FFFFFF',
+    fontSize: 29,
     fontWeight: '800',
-    textAlign: 'center',
+    lineHeight: 34,
+    marginTop: Spacing.two,
+    maxWidth: 250,
   },
   pressed: {
     opacity: 0.65,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  sectionEyebrow: {
+    color: Colors.light.primary,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  sectionHeaderCompact: {
+    marginTop: Spacing.four,
+  },
+  sectionTitle: {
+    color: Colors.light.text,
+    fontSize: 22,
+    fontWeight: '800',
+    marginTop: Spacing.one,
   },
 });

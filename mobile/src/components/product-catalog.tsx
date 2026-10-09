@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -54,20 +55,9 @@ export function ProductSkeletonGrid() {
   );
 }
 
-export function ProductGrid({ products }: { products: CatalogProduct[] }) {
-  return (
-    <View style={styles.productGrid}>
-      {products.map((product) => (
-        <View key={product.id} style={styles.productGridItem}>
-          <ProductCard product={product} />
-        </View>
-      ))}
-    </View>
-  );
-}
-
 type ProductCatalogProps = {
   error: Error | null;
+  headerContent?: ReactNode;
   hasNextPage: boolean;
   isInitialLoading: boolean;
   isLoadingMore: boolean;
@@ -78,11 +68,13 @@ type ProductCatalogProps = {
   paginationError: Error | null;
   products: CatalogProduct[];
   searchQuery?: string;
+  showTitle?: boolean;
   title?: string;
 };
 
 export function ProductCatalog({
   error,
+  headerContent,
   hasNextPage,
   isInitialLoading,
   isLoadingMore,
@@ -93,6 +85,7 @@ export function ProductCatalog({
   paginationError,
   products,
   searchQuery,
+  showTitle = true,
   title = 'Motorcycle Parts',
 }: ProductCatalogProps) {
   const emptyMessage = searchQuery?.trim()
@@ -101,8 +94,13 @@ export function ProductCatalog({
 
   const listHeader = (
     <View style={styles.listHeader}>
-      <Text style={styles.listEyebrow}>PRODUCT CATALOG</Text>
-      <Text style={styles.listTitle}>{title}</Text>
+      {headerContent}
+      {showTitle ? (
+        <>
+          <Text style={styles.listEyebrow}>PRODUCT CATALOG</Text>
+          <Text style={styles.listTitle}>{title}</Text>
+        </>
+      ) : null}
       {searchQuery?.trim() ? (
         <Text style={styles.searchSummary}>
           Results for “{searchQuery.trim()}”
@@ -256,16 +254,6 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  productGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.three,
-  },
-  productGridItem: {
-    flexBasis: '47%',
-    flexGrow: 1,
-    minWidth: 0,
   },
   retryButton: {
     alignItems: 'center',
