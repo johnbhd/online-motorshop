@@ -4,7 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import {
+  BottomTabInset,
+  Colors,
+  MaxContentWidth,
+  Spacing,
+} from '@/constants/theme';
 
 type MobileScreenProps = {
   eyebrow?: string;
@@ -77,7 +82,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.two,
     marginBottom: Spacing.four,
     borderRadius: 2,
-    backgroundColor: '#C96A00',
+    backgroundColor: Colors.light.primary,
   },
   title: {
     maxWidth: 520,

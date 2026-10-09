@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#07111F",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/images/ald-logo.png",
           "imageWidth": 120
         }

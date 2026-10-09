@@ -2,12 +2,10 @@ import * as ExpoSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   Easing,
   StyleSheet,
   Text,
-  View,
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
@@ -18,7 +16,13 @@ const EXIT_DURATION = 260;
 
 const logo = require('@/assets/images/ald-logo.png');
 
-export function MobileSplashOverlay() {
+type MobileSplashOverlayProps = {
+  onComplete?: () => void;
+};
+
+export function MobileSplashOverlay({
+  onComplete,
+}: MobileSplashOverlayProps) {
   const [visible, setVisible] = useState(true);
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.96)).current;
@@ -68,6 +72,7 @@ export function MobileSplashOverlay() {
 
         setVisible(false);
         void ExpoSplashScreen.hideAsync();
+        onComplete?.();
       });
     }, MINIMUM_DISPLAY_DURATION);
 
@@ -75,7 +80,7 @@ export function MobileSplashOverlay() {
       clearTimeout(timeoutId);
       exitAnimation?.stop();
     };
-  }, [overlayOpacity, visible]);
+  }, [onComplete, overlayOpacity, visible]);
 
   if (!visible) {
     return null;
@@ -85,10 +90,10 @@ export function MobileSplashOverlay() {
     <Animated.View
       accessibilityViewIsModal
       accessible
-      accessibilityLabel="ALD Motorshop is loading"
+      accessibilityLabel="ALD Motorshop"
       style={[styles.overlay, { opacity: overlayOpacity }]}
     >
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
       <Animated.Image
         accessibilityLabel="ALD Motorshop logo"
@@ -103,18 +108,7 @@ export function MobileSplashOverlay() {
         ]}
       />
 
-      <View
-        accessible
-        accessibilityLabel="Loading"
-        style={styles.loadingState}
-      >
-        <ActivityIndicator
-          accessibilityLabel="Loading ALD Motorshop"
-          color={Colors.dark.primary}
-          size="small"
-        />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <Text style={styles.brandName}>ALD Motorshop</Text>
     </Animated.View>
   );
 }
@@ -123,7 +117,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
-    backgroundColor: Colors.dark.background,
+    backgroundColor: Colors.light.background,
     justifyContent: 'center',
     zIndex: 1000,
   },
@@ -132,14 +126,11 @@ const styles = StyleSheet.create({
     maxWidth: 260,
     width: '60%',
   },
-  loadingState: {
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 28,
-  },
-  loadingText: {
-    color: Colors.dark.textSecondary,
-    fontSize: 14,
-    fontWeight: '500',
+  brandName: {
+    color: Colors.light.text,
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    marginTop: 24,
   },
 });
