@@ -61,7 +61,7 @@ const links = [
   ["Branches", "/admin/branches", "▧"],
   ["Staff Management", "/admin/staff-management", "♙"],
   ["Website Content", "/admin/website-content", "▤"],
-  ["Reports", "#", "▥"],
+  ["Reports", "/admin/reports", "▥"],
   ["Activity Logs", "#", "◷"],
   ["Settings", "/admin/settings", "⚙"],
   ["Profile", "/admin/profile", "◉"],

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminPaymentsController;
 use App\Http\Controllers\Admin\AdminPickupRequestsController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
@@ -23,8 +24,8 @@ use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProfileController;
 use App\Http\Controllers\OrderRequestController;
-use App\Http\Controllers\PortalNotificationController;
 use App\Http\Controllers\PaymentInstructionsController;
+use App\Http\Controllers\PortalNotificationController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Staff\StaffConversationsController;
 use App\Http\Controllers\Staff\StaffCustomersController;
@@ -131,6 +132,9 @@ Route::prefix('admin')
     ->group(function () {
         Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
             ->name('dashboard.data');
+
+        Route::get('/reports/data', [AdminReportsController::class, 'data'])
+            ->name('reports.data');
 
         Route::get('/settings', [AdminSettingsController::class, 'show'])
             ->name('settings.show');
