@@ -8,8 +8,11 @@ use App\Models\Customer;
 use App\Models\OrderRequest;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\CloudinaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Tests\Fakes\FakeCloudinaryService;
 use Tests\TestCase;
 
 class AdminProductsApiTest extends TestCase
@@ -21,6 +24,7 @@ class AdminProductsApiTest extends TestCase
         $app = parent::createApplication();
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app->instance(CloudinaryService::class, new FakeCloudinaryService);
 
         return $app;
     }
@@ -217,6 +221,48 @@ class AdminProductsApiTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_admin_product_image_upload_and_replacement_use_cloudinary_metadata(): void
+    {
+        $admin = $this->createUser('admin');
+        $category = $this->createCategory('Cloudinary Parts');
+        $brand = $this->createBrand('Cloudinary Brand');
+
+        $created = $this->adminRequest($admin)
+            ->post('/api/admin/products', [
+                'category_id' => $category->id,
+                'name' => 'Cloudinary Product',
+                'part_number' => 'CLOUDINARY-001',
+                'brand_id' => $brand->id,
+                'price' => 250,
+                'image' => $this->validImage('product.png'),
+                'availability_status' => 'active',
+                'status' => 'active',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('product.img_public_id', 'ald-motorshop/products/fake-1');
+
+        $product = Product::query()->where('part_number', 'CLOUDINARY-001')->firstOrFail();
+        $oldPublicId = $product->img_public_id;
+
+        $this->assertSame(
+            'https://res.cloudinary.com/test/image/upload/ald-motorshop/products/fake-1.png',
+            $created->json('product.img_url'),
+        );
+
+        $this->adminRequest($admin)
+            ->post('/api/admin/products/CLOUDINARY-001', [
+                '_method' => 'PATCH',
+                'name' => 'Replaced Cloudinary Product',
+                'image' => $this->validImage('replacement.webp'),
+            ])
+            ->assertOk()
+            ->assertJsonPath('product.img_public_id', 'ald-motorshop/products/fake-2');
+
+        $product->refresh();
+        $this->assertSame('ald-motorshop/products/fake-2', $product->img_public_id);
+        $this->assertContains($oldPublicId, app(CloudinaryService::class)->deletions);
+    }
+
     public function test_inactive_taxonomy_is_preserved_for_existing_products_but_not_new_assignments(): void
     {
         $admin = $this->createUser('admin');
@@ -320,6 +366,16 @@ class AdminProductsApiTest extends TestCase
             'description' => $name.' description',
             'status' => 'active',
         ]);
+    }
+
+    private function validImage(string $filename): UploadedFile
+    {
+        $contents = base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            true,
+        );
+
+        return UploadedFile::fake()->createWithContent($filename, $contents ?: '');
     }
 
     /** @param array<string, mixed> $overrides */

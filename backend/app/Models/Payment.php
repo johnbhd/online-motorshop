@@ -39,6 +39,7 @@ class Payment extends Model
         'amount',
         'payment_reference',
         'proof_image_url',
+        'proof_image_public_id',
         'payment_status',
         'verified_by',
         'verified_at',

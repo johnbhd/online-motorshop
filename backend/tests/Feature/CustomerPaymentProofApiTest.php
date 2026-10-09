@@ -7,10 +7,11 @@ use App\Models\Customer;
 use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\CloudinaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Tests\Fakes\FakeCloudinaryService;
 use Tests\TestCase;
 
 class CustomerPaymentProofApiTest extends TestCase
@@ -22,13 +23,13 @@ class CustomerPaymentProofApiTest extends TestCase
         $app = parent::createApplication();
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app->instance(CloudinaryService::class, new FakeCloudinaryService);
 
         return $app;
     }
 
     public function test_confirmed_customer_can_submit_valid_online_payment_proof(): void
     {
-        Storage::fake('public');
         [$user, $customer] = $this->createCustomer('payment-proof@example.com');
         $order = $this->createOrder($customer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT);
         $token = $user->createToken('payment-proof-test')->plainTextToken;
@@ -45,8 +46,9 @@ class CustomerPaymentProofApiTest extends TestCase
 
         $this->assertSame(Payment::STATUS_WAITING_FOR_VERIFICATION, $payment->payment_status);
         $this->assertNotNull($payment->proof_image_url);
-        Storage::disk('public')->assertExists(
-            str_replace('/storage/', '', (string) parse_url($payment->proof_image_url, PHP_URL_PATH)),
+        $this->assertSame(
+            'ald-motorshop/payment-proofs/'.$order->order_reference.'/fake-1',
+            $payment->proof_image_public_id,
         );
     }
 
@@ -111,7 +113,6 @@ class CustomerPaymentProofApiTest extends TestCase
 
     public function test_failed_proof_can_be_replaced_for_an_active_order(): void
     {
-        Storage::fake('public');
         [$user, $customer] = $this->createCustomer('failed-payment@example.com');
         $order = $this->createOrder($customer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT, Payment::STATUS_FAILED);
 
@@ -122,6 +123,25 @@ class CustomerPaymentProofApiTest extends TestCase
         )
             ->assertCreated()
             ->assertJsonPath('order.payment.status', Payment::STATUS_WAITING_FOR_VERIFICATION);
+    }
+
+    public function test_cloudinary_failure_does_not_change_payment_state(): void
+    {
+        [$user, $customer] = $this->createCustomer('failed-cloudinary-payment@example.com');
+        $order = $this->createOrder($customer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT);
+        $cloudinary = app(CloudinaryService::class);
+        $cloudinary->failUploads = true;
+
+        $this->postProof(
+            $user->createToken('failed-cloudinary-payment-test')->plainTextToken,
+            $order->order_reference,
+            $this->validProof(),
+        )->assertStatus(503);
+
+        $payment = $order->payments()->firstOrFail();
+        $this->assertSame(Payment::STATUS_UNPAID, $payment->payment_status);
+        $this->assertNull($payment->proof_image_url);
+        $this->assertNull($payment->proof_image_public_id);
     }
 
     public function test_invalid_file_is_rejected(): void

@@ -8,6 +8,7 @@ use App\Http\Requests\StoreAdminProductRequest;
 use App\Http\Requests\UpdateAdminProductRequest;
 use App\Services\AdminProductPresenter;
 use App\Services\AdminProductService;
+use App\Services\CloudinaryServiceException;
 use Illuminate\Http\JsonResponse;
 
 class AdminProductController extends Controller
@@ -42,7 +43,13 @@ class AdminProductController extends Controller
 
     public function store(StoreAdminProductRequest $request): JsonResponse
     {
-        $product = $this->service->create($request->validated());
+        try {
+            $product = $this->service->create($request->validated());
+        } catch (CloudinaryServiceException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 503);
+        }
 
         return response()->json([
             'message' => 'Product created successfully.',
@@ -58,7 +65,13 @@ class AdminProductController extends Controller
             return response()->json(['message' => 'Product not found.'], 404);
         }
 
-        $product = $this->service->update($product, $request->validated());
+        try {
+            $product = $this->service->update($product, $request->validated());
+        } catch (CloudinaryServiceException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 503);
+        }
 
         return response()->json([
             'message' => 'Product updated successfully.',

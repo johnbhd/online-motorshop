@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
@@ -50,6 +50,7 @@ type ProductFormValues = {
   description: string;
   price: string;
   img_url: string;
+  image: File | null;
   availability_status: string;
   status: string;
 };
@@ -97,6 +98,7 @@ function emptyForm(
     description: "",
     price: "",
     img_url: "",
+    image: null,
     availability_status: "active",
     status: "active",
   };
@@ -111,6 +113,7 @@ function formFromProduct(product: AdminProduct): ProductFormValues {
     description: product.description ?? "",
     price: String(product.price),
     img_url: product.img_url,
+    image: null,
     availability_status: product.availability_status,
     status: product.status,
   };
@@ -124,20 +127,20 @@ function payloadFromForm(values: ProductFormValues): AdminProductPayload {
     brand_id: Number(values.brand_id),
     description: values.description.trim() || null,
     price: Number(values.price),
-    img_url: values.img_url.trim(),
+    img_url: values.img_url.trim() || undefined,
+    image: values.image,
     availability_status: values.availability_status,
     status: values.status,
   };
 }
 
-function clientFormErrors(values: ProductFormValues): ProductFormErrors {
+function clientFormErrors(values: ProductFormValues, isEditing: boolean): ProductFormErrors {
   const errors: ProductFormErrors = {};
-  const required: Array<[keyof ProductFormValues, string]> = [
+  const required: Array<[Exclude<keyof ProductFormValues, "image">, string]> = [
     ["category_id", "Choose a category."],
     ["name", "Enter a product name."],
     ["part_number", "Enter a part number."],
     ["brand_id", "Choose a brand."],
-    ["img_url", "Enter an image URL or existing image path."],
     ["availability_status", "Choose an availability status."],
     ["status", "Choose a catalog status."],
   ];
@@ -146,6 +149,10 @@ function clientFormErrors(values: ProductFormValues): ProductFormErrors {
     if (!values[field].trim()) {
       errors[field] = [message];
     }
+  }
+
+  if (!isEditing && !values.image && !values.img_url.trim()) {
+    errors.image = ["Choose a product image to upload."];
   }
 
   const price = Number(values.price);
@@ -326,7 +333,7 @@ export default function RealAdminProductsPage() {
       return;
     }
 
-    const localErrors = clientFormErrors(values);
+    const localErrors = clientFormErrors(values, Boolean(editingPartNumber));
 
     if (Object.keys(localErrors).length) {
       setFormErrors(localErrors);
@@ -569,10 +576,23 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
   const categoryOptions = productCategory ? [...activeCategories, productCategory] : activeCategories;
   const brandOptions = productBrand ? [...activeBrands, productBrand] : activeBrands;
   const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(activeCategories, activeBrands, initialCategoryId, initialBrandId));
+  const previewUrl = useMemo(
+    () => (values.image ? URL.createObjectURL(values.image) : null),
+    [values.image],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   if (!isOpen) return null;
 
-  const update = (field: keyof ProductFormValues, value: string) => setValues((current) => ({ ...current, [field]: value }));
+  const update = (field: Exclude<keyof ProductFormValues, "image">, value: string) => setValues((current) => ({ ...current, [field]: value }));
+  const updateImage = (image: File | null) => setValues((current) => ({ ...current, image }));
   const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); onSubmit(values); };
   const allErrors = fieldErrors;
   const fieldError = (field: keyof ProductFormValues) => allErrors[field]?.[0];
@@ -589,10 +609,24 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
         <TextField label="Price" type="number" min="0" step="0.01" value={values.price} error={fieldError("price")} onChange={(value) => update("price", value)} required />
         <SelectField label="Availability" value={values.availability_status} error={fieldError("availability_status")} options={availabilityOptions.map((option) => ({ value: option, label: formatLabel(option) }))} onChange={(value) => update("availability_status", value)} required />
         <SelectField label="Catalog status" value={values.status} error={fieldError("status")} options={statusOptions.map((option) => ({ value: option, label: formatLabel(option) }))} onChange={(value) => update("status", value)} required />
-        <TextField label="Image URL" value={values.img_url} error={fieldError("img_url")} onChange={(value) => update("img_url", value)} required />
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-sm font-semibold text-slate-700">
+            Product image{!isEditing ? <span aria-hidden="true"> *</span> : null}
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            required={!isEditing && !values.img_url}
+            aria-invalid={Boolean(fieldError("image"))}
+            onChange={(event) => updateImage(event.target.files?.[0] ?? null)}
+            className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-700 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+          />
+          {fieldError("image") ? <span className="mt-1 block text-xs font-medium text-red-600" role="alert">{fieldError("image")}</span> : null}
+          <span className="mt-1 block text-xs text-slate-500">JPG, PNG, or WEBP up to 5 MB. Leave this empty while editing to keep the current image.</span>
+        </label>
       </div>
       <label className="block"><span className="mb-1 block text-sm font-semibold text-slate-700">Description</span><textarea value={values.description} onChange={(event) => update("description", event.target.value)} rows={3} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" /></label>
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Image preview</p><div className="mt-3 flex items-center gap-3">{values.img_url ? <img src={values.img_url} alt="Product preview" width={72} height={72} className="size-[72px] rounded-lg border border-slate-200 bg-white object-cover" /> : <span className="grid size-[72px] place-items-center rounded-lg border border-dashed border-slate-300 text-slate-400"><FontAwesomeIcon icon={faBoxOpen} aria-hidden="true" /></span>}<p className="text-xs leading-5 text-slate-500">The current product image is stored as a URL/path. This field is ready for a future Cloudinary upload without uploading files today.</p></div></div>
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Image preview</p><div className="mt-3 flex items-center gap-3">{previewUrl || values.img_url ? <img src={previewUrl ?? values.img_url} alt="Product preview" width={72} height={72} className="size-[72px] rounded-lg border border-slate-200 bg-white object-cover" /> : <span className="grid size-[72px] place-items-center rounded-lg border border-dashed border-slate-300 text-slate-400"><FontAwesomeIcon icon={faBoxOpen} aria-hidden="true" /></span>}<p className="text-xs leading-5 text-slate-500">The selected image is uploaded securely by Laravel after you save. Editing without a new file keeps the existing image.</p></div></div>
     </form>
   </ModalShell>;
 }
