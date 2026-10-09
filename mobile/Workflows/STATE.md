@@ -4,7 +4,7 @@
 
 ## Overall Status
 
-Mobile foundation implemented on 2026-10-09. The app is now an ALD customer shell with a direct Laravel API boundary and SecureStore-backed auth session bootstrap. Business screens remain placeholders.
+Mobile foundation and branded startup screen implemented on 2026-10-09. The app is now an ALD customer shell with a direct Laravel API boundary, SecureStore-backed auth session bootstrap, and a real ALD logo reveal before the tabs. Business screens remain placeholders.
 
 ## Mobile Stack
 
@@ -48,11 +48,13 @@ Mobile foundation implemented on 2026-10-09. The app is now an ALD customer shel
 ## Device Features / Permissions
 
 - Safe-area context, Expo splash handling, and system theme are used.
+- The real frontend logo is copied to `assets/images/ald-logo.png` and used by both native Expo splash configuration and the React Native startup overlay.
 - No camera, gallery, location, microphone, contacts, biometric, push, file-picker, or payment-device permission is configured.
 
 ## Known UI / Functional / Platform Issues
 
 - Main customer routes are temporary migration screens and do not implement storefront behavior.
+- Splash startup is time-based and does not yet wait for remote bootstrap beyond the existing background session restoration.
 - No runtime device or Expo startup verification was completed.
 - Full `npm run lint` was attempted but did not complete in this environment; no lint result is claimed.
 - No EAS configuration, native folders, application identifiers, release profiles, or test runner exists.

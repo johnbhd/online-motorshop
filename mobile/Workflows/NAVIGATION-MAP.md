@@ -9,12 +9,15 @@ Expo Router bootstrap
         ↓
 Theme + splash composition
         ↓
+ALD branded startup overlay
+        ↓
 AuthProvider session restore in background
         ↓
 Customer tab shell
 ```
 
 - `src/app/_layout.tsx` mounts the provider and tab shell.
+- `MobileSplashOverlay` is a temporary overlay owned by the root layout; it dismisses once after the short startup reveal and does not create a back-stack route.
 - Session restoration currently reports state through context; it does not redirect or block tabs.
 
 ## Public / Authentication Routes

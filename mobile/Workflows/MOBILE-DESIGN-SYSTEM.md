@@ -5,6 +5,7 @@
 ## Visual Direction
 
 - Temporary ALD Motorshop shell: near-black/navy surfaces with orange-gold primary accent and restrained neutral copy.
+- Startup overlay: dark navy full-screen background, centered circular ALD logo, orange loading indicator, and restrained motion.
 - Product screens remain intentionally unbuilt; do not infer final storefront styling from the placeholder shell.
 
 ## Color System
@@ -32,6 +33,7 @@
 ## Components and Interaction
 
 - `MobileScreen` is the current temporary safe-area/scrollable shell.
+- `MobileSplashOverlay` is the current startup presentation; it uses the real frontend logo copied into mobile assets.
 - Existing Expo themed primitives remain available.
 - No product buttons, forms, cards, lists, bottom sheets, modals, or upload controls are implemented.
 - No UI framework or web CSS has been copied into mobile.
@@ -45,6 +47,7 @@
 ## Loading / Empty / Error / Offline
 
 - Auth context has restore and error states.
+- Splash loading shows a native activity indicator and dismisses after a 1.4-second minimum reveal plus a 260ms fade-out.
 - Product/cart/order loading, empty, error, disabled, unauthorized, and offline states remain future feature requirements.
 - No offline cache or retry UI exists outside session-restore retry.
 

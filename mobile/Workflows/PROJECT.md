@@ -28,6 +28,7 @@
 ## Implemented Foundation
 
 - `src/app/_layout.tsx` mounts the theme/splash composition and `AuthProvider`.
+- `src/components/splash-screen.tsx` provides the ALD branded React Native startup overlay with the copied logo, restrained reveal, loading indicator, and timed dismissal.
 - Main customer shell routes are `/`, `/products`, `/cart`, `/orders`, and `/account`.
 - `/explore` remains as an unlinked legacy Expo starter route until cleanup is scheduled.
 - `src/lib/api/client.ts` provides a fetch-based JSON client with public `EXPO_PUBLIC_API_URL`, bearer-token support, timeout, cancellation, and normalized HTTP/network errors.
@@ -45,6 +46,7 @@
 ## Device / Build Status
 
 - Safe areas, Expo splash handling, and light/dark theme selection remain configured.
+- Native Expo splash configuration now uses the copied ALD logo on the dark ALD background; the React Native overlay remains the short branded startup experience.
 - No checked-in native `android/` or `ios/` directories, EAS configuration, release profile, or test runner exists.
 - TypeScript verification passed. Full lint was attempted but the Expo lint command did not complete in this environment; no runtime device verification was performed.
 

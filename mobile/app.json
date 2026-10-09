@@ -28,9 +28,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#07111F",
+          "image": "./assets/images/ald-logo.png",
+          "imageWidth": 120
         }
       ],
       "expo-secure-store"

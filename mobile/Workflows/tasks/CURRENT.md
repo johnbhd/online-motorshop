@@ -2,4 +2,4 @@
 
 No active task.
 
-The completed mobile foundation task is archived in `tasks/done/TASK-001-mobile-foundation.md`.
+The completed mobile splash task is archived in `tasks/done/TASK-002-mobile-splash.md`.
