@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class ConversationService
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+    ) {}
+
     public function findCurrent(?User $user, ?string $guestToken): ?Conversation
     {
         $query = Conversation::query();
@@ -67,7 +71,10 @@ class ConversationService
         User $staff,
         string $body,
     ): Message {
-        return $this->appendMessage($conversation, 'staff', $body, $staff->id);
+        $message = $this->appendMessage($conversation, 'staff', $body, $staff->id);
+        $this->customerNotificationService->supportMessageReceived($message);
+
+        return $message;
     }
 
     public function appendAdminMessage(
@@ -75,7 +82,10 @@ class ConversationService
         User $admin,
         string $body,
     ): Message {
-        return $this->appendMessage($conversation, 'admin', $body, $admin->id);
+        $message = $this->appendMessage($conversation, 'admin', $body, $admin->id);
+        $this->customerNotificationService->supportMessageReceived($message);
+
+        return $message;
     }
 
     public function loadConversation(?Conversation $conversation, bool $includeSenderUsers = false): ?Conversation

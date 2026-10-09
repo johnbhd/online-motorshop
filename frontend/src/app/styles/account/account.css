@@ -20,9 +20,88 @@
 
 .customer-orders-page,
 .customer-order-details-page,
-.customer-profile-page {
+.customer-profile-page,
+.customer-notifications-page {
   min-height: calc(100vh - 9rem);
   background: var(--customer-orders-surface);
+}
+
+.customer-notifications-content {
+  padding-block: clamp(2rem, 5vw, 4rem) 5rem;
+}
+
+.customer-notifications-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--customer-orders-border);
+}
+
+.customer-notifications-filters button,
+.customer-notifications-pagination button {
+  min-height: 2.25rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--customer-orders-border);
+  border-radius: 0.45rem;
+  background: #ffffff;
+  color: var(--customer-orders-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.customer-notifications-filters button:hover,
+.customer-notifications-filters button.is-active,
+.customer-notifications-pagination button:hover:not(:disabled) {
+  border-color: var(--customer-orders-orange);
+  color: var(--customer-orders-orange);
+}
+
+.customer-notifications-list {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem 1.25rem;
+}
+
+.customer-notifications-list .site-notification-item {
+  min-height: 4.8rem;
+  align-items: center;
+  border: 1px solid #edf2f7;
+}
+
+.customer-notifications-empty {
+  padding: 4rem 1.25rem;
+  color: var(--customer-orders-muted);
+  text-align: center;
+}
+
+.customer-notifications-empty h2 {
+  margin: 0;
+  color: var(--customer-orders-ink);
+  font-size: 1.35rem;
+}
+
+.customer-notifications-empty p {
+  margin: 0.65rem 0 0;
+  line-height: 1.55;
+}
+
+.customer-notifications-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--customer-orders-border);
+  color: var(--customer-orders-muted);
+  font-size: 0.78rem;
+}
+
+.customer-notifications-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .customer-profile-content {

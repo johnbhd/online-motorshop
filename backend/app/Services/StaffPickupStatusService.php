@@ -7,6 +7,10 @@ use Illuminate\Validation\ValidationException;
 
 class StaffPickupStatusService
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+    ) {}
+
     private const TRANSITIONS = [
         'pending' => [
             'preparing',
@@ -43,6 +47,9 @@ class StaffPickupStatusService
                 : $pickupRequest->completed_at,
         ]);
 
-        return $pickupRequest->fresh();
+        $pickupRequest = $pickupRequest->fresh();
+        $this->customerNotificationService->pickupStatusChanged($pickupRequest, $status);
+
+        return $pickupRequest;
     }
 }

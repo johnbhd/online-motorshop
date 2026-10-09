@@ -233,6 +233,7 @@
 }
 
 .site-header-notifications-trigger {
+  position: relative;
   display: grid;
   width: 2.25rem;
   height: 2.25rem;
@@ -283,6 +284,23 @@
   white-space: nowrap;
 }
 
+.site-header-notifications-badge {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.35rem;
+  display: grid;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  place-items: center;
+  padding-inline: 0.18rem;
+  border-radius: 999px;
+  background: #e07a08;
+  color: #ffffff;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .site-notifications-list {
   display: grid;
   gap: 0.35rem;
@@ -293,11 +311,83 @@
 
 .site-notification-item {
   display: flex;
+  width: 100%;
   align-items: flex-start;
   gap: 0.65rem;
   padding: 0.65rem 0.75rem;
+  border: 0;
   border-radius: 0.45rem;
   background: #f8fafc;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: background 150ms ease, box-shadow 150ms ease;
+}
+
+.site-notification-item:hover,
+.site-notification-item:focus-visible {
+  background: #fff7ed;
+  box-shadow: inset 0 0 0 1px #fed7aa;
+}
+
+.site-notification-item.is-unread {
+  background: #fffaf4;
+}
+
+.site-notification-item.is-read .site-notification-copy strong {
+  font-weight: 700;
+}
+
+.site-notification-item.is-compact {
+  padding: 0.6rem 0.65rem;
+}
+
+.site-notification-unread-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  flex: 0 0 auto;
+  margin-top: 0.4rem;
+  border-radius: 50%;
+  background: #e07a08;
+}
+
+.site-notifications-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem 0.15rem;
+}
+
+.site-notifications-toolbar button,
+.site-notifications-toolbar a,
+.site-notifications-state button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #e07a08;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-notifications-toolbar button:hover,
+.site-notifications-toolbar a:hover,
+.site-notifications-state button:hover {
+  color: #b95f00;
+}
+
+.site-notifications-state {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.3rem 0.9rem;
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  text-align: center;
 }
 
 .site-notification-icon {
@@ -705,6 +795,11 @@
 
   .site-mobile-notifications .site-notification-copy small {
     color: #94a3b8;
+  }
+
+  .site-mobile-notifications .site-notifications-toolbar button,
+  .site-mobile-notifications .site-notifications-toolbar a {
+    color: #fdb813;
   }
 
   .site-mobile-nav-cart-badge {

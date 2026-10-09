@@ -19,6 +19,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PaymentInstructionsController;
@@ -76,6 +77,12 @@ Route::prefix('customer')
         'role:customer',
     ])
     ->group(function () {
+        Route::get('/notifications', [CustomerNotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::patch('/notifications/read-all', [CustomerNotificationController::class, 'markAllRead'])
+            ->name('notifications.read-all');
+        Route::patch('/notifications/{notification}/read', [CustomerNotificationController::class, 'markRead'])
+            ->name('notifications.read');
         Route::get('/orders', [CustomerOrderController::class, 'index'])
             ->name('orders.index');
         Route::get('/orders/{reference}', [CustomerOrderController::class, 'show'])
