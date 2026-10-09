@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CustomerScreen } from '@/components/customer-screen';
+import { ProductSkeletonCard } from '@/components/product-skeleton-card';
 import { Colors, Spacing } from '@/constants/theme';
 
 const discoveryOptions = [
@@ -57,6 +58,17 @@ export function HomeScreen() {
             <Text style={styles.brandLabel}>{option.label}</Text>
           </Pressable>
         ))}
+      </View>
+
+      <View style={styles.skeletonGrid}>
+        <View style={styles.skeletonRow}>
+          <ProductSkeletonCard />
+          <ProductSkeletonCard />
+        </View>
+        <View style={styles.skeletonRow}>
+          <ProductSkeletonCard />
+          <ProductSkeletonCard />
+        </View>
       </View>
     </CustomerScreen>
   );
@@ -195,6 +207,14 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     fontSize: 13,
     fontWeight: '800',
+  },
+  skeletonGrid: {
+    gap: Spacing.three,
+    marginTop: Spacing.four,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    gap: Spacing.three,
   },
   pressed: {
     opacity: 0.65,
