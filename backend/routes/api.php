@@ -21,6 +21,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\CustomerProfileController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PaymentInstructionsController;
 use App\Http\Controllers\Staff\StaffConversationsController;
@@ -77,6 +78,12 @@ Route::prefix('customer')
         'role:customer',
     ])
     ->group(function () {
+        Route::get('/profile', [CustomerProfileController::class, 'show'])
+            ->name('profile.show');
+        Route::patch('/profile', [CustomerProfileController::class, 'update'])
+            ->name('profile.update');
+        Route::patch('/profile/password', [CustomerProfileController::class, 'updatePassword'])
+            ->name('profile.password');
         Route::get('/notifications', [CustomerNotificationController::class, 'index'])
             ->name('notifications.index');
         Route::patch('/notifications/read-all', [CustomerNotificationController::class, 'markAllRead'])

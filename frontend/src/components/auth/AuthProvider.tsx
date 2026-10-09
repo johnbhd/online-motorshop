@@ -27,7 +27,9 @@ type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   establishSession: (token: string) => Promise<AuthUser>;
-  updateUser: (updates: Pick<AuthUser, "name" | "email">) => void;
+  updateUser: (
+    updates: Partial<Pick<AuthUser, "name" | "email" | "customer">>,
+  ) => void;
   logout: () => Promise<void>;
 };
 
@@ -99,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateUser = useCallback(
-    (updates: Pick<AuthUser, "name" | "email">) => {
+    (updates: Partial<Pick<AuthUser, "name" | "email" | "customer">>) => {
       setUser((currentUser) =>
         currentUser ? { ...currentUser, ...updates } : currentUser,
       );
