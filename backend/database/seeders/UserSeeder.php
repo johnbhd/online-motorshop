@@ -89,12 +89,7 @@ class UserSeeder extends Seeder
                 'name' => 'Earl',
                 'email' => 'earl@gmail.com',
                 'password' => 'earl123',
-            ],
-            [
-                'name' => 'Jonifer',
-                'email' => 'jonifer@gmail.com',
-                'password' => 'jonifer123',
-            ],
+            ]
         ];
 
         foreach ($customers as $customer) {
