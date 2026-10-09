@@ -30,6 +30,7 @@ export function CustomerHeader() {
   const router = useRouter();
   const inputRef = useRef<TextInput>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -49,13 +50,19 @@ export function CustomerHeader() {
   const closeSearch = () => {
     Keyboard.dismiss();
     setIsSearchOpen(false);
+    setIsSearchFocused(false);
     setQuery('');
   };
 
   if (isSearchOpen) {
     return (
       <View style={styles.header}>
-        <View style={styles.searchModeField}>
+        <View
+          style={[
+            styles.searchModeField,
+            isSearchFocused && styles.searchModeFieldFocused,
+          ]}
+        >
           <SymbolView
             accessibilityLabel="Search products"
             name={icons.search}
@@ -70,6 +77,8 @@ export function CustomerHeader() {
             autoCorrect={false}
             blurOnSubmit
             onChangeText={setQuery}
+            onBlur={() => setIsSearchFocused(false)}
+            onFocus={() => setIsSearchFocused(true)}
             onSubmitEditing={Keyboard.dismiss}
             placeholder="Search motorcycle parts"
             placeholderTextColor={Colors.light.textSecondary}
@@ -240,11 +249,19 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: Spacing.three,
   },
+  searchModeFieldFocused: {
+    borderColor: Colors.light.primary,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { height: 0, width: 0 },
+    shadowOpacity: 0.16,
+    shadowRadius: 4,
+  },
   searchInput: {
     color: Colors.light.text,
     flex: 1,
     fontSize: 15,
     minHeight: 42,
+    outlineWidth: 0,
     paddingHorizontal: Spacing.two,
   },
 });

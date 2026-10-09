@@ -50,12 +50,15 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Orders</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="settings">
+      <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Icon
-          md={{ default: 'settings', selected: 'settings' }}
-          sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
+          md={{ default: 'person', selected: 'person' }}
+          sf={{
+            default: 'person.crop.circle',
+            selected: 'person.crop.circle.fill',
+          }}
         />
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

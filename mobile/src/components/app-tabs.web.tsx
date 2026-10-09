@@ -24,7 +24,11 @@ const tabIcons: Record<string, SymbolViewProps['name']> = {
     android: 'receipt_long',
     web: 'receipt_long',
   },
-  settings: { ios: 'gearshape', android: 'settings', web: 'settings' },
+  profile: {
+    ios: 'person.crop.circle',
+    android: 'person',
+    web: 'person',
+  },
 };
 
 export default function AppTabs() {
@@ -45,8 +49,8 @@ export default function AppTabs() {
           <TabTrigger name="orders" href="/orders" asChild>
             <TabButton icon={tabIcons.orders}>Orders</TabButton>
           </TabTrigger>
-          <TabTrigger name="settings" href="/settings" asChild>
-            <TabButton icon={tabIcons.settings}>Settings</TabButton>
+          <TabTrigger name="profile" href="/profile" asChild>
+            <TabButton icon={tabIcons.profile}>Profile</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
