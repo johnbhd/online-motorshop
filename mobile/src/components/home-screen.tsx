@@ -1,8 +1,6 @@
-import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CustomerScreen } from '@/components/customer-screen';
-import { ProductSkeletonCard } from '@/components/product-skeleton-card';
 import { Colors, Spacing } from '@/constants/theme';
 
 const discoveryOptions = [
@@ -11,15 +9,7 @@ const discoveryOptions = [
   { label: 'Suzuki', color: '#3E77B6' },
 ];
 
-const serviceHighlights = [
-  'Genuine parts',
-  'Guest ordering',
-  'Pickup or delivery',
-];
-
 export function HomeScreen() {
-  const router = useRouter();
-
   return (
     <CustomerScreen>
       <View style={styles.heroCard}>
@@ -52,81 +42,23 @@ export function HomeScreen() {
           <Text style={styles.sectionEyebrow}>SHOP BY MAKE</Text>
           <Text style={styles.sectionTitle}>Find your fit</Text>
         </View>
-        <Pressable
-          accessibilityLabel="Browse categories"
-          accessibilityRole="button"
-          onPress={() => router.push('/categories')}
-          style={({ pressed }) => pressed && styles.pressed}
-        >
-          <Text style={styles.textLink}>Categories</Text>
-        </Pressable>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.discoveryContent}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      >
+      <View style={styles.brandRow}>
         {discoveryOptions.map((option) => (
-          <View key={option.label} style={styles.discoveryChip}>
-            <View style={[styles.discoveryDot, { backgroundColor: option.color }]} />
-            <Text style={styles.discoveryLabel}>{option.label}</Text>
-          </View>
+          <Pressable
+            accessibilityLabel={`Browse ${option.label} parts`}
+            accessibilityRole="button"
+            key={option.label}
+            onPress={() => undefined}
+            style={({ pressed }) => [styles.brandCard, pressed && styles.pressed]}
+          >
+            <View style={[styles.brandDot, { backgroundColor: option.color }]} />
+            <Text style={styles.brandLabel}>{option.label}</Text>
+          </Pressable>
         ))}
-        <Pressable
-          accessibilityLabel="Browse categories"
-          accessibilityRole="button"
-          onPress={() => router.push('/categories')}
-          style={({ pressed }) => [
-            styles.discoveryChip,
-            styles.categoryChip,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text style={styles.categoryChipLabel}>Categories</Text>
-          <Text style={styles.categoryChipArrow}>&gt;</Text>
-        </Pressable>
-      </ScrollView>
-
-      <View style={styles.highlightRow}>
-        {serviceHighlights.map((label) => (
-          <Highlight key={label} label={label} />
-        ))}
-      </View>
-
-      <View style={styles.sectionHeader}>
-        <View>
-          <Text style={styles.sectionEyebrow}>EXPLORE THE CATALOG</Text>
-          <Text style={styles.sectionTitle}>Featured Products</Text>
-        </View>
-        <Pressable
-          accessibilityLabel="See all products"
-          accessibilityRole="button"
-          onPress={() => router.push('/products')}
-          style={({ pressed }) => pressed && styles.pressed}
-        >
-          <Text style={styles.textLink}>See All</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.skeletonRow}>
-        <ProductSkeletonCard />
-        <ProductSkeletonCard />
-      </View>
-      <View style={styles.skeletonRow}>
-        <ProductSkeletonCard />
-        <ProductSkeletonCard />
       </View>
     </CustomerScreen>
-  );
-}
-
-function Highlight({ label }: { label: string }) {
-  return (
-    <View style={styles.highlight}>
-      <View style={styles.highlightDot} />
-      <Text style={styles.highlightText}>{label}</Text>
-    </View>
   );
 }
 
@@ -220,17 +152,7 @@ const styles = StyleSheet.create({
     width: 14,
   },
   sectionHeaderCompact: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: Spacing.five,
-  },
-  sectionHeader: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.three,
-    marginTop: Spacing.five,
+    marginTop: Spacing.four,
   },
   sectionEyebrow: {
     color: Colors.light.primary,
@@ -244,83 +166,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: Spacing.one,
   },
-  textLink: {
-    color: Colors.light.primary,
-    fontSize: 13,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  discoveryContent: {
+  brandRow: {
+    flexDirection: 'row',
     gap: Spacing.two,
-    paddingRight: Spacing.four,
-    paddingTop: Spacing.three,
+    marginTop: Spacing.two,
   },
-  discoveryChip: {
+  brandCard: {
     alignItems: 'center',
     backgroundColor: Colors.light.backgroundElement,
     borderColor: '#E2E8F0',
     borderRadius: 10,
     borderWidth: 1,
+    flex: 1,
     flexDirection: 'row',
-    minHeight: 44,
-    paddingHorizontal: Spacing.three,
+    justifyContent: 'center',
+    minHeight: 50,
+    minWidth: 0,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.two,
   },
-  discoveryDot: {
+  brandDot: {
     borderRadius: 5,
     height: 10,
     marginRight: Spacing.two,
     width: 10,
   },
-  discoveryLabel: {
+  brandLabel: {
     color: Colors.light.text,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
-  },
-  categoryChip: {
-    backgroundColor: '#FFF7ED',
-    borderColor: '#F7C98C',
-  },
-  categoryChipLabel: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  categoryChipArrow: {
-    color: Colors.light.primary,
-    fontSize: 17,
-    marginLeft: Spacing.two,
-  },
-  highlightRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-    marginTop: Spacing.three,
-  },
-  highlight: {
-    alignItems: 'center',
-    backgroundColor: '#FFF7ED',
-    borderRadius: 8,
-    flex: 1,
-    minHeight: 58,
-    paddingHorizontal: Spacing.one,
-    paddingVertical: Spacing.two,
-  },
-  highlightDot: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 5,
-    height: 10,
-    marginBottom: Spacing.one,
-    width: 10,
-  },
-  highlightText: {
-    color: Colors.light.text,
-    fontSize: 10,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  skeletonRow: {
-    flexDirection: 'row',
-    gap: Spacing.three,
-    marginBottom: Spacing.three,
   },
   pressed: {
     opacity: 0.65,
