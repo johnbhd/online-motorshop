@@ -136,6 +136,10 @@ export async function apiRequest<T>(
       signal: controller.signal,
     });
   } catch (error) {
+    if (error instanceof ApiError && error.kind === 'configuration') {
+      throw error;
+    }
+
     if (requestSignal?.aborted) {
       throw new ApiError('The API request was cancelled.', {
         kind: 'cancelled',

@@ -1,8 +1,15 @@
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CustomerScreen } from '@/components/customer-screen';
-import { ProductSkeletonCard } from '@/components/product-skeleton-card';
+import {
+  CatalogFeedback,
+  ProductGrid,
+  ProductSkeletonGrid,
+} from '@/components/product-catalog';
 import { Colors, Spacing } from '@/constants/theme';
+import { useProductCatalog } from '@/hooks/use-product-catalog';
 
 const discoveryOptions = [
   { label: 'Honda', color: '#D94242' },
@@ -11,8 +18,15 @@ const discoveryOptions = [
 ];
 
 export function HomeScreen() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const catalog = useProductCatalog({
+    filters: { search: searchQuery },
+    perPage: 4,
+  });
+
   return (
-    <CustomerScreen>
+    <CustomerScreen onSearchChange={setSearchQuery}>
       <View style={styles.heroCard}>
         <View style={styles.heroCopy}>
           <Text style={styles.heroEyebrow}>GENUINE MOTORCYCLE PARTS</Text>
@@ -51,7 +65,12 @@ export function HomeScreen() {
             accessibilityLabel={`Browse ${option.label} parts`}
             accessibilityRole="button"
             key={option.label}
-            onPress={() => undefined}
+            onPress={() =>
+              router.push({
+                pathname: '/products',
+                params: { brand: option.label },
+              })
+            }
             style={({ pressed }) => [styles.brandCard, pressed && styles.pressed]}
           >
             <View style={[styles.brandDot, { backgroundColor: option.color }]} />
@@ -60,15 +79,36 @@ export function HomeScreen() {
         ))}
       </View>
 
-      <View style={styles.skeletonGrid}>
-        <View style={styles.skeletonRow}>
-          <ProductSkeletonCard />
-          <ProductSkeletonCard />
-        </View>
-        <View style={styles.skeletonRow}>
-          <ProductSkeletonCard />
-          <ProductSkeletonCard />
-        </View>
+      <View style={styles.productPreview}>
+        {catalog.isInitialLoading ? <ProductSkeletonGrid /> : null}
+        {!catalog.isInitialLoading && catalog.error && catalog.products.length === 0 ? (
+          <CatalogFeedback
+            description="Check your connection and try again."
+            onRetry={catalog.retry}
+            title="Unable to load products"
+          />
+        ) : null}
+        {!catalog.isInitialLoading &&
+        !catalog.error &&
+        catalog.products.length === 0 ? (
+          <View style={styles.emptyPreview}>
+            <Text style={styles.emptyPreviewTitle}>
+              {searchQuery.trim()
+                ? 'No products match your search.'
+                : 'No products found.'}
+            </Text>
+          </View>
+        ) : null}
+        {catalog.products.length > 0 ? (
+          <ProductGrid products={catalog.products} />
+        ) : null}
+        {catalog.error && catalog.products.length > 0 ? (
+          <CatalogFeedback
+            description="Your current products are still shown."
+            onRetry={catalog.retry}
+            title="Could not refresh products"
+          />
+        ) : null}
       </View>
     </CustomerScreen>
   );
@@ -208,13 +248,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-  skeletonGrid: {
-    gap: Spacing.three,
+  productPreview: {
     marginTop: Spacing.four,
   },
-  skeletonRow: {
-    flexDirection: 'row',
-    gap: Spacing.three,
+  emptyPreview: {
+    alignItems: 'center',
+    backgroundColor: Colors.light.backgroundElement,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.four,
+  },
+  emptyPreviewTitle: {
+    color: Colors.light.text,
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.65,

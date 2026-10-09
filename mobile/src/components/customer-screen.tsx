@@ -13,13 +13,17 @@ import { Colors, Spacing } from '@/constants/theme';
 
 type CustomerScreenProps = {
   children: ReactNode;
+  onSearchChange?: (query: string) => void;
 };
 
-export function CustomerScreen({ children }: CustomerScreenProps) {
+export function CustomerScreen({
+  children,
+  onSearchChange,
+}: CustomerScreenProps) {
   return (
     <View style={styles.container}>
       <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-        <CustomerHeader />
+        <CustomerHeader onSearchChange={onSearchChange} />
 
         <ScrollView
           contentContainerStyle={styles.content}

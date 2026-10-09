@@ -1,38 +1,54 @@
-import { CustomerScreen } from '@/components/customer-screen';
-import { Colors, Spacing } from '@/constants/theme';
-import { StyleSheet, Text } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
+
+import { CustomerHeader } from '@/components/customer-header';
+import { ProductCatalog } from '@/components/product-catalog';
+import { Colors } from '@/constants/theme';
+import { useProductCatalog } from '@/hooks/use-product-catalog';
 
 export default function ProductsScreen() {
+  const { brand: brandParam, category: categoryParam } =
+    useLocalSearchParams<{ brand?: string; category?: string }>();
+  const [searchQuery, setSearchQuery] = useState('');
+  const brand = Array.isArray(brandParam) ? brandParam[0] : brandParam;
+  const category = Array.isArray(categoryParam)
+    ? categoryParam[0]
+    : categoryParam;
+  const catalog = useProductCatalog({
+    filters: { brand, category, search: searchQuery },
+    perPage: 20,
+  });
+
   return (
-    <CustomerScreen>
-      <Text style={styles.eyebrow}>PRODUCT DISCOVERY</Text>
-      <Text style={styles.title}>Motorcycle Parts</Text>
-      <Text style={styles.description}>
-        The mobile catalog will bring ALD Motorshop products, categories,
-        brands, search, and filters into a native browsing experience.
-      </Text>
-    </CustomerScreen>
+    <View style={styles.container}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+        <CustomerHeader onSearchChange={setSearchQuery} />
+        <ProductCatalog
+          error={catalog.error}
+          hasNextPage={catalog.hasNextPage}
+          isInitialLoading={catalog.isInitialLoading}
+          isLoadingMore={catalog.isLoadingMore}
+          isRefreshing={catalog.isRefreshing}
+          loadMore={catalog.loadMore}
+          onRefresh={catalog.refresh}
+          onRetry={catalog.retry}
+          paginationError={catalog.paginationError}
+          products={catalog.products}
+          searchQuery={searchQuery}
+        />
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  eyebrow: {
-    color: Colors.light.primary,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
+  container: {
+    backgroundColor: Colors.light.background,
+    flex: 1,
   },
-  title: {
-    color: Colors.light.text,
-    fontSize: 30,
-    fontWeight: '800',
-    lineHeight: 36,
-    marginTop: Spacing.two,
-  },
-  description: {
-    color: Colors.light.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: Spacing.two,
+  safeArea: {
+    flex: 1,
   },
 });

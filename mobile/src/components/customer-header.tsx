@@ -26,7 +26,11 @@ const icons: Record<string, SymbolViewProps['name']> = {
   search: { ios: 'magnifyingglass', android: 'search', web: 'search' },
 };
 
-export function CustomerHeader() {
+type CustomerHeaderProps = {
+  onSearchChange?: (query: string) => void;
+};
+
+export function CustomerHeader({ onSearchChange }: CustomerHeaderProps = {}) {
   const router = useRouter();
   const inputRef = useRef<TextInput>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -52,6 +56,7 @@ export function CustomerHeader() {
     setIsSearchOpen(false);
     setIsSearchFocused(false);
     setQuery('');
+    onSearchChange?.('');
   };
 
   if (isSearchOpen) {
@@ -72,11 +77,14 @@ export function CustomerHeader() {
           <TextInput
             ref={inputRef}
             accessibilityLabel="Search motorcycle parts"
-            accessibilityHint="Search is visual only until the catalog feature is connected."
+            accessibilityHint="Search motorcycle parts by name or part number."
             autoCapitalize="none"
             autoCorrect={false}
             blurOnSubmit
-            onChangeText={setQuery}
+            onChangeText={(value) => {
+              setQuery(value);
+              onSearchChange?.(value);
+            }}
             onBlur={() => setIsSearchFocused(false)}
             onFocus={() => setIsSearchFocused(true)}
             onSubmitEditing={Keyboard.dismiss}
