@@ -133,6 +133,12 @@ export default function CheckoutPage() {
     setFormData((currentFormData) => ({
       ...currentFormData,
       ...(loggedInCustomer ?? {}),
+      fulfillmentMethod:
+        new URLSearchParams(window.location.search).get("fulfillment") ===
+        "delivery"
+          ? "delivery"
+          : "pickup",
+      paymentMethod: "",
       branchId: readSelectedBranchId(),
     }));
     setIsReady(true);

@@ -101,7 +101,7 @@ export default function CartSummary({
 
         <Link
           className="cart-checkout-button"
-          href="/checkout"
+          href={`/checkout?fulfillment=${fulfillmentMethod}`}
         >
           <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
           Proceed to Checkout
