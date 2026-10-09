@@ -27,7 +27,6 @@ export function HomeScreen() {
           <Text style={styles.sectionEyebrow}>EXPLORE THE CATALOG</Text>
           <Text style={styles.sectionTitle}>Featured Products</Text>
         </View>
-        <Text style={styles.comingSoon}>Coming soon</Text>
       </View>
 
       <View style={styles.skeletonRow}>
@@ -123,11 +122,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     marginTop: Spacing.one,
-  },
-  comingSoon: {
-    color: Colors.light.textSecondary,
-    fontSize: 12,
-    marginBottom: 2,
   },
   skeletonRow: {
     flexDirection: 'row',
