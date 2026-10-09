@@ -22,17 +22,17 @@ export default function AppTabs() {
           <TabTrigger name="index" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
-          <TabTrigger name="products" href="/products" asChild>
-            <TabButton>Products</TabButton>
+          <TabTrigger name="categories" href="/categories" asChild>
+            <TabButton>Categories</TabButton>
+          </TabTrigger>
+          <TabTrigger name="messages" href="/messages" asChild>
+            <TabButton>Messages</TabButton>
           </TabTrigger>
           <TabTrigger name="cart" href="/cart" asChild>
             <TabButton>Cart</TabButton>
           </TabTrigger>
-          <TabTrigger name="orders" href="/orders" asChild>
-            <TabButton>Orders</TabButton>
-          </TabTrigger>
-          <TabTrigger name="account" href="/account" asChild>
-            <TabButton>Account</TabButton>
+          <TabTrigger name="settings" href="/settings" asChild>
+            <TabButton>Settings</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>

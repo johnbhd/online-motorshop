@@ -1,11 +1,5 @@
-import { MobileScreen } from '@/components/mobile-screen';
+import { HomeScreen as HomeContent } from '@/components/home-screen';
 
 export default function HomeScreen() {
-  return (
-    <MobileScreen
-      title="Parts for every ride."
-      description="ALD Motorshop Mobile will make it easier to browse genuine motorcycle parts, submit an order request, and stay connected with your selected branch."
-      status="Customer mobile foundation ready"
-    />
-  );
+  return <HomeContent />;
 }
