@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
+  faBell,
   faChartColumn,
   faClipboardList,
   faComments,
@@ -37,6 +38,7 @@ const icons = {
   Reviews: faStar,
   Reports: faChartColumn,
   Profile: faUser,
+  Notifications: faBell,
 } as const;
 
 type SidebarLink = {
@@ -61,6 +63,7 @@ const links: SidebarLink[] = [
   },
   { label: "Products", href: "/staff/products" },
   { label: "Messages", href: "/staff/messages", badgeKey: "messages" },
+  { label: "Notifications", href: "/staff/notifications" },
   { label: "Customers", href: "/staff/customers" },
   { label: "Reviews", href: "/staff/reviews" },
   { label: "Reports", href: "/staff/reports" },

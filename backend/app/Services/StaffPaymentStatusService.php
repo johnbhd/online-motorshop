@@ -11,6 +11,7 @@ class StaffPaymentStatusService
 {
     public function __construct(
         private readonly CustomerNotificationService $customerNotificationService,
+        private readonly StaffAdminNotificationService $staffAdminNotificationService,
     ) {}
 
     private const TRANSITIONS = [
@@ -49,6 +50,10 @@ class StaffPaymentStatusService
         });
 
         $this->customerNotificationService->paymentStatusChanged($payment, $status);
+
+        if ($status === Payment::STATUS_PAID) {
+            $this->staffAdminNotificationService->deliveryReadyForBooking($payment, $reviewer->id);
+        }
 
         return $payment;
     }

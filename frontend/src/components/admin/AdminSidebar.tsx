@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
+  faBell,
   faChartColumn,
   faClipboardList,
   faComments,
@@ -42,9 +43,11 @@ const adminIcons = {
   "Activity Logs": faChartColumn,
   Settings: faGear,
   Profile: faUser,
+  Notifications: faBell,
 } as const;
 
 const links = [
+  ["Notifications", "/admin/notifications", "!"],
   ["Dashboard", "/admin", "▦"],
   ["Orders", "/admin/orders", "▤"],
   ["Payments", "/admin/payments", "▣"],

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { notifications } from "@/lib/mock/staff";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,6 +13,7 @@ import {
   faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { usePortalNotifications } from "@/components/portal/notifications/usePortalNotifications";
 
 const labels: Record<string, string> = {
   "/admin": "Dashboard",
@@ -24,6 +24,7 @@ const labels: Record<string, string> = {
   "/admin/products": "Products",
   "/admin/customers": "Customers",
   "/admin/messages": "Messages",
+  "/admin/notifications": "Notifications",
   "/admin/branches": "Branches",
   "/admin/staff-management": "Staff Management",
   "/admin/website-content": "Website Content",
@@ -43,6 +44,7 @@ export default function AdminNavbar({
   const path = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
+  const { notifications, unreadCount, loading, markRead } = usePortalNotifications("admin", { perPage: 5 });
   const title = labels[path] ?? "Dashboard";
 
   useEffect(() => {
@@ -101,23 +103,23 @@ export default function AdminNavbar({
               className="relative grid size-10 place-items-center text-xl text-[#0B1930] hover:text-orange-500"
               aria-haspopup="menu"
               aria-expanded={menu === "notifications"}
-              aria-label="Notifications, 8 unread"
+              aria-label={`Notifications, ${unreadCount} unread`}
             >
               <FontAwesomeIcon icon={faBell} />
-              <span className="absolute right-0 top-0 grid size-3.5 place-items-center rounded-full bg-orange-500 text-[8px] font-bold text-white ring-2 ring-white">
-                8
-              </span>
+              {unreadCount > 0 && <span className="absolute right-0 top-0 grid min-w-3.5 place-items-center rounded-full bg-orange-500 px-1 text-[8px] font-bold text-white ring-2 ring-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}
             </button>
             {menu === "notifications" && (
               <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-1rem)] max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl sm:w-80">
                 <h2 className="border-b border-slate-100 px-4 py-3.5 text-sm font-bold text-[#0B1930]">
                   Notifications
                 </h2>
-                {notifications.slice(0, 5).map((n) => (
+                {loading && <p className="px-4 py-5 text-sm text-slate-500">Loading notifications…</p>}
+                {!loading && !notifications.length && <p className="px-4 py-5 text-sm text-slate-500">You&apos;re all caught up.</p>}
+                {!loading && notifications.slice(0, 5).map((n) => (
                   <button
                     key={n.id}
-                    onClick={() => setMenu(null)}
-                    className={`flex w-full gap-3 border-b border-slate-100 px-4 py-3.5 text-left hover:bg-slate-50 ${n.unread ? "bg-orange-50/60" : "bg-white"}`}
+                    onClick={() => { void markRead(n); setMenu(null); }}
+                    className={`flex w-full gap-3 border-b border-slate-100 px-4 py-3.5 text-left hover:bg-slate-50 ${!n.read ? "bg-orange-50/60" : "bg-white"}`}
                   >
                     <span className="grid size-9 place-items-center rounded-lg bg-orange-100 text-orange-600">
                       ●
@@ -126,7 +128,7 @@ export default function AdminNavbar({
                       <span className="flex gap-2">
                         <i
                           className={
-                            n.unread
+                            !n.read
                               ? "mt-1 size-1.5 rounded-full bg-orange-500"
                               : "hidden"
                           }
@@ -136,14 +138,15 @@ export default function AdminNavbar({
                         </b>
                       </span>
                       <span className="mt-1 block text-xs leading-5 text-slate-500">
-                        {n.description}
+                        {n.message}
                       </span>
                       <span className="mt-1 block text-xs text-slate-400">
-                        {n.time}
+                        {n.created_at ? new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(n.created_at)) : "Time unavailable"}
                       </span>
                     </span>
                   </button>
                 ))}
+                <Link href="/admin/notifications" onClick={() => setMenu(null)} className="block border-t border-slate-100 px-4 py-3 text-center text-sm font-semibold text-orange-600">See All Notifications</Link>
               </div>
             )}
           </div>

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { notifications } from "@/lib/mock/staff";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,12 +12,14 @@ import {
   faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { usePortalNotifications } from "@/components/portal/notifications/usePortalNotifications";
 
 export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
   const [menu, setMenu] = useState<"notifications" | "profile" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { logout, user } = useAuth();
+  const { notifications, unreadCount, loading, markRead } = usePortalNotifications("staff", { perPage: 5 });
 
   useEffect(() => {
     const close = (e: MouseEvent) =>
@@ -26,8 +27,6 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, []);
-
-  const unread = notifications.filter((n) => n.unread).length;
 
   const handleLogout = async () => {
     await logout();
@@ -60,29 +59,32 @@ export default function StaffNavbar({ onMenu }: { onMenu: () => void }) {
                 setMenu(menu === "notifications" ? null : "notifications")
               }
               className="relative grid size-10 place-items-center rounded-lg text-lg text-slate-600 hover:bg-slate-100"
-              aria-label={`Notifications, ${unread} unread`}
+              aria-label={`Notifications, ${unreadCount} unread`}
             >
               <FontAwesomeIcon icon={faBell} aria-hidden="true" />
+              {unreadCount > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-orange-500 px-1 text-[9px] font-bold text-white ring-2 ring-white">{unreadCount > 99 ? "99+" : unreadCount}</span>}
             </button>
             {menu === "notifications" && (
               <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
                 <p className="px-4 py-3 text-sm font-bold text-[#0B1930]">
                   Notifications
                 </p>
-                {notifications.slice(0, 4).map((n) => (
+                {loading && <p className="px-4 py-5 text-sm text-slate-500">Loading notifications…</p>}
+                {!loading && !notifications.length && <p className="px-4 py-5 text-sm text-slate-500">You&apos;re all caught up.</p>}
+                {!loading && notifications.slice(0, 4).map((n) => (
                   <button
                     key={n.id}
                     className="block w-full px-4 py-3 text-left hover:bg-slate-50"
-                    onClick={() => setMenu(null)}
+                    onClick={() => { void markRead(n); setMenu(null); }}
                   >
                     <p className="text-sm font-semibold text-slate-700">
-                      {n.unread && (
+                      {!n.read && (
                         <span className="mr-2 inline-block size-2 rounded-full bg-orange-500" />
                       )}
                       {n.title}
                     </p>
                     <p className="mt-1 truncate text-xs text-slate-500">
-                      {n.description}
+                      {n.message}
                     </p>
                   </button>
                 ))}

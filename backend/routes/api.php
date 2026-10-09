@@ -23,6 +23,7 @@ use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProfileController;
 use App\Http\Controllers\OrderRequestController;
+use App\Http\Controllers\PortalNotificationController;
 use App\Http\Controllers\PaymentInstructionsController;
 use App\Http\Controllers\Staff\StaffConversationsController;
 use App\Http\Controllers\Staff\StaffCustomersController;
@@ -139,6 +140,13 @@ Route::prefix('admin')
 
         Route::patch('/profile/password', [AdminProfileController::class, 'updatePassword'])
             ->name('profile.password');
+
+        Route::get('/notifications', [PortalNotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::patch('/notifications/read-all', [PortalNotificationController::class, 'markAllRead'])
+            ->name('notifications.read-all');
+        Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
+            ->name('notifications.read');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');
@@ -414,6 +422,13 @@ Route::prefix('staff')
 
             Route::patch('/profile', [StaffProfileController::class, 'update'])
                 ->name('profile.update');
+
+            Route::get('/notifications', [PortalNotificationController::class, 'index'])
+                ->name('notifications.index');
+            Route::patch('/notifications/read-all', [PortalNotificationController::class, 'markAllRead'])
+                ->name('notifications.read-all');
+            Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
+                ->name('notifications.read');
         });
 
         Route::middleware('role:admin')->group(function () {

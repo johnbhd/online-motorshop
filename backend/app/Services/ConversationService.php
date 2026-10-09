@@ -12,6 +12,7 @@ class ConversationService
 {
     public function __construct(
         private readonly CustomerNotificationService $customerNotificationService,
+        private readonly StaffAdminNotificationService $staffAdminNotificationService,
     ) {}
 
     public function findCurrent(?User $user, ?string $guestToken): ?Conversation
@@ -63,7 +64,10 @@ class ConversationService
         ?User $user,
         string $body,
     ): Message {
-        return $this->appendMessage($conversation, 'customer', $body, $user?->id);
+        $message = $this->appendMessage($conversation, 'customer', $body, $user?->id);
+        $this->staffAdminNotificationService->customerMessageReceived($message);
+
+        return $message;
     }
 
     public function appendStaffMessage(

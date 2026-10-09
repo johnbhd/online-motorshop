@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Services\OrderRequestPresenter;
+use App\Services\StaffAdminNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,7 @@ class CustomerOrderController extends Controller
 
     public function __construct(
         private readonly OrderRequestPresenter $orderRequestPresenter,
+        private readonly StaffAdminNotificationService $staffAdminNotificationService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -211,6 +213,8 @@ class CustomerOrderController extends Controller
             $disk->delete($path);
             throw $exception;
         }
+
+        $this->staffAdminNotificationService->paymentProofSubmitted($payment->fresh());
 
         $order->load([
             'branch',
