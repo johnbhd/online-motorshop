@@ -1,1 +1,3 @@
-export { PickupsPage as default } from "@/components/admin/AdminPages";
+"use client";
+
+export { default } from "./RealAdminPickupRequestsPage";

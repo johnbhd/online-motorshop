@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCustomerPaymentProofRequest;
 use App\Models\Customer;
 use App\Models\OrderRequest;
+use App\Models\Payment;
 use App\Services\OrderRequestPresenter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CustomerOrderController extends Controller
 {
@@ -40,7 +45,7 @@ class CustomerOrderController extends Controller
             ->where('customer_id', $customer->id)
             ->with([
                 'branch',
-                'payments:id,order_id,payment_method,amount,payment_reference,payment_status,created_at,verified_at',
+                'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
             ])
             ->withCount('items')
             ->withSum('items', 'quantity')
@@ -78,8 +83,8 @@ class CustomerOrderController extends Controller
             ->with([
                 'branch',
                 'customer',
-                'items.product:id,part_number',
-                'payments:id,order_id,payment_method,amount,payment_reference,payment_status,created_at,verified_at',
+                'items.product:id,part_number,img_url',
+                'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
                 'pickupRequest.branch',
                 'deliveryRequest.branch',
             ])
@@ -94,6 +99,132 @@ class CustomerOrderController extends Controller
         return response()->json([
             'order' => $this->orderRequestPresenter->detail($order),
         ]);
+    }
+
+    public function storePaymentProof(
+        StoreCustomerPaymentProofRequest $request,
+        string $reference,
+    ): JsonResponse {
+        $customer = $request->user()?->customer;
+
+        if (! $customer) {
+            return response()->json([
+                'message' => 'Customer profile not found.',
+            ], 404);
+        }
+
+        $order = $this->ownedOrderQuery($customer, $reference)
+            ->with([
+                'branch',
+                'customer',
+                'items.product:id,part_number,img_url',
+                'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
+                'pickupRequest.branch',
+                'deliveryRequest.branch',
+            ])
+            ->first();
+
+        if (! $order) {
+            return response()->json([
+                'message' => 'Order not found.',
+            ], 404);
+        }
+
+        /** @var Payment|null $payment */
+        $payment = $order->payments
+            ->sortByDesc(fn (Payment $item): int => $item->created_at?->getTimestamp() ?? 0)
+            ->sortByDesc('id')
+            ->first();
+
+        if (! $payment) {
+            throw ValidationException::withMessages([
+                'payment' => ['This order does not have a payment record.'],
+            ]);
+        }
+
+        if ($payment->payment_method !== Payment::METHOD_ONLINE_PAYMENT) {
+            throw ValidationException::withMessages([
+                'payment' => ['Payment proof is only available for online payment orders.'],
+            ]);
+        }
+
+        if (in_array($order->order_status, OrderRequest::TERMINAL_STATUSES, true)) {
+            throw ValidationException::withMessages([
+                'payment' => ['Payment proof cannot be submitted for a cancelled or closed order.'],
+            ]);
+        }
+
+        if ($payment->payment_status === Payment::STATUS_PAID) {
+            throw ValidationException::withMessages([
+                'payment' => ['This payment has already been verified.'],
+            ]);
+        }
+
+        if ($payment->payment_status === Payment::STATUS_WAITING_FOR_VERIFICATION) {
+            throw ValidationException::withMessages([
+                'payment' => ['Payment proof is already waiting for staff verification.'],
+            ]);
+        }
+
+        if (! in_array($payment->payment_status, [
+            Payment::STATUS_UNPAID,
+            Payment::STATUS_FAILED,
+        ], true)) {
+            throw ValidationException::withMessages([
+                'payment' => ['This payment is not currently eligible for proof submission.'],
+            ]);
+        }
+
+        if ($payment->payment_status === Payment::STATUS_UNPAID
+            && ! in_array($order->order_status, [
+                'confirmed',
+                'preparing_order',
+                'ready_for_pickup',
+                'booked_for_delivery',
+                'picked_up_by_rider',
+            ], true)) {
+            throw ValidationException::withMessages([
+                'payment' => ['Payment instructions become available after the order is confirmed.'],
+            ]);
+        }
+
+        $file = $request->file('proof');
+        $disk = Storage::disk('public');
+        $directory = 'payment-proofs/'.$order->order_reference;
+        $filename = Str::uuid()->toString().'.'.$file->extension();
+        $path = $disk->putFileAs($directory, $file, $filename);
+
+        if ($path === false) {
+            throw ValidationException::withMessages([
+                'proof' => ['The payment proof could not be stored. Please try again.'],
+            ]);
+        }
+
+        try {
+            $payment->update([
+                'proof_image_url' => $disk->url($path),
+                'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
+                'verified_by' => null,
+                'verified_at' => null,
+            ]);
+        } catch (\Throwable $exception) {
+            $disk->delete($path);
+            throw $exception;
+        }
+
+        $order->load([
+            'branch',
+            'customer',
+            'items.product:id,part_number,img_url',
+            'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
+            'pickupRequest.branch',
+            'deliveryRequest.branch',
+        ]);
+
+        return response()->json([
+            'message' => 'Payment proof submitted for staff verification.',
+            'order' => $this->orderRequestPresenter->detail($order),
+        ], 201);
     }
 
     private function ownedOrderQuery(Customer $customer, string $reference): Builder

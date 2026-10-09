@@ -13,9 +13,14 @@ import {
   hasDisplayablePrices,
 } from "./checkoutUtils";
 import type { CheckoutFieldErrors } from "./checkoutTypes";
+import {
+  getPaymentMethodLabel,
+  type PaymentMethod,
+} from "@/lib/orders/orderRequestTypes";
 
 type CheckoutOrderSummaryProps = {
   items: CartItemData[];
+  paymentMethod: PaymentMethod | "";
   confirmDetails: boolean;
   errors: CheckoutFieldErrors;
   isSubmitting: boolean;
@@ -24,6 +29,7 @@ type CheckoutOrderSummaryProps = {
 
 export default function CheckoutOrderSummary({
   items,
+  paymentMethod,
   confirmDetails,
   errors,
   isSubmitting,
@@ -98,6 +104,14 @@ export default function CheckoutOrderSummary({
           <div className="checkout-summary-row">
             <span>Delivery fee</span>
             <span className="checkout-muted">To be confirmed</span>
+          </div>
+          <div className="checkout-summary-row">
+            <span>Payment method</span>
+            <strong>
+              {paymentMethod
+                ? getPaymentMethodLabel(paymentMethod)
+                : "Select a payment method"}
+            </strong>
           </div>
           <div className="checkout-summary-row checkout-summary-row--total">
             <span>Estimated total</span>

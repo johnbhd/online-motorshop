@@ -41,6 +41,7 @@ class OrderRequestApiTest extends TestCase
                 'price' => 1,
                 'subtotal' => 1,
             ]],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => [
                 'method' => 'pickup',
                 'branch_id' => $branch->id,
@@ -52,9 +53,12 @@ class OrderRequestApiTest extends TestCase
             ->assertJsonPath('order.reference', fn (string $reference): bool => (bool) preg_match('/^ALD-\d{4}-\d{6}$/', $reference))
             ->assertJsonPath('order.status', 'pending')
             ->assertJsonPath('order.payment_status', 'unpaid')
+            ->assertJsonPath('order.payment.method', 'pay_at_pickup')
+            ->assertJsonPath('order.payment.status', 'unpaid')
             ->assertJsonPath('order.fulfillment_method', 'pickup')
             ->assertJsonPath('order.subtotal', 360)
             ->assertJsonPath('order.estimated_total', 360)
+            ->assertJsonPath('order.items.0.image', 'https://example.com/test-product.png')
             ->assertJsonPath('order.items.0.unit_price', 180)
             ->assertJsonPath('order.items.0.line_total', 360)
             ->assertJsonPath('order.pickup.status', 'pending');
@@ -68,6 +72,11 @@ class OrderRequestApiTest extends TestCase
             'order_status' => 'pending',
             'subtotal' => '360.00',
             'total_amount' => '360.00',
+        ]);
+        $this->assertDatabaseHas('payments', [
+            'payment_method' => 'pay_at_pickup',
+            'amount' => '360.00',
+            'payment_status' => 'unpaid',
         ]);
         $this->assertDatabaseHas('pickup_requests', [
             'branch_id' => $branch->id,
@@ -91,6 +100,7 @@ class OrderRequestApiTest extends TestCase
                 'part_number' => $product->part_number,
                 'quantity' => 1,
             ]],
+            'payment_method' => 'online_payment',
             'fulfillment' => [
                 'method' => 'delivery',
                 'branch_id' => $branch->id,
@@ -106,6 +116,8 @@ class OrderRequestApiTest extends TestCase
 
         $response
             ->assertCreated()
+            ->assertJsonPath('order.payment.method', 'online_payment')
+            ->assertJsonPath('order.payment.status', 'unpaid')
             ->assertJsonPath('order.fulfillment_method', 'delivery')
             ->assertJsonPath('order.delivery.status', 'waiting_for_booking')
             ->assertJsonPath('order.delivery.address', '12 Main Street, Barangay San Isidro, Makati City')
@@ -148,6 +160,7 @@ class OrderRequestApiTest extends TestCase
                 'part_number' => $product->part_number,
                 'quantity' => 1,
             ]],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => [
                 'method' => 'pickup',
                 'branch_id' => $branch->id,
@@ -182,6 +195,7 @@ class OrderRequestApiTest extends TestCase
                 ['part_number' => $first->part_number, 'quantity' => 2],
                 ['part_number' => $second->part_number, 'quantity' => 1],
             ],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => [
                 'method' => 'pickup',
                 'branch_id' => $branch->id,
@@ -211,6 +225,7 @@ class OrderRequestApiTest extends TestCase
                 ['part_number' => 'INACTIVE-001', 'quantity' => 1],
                 ['part_number' => 'UNKNOWN-001', 'quantity' => 1],
             ],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => [
                 'method' => 'pickup',
                 'branch_id' => $branch->id,
@@ -235,6 +250,7 @@ class OrderRequestApiTest extends TestCase
                 'contact_number' => '09173333333',
             ],
             'items' => [['part_number' => $product->part_number, 'quantity' => 0]],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => ['method' => 'pickup', 'branch_id' => $branch->id],
         ])->assertUnprocessable();
 
@@ -248,6 +264,7 @@ class OrderRequestApiTest extends TestCase
                 ['part_number' => $product->part_number, 'quantity' => 1],
                 ['part_number' => $product->part_number, 'quantity' => 1],
             ],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => ['method' => 'pickup', 'branch_id' => $branch->id],
         ])->assertUnprocessable();
 
@@ -266,6 +283,7 @@ class OrderRequestApiTest extends TestCase
                 'contact_number' => '09175555555',
             ],
             'items' => [['part_number' => $product->part_number, 'quantity' => 1]],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => ['method' => 'pickup', 'branch_id' => $branch->id],
         ]);
 
@@ -284,6 +302,7 @@ class OrderRequestApiTest extends TestCase
                 'contact_number' => '09176666666',
             ],
             'items' => [['part_number' => $product->part_number, 'quantity' => 1]],
+            'payment_method' => 'online_payment',
             'fulfillment' => ['method' => 'delivery', 'branch_id' => $branch->id],
         ];
 
@@ -291,6 +310,7 @@ class OrderRequestApiTest extends TestCase
 
         $this->postJson('/api/order-requests', [
             ...$basePayload,
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => [
                 'method' => 'pickup',
                 'branch_id' => $branch->id,
@@ -303,7 +323,44 @@ class OrderRequestApiTest extends TestCase
             ],
         ])->assertUnprocessable();
 
+        $this->postJson('/api/order-requests', [
+            ...$basePayload,
+            'payment_method' => 'pay_at_pickup',
+            'fulfillment' => [
+                'method' => 'delivery',
+                'branch_id' => $branch->id,
+                'delivery' => [
+                    'address' => '12 Main Street',
+                    'barangay' => 'San Isidro',
+                    'city' => 'Makati City',
+                    'contact_person' => 'Contract Buyer',
+                ],
+            ],
+        ])->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+
         $this->assertDatabaseCount('order_requests', 0);
+    }
+
+    public function test_payment_method_is_required(): void
+    {
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-009', 900.00);
+
+        $this->postJson('/api/order-requests', [
+            'customer' => [
+                'name' => 'Missing Payment Buyer',
+                'email' => 'missing-payment@example.com',
+                'contact_number' => '09178888888',
+            ],
+            'items' => [['part_number' => $product->part_number, 'quantity' => 1]],
+            'fulfillment' => [
+                'method' => 'pickup',
+                'branch_id' => $branch->id,
+            ],
+        ])->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+
+        $this->assertDatabaseCount('order_requests', 0);
+        $this->assertDatabaseCount('payments', 0);
     }
 
     public function test_invalid_bearer_tokens_are_not_treated_as_guests(): void
@@ -318,6 +375,7 @@ class OrderRequestApiTest extends TestCase
                 'contact_number' => '09177777777',
             ],
             'items' => [['part_number' => $product->part_number, 'quantity' => 1]],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => ['method' => 'pickup', 'branch_id' => $branch->id],
         ])->assertUnauthorized();
     }
@@ -337,6 +395,7 @@ class OrderRequestApiTest extends TestCase
 
         $this->withToken($token)->postJson('/api/order-requests', [
             'items' => [['part_number' => $product->part_number, 'quantity' => 1]],
+            'payment_method' => 'pay_at_pickup',
             'fulfillment' => ['method' => 'pickup', 'branch_id' => $branch->id],
         ])->assertForbidden();
         $this->assertDatabaseCount('order_requests', 0);

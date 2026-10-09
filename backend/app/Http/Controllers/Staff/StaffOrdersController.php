@@ -128,7 +128,7 @@ class StaffOrdersController extends Controller
         $order->load([
             'customer:id,full_name,contact_number,email,address,user_id',
             'branch:id,name,address,contact_number',
-            'items.product:id,part_number',
+            'items.product:id,part_number,img_url',
             'payments:id,order_id,payment_method,amount,payment_reference,payment_status,created_at,verified_at',
             'pickupRequest.branch',
             'deliveryRequest.branch',
@@ -151,7 +151,7 @@ class StaffOrdersController extends Controller
         return $this->scopedQuery($branchId)->with([
             'customer:id,full_name,contact_number,email,address,user_id',
             'branch:id,name,address,contact_number',
-            'items.product:id,part_number',
+            'items.product:id,part_number,img_url',
             'payments:id,order_id,payment_method,amount,payment_reference,payment_status,created_at,verified_at',
             'pickupRequest.branch',
             'deliveryRequest.branch',

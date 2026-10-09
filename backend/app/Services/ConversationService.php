@@ -6,6 +6,7 @@ use App\Models\Conversation;
 use App\Models\Customer;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class ConversationService
 {
@@ -69,17 +70,32 @@ class ConversationService
         return $this->appendMessage($conversation, 'staff', $body, $staff->id);
     }
 
-    public function loadConversation(?Conversation $conversation): ?Conversation
+    public function appendAdminMessage(
+        Conversation $conversation,
+        User $admin,
+        string $body,
+    ): Message {
+        return $this->appendMessage($conversation, 'admin', $body, $admin->id);
+    }
+
+    public function loadConversation(?Conversation $conversation, bool $includeSenderUsers = false): ?Conversation
     {
         if (! $conversation) {
             return null;
         }
 
-        return $conversation->load([
+        $relations = [
             'customer.user',
             'messages' => fn ($query) => $query->orderBy('id'),
             'latestMessage',
-        ]);
+        ];
+
+        if ($includeSenderUsers) {
+            $relations['messages.senderUser'] = fn ($query) => $query->select(['id', 'name']);
+            $relations['latestMessage.senderUser'] = fn ($query) => $query->select(['id', 'name']);
+        }
+
+        return $conversation->load($relations);
     }
 
     private function appendMessage(
@@ -88,17 +104,25 @@ class ConversationService
         string $body,
         ?int $senderUserId,
     ): Message {
-        $message = $conversation->messages()->create([
-            'sender_type' => $senderType,
-            'sender_user_id' => $senderUserId,
-            'body' => trim($body),
-        ]);
+        return DB::transaction(function () use ($conversation, $senderType, $body, $senderUserId): Message {
+            $lockedConversation = Conversation::query()
+                ->lockForUpdate()
+                ->findOrFail($conversation->id);
 
-        $conversation->forceFill([
-            'last_message_at' => $message->created_at,
-        ])->save();
+            abort_unless($lockedConversation->status === 'open', 409, 'This conversation is not open.');
 
-        return $message;
+            $message = $lockedConversation->messages()->create([
+                'sender_type' => $senderType,
+                'sender_user_id' => $senderUserId,
+                'body' => trim($body),
+            ]);
+
+            $lockedConversation->forceFill([
+                'last_message_at' => $message->created_at,
+            ])->save();
+
+            return $message;
+        });
     }
 
     /** @return array{Conversation, bool} */

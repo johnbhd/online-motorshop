@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import { toStatusLabel } from "@/lib/orders/orderAdapter";
+import { getPaymentMethodLabel } from "@/lib/orders/orderRequestTypes";
 import { Badge } from "@/components/staff/PortalTable";
 import {
   getStaffDeliveriesErrorMessage,
@@ -47,6 +48,10 @@ function formatPeso(value: number | null | undefined) {
   return typeof value === "number" && Number.isFinite(value)
     ? pesoFormatter.format(value)
     : "Not available";
+}
+
+function formatDeliveryFee(value: number | null | undefined) {
+  return typeof value === "number" && value > 0 ? formatPeso(value) : "Not confirmed";
 }
 
 function formatDate(value?: string | null) {
@@ -453,7 +458,7 @@ export default function RealStaffDeliveryDetailsModal({
                   </div>
                   <div>
                     <dt className="text-slate-500">Delivery Fee</dt>
-                    <dd className="mt-1 text-slate-700">{formatPeso(delivery.delivery_fee)}</dd>
+                    <dd className="mt-1 text-slate-700">{formatDeliveryFee(delivery.delivery_fee)}</dd>
                   </div>
                   <div>
                     <dt className="text-slate-500">Delivered At</dt>
@@ -490,12 +495,23 @@ export default function RealStaffDeliveryDetailsModal({
                   </div>
                   <div>
                     <dt className="text-slate-500">Payment Method</dt>
-                    <dd className="mt-1 text-slate-700">{displayValue(delivery.payment?.method)}</dd>
+                    <dd className="mt-1 text-slate-700">
+                      {delivery.payment
+                        ? getPaymentMethodLabel(delivery.payment.method)
+                        : "Not available"}
+                    </dd>
                   </div>
                 </dl>
                 <p className="mt-4 text-xs leading-5 text-slate-500">
                   Delivery actions do not verify or mutate payment records. A missing payment remains missing and is never displayed as Paid.
                 </p>
+                {delivery.delivery_status === "waiting_for_booking" ? (
+                  <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="status">
+                    {delivery.payment?.status === "paid"
+                      ? "Payment has been confirmed. This delivery is waiting for manual Lalamove booking."
+                      : "Payment is not confirmed. Manual booking is unavailable until the latest payment is verified."}
+                  </p>
+                ) : null}
               </section>
 
               <section>

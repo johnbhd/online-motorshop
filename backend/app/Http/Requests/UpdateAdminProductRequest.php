@@ -35,18 +35,34 @@ class UpdateAdminProductRequest extends FormRequest
      */
     public function rules(): array
     {
-        $currentProductId = Product::query()
+        $currentProduct = Product::query()
+            ->select(['id', 'category_id', 'brand_id'])
             ->where('part_number', (string) $this->route('partNumber'))
-            ->value('id');
+            ->first();
+
+        $activeOrCurrentCategory = Rule::exists('categories', 'id')->where(function ($query) use ($currentProduct): void {
+            $query->where('status', 'active');
+
+            if ($currentProduct?->category_id !== null) {
+                $query->orWhere('id', $currentProduct->category_id);
+            }
+        });
+        $activeOrCurrentBrand = Rule::exists('brands', 'id')->where(function ($query) use ($currentProduct): void {
+            $query->where('status', 'active');
+
+            if ($currentProduct?->brand_id !== null) {
+                $query->orWhere('id', $currentProduct->brand_id);
+            }
+        });
 
         return [
-            'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
+            'category_id' => ['sometimes', 'required', 'integer', $activeOrCurrentCategory],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'part_number' => [
                 'sometimes', 'required', 'string', 'max:255',
-                Rule::unique('products', 'part_number')->ignore($currentProductId),
+                Rule::unique('products', 'part_number')->ignore($currentProduct?->id),
             ],
-            'brand_id' => ['sometimes', 'required', 'integer', 'exists:brands,id'],
+            'brand_id' => ['sometimes', 'required', 'integer', $activeOrCurrentBrand],
             'description' => ['sometimes', 'nullable', 'string'],
             'price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
             'img_url' => ['sometimes', 'required', 'string', 'max:255'],

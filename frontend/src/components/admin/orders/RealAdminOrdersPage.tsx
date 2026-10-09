@@ -1,0 +1,75 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRefresh } from "@fortawesome/free-solid-svg-icons";
+import { AdminBadge } from "@/components/admin/AdminDataTable";
+import { getAuthToken } from "@/lib/auth/authStorage";
+import { getAdminOrder, getAdminOrders, getAdminOrdersErrorMessage, updateAdminOrderAssignment, updateAdminOrderStatus } from "@/lib/adminOrdersApi";
+import type { AdminOrder, AdminOrderDetail, AdminOrderListResponse } from "@/lib/adminOrderTypes";
+import OrderDetailsModal from "./RealOrderDetailsModal";
+
+const tabs = ["", "pending", "under_review", "confirmed", "completed", "rejected", "cancelled"];
+
+function label(value: string | null | undefined) { return value ? value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()) : "Not available"; }
+function formatDate(value: string | null) { const date = value ? new Date(value) : null; return date && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(date) : "Not available"; }
+function formatPeso(value: number) { return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value); }
+function getPageNumbers(current: number, last: number): Array<number | "ellipsis"> { if (last <= 7) return Array.from({ length: last }, (_, index) => index + 1); const result: Array<number | "ellipsis"> = [1]; const start = Math.max(2, current - 1); const end = Math.min(last - 1, current + 1); if (start > 2) result.push("ellipsis"); for (let page = start; page <= end; page += 1) result.push(page); if (end < last - 1) result.push("ellipsis"); result.push(last); return result; }
+
+export default function RealAdminOrdersPage() {
+  const token = getAuthToken();
+  const [response, setResponse] = useState<AdminOrderListResponse | null>(null);
+  const [search, setSearch] = useState("");
+  const [branchId, setBranchId] = useState<number | "">("");
+  const [status, setStatus] = useState("");
+  const [fulfillment, setFulfillment] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [assignedStaffId, setAssignedStaffId] = useState<number | "">("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrderDetail | null>(null);
+  const [assignableStaff, setAssignableStaff] = useState<AdminOrderListResponse["filters"]["staff"]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const loadOrders = useCallback(async (signal?: AbortSignal) => {
+    if (!token) { setError("Your Admin session is unavailable. Please sign in again."); setLoading(false); return; }
+    setLoading(true);
+    try { setResponse(await getAdminOrders(token, { search, branchId, status, fulfillment, paymentStatus, assignedStaffId, page, perPage: 10, signal })); setError(null); }
+    catch (requestError) { if (requestError instanceof Error && requestError.name === "AbortError") return; setError(getAdminOrdersErrorMessage(requestError)); }
+    finally { if (!signal?.aborted) setLoading(false); }
+  }, [assignedStaffId, branchId, fulfillment, page, paymentStatus, search, status, token]);
+
+  useEffect(() => { const controller = new AbortController(); const timer = window.setTimeout(() => void loadOrders(controller.signal), 150); return () => { window.clearTimeout(timer); controller.abort(); }; }, [loadOrders]);
+
+  const openOrder = useCallback(async (order: AdminOrder) => {
+    if (!token) return;
+    setDetailLoading(true);
+    try { const detail = await getAdminOrder(token, order.reference); setSelectedOrder(detail.order); setAssignableStaff(detail.assignable_staff); }
+    catch (requestError) { setError(getAdminOrdersErrorMessage(requestError)); }
+    finally { setDetailLoading(false); }
+  }, [token]);
+
+  const refreshOrder = useCallback(async (reference: string) => { if (!token) return; const detail = await getAdminOrder(token, reference); setSelectedOrder(detail.order); setAssignableStaff(detail.assignable_staff); await loadOrders(); }, [loadOrders, token]);
+  const changeStatus = useCallback(async (nextStatus: string) => { if (!token || !selectedOrder) return; setSaving(true); try { await updateAdminOrderStatus(token, selectedOrder.reference, nextStatus); await refreshOrder(selectedOrder.reference); } catch (requestError) { setError(getAdminOrdersErrorMessage(requestError)); } finally { setSaving(false); } }, [refreshOrder, selectedOrder, token]);
+  const changeAssignment = useCallback(async (staffId: number | null) => { if (!token || !selectedOrder) return; setSaving(true); try { await updateAdminOrderAssignment(token, selectedOrder.reference, staffId); await refreshOrder(selectedOrder.reference); } catch (requestError) { setError(getAdminOrdersErrorMessage(requestError)); } finally { setSaving(false); } }, [refreshOrder, selectedOrder, token]);
+
+  const summary = response?.summary;
+  const orders = response?.orders ?? [];
+  const meta = response?.meta;
+  const filters = response?.filters;
+  const pageNumbers = useMemo(() => getPageNumbers(page, meta?.last_page ?? 1), [meta?.last_page, page]);
+  const resetFilters = () => { setSearch(""); setBranchId(""); setStatus(""); setFulfillment(""); setPaymentStatus(""); setAssignedStaffId(""); setPage(1); };
+
+  return <div className="space-y-5">
+    <section className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-orange-600">Order Management</p><h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0B1930] sm:text-3xl">All Customer Orders</h1><p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">Oversee canonical customer orders across every ALD branch.</p></div><button type="button" onClick={() => void loadOrders()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><FontAwesomeIcon icon={faRefresh} aria-hidden="true" /> Refresh</button></section>
+    {error && <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><span>{error}</span><button type="button" onClick={() => void loadOrders()} className="font-semibold underline">Retry</button></div>}
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">{[[summary?.total, "Total Orders", "All branches"], [summary?.needs_review, "Needs Review", "Pending or under review"], [summary?.confirmed, "Confirmed", "Accepted order requests"], [summary?.completed, "Completed", "Closed orders"], [summary?.under_review, "Under Review", "Currently being reviewed"]].map(([value, title, description]) => <article key={title} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-3xl font-bold text-[#0B1930]">{value ?? "—"}</p><h2 className="mt-1 font-semibold text-[#0B1930]">{title}</h2><p className="mt-1 text-sm text-slate-500">{description}</p></article>)}</section>
+    <section className="rounded-xl border border-slate-200 bg-white px-4 shadow-sm sm:px-5"><div className="overflow-x-auto"><div className="flex min-w-max items-center gap-6" role="tablist">{tabs.map((tab) => <button key={tab || "all"} type="button" role="tab" aria-selected={status === tab} onClick={() => { setStatus(tab); setPage(1); }} className={`inline-flex min-h-14 items-center gap-2 border-b-2 border-transparent px-1 text-sm font-semibold ${status === tab ? "border-orange-500 text-[#0B1930]" : "text-slate-500 hover:text-[#0B1930]"}`}>{tab ? label(tab) : "All"}<span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">{tab === "" ? summary?.total ?? "—" : summary?.status_counts[tab] ?? "—"}</span></button>)}</div></div></section>
+    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"><div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(17rem,1fr)_repeat(4,minmax(8rem,1fr))_auto]"><input aria-label="Search orders" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search reference, customer, or phone" className="min-h-11 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-orange-500" /><select aria-label="Branch" value={branchId} onChange={(event) => { setBranchId(event.target.value ? Number(event.target.value) : ""); setPage(1); }} className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm"><option value="">All branches</option>{filters?.branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select><select aria-label="Fulfillment" value={fulfillment} onChange={(event) => { setFulfillment(event.target.value); setPage(1); }} className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm"><option value="">All fulfillment</option><option value="pickup">Store pickup</option><option value="delivery">Lalamove delivery</option></select><select aria-label="Payment status" value={paymentStatus} onChange={(event) => { setPaymentStatus(event.target.value); setPage(1); }} className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm"><option value="">All payment</option><option value="unpaid">Unpaid / no record</option><option value="waiting_for_verification">Waiting for verification</option><option value="paid">Paid</option><option value="failed">Failed</option></select><select aria-label="Assigned staff" value={assignedStaffId} onChange={(event) => { setAssignedStaffId(event.target.value ? Number(event.target.value) : ""); setPage(1); }} className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm"><option value="">All staff</option>{filters?.staff.map((staff) => <option key={staff.id} value={staff.id}>{staff.name}</option>)}</select><button type="button" onClick={resetFilters} className="min-h-11 rounded-lg px-3 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-orange-600">Clear</button></div></section>
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"><div className="flex items-center justify-between border-b border-slate-200 px-5 py-5"><div><h2 className="text-lg font-semibold text-[#0B1930]">Order List</h2><p className="mt-1 text-sm text-slate-500">{meta ? `${meta.total} matching order records` : "Loading order records..."}</p></div><span className="text-sm text-slate-500">Page {meta?.current_page ?? page} of {meta?.last_page ?? 1}</span></div><div className="overflow-x-auto"><table className="w-full min-w-[1250px] border-collapse text-left"><thead className="bg-slate-50"><tr>{["Reference", "Customer", "Branch", "Amount", "Fulfillment", "Payment", "Assigned Staff", "Status", "Updated", "Action"].map((heading) => <th key={heading} scope="col" className="whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{heading}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{loading ? <tr><td colSpan={10} className="px-5 py-14 text-center text-slate-500">Loading order records...</td></tr> : orders.length === 0 ? <tr><td colSpan={10} className="px-5 py-14 text-center text-slate-500">No orders found.</td></tr> : orders.map((order) => <tr key={order.id} className="transition hover:bg-slate-50/80"><td className="px-5 py-4"><b className="text-[#0B1930]">{order.reference}</b><small className="mt-1 block text-slate-500">{order.line_item_count} line items</small></td><td className="px-5 py-4"><b className="block text-[#0B1930]">{order.customer?.full_name ?? "Guest customer"}</b><small className="text-slate-500">{order.customer?.contact_number || order.customer?.email || "No contact"}</small></td><td className="px-5 py-4 text-slate-600">{order.branch?.name ?? "Not assigned"}</td><td className="px-5 py-4 font-semibold text-[#0B1930]">{formatPeso(order.total_amount)}</td><td className="px-5 py-4"><span className="text-slate-600">{label(order.fulfillment_method)}</span><small className="mt-1 block text-slate-500">{label(order.fulfillment_status)}</small></td><td className="px-5 py-4"><AdminBadge>{label(order.payment_status)}</AdminBadge><small className="mt-1 block text-slate-500">{order.payment_method ? label(order.payment_method) : "No payment record"}</small></td><td className="px-5 py-4 text-slate-600">{order.assigned_staff?.name ?? "Unassigned"}</td><td className="px-5 py-4"><AdminBadge>{label(order.status)}</AdminBadge></td><td className="px-5 py-4 text-slate-600">{formatDate(order.updated_at)}</td><td className="px-5 py-4"><button type="button" onClick={() => void openOrder(order)} className="rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-600 hover:bg-orange-50">{order.status === "pending" ? "Review" : "View"}</button></td></tr>)}</tbody></table></div><div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"><span className="text-slate-500">Showing {meta?.total ? (page - 1) * (meta.per_page) + 1 : 0}–{meta ? Math.min(page * meta.per_page, meta.total) : 0} of {meta?.total ?? 0}</span>{(meta?.last_page ?? 1) > 1 && <nav className="flex flex-wrap items-center justify-end gap-1" aria-label="Order pages"><button type="button" disabled={page <= 1 || loading} onClick={() => setPage((current) => Math.max(1, current - 1))} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:opacity-40">Previous</button>{pageNumbers.map((pageNumber, index) => pageNumber === "ellipsis" ? <span key={`ellipsis-${index}`} className="px-2 text-slate-400">…</span> : <button type="button" key={pageNumber} aria-current={pageNumber === page ? "page" : undefined} disabled={loading} onClick={() => setPage(pageNumber)} className={`min-w-9 rounded-lg border px-3 py-2 font-semibold ${pageNumber === page ? "border-orange-600 bg-orange-600 text-white" : "border-slate-300 text-slate-700 hover:bg-slate-50"}`}>{pageNumber}</button>)}<button type="button" disabled={page >= (meta?.last_page ?? 1) || loading} onClick={() => setPage((current) => Math.min(meta?.last_page ?? current, current + 1))} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 disabled:opacity-40">Next</button></nav>}</div></section>
+    {detailLoading && <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/20 text-sm font-semibold text-slate-700">Loading order details…</div>}
+    <OrderDetailsModal order={selectedOrder} staffOptions={assignableStaff} saving={saving} onClose={() => setSelectedOrder(null)} onStatusChange={(nextStatus) => void changeStatus(nextStatus)} onAssignmentChange={(staffId) => void changeAssignment(staffId)} />
+  </div>;
+}

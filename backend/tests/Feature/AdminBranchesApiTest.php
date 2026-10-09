@@ -92,6 +92,27 @@ class AdminBranchesApiTest extends TestCase
             ->assertJsonMissing(['name' => 'Imus Motorshop']);
     }
 
+    public function test_admin_pickup_filter_handles_false_query_string(): void
+    {
+        $admin = $this->createUser('admin');
+        $pickupEnabled = $this->createBranch('Pickup Enabled');
+        $pickupDisabled = $this->createBranch('Pickup Disabled');
+        $pickupDisabled->update(['pickup_available' => false]);
+
+        $this->adminRequest($admin)
+            ->getJson('/api/admin/branches?pickup_available=false')
+            ->assertOk()
+            ->assertJsonPath('summary.pickup_available_branches', 1)
+            ->assertJsonPath('branches.0.id', $pickupDisabled->id)
+            ->assertJsonMissing(['id' => $pickupEnabled->id]);
+
+        $this->adminRequest($admin)
+            ->getJson('/api/admin/branches?pickup_available=true')
+            ->assertOk()
+            ->assertJsonPath('branches.0.id', $pickupEnabled->id)
+            ->assertJsonMissing(['id' => $pickupDisabled->id]);
+    }
+
     public function test_referenced_branches_cannot_be_deleted_but_unused_branches_can(): void
     {
         $admin = $this->createUser('admin');

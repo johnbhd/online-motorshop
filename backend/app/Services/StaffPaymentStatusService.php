@@ -24,7 +24,7 @@ class StaffPaymentStatusService
     public function transition(
         Payment $payment,
         string $status,
-        User $staff,
+        User $reviewer,
     ): Payment {
         if (! in_array($status, $this->allowedStatuses($payment), true)) {
             throw ValidationException::withMessages([
@@ -34,10 +34,10 @@ class StaffPaymentStatusService
             ]);
         }
 
-        return DB::transaction(function () use ($payment, $staff, $status): Payment {
+        return DB::transaction(function () use ($payment, $reviewer, $status): Payment {
             $payment->update([
                 'payment_status' => $status,
-                'verified_by' => $staff->id,
+                'verified_by' => $reviewer->id,
                 'verified_at' => now(),
             ]);
 

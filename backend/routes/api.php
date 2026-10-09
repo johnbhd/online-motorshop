@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\AdminOrdersController;
 use App\Http\Controllers\Admin\AdminPaymentsController;
 use App\Http\Controllers\Admin\AdminPickupRequestsController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Auth\LoginController;
@@ -19,6 +21,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\OrderRequestController;
+use App\Http\Controllers\PaymentInstructionsController;
 use App\Http\Controllers\Staff\StaffConversationsController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
@@ -51,6 +54,8 @@ Route::get('/categories', [CatalogController::class, 'categories'])
     ->name('catalog.categories.index');
 Route::get('/branches', [CatalogController::class, 'branches'])
     ->name('catalog.branches.index');
+Route::get('/payment-instructions', [PaymentInstructionsController::class, 'show'])
+    ->name('payment-instructions.show');
 Route::post('/order-requests', [OrderRequestController::class, 'store'])
     ->name('order-requests.store');
 Route::post('/order-requests/track', [OrderRequestController::class, 'track'])
@@ -75,6 +80,8 @@ Route::prefix('customer')
             ->name('orders.index');
         Route::get('/orders/{reference}', [CustomerOrderController::class, 'show'])
             ->name('orders.show');
+        Route::post('/orders/{reference}/payment-proof', [CustomerOrderController::class, 'storePaymentProof'])
+            ->name('orders.payment-proof.store');
     });
 
 // Auth
@@ -103,6 +110,21 @@ Route::prefix('admin')
     ->group(function () {
         Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
             ->name('dashboard.data');
+
+        Route::get('/settings', [AdminSettingsController::class, 'show'])
+            ->name('settings.show');
+
+        Route::patch('/settings', [AdminSettingsController::class, 'update'])
+            ->name('settings.update');
+
+        Route::get('/profile', [AdminProfileController::class, 'show'])
+            ->name('profile.show');
+
+        Route::patch('/profile', [AdminProfileController::class, 'update'])
+            ->name('profile.update');
+
+        Route::patch('/profile/password', [AdminProfileController::class, 'updatePassword'])
+            ->name('profile.password');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');
@@ -197,17 +219,54 @@ Route::prefix('admin')
         Route::delete('/staff/{staff}', [AdminStaffController::class, 'destroy'])
             ->name('staff.destroy');
 
+        Route::get('/orders', [AdminOrdersController::class, 'index'])
+            ->name('orders.index');
+
         Route::get('/orders/data', [AdminOrdersController::class, 'data'])
             ->name('orders.data');
+
+        Route::get('/orders/{reference}', [AdminOrdersController::class, 'show'])
+            ->name('orders.show');
+
+        Route::patch('/orders/{reference}/status', [AdminOrdersController::class, 'updateStatus'])
+            ->name('orders.status');
+
+        Route::patch('/orders/{reference}/assignment', [AdminOrdersController::class, 'updateAssignment'])
+            ->name('orders.assignment');
+
+        Route::get('/payments', [AdminPaymentsController::class, 'index'])
+            ->name('payments.index');
 
         Route::get('/payments/data', [AdminPaymentsController::class, 'data'])
             ->name('payments.data');
 
+        Route::get('/payments/{payment}', [AdminPaymentsController::class, 'show'])
+            ->whereNumber('payment')
+            ->name('payments.show');
+
+        Route::patch('/payments/{payment}/status', [AdminPaymentsController::class, 'updateStatus'])
+            ->whereNumber('payment')
+            ->name('payments.status');
+
+        Route::get('/pickup-requests', [AdminPickupRequestsController::class, 'index'])
+            ->name('pickups.index');
+
         Route::get('/pickup-requests/data', [AdminPickupRequestsController::class, 'data'])
             ->name('pickups.data');
 
+        Route::get('/pickup-requests/{pickup}', [AdminPickupRequestsController::class, 'show'])
+            ->whereNumber('pickup')
+            ->name('pickups.show');
+
+        Route::get('/delivery-requests', [AdminDeliveryRequestsController::class, 'index'])
+            ->name('deliveries.index');
+
         Route::get('/delivery-requests/data', [AdminDeliveryRequestsController::class, 'data'])
             ->name('deliveries.data');
+
+        Route::get('/delivery-requests/{delivery}', [AdminDeliveryRequestsController::class, 'show'])
+            ->whereNumber('delivery')
+            ->name('deliveries.show');
 
         Route::get('/customers', [AdminCustomersController::class, 'index'])
             ->name('customers.index');
@@ -227,7 +286,18 @@ Route::prefix('admin')
             ->whereNumber('customer')
             ->name('customers.destroy');
 
-        Route::get('/messages/data', [AdminMessagesController::class, 'data'])
+        Route::get('/conversations', [AdminMessagesController::class, 'index'])
+            ->name('conversations.index');
+
+        Route::get('/conversations/{conversation}', [AdminMessagesController::class, 'show'])
+            ->whereNumber('conversation')
+            ->name('conversations.show');
+
+        Route::post('/conversations/{conversation}/messages', [AdminMessagesController::class, 'storeMessage'])
+            ->whereNumber('conversation')
+            ->name('conversations.messages.store');
+
+        Route::get('/messages/data', [AdminMessagesController::class, 'index'])
             ->name('messages.data');
 
         Route::get('/staff-management/data', [AdminStaffController::class, 'data'])

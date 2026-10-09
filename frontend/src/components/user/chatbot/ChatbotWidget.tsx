@@ -161,7 +161,7 @@ export default function ChatbotWidget() {
     };
   }, [openStaffChat]);
 
-  const handleBackToAssistant = useCallback(() => {
+  const handleBackToHelp = useCallback(() => {
     setMode("assistant");
     setShowQuickActions(true);
   }, []);
@@ -315,7 +315,7 @@ export default function ChatbotWidget() {
           quickActions={chatbotQuickActions}
           showQuickActions={showQuickActions}
           onClose={closeChatbot}
-          onBackToAssistant={handleBackToAssistant}
+          onBackToHelp={handleBackToHelp}
           onQuickAction={handleQuickAction}
           onRequestStaff={handleRequestStaff}
           onToggleQuickActions={() => {
@@ -334,6 +334,10 @@ export default function ChatbotWidget() {
           if (isOpen) {
             closeChatbot();
             return;
+          }
+
+          if (mode === "assistant") {
+            setShowQuickActions(true);
           }
 
           setIsOpen(true);

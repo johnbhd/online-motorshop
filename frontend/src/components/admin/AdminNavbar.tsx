@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { notifications } from "@/lib/mock/staff";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -26,6 +27,8 @@ const labels: Record<string, string> = {
   "/admin/branches": "Branches",
   "/admin/staff-management": "Staff Management",
   "/admin/website-content": "Website Content",
+  "/admin/settings": "Settings",
+  "/admin/profile": "My Profile",
 };
 
 export default function AdminNavbar({
@@ -169,12 +172,13 @@ export default function AdminNavbar({
             </button>
             {menu === "profile" && (
               <div className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl">
-                <a
-                  href="#"
+                <Link
+                  href="/admin/profile"
+                  onClick={() => setMenu(null)}
                   className="block px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   ◉ &nbsp; Profile
-                </a>
+                </Link>
                 <button
                   type="button"
                   onClick={handleLogout}

@@ -397,27 +397,33 @@ export default function MessagesPage() {
                   {activeConversation.messages.length ? (
                     activeConversation.messages.map((message) => {
                       const isStaffMessage = message.sender === "staff";
+                      const isAdminMessage = message.sender === "admin";
+                      const isTeamMessage = isStaffMessage || isAdminMessage;
 
                       return (
                         <div
                           key={message.id}
                           className={
-                            isStaffMessage
+                            isTeamMessage
                               ? "flex justify-end"
                               : "flex justify-start"
                           }
                         >
                           <div
                             className={
-                              isStaffMessage
+                              isTeamMessage
                                 ? "max-w-[82%] rounded-2xl rounded-br-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-800 sm:max-w-[70%]"
                                 : "max-w-[82%] rounded-2xl rounded-bl-md bg-slate-200/80 px-4 py-3 text-sm text-slate-800 sm:max-w-[70%]"
                             }
                           >
                             <p className="mb-1 text-[11px] font-semibold text-slate-500">
-                              {isStaffMessage
-                                ? "ALD Staff"
-                                : activeConversation.participant.name}
+                              {isAdminMessage
+                                ? "ALD Administrator"
+                                : isStaffMessage
+                                  ? message.sender_name
+                                    ? `ALD Staff · ${message.sender_name}`
+                                    : "ALD Staff"
+                                  : activeConversation.participant.name}
                             </p>
                             <p>{message.body}</p>
                             <p className="mt-1.5 text-right text-[11px] text-slate-500">

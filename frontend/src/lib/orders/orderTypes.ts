@@ -101,6 +101,7 @@ export type CustomerOrderSummary = {
   reference: string;
   status: string;
   paymentStatus: string;
+  payment: OrderViewPayment | null;
   fulfillmentMethod: string;
   branch: CustomerOrderBranch | null;
   itemCount: number;
@@ -173,6 +174,7 @@ export type OrderViewPayment = {
   method: string;
   amount: number | null;
   reference: string | null;
+  proofImageUrl: string | null;
   status: string;
   verifiedAt: string | null;
 };

@@ -2,7 +2,7 @@
 
 import { forwardRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCommentDots, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faCommentDots } from "@fortawesome/free-solid-svg-icons";
 
 export type ChatbotLauncherProps = {
   isOpen: boolean;
@@ -19,12 +19,10 @@ const ChatbotLauncher = forwardRef<HTMLButtonElement, ChatbotLauncherProps>(
         aria-label={isOpen ? "Close ALD Assistant" : "Open ALD Assistant"}
         aria-expanded={isOpen}
         aria-controls="ald-chatbot-panel"
+        hidden={isOpen}
         onClick={onClick}
       >
-        <FontAwesomeIcon
-          icon={isOpen ? faXmark : faCommentDots}
-          aria-hidden="true"
-        />
+        <FontAwesomeIcon icon={faCommentDots} aria-hidden="true" />
       </button>
     );
   },

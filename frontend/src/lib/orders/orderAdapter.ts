@@ -14,6 +14,7 @@ import type {
   OrderViewPayment,
   OrderViewPickup,
 } from "./orderTypes";
+import { getPaymentMethodLabel } from "./orderRequestTypes";
 
 export function toCustomerOrderSummary(
   order: OrderApiSummary,
@@ -23,6 +24,7 @@ export function toCustomerOrderSummary(
     reference: order.reference,
     status: toStatusLabel(order.status),
     paymentStatus: toStatusLabel(order.payment_status),
+    payment: toPayment(order.payment),
     fulfillmentMethod: order.fulfillment_method,
     branch: toBranch(order.branch),
     itemCount: order.item_count,
@@ -89,6 +91,7 @@ export function toStatusLabel(value: string): string {
     confirmed: "Confirmed",
     waiting_for_payment: "Waiting for Payment",
     payment_verification: "Payment Verification",
+    waiting_for_verification: "Waiting for Verification",
     preparing_order: "Preparing Order",
     ready_for_pickup: "Ready for Pickup",
     booked_for_delivery: "Booked for Delivery",
@@ -99,6 +102,8 @@ export function toStatusLabel(value: string): string {
     cancelled: "Cancelled",
     unpaid: "Unpaid",
     paid: "Paid",
+    failed: "Failed",
+    refunded: "Refunded",
   };
 
   return (
@@ -131,8 +136,8 @@ function toOrderItem(item: OrderApiDetails["items"][number]): OrderViewItem {
       partNumber: item.part_number,
       name: item.name,
       brand: null,
-      image: null,
-      alt: null,
+      image: item.image,
+      alt: `${item.name} product image`,
     },
     unitPrice: item.unit_price,
     lineTotal: item.line_total,
@@ -185,9 +190,10 @@ function toPayment(payment: OrderApiPayment | null): OrderViewPayment | null {
 
   return {
     id: payment.id,
-    method: payment.method,
+    method: getPaymentMethodLabel(payment.method),
     amount: payment.amount,
     reference: payment.reference,
+    proofImageUrl: payment.proof_image_url,
     status: toStatusLabel(payment.status),
     verifiedAt: payment.verified_at,
   };

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Message extends Model
 {
-    public const SENDER_TYPES = ['customer', 'staff'];
+    public const SENDER_TYPES = ['customer', 'staff', 'admin'];
 
     protected $fillable = [
         'conversation_id',

@@ -6,6 +6,25 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class AdminBranchIndexRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $value = $this->query('pickup_available');
+
+        if (! is_string($value)) {
+            return;
+        }
+
+        $normalized = match (strtolower($value)) {
+            'true' => true,
+            'false' => false,
+            default => null,
+        };
+
+        if ($normalized !== null) {
+            $this->merge(['pickup_available' => $normalized]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->role === 'admin';

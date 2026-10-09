@@ -3,20 +3,24 @@
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCreditCard,
   faMessage,
   faStore,
   faTruck,
 } from "@fortawesome/free-solid-svg-icons";
 import type { OrderViewModel } from "@/lib/orders/orderTypes";
 import { OPEN_STAFF_CHAT_EVENT } from "../chatbot/chatbotEvents";
+import OrderPaymentSection from "../orders/OrderPaymentSection";
 
 type OrderSupportSectionProps = {
   order: OrderViewModel;
+  paymentToken?: string | null;
+  onOrderUpdated?: (order: OrderViewModel) => void;
 };
 
 export default function OrderSupportSection({
   order,
+  paymentToken,
+  onOrderUpdated,
 }: OrderSupportSectionProps) {
   const isPickup = order.fulfillment.method === "pickup";
   const fulfillmentMethod = isPickup ? "Store Pickup" : "Delivery";
@@ -29,11 +33,6 @@ export default function OrderSupportSection({
   const fulfillmentDetail = order.fulfillment.method === "pickup"
     ? order.fulfillment.branch?.name ?? "Branch unavailable"
     : order.fulfillment.delivery?.address ?? "Delivery address unavailable";
-  const paymentInformation =
-    order.payment
-      ? "Payment is recorded for this order request."
-      : "No verified payment is recorded for this order request. ALD staff will provide instructions after confirming the request and final amount.";
-
   const handleTalkToStaff = () => {
     window.dispatchEvent(new Event(OPEN_STAFF_CHAT_EVENT));
   };
@@ -56,18 +55,11 @@ export default function OrderSupportSection({
           <strong>{fulfillmentDetail}</strong>
         </div>
       </section>
-      <section
-        className="track-order-card track-order-support-card"
-        aria-labelledby="track-order-payment-title"
-      >
-        <span className="track-order-support-icon" aria-hidden="true">
-          <FontAwesomeIcon icon={faCreditCard} />
-        </span>
-        <p className="track-order-section-eyebrow">PAYMENT</p>
-        <h2 id="track-order-payment-title">Payment Status</h2>
-        <strong>{order.paymentStatus}</strong>
-        <p>{paymentInformation}</p>
-      </section>
+      <OrderPaymentSection
+        order={order}
+        paymentToken={paymentToken}
+        onOrderUpdated={onOrderUpdated}
+      />
       <section
         className="track-order-help-card"
         aria-labelledby="track-order-help-title"

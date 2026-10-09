@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import { toStatusLabel } from "@/lib/orders/orderAdapter";
+import { getPaymentMethodLabel } from "@/lib/orders/orderRequestTypes";
 import { Badge } from "@/components/staff/PortalTable";
 import {
   getStaffPayment,
@@ -291,7 +292,7 @@ export default function RealStaffPaymentDetailsModal({
                   </div>
                   <div>
                     <dt className="text-slate-500">Payment Method</dt>
-                    <dd className="mt-1 font-semibold text-[#0B1930]">{payment.method}</dd>
+                    <dd className="mt-1 font-semibold text-[#0B1930]">{getPaymentMethodLabel(payment.method)}</dd>
                   </div>
                   <div>
                     <dt className="text-slate-500">Amount</dt>

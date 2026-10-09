@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import { toStatusLabel } from "@/lib/orders/orderAdapter";
+import { getPaymentMethodLabel } from "@/lib/orders/orderRequestTypes";
 import { Badge } from "@/components/staff/PortalTable";
 import {
   getStaffOrder,
@@ -376,7 +377,11 @@ export default function RealStaffOrderDetailsModal({
                   </div>
                   <div>
                     <dt>Payment Record</dt>
-                    <dd>{order.payment ? order.payment.method : "No payment record"}</dd>
+                    <dd>
+                      {order.payment
+                        ? getPaymentMethodLabel(order.payment.method)
+                        : "No payment record"}
+                    </dd>
                   </div>
                   <div>
                     <dt>Amount</dt>

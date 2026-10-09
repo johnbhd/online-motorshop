@@ -3,163 +3,121 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminConversationIndexRequest;
+use App\Http\Requests\SendAdminConversationMessageRequest;
+use App\Models\Conversation;
+use App\Services\ConversationPresenter;
+use App\Services\ConversationService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 
 class AdminMessagesController extends Controller
 {
-    public function data(): JsonResponse
+    public function __construct(
+        private readonly ConversationService $conversationService,
+        private readonly ConversationPresenter $conversationPresenter,
+    ) {}
+
+    public function index(AdminConversationIndexRequest $request): JsonResponse
     {
+        $filters = $request->validated();
+        $query = Conversation::query()
+            ->with(['customer.user', 'latestMessage.senderUser'])
+            ->withCount('messages')
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('id');
+
+        $this->applyFilters($query, $filters);
+        $conversations = $query->paginate($filters['per_page'] ?? 20);
+
         return response()->json([
-            'summary' => [
-                'total' => 24,
-                'unread' => 5,
-            ],
-            'conversations' => [
-                [
-                    'id' => 1,
-                    'customer' => [
-                        'name' => 'Mark Reyes',
-                        'initials' => 'MR',
-                    ],
-                    'branch' => 'Makati Branch',
-                    'status' => 'New',
-                    'unread' => true,
-                    'last_message' => 'Available ba yung Honda Click brake pad sa Makati branch?',
-                    'updated_at' => '12 min ago',
-                    'messages' => [
-                        [
-                            'sender' => 'customer',
-                            'message' => 'Available ba yung Honda Click brake pad sa Makati branch?',
-                            'time' => '12:03 PM',
-                        ],
-                        [
-                            'sender' => 'admin',
-                            'message' => 'Hi! We can confirm that the Honda Click brake pad is currently available at our Makati Branch.',
-                            'time' => '12:10 PM',
-                        ],
-                        [
-                            'sender' => 'customer',
-                            'message' => 'Okay po, thank you!',
-                            'time' => '12:12 PM',
-                        ],
-                    ],
-                ],
-                [
-                    'id' => 2,
-                    'customer' => [
-                        'name' => 'Angela Cruz',
-                        'initials' => 'AC',
-                    ],
-                    'branch' => 'Makati Branch',
-                    'status' => 'Open',
-                    'unread' => true,
-                    'last_message' => 'Pwede po ba Lalamove delivery to Makati?',
-                    'updated_at' => '31 min ago',
-                    'messages' => [
-                        [
-                            'sender' => 'customer',
-                            'message' => 'Pwede po ba Lalamove delivery to Makati?',
-                            'time' => '11:28 AM',
-                        ],
-                        [
-                            'sender' => 'admin',
-                            'message' => 'Yes po, we can arrange Lalamove delivery for your order.',
-                            'time' => '11:32 AM',
-                        ],
-                    ],
-                ],
-                [
-                    'id' => 3,
-                    'customer' => [
-                        'name' => 'Paolo Santos',
-                        'initials' => 'PS',
-                    ],
-                    'branch' => 'Manila Branch',
-                    'status' => 'Waiting',
-                    'unread' => false,
-                    'last_message' => 'Ready na po ba pickup order ko?',
-                    'updated_at' => '1 hr ago',
-                    'messages' => [
-                        [
-                            'sender' => 'customer',
-                            'message' => 'Ready na po ba pickup order ko?',
-                            'time' => '10:41 AM',
-                        ],
-                        [
-                            'sender' => 'admin',
-                            'message' => 'We are confirming this with the branch and will update you shortly.',
-                            'time' => '10:45 AM',
-                        ],
-                    ],
-                ],
-                [
-                    'id' => 4,
-                    'customer' => [
-                        'name' => 'Carla Mendoza',
-                        'initials' => 'CM',
-                    ],
-                    'branch' => 'Makati Branch',
-                    'status' => 'Open',
-                    'unread' => false,
-                    'last_message' => 'I already uploaded my payment proof.',
-                    'updated_at' => '2 hrs ago',
-                    'messages' => [
-                        [
-                            'sender' => 'customer',
-                            'message' => 'I already uploaded my payment proof.',
-                            'time' => '9:20 AM',
-                        ],
-                        [
-                            'sender' => 'admin',
-                            'message' => 'Thank you. We will verify it shortly.',
-                            'time' => '9:24 AM',
-                        ],
-                    ],
-                ],
-                [
-                    'id' => 5,
-                    'customer' => [
-                        'name' => 'Miguel Ramos',
-                        'initials' => 'MR',
-                    ],
-                    'branch' => 'Imus Branch',
-                    'status' => 'New',
-                    'unread' => true,
-                    'last_message' => 'Compatible ba ito sa Suzuki Raider R150?',
-                    'updated_at' => 'Today',
-                    'messages' => [
-                        [
-                            'sender' => 'customer',
-                            'message' => 'Compatible ba ito sa Suzuki Raider R150?',
-                            'time' => '8:55 AM',
-                        ],
-                    ],
-                ],
-                [
-                    'id' => 6,
-                    'customer' => [
-                        'name' => 'Grace Lopez',
-                        'initials' => 'GL',
-                    ],
-                    'branch' => 'Imus Branch',
-                    'status' => 'Resolved',
-                    'unread' => false,
-                    'last_message' => 'Thank you, received na po.',
-                    'updated_at' => 'Yesterday',
-                    'messages' => [
-                        [
-                            'sender' => 'admin',
-                            'message' => 'Your order has been completed. Thank you!',
-                            'time' => '4:05 PM',
-                        ],
-                        [
-                            'sender' => 'customer',
-                            'message' => 'Thank you, received na po.',
-                            'time' => '4:12 PM',
-                        ],
-                    ],
-                ],
+            'summary' => $this->summary(),
+            'conversations' => $conversations->getCollection()
+                ->map(fn (Conversation $conversation): array => $this->conversationPresenter->summaryForAdmin($conversation))
+                ->values(),
+            'meta' => [
+                'current_page' => $conversations->currentPage(),
+                'last_page' => $conversations->lastPage(),
+                'per_page' => $conversations->perPage(),
+                'total' => $conversations->total(),
             ],
         ]);
+    }
+
+    public function show(Conversation $conversation): JsonResponse
+    {
+        return response()->json([
+            'conversation' => $this->conversationPresenter->detailsForAdmin(
+                $this->conversationService->loadConversation($conversation, true),
+            ),
+        ]);
+    }
+
+    public function storeMessage(
+        SendAdminConversationMessageRequest $request,
+        Conversation $conversation,
+    ): JsonResponse {
+        $this->conversationService->appendAdminMessage(
+            $conversation,
+            $request->user(),
+            $request->validated('body'),
+        );
+
+        return response()->json([
+            'conversation' => $this->conversationPresenter->detailsForAdmin(
+                $this->conversationService->loadConversation($conversation, true),
+            ),
+        ], 201);
+    }
+
+    private function applyFilters(Builder $query, array $filters): void
+    {
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search !== '') {
+            $query->where(function (Builder $searchQuery) use ($search): void {
+                $searchQuery
+                    ->whereHas('customer', function (Builder $customerQuery) use ($search): void {
+                        $customerQuery
+                            ->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('contact_number', 'like', "%{$search}%");
+                    })
+                    ->orWhere('id', is_numeric($search) ? (int) $search : -1)
+                    ->orWhereHas('messages', fn (Builder $messageQuery): Builder => $messageQuery
+                        ->where('body', 'like', "%{$search}%"));
+            });
+        }
+
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (array_key_exists('needs_reply', $filters)) {
+            $needsReply = filter_var($filters['needs_reply'], FILTER_VALIDATE_BOOLEAN);
+            $needsReplyQuery = fn (Builder $messageQuery): Builder => $messageQuery
+                ->where('sender_type', 'customer');
+
+            if ($needsReply) {
+                $query->where('status', 'open')->whereHas('latestMessage', $needsReplyQuery);
+            } else {
+                $query->whereDoesntHave('latestMessage', $needsReplyQuery);
+            }
+        }
+    }
+
+    private function summary(): array
+    {
+        $query = Conversation::query();
+
+        return [
+            'total' => (clone $query)->count(),
+            'open' => (clone $query)->where('status', 'open')->count(),
+            'needs_reply' => (clone $query)
+                ->where('status', 'open')
+                ->whereHas('latestMessage', fn (Builder $messageQuery): Builder => $messageQuery
+                    ->where('sender_type', 'customer'))
+                ->count(),
+        ];
     }
 }

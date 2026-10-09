@@ -9,7 +9,7 @@ class OrderRequestPresenter
 {
     public function confirmation(OrderRequest $order): array
     {
-        return $this->payload($order, includeCustomer: true, includePayment: false);
+        return $this->payload($order, includeCustomer: true, includePayment: true);
     }
 
     public function summary(OrderRequest $order): array
@@ -19,6 +19,7 @@ class OrderRequestPresenter
             'reference' => $order->order_reference,
             'status' => $order->order_status,
             'payment_status' => $this->paymentStatus($order),
+            'payment' => $this->paymentPayload($order),
             'fulfillment_method' => $order->fulfillment_type,
             'branch' => $this->branchPayload($order),
             'item_count' => (int) ($order->getAttribute('items_sum_quantity') ?? 0),
@@ -72,6 +73,38 @@ class OrderRequestPresenter
         return $payload;
     }
 
+    public function adminSummary(OrderRequest $order): array
+    {
+        return [
+            'id' => $order->id,
+            'reference' => $order->order_reference,
+            'customer' => $order->customer?->only(['id', 'full_name', 'contact_number', 'email']),
+            'status' => $order->order_status,
+            'payment_status' => $this->paymentStatus($order),
+            'payment_method' => $this->latestPayment($order)?->payment_method,
+            'fulfillment_method' => $order->fulfillment_type,
+            'fulfillment_status' => $order->fulfillment_type === 'pickup'
+                ? $order->pickupRequest?->pickup_status
+                : $order->deliveryRequest?->delivery_status,
+            'branch' => $this->branchPayload($order),
+            'assigned_staff' => $order->assignedStaff?->only(['id', 'name', 'email', 'branch_id']),
+            'item_count' => (int) ($order->getAttribute('items_sum_quantity') ?? 0),
+            'line_item_count' => (int) ($order->getAttribute('items_count') ?? 0),
+            'total_amount' => (float) $order->total_amount,
+            'created_at' => $order->created_at?->toISOString(),
+            'updated_at' => $order->updated_at?->toISOString(),
+        ];
+    }
+
+    public function adminDetail(OrderRequest $order, array $allowedStatuses): array
+    {
+        $payload = $this->staffDetail($order);
+        $payload['allowed_statuses'] = $allowedStatuses;
+        $payload['payment_method'] = $this->latestPayment($order)?->payment_method;
+
+        return $payload;
+    }
+
     public function detail(
         OrderRequest $order,
         bool $includeCustomer = true,
@@ -95,6 +128,7 @@ class OrderRequestPresenter
             'items' => $order->items->map(fn ($item): array => [
                 'product_id' => $item->product_id,
                 'part_number' => $item->product?->part_number,
+                'image' => $item->product?->img_url,
                 'name' => $item->product_name,
                 'unit_price' => (float) $item->unit_price,
                 'quantity' => $item->quantity,
@@ -200,6 +234,7 @@ class OrderRequestPresenter
             'method' => $payment->payment_method,
             'amount' => (float) $payment->amount,
             'reference' => $payment->payment_reference,
+            'proof_image_url' => $payment->proof_image_url,
             'status' => $payment->payment_status,
             'verified_at' => $payment->verified_at?->toISOString(),
         ];

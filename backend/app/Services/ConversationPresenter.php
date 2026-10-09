@@ -9,6 +9,16 @@ class ConversationPresenter
 {
     public function details(Conversation $conversation): array
     {
+        return $this->presentDetails($conversation, false);
+    }
+
+    public function detailsForAdmin(Conversation $conversation): array
+    {
+        return $this->presentDetails($conversation, true);
+    }
+
+    private function presentDetails(Conversation $conversation, bool $includeSenderNames): array
+    {
         return [
             'id' => $conversation->id,
             'participant_type' => $conversation->participant_type,
@@ -18,13 +28,23 @@ class ConversationPresenter
             'updated_at' => $conversation->updated_at?->toISOString(),
             'last_message_at' => $conversation->last_message_at?->toISOString(),
             'messages' => $conversation->messages
-                ->map(fn (Message $message): array => $this->message($message))
+                ->map(fn (Message $message): array => $this->message($message, $includeSenderNames))
                 ->values()
                 ->all(),
         ];
     }
 
     public function summary(Conversation $conversation): array
+    {
+        return $this->presentSummary($conversation, false);
+    }
+
+    public function summaryForAdmin(Conversation $conversation): array
+    {
+        return $this->presentSummary($conversation, true);
+    }
+
+    private function presentSummary(Conversation $conversation, bool $includeSenderNames): array
     {
         $latestMessage = $conversation->latestMessage;
 
@@ -37,7 +57,7 @@ class ConversationPresenter
             'updated_at' => $conversation->updated_at?->toISOString(),
             'last_message_at' => $conversation->last_message_at?->toISOString(),
             'message_count' => $conversation->messages_count ?? $conversation->messages()->count(),
-            'last_message' => $latestMessage ? $this->message($latestMessage) : null,
+            'last_message' => $latestMessage ? $this->message($latestMessage, $includeSenderNames) : null,
         ];
     }
 
@@ -60,13 +80,19 @@ class ConversationPresenter
         ];
     }
 
-    private function message(Message $message): array
+    private function message(Message $message, bool $includeSenderName = false): array
     {
-        return [
+        $payload = [
             'id' => $message->id,
             'sender' => $message->sender_type,
             'body' => $message->body,
             'created_at' => $message->created_at?->toISOString(),
         ];
+
+        if ($includeSenderName) {
+            $payload['sender_name'] = $message->senderUser?->name;
+        }
+
+        return $payload;
     }
 }

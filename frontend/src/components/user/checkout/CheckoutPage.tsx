@@ -14,6 +14,7 @@ import CheckoutOrderSummary from "./CheckoutOrderSummary";
 import DeliveryFields from "./DeliveryFields";
 import FulfillmentMethod from "./FulfillmentMethod";
 import StorePickupFields from "./StorePickupFields";
+import CheckoutPaymentMethod from "./PaymentMethod";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/toast/ToastProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
@@ -28,6 +29,7 @@ import {
 } from "@/lib/orders/orderRequestApi";
 import { saveOrderConfirmation } from "@/lib/orders/orderConfirmationStorage";
 import { buildOrderRequestPayload } from "@/lib/orders/orderRequestMapper";
+import type { PaymentMethod } from "@/lib/orders/orderRequestTypes";
 import type {
   CartItemData,
   FulfillmentMethod as CartFulfillmentMethod,
@@ -64,6 +66,7 @@ const initialFormData: CheckoutFormData = {
   fulfillmentMethod: "pickup",
   branchId: "",
   delivery: initialDeliveryData,
+  paymentMethod: "",
   orderNotes: "",
   confirmDetails: false,
 };
@@ -173,6 +176,7 @@ export default function CheckoutPage() {
     setFormData((currentFormData) => ({
       ...currentFormData,
       fulfillmentMethod: method,
+      paymentMethod: "",
     }));
     setErrors((currentErrors) => ({
       ...currentErrors,
@@ -181,6 +185,19 @@ export default function CheckoutPage() {
       barangay: undefined,
       city: undefined,
       contactPerson: undefined,
+      paymentMethod: undefined,
+    }));
+    setSubmitError("");
+  };
+
+  const handlePaymentMethodChange = (paymentMethod: PaymentMethod) => {
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      paymentMethod,
+    }));
+    setErrors((currentErrors) => ({
+      ...currentErrors,
+      paymentMethod: undefined,
     }));
     setSubmitError("");
   };
@@ -295,6 +312,7 @@ export default function CheckoutPage() {
             "fulfillment.delivery.barangay": "barangay",
             "fulfillment.delivery.city": "city",
             "fulfillment.delivery.contact_person": "contactPerson",
+            payment_method: "paymentMethod",
           };
 
           if (message && fieldMap[field]) {
@@ -435,6 +453,13 @@ export default function CheckoutPage() {
               />
             ) : null}
 
+            <CheckoutPaymentMethod
+              fulfillmentMethod={formData.fulfillmentMethod}
+              value={formData.paymentMethod}
+              error={errors.paymentMethod}
+              onChange={handlePaymentMethodChange}
+            />
+
             <section className="checkout-section checkout-section--notes" aria-labelledby="checkout-notes-title">
               <div className="checkout-section-heading">
                 <div className="checkout-section-icon" aria-hidden="true">
@@ -461,6 +486,7 @@ export default function CheckoutPage() {
 
           <CheckoutOrderSummary
             items={cartItems}
+            paymentMethod={formData.paymentMethod}
             confirmDetails={formData.confirmDetails}
             errors={errors}
             isSubmitting={isSubmitting}

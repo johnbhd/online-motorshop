@@ -4,7 +4,6 @@ import type { FormEvent, RefObject } from "react";
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowLeft,
   faBars,
   faPaperPlane,
   faXmark,
@@ -16,7 +15,6 @@ export type ChatbotComposerProps = {
   showQuickActions: boolean;
   isSending?: boolean;
   onSend: (message: string) => void;
-  onBackToAssistant: () => void;
   onToggleQuickActions: () => void;
 };
 
@@ -26,7 +24,6 @@ export default function ChatbotComposer({
   showQuickActions,
   isSending = false,
   onSend,
-  onBackToAssistant,
   onToggleQuickActions,
 }: ChatbotComposerProps) {
   const [message, setMessage] = useState("");
@@ -48,23 +45,23 @@ export default function ChatbotComposer({
 
   return (
     <form className="ald-chatbot__composer" onSubmit={handleSubmit}>
-      <button
-        className="ald-chatbot__composer-menu"
-        type="button"
-        aria-label={
-          isStaffMode
-            ? "Back to ALD Assistant"
-            : showQuickActions
+      {!isStaffMode && (
+        <button
+          className="ald-chatbot__composer-menu"
+          type="button"
+          aria-label={
+            showQuickActions
               ? "Hide chatbot quick actions"
               : "Show chatbot quick actions"
-        }
-        onClick={isStaffMode ? onBackToAssistant : onToggleQuickActions}
-      >
-        <FontAwesomeIcon
-          icon={isStaffMode ? faArrowLeft : showQuickActions ? faXmark : faBars}
-          aria-hidden="true"
-        />
-      </button>
+          }
+          onClick={onToggleQuickActions}
+        >
+          <FontAwesomeIcon
+            icon={showQuickActions ? faXmark : faBars}
+            aria-hidden="true"
+          />
+        </button>
+      )}
       <label className="sr-only" htmlFor="ald-chatbot-message-input">
         {isStaffMode ? "Message ALD Staff" : "Message ALD Assistant"}
       </label>

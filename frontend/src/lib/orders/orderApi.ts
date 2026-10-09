@@ -10,6 +10,7 @@ export type OrderApiSummary = {
   reference: string;
   status: string;
   payment_status: string;
+  payment: OrderApiPayment | null;
   fulfillment_method: string;
   branch: OrderApiBranch | null;
   item_count: number;
@@ -33,6 +34,7 @@ export type OrderApiCustomer = {
 export type OrderApiItem = {
   product_id: number;
   part_number: string | null;
+  image: string | null;
   name: string;
   unit_price: number;
   quantity: number;
@@ -66,6 +68,7 @@ export type OrderApiPayment = {
   method: string;
   amount: number | null;
   reference: string | null;
+  proof_image_url: string | null;
   status: string;
   verified_at: string | null;
 };
@@ -93,6 +96,10 @@ export type CustomerOrdersApiResponse = {
 
 export type OrderDetailsApiResponse = {
   order: OrderApiDetails;
+};
+
+export type CustomerPaymentProofApiResponse = OrderDetailsApiResponse & {
+  message: string;
 };
 
 export type TrackOrderApiResponse = {
@@ -138,7 +145,7 @@ async function requestOrderApi<T>(
 
   headers.set("Accept", "application/json");
 
-  if (options.body) {
+  if (options.body && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -221,6 +228,28 @@ export async function getCustomerOrder(
   );
 }
 
+export async function submitPaymentProof(
+  token: string,
+  reference: string,
+  file: File,
+  signal?: AbortSignal,
+): Promise<CustomerPaymentProofApiResponse> {
+  const formData = new FormData();
+  formData.append("proof", file);
+
+  return requestOrderApi<CustomerPaymentProofApiResponse>(
+    `/api/customer/orders/${encodeURIComponent(reference)}/payment-proof`,
+    {
+      method: "POST",
+      signal,
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+}
+
 export async function trackOrder(
   reference: string,
   contactNumber: string,
@@ -251,6 +280,18 @@ export function getOrderApiErrorMessage(
 
     if (error.status === 403) {
       return "You are not authorized to view these orders.";
+    }
+
+    if (error.status === 422 && isApiErrorPayload(error.payload)) {
+      const validationErrors = error.payload.errors;
+
+      if (typeof validationErrors === "object" && validationErrors !== null) {
+        const firstError = Object.values(validationErrors).flat()[0];
+
+        if (typeof firstError === "string") {
+          return firstError;
+        }
+      }
     }
 
     if (error.status >= 500 || error.status === 0) {

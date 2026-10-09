@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import { toStatusLabel } from "@/lib/orders/orderAdapter";
+import { getPaymentMethodLabel } from "@/lib/orders/orderRequestTypes";
 import { Badge } from "@/components/staff/PortalTable";
 import {
   getStaffPickup,
@@ -432,7 +433,11 @@ export default function RealStaffPickupDetailsModal({
                   </div>
                   <div>
                     <dt className="text-slate-500">Payment Method</dt>
-                    <dd className="mt-1 text-slate-700">{displayValue(pickup.payment?.method)}</dd>
+                    <dd className="mt-1 text-slate-700">
+                      {pickup.payment
+                        ? getPaymentMethodLabel(pickup.payment.method)
+                        : "Not available"}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-slate-500">Payment Reference</dt>

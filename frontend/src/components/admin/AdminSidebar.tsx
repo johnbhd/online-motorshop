@@ -60,8 +60,8 @@ const links = [
   ["Website Content", "/admin/website-content", "▤"],
   ["Reports", "#", "▥"],
   ["Activity Logs", "#", "◷"],
-  ["Settings", "#", "⚙"],
-  ["Profile", "#", "◉"],
+  ["Settings", "/admin/settings", "⚙"],
+  ["Profile", "/admin/profile", "◉"],
 ] as const;
 
 export default function AdminSidebar({
