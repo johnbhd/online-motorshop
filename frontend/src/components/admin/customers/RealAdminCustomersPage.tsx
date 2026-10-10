@@ -442,7 +442,7 @@ export default function RealAdminCustomersPage() {
           <span className="text-sm text-slate-500">Page {page} of {lastPage}</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[940px] text-left text-sm">
+          <table className="w-full min-w-[1040px] text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th scope="col" className="w-14 px-5 py-3">#</th>
@@ -453,24 +453,17 @@ export default function RealAdminCustomersPage() {
                 <th scope="col" className="px-5 py-3">Orders</th>
                 <th scope="col" className="px-5 py-3">Last order</th>
                 <th scope="col" className="px-5 py-3">Status</th>
+                <th scope="col" className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan={8} className="px-5 py-14 text-center text-slate-500">Loading customer records...</td></tr>
+                <tr><td colSpan={9} className="px-5 py-14 text-center text-slate-500">Loading customer records...</td></tr>
               ) : customers.length === 0 ? (
-                <tr><td colSpan={8} className="px-5 py-14 text-center text-slate-500">No customer records match these filters.</td></tr>
+                <tr><td colSpan={9} className="px-5 py-14 text-center text-slate-500">No customer records match these filters.</td></tr>
               ) : (
                 customers.map((customer, index) => (
-                  <tr
-                    key={customer.id}
-                    tabIndex={0}
-                    onClick={() => openCustomer(customer)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") openCustomer(customer);
-                    }}
-                    className="cursor-pointer transition hover:bg-orange-50/40 focus:bg-orange-50/40 focus:outline-none"
-                  >
+                  <tr key={customer.id} className="transition hover:bg-slate-50/80">
                     <td className="px-5 py-4 font-semibold text-slate-400">{(page - 1) * perPage + index + 1}</td>
                     <td className="px-5 py-4"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">{customer.initials}</span><span><b className="block text-[#0B1930]">{customer.name}</b><small className="text-slate-500">{customer.email || "No email"}</small></span></div></td>
                     <td className="px-5 py-4"><AdminBadge>{label(customer.type)}</AdminBadge></td>
@@ -479,6 +472,15 @@ export default function RealAdminCustomersPage() {
                     <td className="px-5 py-4 font-semibold text-[#0B1930]">{customer.orders}</td>
                     <td className="px-5 py-4 text-slate-600">{formatDate(customer.last_order_at)}</td>
                     <td className="px-5 py-4"><AdminBadge>{label(customer.account_status ?? "guest")}</AdminBadge></td>
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openCustomer(customer)}
+                        className="min-h-9 rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                      >
+                        View details
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
