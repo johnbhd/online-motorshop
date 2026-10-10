@@ -1,8 +1,15 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   OPEN_STAFF_CHAT_EVENT,
   type OpenStaffChatDetail,
@@ -18,6 +25,29 @@ export default function ContactForm() {
   const [status, setStatus] = useState(
     "Your inquiry will be sent directly to ALD Support for review.",
   );
+  const { user } = useAuth();
+  const fullNameInputRef = useRef<HTMLInputElement>(null);
+  const contactNumberInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    if (fullNameInputRef.current?.value.trim() === "") {
+      fullNameInputRef.current.value = user.customer?.full_name || user.name;
+    }
+
+    if (contactNumberInputRef.current?.value.trim() === "") {
+      contactNumberInputRef.current.value =
+        user.customer?.contact_number || "";
+    }
+
+    if (emailInputRef.current?.value.trim() === "") {
+      emailInputRef.current.value = user.customer?.email || user.email;
+    }
+  }, [user]);
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSelectedPhoto(event.target.files?.[0] ?? null);
@@ -139,6 +169,7 @@ export default function ContactForm() {
                   autoComplete="name"
                   placeholder="Enter your complete name"
                   required
+                  ref={fullNameInputRef}
                 />
               </div>
 
@@ -151,6 +182,7 @@ export default function ContactForm() {
                   autoComplete="tel"
                   placeholder="Enter your mobile number"
                   required
+                  ref={contactNumberInputRef}
                 />
               </div>
 
@@ -164,6 +196,7 @@ export default function ContactForm() {
                   type="email"
                   autoComplete="email"
                   placeholder="Enter your email address"
+                  ref={emailInputRef}
                 />
               </div>
 
