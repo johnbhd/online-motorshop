@@ -15,6 +15,22 @@ import {
   type ReviewSummary,
 } from "@/lib/reviews/reviewApi";
 
+function formatReviewDate(value: string | null | undefined) {
+  if (!value) {
+    return "Date unavailable";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Date unavailable";
+  }
+
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+  }).format(date);
+}
+
 function ReviewStars({ rating }: { rating: number }) {
   return (
     <span
@@ -178,7 +194,11 @@ export default function ProductReviews({
                 </span>
                 <div>
                   <h3>{review.customer.name}</h3>
-                  <p>{review.published_at ?? review.created_at ?? ""}</p>
+                  <p>
+                    <time dateTime={review.published_at ?? review.created_at ?? undefined}>
+                      {formatReviewDate(review.published_at ?? review.created_at)}
+                    </time>
+                  </p>
                 </div>
               </div>
               <div className="product-details-review-rating">
