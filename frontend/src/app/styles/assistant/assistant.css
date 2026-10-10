@@ -1,0 +1,628 @@
+.ald-assistant {
+  position: relative;
+}
+
+.ald-assistant__launcher {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 35;
+  display: grid;
+  width: 3.75rem;
+  height: 3.75rem;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ald-orange);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 1.35rem;
+  box-shadow: 0 0.75rem 1.75rem rgba(17, 24, 39, 0.22);
+  transition: background-color 150ms ease, box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.ald-assistant__launcher[hidden] {
+  display: none;
+}
+
+.ald-assistant__launcher:hover {
+  background: var(--ald-orange-dark);
+  box-shadow: 0 1rem 2rem rgba(17, 24, 39, 0.26);
+  transform: translateY(-2px);
+}
+
+.ald-assistant__panel {
+  position: fixed;
+  right: 1.5rem;
+  bottom: calc(1.5rem + 3.75rem + 0.875rem);
+  z-index: 35;
+  display: flex;
+  width: min(410px, calc(100vw - 2rem));
+  height: min(650px, calc(100dvh - 6rem));
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe2ec;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1.25rem 3rem rgba(17, 24, 39, 0.22);
+  animation: ald-assistant-panel-in 160ms ease-out;
+}
+
+.ald-assistant__header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  background: #0b1930;
+  color: #ffffff;
+}
+
+.ald-assistant__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.ald-assistant__header-logo {
+  width: 2.625rem;
+  height: 2.625rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+.ald-assistant__identity h2 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.ald-assistant__identity p {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.2rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.ald-assistant__status-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ald-orange);
+}
+
+.ald-assistant__header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.ald-assistant__new-chat,
+.ald-assistant__close,
+.ald-assistant__support button,
+.ald-assistant__send,
+.ald-assistant__retry button,
+.ald-assistant__suggestion {
+  cursor: pointer;
+  font: inherit;
+}
+
+.ald-assistant__new-chat {
+  display: inline-flex;
+  min-height: 2.15rem;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(253, 184, 19, 0.55);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #ffcf73;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 150ms ease, border-color 150ms ease,
+    color 150ms ease;
+}
+
+.ald-assistant__new-chat:hover {
+  border-color: #fdb813;
+  background: rgba(253, 184, 19, 0.12);
+  color: #ffffff;
+}
+
+.ald-assistant__close {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 1rem;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.ald-assistant__close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.ald-assistant__messages {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 1rem;
+  background: #f8fafc;
+  overscroll-behavior: contain;
+  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-width: thin;
+}
+
+.ald-assistant__welcome {
+  max-width: 23rem;
+  margin: auto;
+  padding: 1rem 0.5rem 1.25rem;
+  color: #16234a;
+  text-align: center;
+}
+
+.ald-assistant__welcome-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 0.75rem;
+  place-items: center;
+  border: 1px solid #fed7aa;
+  border-radius: 50%;
+  background: #fff7ed;
+}
+
+.ald-assistant__welcome-icon img {
+  width: 2.35rem;
+  height: 2.35rem;
+  object-fit: contain;
+}
+
+.ald-assistant__welcome h3 {
+  margin: 0;
+  color: #0b1930;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.ald-assistant__welcome > p {
+  margin: 0.5rem auto 1rem;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.ald-assistant__suggestions {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.ald-assistant__suggestions-title {
+  margin: 0 0 0.45rem;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ald-assistant__suggestions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.ald-assistant__suggestion {
+  display: flex;
+  min-width: 0;
+  min-height: 2.6rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #dbe2ec;
+  border-radius: 0.6rem;
+  background: #ffffff;
+  color: #16234a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: left;
+  transition: background-color 150ms ease, border-color 150ms ease,
+    color 150ms ease;
+}
+
+.ald-assistant__suggestion:last-child {
+  grid-column: 1 / -1;
+}
+
+.ald-assistant__suggestion svg {
+  flex: 0 0 auto;
+  color: var(--ald-orange);
+  font-size: 0.78rem;
+}
+
+.ald-assistant__suggestion:hover {
+  border-color: var(--ald-orange);
+  background: #fff7ed;
+}
+
+.ald-assistant__message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.ald-assistant__message-row:last-child {
+  margin-bottom: 0;
+}
+
+.ald-assistant__message-row--user {
+  justify-content: flex-end;
+}
+
+.ald-assistant__message-avatar {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  background: #ffffff;
+  object-fit: contain;
+}
+
+.ald-assistant__message {
+  max-width: 84%;
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.8rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.ald-assistant__message p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.ald-assistant__message--assistant {
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 0.25rem;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.ald-assistant__message--user {
+  border-bottom-right-radius: 0.25rem;
+  background: var(--ald-orange);
+  color: #ffffff;
+}
+
+.ald-assistant__message-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.ald-assistant__retry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.ald-assistant__retry button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ald-assistant__retry button:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.ald-assistant__typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.23rem;
+  min-width: 7.4rem;
+  min-height: 2.35rem;
+}
+
+.ald-assistant__typing-label {
+  margin-right: 0.12rem;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ald-assistant__typing-dot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: #64748b;
+  animation: ald-assistant-typing 1.2s ease-in-out infinite;
+}
+
+.ald-assistant__typing-dot:nth-child(3) {
+  animation-delay: 150ms;
+}
+
+.ald-assistant__typing-dot:nth-child(4) {
+  animation-delay: 300ms;
+}
+
+.ald-assistant__support {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+.ald-assistant__support button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--ald-orange-dark);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.ald-assistant__support button:hover {
+  color: #8c4800;
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+}
+
+.ald-assistant__composer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 0.55rem;
+  padding: 0.55rem 0.85rem 0.75rem;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.ald-assistant__input {
+  min-width: 0;
+  min-height: 2.6rem;
+  max-height: 7rem;
+  flex: 1 1 auto;
+  resize: vertical;
+  border: 1px solid #dbe2ec;
+  border-radius: 0.7rem;
+  padding: 0.62rem 0.75rem;
+  background: #f8fafc;
+  color: #16234a;
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  outline: none;
+}
+
+.ald-assistant__input::placeholder {
+  color: #94a3b8;
+}
+
+.ald-assistant__input:focus {
+  border-color: var(--ald-orange);
+  box-shadow: 0 0 0 3px rgba(224, 122, 8, 0.16);
+}
+
+.ald-assistant__composer-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.ald-assistant__character-count {
+  color: #94a3b8;
+  font-size: 0.58rem;
+  white-space: nowrap;
+}
+
+.ald-assistant__send {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ald-orange);
+  color: #ffffff;
+  font-size: 0.85rem;
+  transition: background-color 150ms ease, opacity 150ms ease;
+}
+
+.ald-assistant__send:hover:not(:disabled) {
+  background: var(--ald-orange-dark);
+}
+
+.ald-assistant__send:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.ald-assistant__launcher:focus-visible,
+.ald-assistant__new-chat:focus-visible,
+.ald-assistant__close:focus-visible,
+.ald-assistant__suggestion:focus-visible,
+.ald-assistant__support button:focus-visible,
+.ald-assistant__retry button:focus-visible,
+.ald-assistant__send:focus-visible,
+.ald-assistant__input:focus-visible {
+  outline: 3px solid rgba(224, 122, 8, 0.38);
+  outline-offset: 2px;
+}
+
+@keyframes ald-assistant-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ald-assistant-typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-0.2rem);
+  }
+}
+
+@media (max-width: 560px) {
+  .ald-assistant__launcher {
+    right: 0.75rem;
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .ald-assistant__panel {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ald-assistant__header {
+    padding-top: max(0.8rem, env(safe-area-inset-top));
+  }
+
+  .ald-assistant__composer {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 380px) {
+  .ald-assistant__header {
+    gap: 0.3rem;
+    padding-right: 0.65rem;
+    padding-left: 0.65rem;
+  }
+
+  .ald-assistant__identity {
+    gap: 0.42rem;
+  }
+
+  .ald-assistant__header-logo {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .ald-assistant__identity h2 {
+    font-size: 0.85rem;
+  }
+
+  .ald-assistant__identity p {
+    font-size: 0.64rem;
+  }
+
+  .ald-assistant__new-chat {
+    padding-right: 0.4rem;
+    padding-left: 0.4rem;
+    font-size: 0.64rem;
+  }
+
+  .ald-assistant__close {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  .ald-assistant__messages {
+    padding: 0.8rem;
+  }
+
+  .ald-assistant__suggestions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ald-assistant__suggestion:last-child {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ald-assistant__panel,
+  .ald-assistant__launcher,
+  .ald-assistant__new-chat,
+  .ald-assistant__close,
+  .ald-assistant__suggestion,
+  .ald-assistant__support button,
+  .ald-assistant__send {
+    animation: none;
+    transition: none;
+  }
+
+  .ald-assistant__typing-dot {
+    animation: none;
+    opacity: 0.7;
+  }
+}

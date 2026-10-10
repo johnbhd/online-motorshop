@@ -72,7 +72,13 @@ function toInquiryMetadata(
   };
 }
 
-export default function ChatbotWidget() {
+export type ChatbotWidgetProps = {
+  staffOnly?: boolean;
+};
+
+export default function ChatbotWidget({
+  staffOnly = false,
+}: ChatbotWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
@@ -286,9 +292,14 @@ export default function ChatbotWidget() {
   }, [openStaffChat]);
 
   const handleBackToHelp = useCallback(() => {
+    if (staffOnly) {
+      closeChatbot();
+      return;
+    }
+
     setMode("assistant");
     setShowQuickActions(true);
-  }, []);
+  }, [closeChatbot, staffOnly]);
 
   const handleStaffSend = useCallback(
     async (message: string) => {
@@ -456,7 +467,7 @@ export default function ChatbotWidget() {
 
   return (
     <div className="ald-chatbot">
-      {isOpen && (
+      {isOpen && (!staffOnly || mode === "staff") && (
         <ChatbotPanel
           messages={visibleMessages}
           messageListRef={messageListRef}
@@ -483,22 +494,24 @@ export default function ChatbotWidget() {
           onCancelProductInquiry={handleCancelProductInquiry}
         />
       )}
-      <ChatbotLauncher
-        ref={launcherRef}
-        isOpen={isOpen}
-        onClick={() => {
-          if (isOpen) {
-            closeChatbot();
-            return;
-          }
+      {!staffOnly && (
+        <ChatbotLauncher
+          ref={launcherRef}
+          isOpen={isOpen}
+          onClick={() => {
+            if (isOpen) {
+              closeChatbot();
+              return;
+            }
 
-          if (mode === "assistant") {
-            setShowQuickActions(true);
-          }
+            if (mode === "assistant") {
+              setShowQuickActions(true);
+            }
 
-          setIsOpen(true);
-        }}
-      />
+            setIsOpen(true);
+          }}
+        />
+      )}
     </div>
   );
 }

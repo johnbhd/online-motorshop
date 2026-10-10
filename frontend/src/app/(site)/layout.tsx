@@ -15,7 +15,9 @@ import "../styles/product-details/product-details.css";
 import "../styles/products/products.css";
 import "../styles/account/account.css";
 import "../styles/track-order/track-order.css";
+import "../styles/assistant/assistant.css";
 
+import AldAssistant from "@/components/user/assistant/AldAssistant";
 import ChatbotWidget from "@/components/user/chatbot/ChatbotWidget";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
@@ -26,7 +28,8 @@ export default function SiteLayout({ children }: Readonly<{ children: ReactNode 
       <Navbar />
         <main className="flex-1">{children}</main>
       <Footer />
-      <ChatbotWidget />
+      <AldAssistant />
+      <ChatbotWidget staffOnly />
     </div>
   );
 }
