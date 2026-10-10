@@ -3,16 +3,19 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faBan,
   faChartLine,
   faClipboardList,
   faPen,
   faRefresh,
+  faRotateLeft,
   faTrash,
   faUser,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
 import BranchModalShell from "@/components/admin/branches/BranchModalShell";
+import CustomerAccountStatusModal from "./CustomerAccountStatusModal";
 import {
   deleteAdminCustomer,
   getAdminCustomer,
@@ -142,16 +145,6 @@ function CustomerFormModal({
               <input value={form.address} onChange={(event) => onChange("address", event.target.value)} />
               {fieldError("address") && <small className="text-red-600">{fieldError("address")}</small>}
             </label>
-            {customer.type === "registered" && (
-              <label className="admin-order-modal-field">
-                <span>Account status</span>
-                <select value={form.status ?? "active"} onChange={(event) => onChange("status", event.target.value)}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                {fieldError("status") && <small className="text-red-600">{fieldError("status")}</small>}
-              </label>
-            )}
           </div>
         </section>
       </form>
@@ -166,6 +159,7 @@ function CustomerDetailsModal({
   onClose,
   onEdit,
   onDelete,
+  onAccountStatus,
 }: {
   customer: AdminCustomerDetail | null;
   loading: boolean;
@@ -173,6 +167,7 @@ function CustomerDetailsModal({
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onAccountStatus: () => void;
 }) {
   return (
     <BranchModalShell
@@ -187,6 +182,25 @@ function CustomerDetailsModal({
       footer={
         <div className="flex w-full justify-between gap-3">
           <div>
+            {customer?.type === "registered" && (
+                <button
+                  type="button"
+                  onClick={onAccountStatus}
+                  className={
+                    customer.account?.status === "active"
+                      ? "admin-order-modal-button admin-order-modal-button-danger"
+                      : "admin-order-modal-button admin-order-modal-button-primary"
+                  }
+                >
+                  <FontAwesomeIcon
+                    icon={customer.account?.status === "active" ? faBan : faRotateLeft}
+                    aria-hidden="true"
+                  />
+                  {customer.account?.status === "active"
+                    ? "Suspend account"
+                    : "Unsuspend account"}
+                </button>
+              )}
             {customer?.type === "guest" && (
               <button type="button" onClick={onDelete} className="admin-order-modal-button admin-order-modal-button-danger">
                 <FontAwesomeIcon icon={faTrash} aria-hidden="true" /> Delete guest
@@ -262,6 +276,8 @@ export default function RealAdminCustomersPage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCustomerDetail | null>(null);
+  const [accountStatusTarget, setAccountStatusTarget] = useState<AdminCustomerDetail | null>(null);
+  const [changingAccountStatus, setChangingAccountStatus] = useState(false);
 
   const loadCustomers = useCallback(async () => {
     if (!token) {
@@ -341,7 +357,12 @@ export default function RealAdminCustomersPage() {
 
   const openEditor = useCallback(() => {
     if (!selectedCustomer) return;
-    setForm({ name: selectedCustomer.name, email: selectedCustomer.email, contact_number: selectedCustomer.contact ?? "", address: selectedCustomer.address ?? "", ...(selectedCustomer.type === "registered" ? { status: selectedCustomer.account_status ?? "active" } : {}) });
+    setForm({
+      name: selectedCustomer.name,
+      email: selectedCustomer.email,
+      contact_number: selectedCustomer.contact ?? "",
+      address: selectedCustomer.address ?? "",
+    });
     setFormErrors({});
     setEditor(selectedCustomer);
   }, [selectedCustomer]);
@@ -376,6 +397,31 @@ export default function RealAdminCustomersPage() {
       setDeleteTarget(null);
     }
   }, [deleteTarget, loadCustomers, token]);
+
+  const changeAccountStatus = useCallback(async () => {
+    if (!token || !accountStatusTarget || accountStatusTarget.type !== "registered") {
+      return;
+    }
+
+    const nextStatus = accountStatusTarget.account?.status === "active"
+      ? "inactive"
+      : "active";
+
+    setChangingAccountStatus(true);
+    setError(null);
+
+    try {
+      await updateAdminCustomer(token, accountStatusTarget.id, {
+        status: nextStatus,
+      });
+      setAccountStatusTarget(null);
+      await Promise.all([loadCustomers(), loadDetails()]);
+    } catch (requestError) {
+      setError(getAdminCustomerErrorMessage(requestError));
+    } finally {
+      setChangingAccountStatus(false);
+    }
+  }, [accountStatusTarget, loadCustomers, loadDetails, token]);
 
   const selectFilter = (setter: (value: string) => void, value: string) => { setter(value); setPage(1); };
 
@@ -452,8 +498,9 @@ export default function RealAdminCustomersPage() {
           )}
         </div>
       </section>
-      {selectedId !== null && <CustomerDetailsModal customer={selectedCustomer} loading={detailLoading} error={detailError} onClose={() => { setSelectedId(null); setSelectedCustomer(null); }} onEdit={openEditor} onDelete={() => selectedCustomer && setDeleteTarget(selectedCustomer)} />}
-      {editor && <CustomerFormModal customer={editor} form={form} errors={formErrors} saving={saving} onChange={(field, value) => setForm((current) => field === "status" ? { ...current, status: value as "active" | "inactive" } : { ...current, [field]: value })} onSubmit={saveCustomer} onClose={() => setEditor(null)} />}
+      {selectedId !== null && <CustomerDetailsModal customer={selectedCustomer} loading={detailLoading} error={detailError} onClose={() => { setSelectedId(null); setSelectedCustomer(null); }} onEdit={openEditor} onDelete={() => selectedCustomer && setDeleteTarget(selectedCustomer)} onAccountStatus={() => selectedCustomer && setAccountStatusTarget(selectedCustomer)} />}
+      {editor && <CustomerFormModal customer={editor} form={form} errors={formErrors} saving={saving} onChange={(field, value) => setForm((current) => ({ ...current, [field]: value }))} onSubmit={saveCustomer} onClose={() => setEditor(null)} />}
+      {accountStatusTarget && <CustomerAccountStatusModal customer={accountStatusTarget} isSubmitting={changingAccountStatus} onClose={() => setAccountStatusTarget(null)} onConfirm={() => void changeAccountStatus()} />}
       {deleteTarget && <BranchModalShell isOpen eyebrow="Customer Management" title="Delete guest customer" description={`Delete ${deleteTarget.name} permanently?`} titleId="admin-customer-delete-title" descriptionId="admin-customer-delete-description" onClose={() => setDeleteTarget(null)} footer={<div className="flex w-full justify-end gap-3"><button type="button" onClick={() => setDeleteTarget(null)} className="admin-order-modal-button admin-order-modal-button-secondary">Cancel</button><button type="button" onClick={() => void removeCustomer()} className="admin-order-modal-button admin-order-modal-button-danger">Delete customer</button></div>}><div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Only an unused guest record can be hard-deleted. Registered accounts and customers referenced by orders or conversations must be retained.</div></BranchModalShell>}
     </div>
   );

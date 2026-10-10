@@ -85,9 +85,9 @@ export type AdminCustomerMutationResponse = {
 };
 
 export type AdminCustomerPayload = {
-  name: string;
-  email: string;
-  contact_number: string;
-  address: string;
+  name?: string;
+  email?: string;
+  contact_number?: string;
+  address?: string;
   status?: "active" | "inactive";
 };

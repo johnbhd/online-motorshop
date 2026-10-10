@@ -160,7 +160,11 @@ class AdminCustomerService
 
     private function customerQuery(): Builder
     {
-        return Customer::query();
+        return Customer::query()->where(function (Builder $query): void {
+            $query
+                ->whereNull('user_id')
+                ->orWhereHas('user', fn (Builder $user): Builder => $user->where('role', 'customer'));
+        });
     }
 
     private function applyFilters(Builder $query, array $filters): Builder
