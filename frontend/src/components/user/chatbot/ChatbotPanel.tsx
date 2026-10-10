@@ -93,7 +93,7 @@ export default function ChatbotPanel({
           />
           <div>
             <h2 id="ald-chatbot-title">
-              {isStaffMode ? "ALD Support" : "ALD Assistant"}
+              {isStaffMode ? "ALD Support" : "ALD AI Assistant"}
             </h2>
             <p>
               <span className="ald-chatbot__status-dot" aria-hidden="true" />
