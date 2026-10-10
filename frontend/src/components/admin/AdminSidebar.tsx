@@ -127,9 +127,8 @@ export default function AdminSidebar({
           <ul className="space-y-1">
             {links.map(([name, href]) => {
               const active =
-                href !== "#" &&
-                (path === href ||
-                  (href !== "/admin" && path.startsWith(`${href}/`)));
+                path === href ||
+                (href !== "/admin" && path.startsWith(`${href}/`));
               return (
                 <li key={name}>
                   <Link
