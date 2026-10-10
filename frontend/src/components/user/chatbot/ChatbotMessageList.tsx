@@ -13,6 +13,18 @@ export type ChatbotMessageListProps = {
   isTyping?: boolean;
 };
 
+function renderMessageText(text: string) {
+  return text.split(/(\*\*[\s\S]+?\*\*)/g).map((part, index) => {
+    const boldText = part.match(/^\*\*([\s\S]+)\*\*$/);
+
+    return boldText ? (
+      <strong key={`${part}-${index}`}>{boldText[1]}</strong>
+    ) : (
+      part
+    );
+  });
+}
+
 const ChatbotMessageList = forwardRef<
   HTMLDivElement,
   ChatbotMessageListProps
@@ -90,9 +102,11 @@ const ChatbotMessageList = forwardRef<
                 </>
               )}
               <span className="ald-chatbot__message-text">
-                {getDisplayConversationMessageBody(
-                  message.messageType ?? "text",
-                  message.text,
+                {renderMessageText(
+                  getDisplayConversationMessageBody(
+                    message.messageType ?? "text",
+                    message.text,
+                  ),
                 )}
               </span>
               {message.attachmentUrl && (
