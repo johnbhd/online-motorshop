@@ -221,6 +221,15 @@ class OrderRetrievalApiTest extends TestCase
             ->assertJsonPath('orders.0.payment.method', Payment::METHOD_ONLINE_PAYMENT)
             ->assertJsonCount(2, 'orders');
 
+        $payAtPickup->pickupRequest()->update(['pickup_status' => 'preparing']);
+
+        $this->withToken($user->createToken('pickup-status-detail-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$payAtPickup->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'preparing')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_PAY_AT_PICKUP)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_UNPAID);
+
         $payAtPickup->pickupRequest()->update(['pickup_status' => 'ready_for_pickup']);
 
         $this->withToken($user->createToken('pickup-status-detail-test')->plainTextToken)
@@ -249,12 +258,32 @@ class OrderRetrievalApiTest extends TestCase
             ->assertJsonPath('orders.0.reference', $onlinePayment->order_reference)
             ->assertJsonCount(1, 'orders');
 
+        $onlinePayment->pickupRequest()->update(['pickup_status' => 'ready_for_pickup']);
+
+        $this->withToken($user->createToken('online-status-ready-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$onlinePayment->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'ready_for_pickup')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_ONLINE_PAYMENT)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_PAID);
+
+        $onlinePayment->pickupRequest()->update(['pickup_status' => 'completed']);
+
+        $this->withToken($user->createToken('online-status-completed-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$onlinePayment->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'completed')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_ONLINE_PAYMENT)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_PAID);
+
         $this->withToken($user->createToken('pickup-status-history-test')->plainTextToken)
             ->getJson('/api/customer/orders?scope=history')
             ->assertOk()
-            ->assertJsonPath('orders.1.reference', $payAtPickup->order_reference)
+            ->assertJsonPath('orders.1.reference', $onlinePayment->order_reference)
             ->assertJsonPath('orders.1.display_status', 'completed')
-            ->assertJsonCount(2, 'orders');
+            ->assertJsonPath('orders.2.reference', $payAtPickup->order_reference)
+            ->assertJsonPath('orders.2.display_status', 'completed')
+            ->assertJsonCount(3, 'orders');
 
         $this->assertDatabaseHas('payments', [
             'id' => $payAtPickupPayment->id,
