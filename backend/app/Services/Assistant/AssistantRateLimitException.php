@@ -6,14 +6,14 @@ use RuntimeException;
 
 class AssistantRateLimitException extends RuntimeException
 {
-    public readonly int $retryAfter;
+    public readonly ?int $retryAfter;
 
     public function __construct(
         public readonly string $publicMessage,
         public readonly string $errorCode,
-        int $retryAfter,
+        ?int $retryAfter,
     ) {
-        $this->retryAfter = max(1, $retryAfter);
+        $this->retryAfter = $retryAfter === null ? null : max(1, $retryAfter);
 
         parent::__construct($publicMessage);
     }
@@ -42,6 +42,15 @@ class AssistantRateLimitException extends RuntimeException
             'Too many messages were sent in a short period. Please wait a few seconds and try again.',
             'assistant_rate_limited',
             $retryAfter,
+        );
+    }
+
+    public static function daily(): self
+    {
+        return new self(
+            "You've reached today's ALD Assistant message limit. You can still browse ALD products or contact ALD staff for help.",
+            'assistant_daily_limit',
+            null,
         );
     }
 }

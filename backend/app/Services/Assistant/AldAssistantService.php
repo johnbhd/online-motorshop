@@ -15,15 +15,11 @@ class AldAssistantService
      */
     public function chat(string $message, array $history = []): string
     {
+        $knowledgeContext = $this->knowledgeService->contextFor($message);
         $messages = [
             [
                 'role' => 'system',
                 'content' => $this->systemPrompt->content(),
-            ],
-            [
-                'role' => 'system',
-                'content' => "Approved ALD knowledge context:\n\n"
-                    .$this->knowledgeService->contextFor($message),
             ],
             ...$this->historyMessages($history),
             [
@@ -31,6 +27,14 @@ class AldAssistantService
                 'content' => trim($message),
             ],
         ];
+
+        if ($knowledgeContext !== null) {
+            array_splice($messages, 1, 0, [[
+                'role' => 'system',
+                'content' => "Approved ALD knowledge context:\n\n"
+                    .$knowledgeContext,
+            ]]);
+        }
 
         return $this->groqService->complete($messages);
     }
@@ -43,7 +47,7 @@ class AldAssistantService
     {
         $messages = [];
 
-        foreach (array_slice($history, -10) as $turn) {
+        foreach (array_slice($history, -((int) config('assistant.history_limit', 6))) as $turn) {
             $role = is_array($turn) ? ($turn['role'] ?? null) : null;
             $content = is_array($turn) ? ($turn['content'] ?? null) : null;
 

@@ -8,6 +8,7 @@ import {
   faPaperPlane,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { ASSISTANT_MAX_MESSAGE_LENGTH } from "@/lib/assistant/assistantTypes";
 
 export type ChatbotComposerProps = {
   inputRef: RefObject<HTMLInputElement | null>;
@@ -81,6 +82,7 @@ export default function ChatbotComposer({
         name="message"
         type="text"
         value={message}
+        maxLength={ASSISTANT_MAX_MESSAGE_LENGTH}
         placeholder={
           isStaffMode ? "Message ALD Staff..." : "Type your message..."
         }

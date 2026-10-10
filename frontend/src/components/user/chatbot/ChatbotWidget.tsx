@@ -37,7 +37,11 @@ import {
   AssistantRequestError,
   sendAssistantMessage,
 } from "@/lib/assistant/assistantApi";
-import type { AssistantHistoryItem } from "@/lib/assistant/assistantTypes";
+import {
+  ASSISTANT_HISTORY_LIMIT,
+  ASSISTANT_MAX_MESSAGE_LENGTH,
+  type AssistantHistoryItem,
+} from "@/lib/assistant/assistantTypes";
 
 const initialMessages: ChatMessage[] = [
   {
@@ -71,7 +75,7 @@ function toChatMessages(conversation: Conversation): ChatMessage[] {
 function toAssistantHistory(messages: ChatMessage[]): AssistantHistoryItem[] {
   return messages
     .filter((message) => message.id !== "welcome")
-    .slice(-10)
+    .slice(-ASSISTANT_HISTORY_LIMIT)
     .map((message) => ({
       role: message.sender === "customer" ? "user" : "assistant",
       content: message.text,
@@ -175,6 +179,14 @@ export default function ChatbotWidget() {
       const now = Date.now();
       const normalizedMessage = normalizeAssistantMessage(message);
       const previousMessage = lastAssistantMessageRef.current;
+
+      if (message.length > ASSISTANT_MAX_MESSAGE_LENGTH) {
+        setAssistantError(
+          "Your message is too long. Please keep it under 1,000 characters.",
+        );
+
+        return false;
+      }
 
       if (
         assistantRequestInFlightRef.current ||

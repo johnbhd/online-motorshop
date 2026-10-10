@@ -6,40 +6,31 @@ use Illuminate\Support\Facades\Log;
 
 class AldKnowledgeService
 {
-    private const MAX_CONTEXT_CHARACTERS = 32000;
-
-    private const MAX_FILE_CHARACTERS = 9000;
-
-    /** @var array<int, string> */
-    private const CORE_FILES = [
-        'ald-ai-rules.md',
-        'ald-overview.md',
-        'ald-order-process.md',
-        'ald-payment.md',
-        'ald-pickup-delivery.md',
-        'ald-faq.md',
-    ];
-
     /** @var array<string, array<int, string>> */
     private const TOPIC_FILES = [
+        'ald-order-process.md' => [
+            'order', 'checkout', 'cart', 'order request', 'submit',
+            'how do i order', 'how to order',
+        ],
+        'ald-pickup-delivery.md' => [
+            'delivery', 'deliver', 'lalamove', 'rider', 'pickup', 'pick up',
+            'collection',
+        ],
+        'ald-payment.md' => [
+            'payment', 'pay', 'gcash', 'online payment', 'qr', 'receipt',
+        ],
         'ald-branches-contact.md' => [
             'branch', 'branches', 'location', 'address', 'contact', 'phone',
-            'hours', 'open', 'where are you', 'where is',
-        ],
-        'ald-team.md' => [
-            'owner', 'founder', 'creator', 'developer', 'team', 'jb',
-            'who made', 'who built',
+            'hours', 'open', 'where are you', 'where is', 'makati', 'manila',
+            'imus',
         ],
         'ald-products.md' => [
             'product', 'brake', 'filter', 'honda', 'yamaha', 'suzuki',
-            'part number', 'parts',
+            'part number', 'parts', 'sell', 'benta', 'binebenta', 'catalog',
         ],
         'ald-product-compatibility.md' => [
             'compatible', 'compatibility', 'fit', 'fitment', 'model',
             'year', 'will this fit',
-        ],
-        'ald-services.md' => [
-            'service', 'repair', 'mechanic', 'maintenance', 'install',
         ],
         'ald-order-statuses.md' => [
             'status', 'pending', 'confirmed', 'completed', 'rejected',
@@ -49,20 +40,27 @@ class AldKnowledgeService
             'account', 'register', 'login', 'sign up', 'guest', 'password',
             'track order',
         ],
+        'ald-team.md' => [
+            'owner', 'founder', 'creator', 'developer', 'team', 'jb',
+            'who made', 'who built', 'who developed',
+        ],
+        'ald-services.md' => [
+            'service', 'repair', 'mechanic', 'maintenance', 'install',
+        ],
+        'ald-overview.md' => [
+            'what is ald', 'ald motorshop', 'motorcycle shop', 'motorcycle parts',
+        ],
     ];
 
-    public function contextFor(string $message): string
+    public function contextFor(string $message): ?string
     {
         $normalizedMessage = mb_strtolower($message);
-        $files = self::CORE_FILES;
+        $files = $this->selectedFiles($normalizedMessage);
 
-        foreach (self::TOPIC_FILES as $file => $keywords) {
-            if ($this->containsKeyword($normalizedMessage, $keywords)) {
-                $files[] = $file;
-            }
+        if ($files === []) {
+            return null;
         }
 
-        $files = array_values(array_unique($files));
         $documents = [];
 
         foreach ($files as $file) {
@@ -83,12 +81,35 @@ class AldKnowledgeService
 
         $context = implode("\n\n", $documents);
 
-        if (mb_strlen($context) > self::MAX_CONTEXT_CHARACTERS) {
-            $context = mb_substr($context, 0, self::MAX_CONTEXT_CHARACTERS)
+        $maxContextCharacters = (int) config(
+            'assistant.max_knowledge_context_characters',
+            12000,
+        );
+
+        if (mb_strlen($context) > $maxContextCharacters) {
+            $context = mb_substr($context, 0, $maxContextCharacters)
                 ."\n\n[Approved knowledge context truncated for safety.]";
         }
 
         return $context;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function selectedFiles(string $message): array
+    {
+        $files = [];
+
+        foreach (self::TOPIC_FILES as $file => $keywords) {
+            if ($this->containsKeyword($message, $keywords)) {
+                $files[] = $file;
+            }
+        }
+
+        $maxDocuments = max(1, (int) config('assistant.max_knowledge_documents', 2));
+
+        return array_slice($files, 0, $maxDocuments);
     }
 
     /**
@@ -131,8 +152,13 @@ class AldKnowledgeService
         $content = preg_replace('/\n{3,}/', "\n\n", $content) ?? $content;
         $content = trim($content);
 
-        if (mb_strlen($content) > self::MAX_FILE_CHARACTERS) {
-            $content = mb_substr($content, 0, self::MAX_FILE_CHARACTERS)
+        $maxFileCharacters = (int) config(
+            'assistant.max_knowledge_file_characters',
+            6000,
+        );
+
+        if (mb_strlen($content) > $maxFileCharacters) {
+            $content = mb_substr($content, 0, $maxFileCharacters)
                 ."\n[This knowledge document was truncated.]";
         }
 

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  ASSISTANT_HISTORY_LIMIT,
+  ASSISTANT_MAX_MESSAGE_LENGTH,
+} from "@/lib/assistant/assistantTypes";
 
-const MAX_MESSAGE_LENGTH = 2000;
-const MAX_HISTORY_ITEMS = 10;
 const REQUEST_TIMEOUT_MS = 35_000;
 
 const unavailableMessage = "I’m having trouble connecting right now. Please try again.";
@@ -15,6 +17,7 @@ const assistantErrorCodes = new Set([
   "assistant_busy",
   "assistant_rate_limited",
   "assistant_burst_limited",
+  "assistant_daily_limit",
   "duplicate_message",
   "assistant_invalid_request",
   "assistant_timeout",
@@ -94,8 +97,14 @@ function parseRequestBody(body: unknown) {
 
   const message = body.message.trim();
 
-  if (!message || message.length > MAX_MESSAGE_LENGTH) {
-    return { error: "Please enter a message up to 2000 characters." } as const;
+  if (!message) {
+    return { error: "Please enter a message." } as const;
+  }
+
+  if (message.length > ASSISTANT_MAX_MESSAGE_LENGTH) {
+    return {
+      error: "Your message is too long. Please keep it under 1,000 characters.",
+    } as const;
   }
 
   if (body.history !== undefined && !Array.isArray(body.history)) {
@@ -104,7 +113,7 @@ function parseRequestBody(body: unknown) {
 
   const history = (body.history ?? []) as unknown[];
 
-  if (history.length > MAX_HISTORY_ITEMS) {
+  if (history.length > ASSISTANT_HISTORY_LIMIT) {
     return { error: "Please send a shorter assistant history." } as const;
   }
 
@@ -117,7 +126,7 @@ function parseRequestBody(body: unknown) {
 
     const content = item.content.trim();
 
-    if (!content || content.length > MAX_MESSAGE_LENGTH) {
+    if (!content || content.length > ASSISTANT_MAX_MESSAGE_LENGTH) {
       return { error: "Please send a valid assistant history." } as const;
     }
 
@@ -147,6 +156,16 @@ function getUpstreamError(
   );
 
   if (status === 429 && code !== null) {
+    if (code === "assistant_daily_limit") {
+      return {
+        message:
+          "You've reached today's ALD Assistant message limit. You can still browse ALD products or contact ALD staff for help.",
+        code,
+        status,
+        retryAfter: null,
+      };
+    }
+
     if (code === "duplicate_message") {
       return {
         message:

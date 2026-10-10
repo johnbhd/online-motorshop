@@ -19,7 +19,7 @@ class AssistantAbuseGuard
 
     public function assertAllowed(Request $request, string $message): void
     {
-        $identity = $this->rateIdentity($request);
+        $identity = $this->identityFor($request);
         $duplicateKey = 'assistant:duplicate:'.$identity.':'.hash(
             'sha256',
             $this->normalizeMessage($message),
@@ -55,9 +55,9 @@ class AssistantAbuseGuard
         }
     }
 
-    private function rateIdentity(Request $request): string
+    public function identityFor(Request $request): string
     {
-        $user = Auth::guard('sanctum')->user();
+        $user = $this->authenticatedUser();
 
         if ($user) {
             return 'user-'.hash('sha256', (string) $user->getAuthIdentifier());
@@ -73,6 +73,16 @@ class AssistantAbuseGuard
         }
 
         return 'ip-'.hash('sha256', $request->ip() ?: 'unknown');
+    }
+
+    public function isAuthenticated(Request $request): bool
+    {
+        return $this->authenticatedUser() !== null;
+    }
+
+    private function authenticatedUser(): mixed
+    {
+        return Auth::guard('sanctum')->user();
     }
 
     private function normalizeMessage(string $message): string

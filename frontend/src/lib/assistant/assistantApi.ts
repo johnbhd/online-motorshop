@@ -64,7 +64,11 @@ function getRetryAfter(value: unknown): number | null {
   return Math.min(120, Math.ceil(seconds));
 }
 
-function getErrorMessage(status: number, code: AssistantErrorCode | null) {
+function getErrorMessage(
+  status: number,
+  code: AssistantErrorCode | null,
+  serverMessage: string | null,
+) {
   if (code === "duplicate_message") {
     return "That message was already sent. Please wait a moment before sending it again.";
   }
@@ -73,8 +77,16 @@ function getErrorMessage(status: number, code: AssistantErrorCode | null) {
     return "Too many messages were sent in a short period. Please wait a few seconds and try again.";
   }
 
+  if (code === "assistant_daily_limit") {
+    return "You've reached today's ALD Assistant message limit. You can still browse ALD products or contact ALD staff for help.";
+  }
+
   if (code === "assistant_busy") {
     return "ALD Assistant is briefly busy. Please wait a few seconds and try again.";
+  }
+
+  if (code === "assistant_invalid_request" && serverMessage) {
+    return serverMessage;
   }
 
   if (status === 429) {
@@ -132,7 +144,13 @@ export async function sendAssistantMessage(
     );
 
     throw new AssistantRequestError(
-      getErrorMessage(response.status, code),
+      getErrorMessage(
+        response.status,
+        code,
+        typeof errorPayload.message === "string"
+          ? errorPayload.message
+          : null,
+      ),
       response.status,
       code,
       retryAfter,

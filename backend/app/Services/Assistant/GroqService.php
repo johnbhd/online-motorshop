@@ -28,16 +28,29 @@ class GroqService
         }
 
         try {
+            $payload = [
+                'model' => $model,
+                'messages' => $messages,
+                'temperature' => 0.3,
+                'max_completion_tokens' => (int) config(
+                    'assistant.max_completion_tokens',
+                    256,
+                ),
+            ];
+
+            if (in_array($model, config('assistant.reasoning_models', []), true)) {
+                $payload['reasoning_effort'] = config(
+                    'assistant.reasoning_effort',
+                    'low',
+                );
+            }
+
             $response = Http::withToken($key)
                 ->acceptJson()
                 ->asJson()
                 ->connectTimeout(10)
                 ->timeout(30)
-                ->post($baseUrl.'/chat/completions', [
-                    'model' => $model,
-                    'messages' => $messages,
-                    'temperature' => 0.3,
-                ]);
+                ->post($baseUrl.'/chat/completions', $payload);
         } catch (ConnectionException $exception) {
             Log::warning('Groq assistant request could not connect.', [
                 'exception' => $exception::class,
