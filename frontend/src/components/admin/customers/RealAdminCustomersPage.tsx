@@ -14,6 +14,7 @@ import {
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import ArchiveRecordButton from "@/components/admin/archive/ArchiveRecordButton";
 import BranchModalShell from "@/components/admin/branches/BranchModalShell";
 import CustomerAccountStatusModal from "./CustomerAccountStatusModal";
 import {
@@ -473,13 +474,16 @@ export default function RealAdminCustomersPage() {
                     <td className="px-5 py-4 text-slate-600">{formatDate(customer.last_order_at)}</td>
                     <td className="px-5 py-4"><AdminBadge>{label(customer.account_status ?? "guest")}</AdminBadge></td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => openCustomer(customer)}
-                        className="min-h-9 rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
-                      >
-                        View details
-                      </button>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openCustomer(customer)}
+                          className="min-h-9 rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                        >
+                          View details
+                        </button>
+                        <ArchiveRecordButton type="customer" id={customer.id} label={customer.name} onArchived={loadCustomers} />
+                      </div>
                     </td>
                   </tr>
                 ))

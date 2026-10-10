@@ -15,12 +15,13 @@ class AdminProductService
     public function __construct(
         private readonly AdminProductPresenter $presenter,
         private readonly CloudinaryService $cloudinaryService,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     /** @param array<string, mixed> $filters */
     public function index(array $filters): array
     {
-        $query = Product::query()->with([
+        $query = $this->archiveService->excludeArchived(Product::query(), 'product')->with([
             'category:id,name,status',
             'brandRecord:id,name,status',
         ]);
@@ -42,7 +43,7 @@ class AdminProductService
 
     public function findByPartNumber(string $partNumber): ?Product
     {
-        return Product::query()
+        return $this->archiveService->excludeArchived(Product::query(), 'product')
             ->with([
                 'category:id,name,status',
                 'brandRecord:id,name,status',
@@ -139,7 +140,7 @@ class AdminProductService
 
     private function summary(): array
     {
-        $products = Product::query();
+        $products = $this->archiveService->excludeArchived(Product::query(), 'product');
 
         return [
             'total' => (clone $products)->count(),

@@ -32,6 +32,8 @@ class AdminReportsService
         'cancelled' => '#94a3b8',
     ];
 
+    public function __construct(private readonly AdminArchiveService $archiveService) {}
+
     public function report(array $filters): array
     {
         [$from, $to] = $this->dateRange($filters);
@@ -47,7 +49,7 @@ class AdminReportsService
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),
                 'branch_id' => $branchId,
-                'branches' => Branch::query()
+                'branches' => $this->archiveService->excludeArchived(Branch::query(), 'branch')
                     ->orderBy('name')
                     ->get(['id', 'name'])
                     ->map(fn (Branch $branch): array => [
@@ -327,7 +329,7 @@ class AdminReportsService
 
     private function customerAnalytics(CarbonImmutable $from, CarbonImmutable $to, ?int $branchId): array
     {
-        $scope = Customer::query()->whereHas(
+        $scope = $this->archiveService->excludeArchived(Customer::query(), 'customer')->whereHas(
             'orderRequests',
             fn (Builder $query): Builder => $this->applyOrderWindow($query, $from, $to, $branchId),
         );
@@ -487,7 +489,7 @@ class AdminReportsService
 
     private function paymentScope(CarbonImmutable $from, CarbonImmutable $to, ?int $branchId): Builder
     {
-        return Payment::query()->whereHas(
+        return $this->archiveService->excludeArchived(Payment::query(), 'payment')->whereHas(
             'order',
             fn (Builder $query): Builder => $this->applyOrderWindow($query, $from, $to, $branchId),
         );
@@ -502,7 +504,7 @@ class AdminReportsService
 
     private function applyOrderWindow(Builder $query, CarbonImmutable $from, CarbonImmutable $to, ?int $branchId): Builder
     {
-        return $query
+        return $this->archiveService->excludeArchived($query, 'order')
             ->whereBetween('created_at', [$from, $to])
             ->when($branchId !== null, fn (Builder $builder): Builder => $builder->where('branch_id', $branchId));
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBranchesController;
+use App\Http\Controllers\Admin\AdminArchiveController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminCustomersController;
@@ -167,6 +168,18 @@ Route::prefix('admin')
             ->whereNumber('review')
             ->whereIn('action', ['publish', 'hide', 'restore', 'resolve-flag'])
             ->name('reviews.moderate');
+
+        Route::get('/archive', [AdminArchiveController::class, 'index'])
+            ->name('archive.index');
+
+        Route::post('/archive/{type}/{record}', [AdminArchiveController::class, 'store'])
+            ->name('archive.store');
+
+        Route::post('/archive/{type}/{record}/restore', [AdminArchiveController::class, 'restore'])
+            ->name('archive.restore');
+
+        Route::delete('/archive/{type}/{record}', [AdminArchiveController::class, 'destroy'])
+            ->name('archive.destroy');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');

@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
   faBell,
+  faBoxArchive,
   faChartColumn,
   faClipboardList,
   faComments,
@@ -44,6 +45,7 @@ const adminIcons = {
   Settings: faGear,
   Profile: faUser,
   Notifications: faBell,
+  Archive: faBoxArchive,
 } as const;
 
 const links = [
@@ -59,7 +61,8 @@ const links = [
   ["Reviews", "/admin/reviews", "☆"],
   ["Branches", "/admin/branches", "▧"],
   ["Staff Management", "/admin/staff-management", "♙"],
-  ["Reports", "/admin/reports", "▥"], 
+  ["Reports", "/admin/reports", "▥"],
+  ["Archive", "/admin/archive", "▰"],
   ["Settings", "/admin/settings", "⚙"],
   ["Profile", "/admin/profile", "◉"],
 ] as const;

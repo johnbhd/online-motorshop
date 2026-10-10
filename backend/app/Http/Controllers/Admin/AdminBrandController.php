@@ -28,7 +28,7 @@ class AdminBrandController extends Controller
 
     public function show(Brand $brand): JsonResponse
     {
-        $brand->loadCount('products');
+        $brand = $this->service->find($brand);
 
         return response()->json([
             'brand' => $this->presenter->brand($brand),
@@ -37,6 +37,7 @@ class AdminBrandController extends Controller
 
     public function products(AdminProductIndexRequest $request, Brand $brand): JsonResponse
     {
+        $brand = $this->service->find($brand);
         $filters = $request->validated();
         $filters['brand'] = $brand->name;
 

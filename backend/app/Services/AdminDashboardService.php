@@ -17,16 +17,23 @@ use Illuminate\Support\Facades\DB;
 
 class AdminDashboardService
 {
+    public function __construct(private readonly AdminArchiveService $archiveService) {}
+
     public function summary(): array
     {
-        $orderCounts = $this->statusCounts(OrderRequest::query(), 'order_status');
-        $paymentsAttention = Payment::query()
+        $orderCounts = $this->statusCounts(
+            $this->archiveService->excludeArchived(OrderRequest::query(), 'order'),
+            'order_status',
+        );
+        $paymentsAttention = $this->archiveService->excludeArchived(Payment::query(), 'payment')
             ->whereIn('payment_status', StaffOperationalSummaryService::PAYMENT_ATTENTION_STATUSES)
             ->count();
         $pickupsAttention = PickupRequest::query()
+            ->whereHas('order', fn (Builder $query): Builder => $this->archiveService->excludeArchived($query, 'order'))
             ->whereIn('pickup_status', StaffOperationalSummaryService::PICKUP_ATTENTION_STATUSES)
             ->count();
         $deliveriesAttention = DeliveryRequest::query()
+            ->whereHas('order', fn (Builder $query): Builder => $this->archiveService->excludeArchived($query, 'order'))
             ->whereIn('delivery_status', StaffOperationalSummaryService::DELIVERY_ATTENTION_STATUSES)
             ->count();
         $conversations = Conversation::query()
@@ -37,8 +44,9 @@ class AdminDashboardService
             )
             ->count();
 
-        $customerCount = Customer::query()->count();
-        $registeredCustomerCount = Customer::query()->whereNotNull('user_id')->count();
+        $customerQuery = $this->archiveService->excludeArchived(Customer::query(), 'customer');
+        $customerCount = (clone $customerQuery)->count();
+        $registeredCustomerCount = (clone $customerQuery)->whereNotNull('user_id')->count();
 
         return [
             'total_orders' => array_sum($orderCounts),
@@ -55,9 +63,9 @@ class AdminDashboardService
             'customers' => $customerCount,
             'registered_customers' => $registeredCustomerCount,
             'guest_customers' => $customerCount - $registeredCustomerCount,
-            'staff' => User::query()->where('role', 'staff')->count(),
-            'products' => Product::query()->count(),
-            'branches' => Branch::query()->count(),
+            'staff' => $this->archiveService->excludeArchived(User::query(), 'staff')->where('role', 'staff')->count(),
+            'products' => $this->archiveService->excludeArchived(Product::query(), 'product')->count(),
+            'branches' => $this->archiveService->excludeArchived(Branch::query(), 'branch')->count(),
         ];
     }
 
@@ -66,11 +74,20 @@ class AdminDashboardService
      */
     public function branches(): Collection
     {
-        $orderCounts = $this->branchStatusCounts(OrderRequest::query(), 'order_status');
-        $pickupCounts = $this->branchStatusCounts(PickupRequest::query(), 'pickup_status');
-        $deliveryCounts = $this->branchStatusCounts(DeliveryRequest::query(), 'delivery_status');
+        $orderCounts = $this->branchStatusCounts(
+            $this->archiveService->excludeArchived(OrderRequest::query(), 'order'),
+            'order_status',
+        );
+        $pickupCounts = $this->branchStatusCounts(
+            PickupRequest::query()->whereHas('order', fn (Builder $query): Builder => $this->archiveService->excludeArchived($query, 'order')),
+            'pickup_status',
+        );
+        $deliveryCounts = $this->branchStatusCounts(
+            DeliveryRequest::query()->whereHas('order', fn (Builder $query): Builder => $this->archiveService->excludeArchived($query, 'order')),
+            'delivery_status',
+        );
 
-        return Branch::query()
+        return $this->archiveService->excludeArchived(Branch::query(), 'branch')
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(function (Branch $branch) use (
@@ -106,7 +123,7 @@ class AdminDashboardService
 
     public function recentOrders(int $limit = 5): Collection
     {
-        return OrderRequest::query()
+        return $this->archiveService->excludeArchived(OrderRequest::query(), 'order')
             ->with([
                 'customer:id,full_name,contact_number,email',
                 'branch:id,name,address,contact_number',

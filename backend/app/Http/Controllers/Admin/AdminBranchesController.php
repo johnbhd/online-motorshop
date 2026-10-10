@@ -53,6 +53,7 @@ class AdminBranchesController extends Controller
 
     public function update(UpdateAdminBranchRequest $request, Branch $branch): JsonResponse
     {
+        $branch = $this->service->find($branch);
         $branch = $this->service->update($branch, $request->validated());
 
         return response()->json([
@@ -63,6 +64,7 @@ class AdminBranchesController extends Controller
 
     public function destroy(Branch $branch): JsonResponse
     {
+        $branch = $this->service->find($branch);
         if (! $this->service->delete($branch)) {
             return response()->json([
                 'message' => 'Branch cannot be deleted while staff, orders, pickup requests, or delivery requests reference it.',

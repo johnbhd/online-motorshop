@@ -29,6 +29,7 @@ const labels: Record<string, string> = {
   "/admin/staff-management": "Staff Management",
   "/admin/website-content": "Website Content",
   "/admin/reports": "Reports",
+  "/admin/archive": "Archive",
   "/admin/settings": "Settings",
   "/admin/profile": "My Profile",
 };

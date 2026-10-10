@@ -12,6 +12,7 @@ class AdminPaymentService
     public function __construct(
         private readonly StaffPaymentPresenter $presenter,
         private readonly StaffPaymentStatusService $statusService,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     public function index(array $filters): array
@@ -62,7 +63,7 @@ class AdminPaymentService
 
     private function paymentQuery(): Builder
     {
-        return Payment::query();
+        return $this->archiveService->excludeArchived(Payment::query(), 'payment');
     }
 
     private function applyFilters(Builder $query, array $filters): Builder
