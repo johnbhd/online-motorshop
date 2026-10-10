@@ -1,6 +1,7 @@
 import { getAuthToken } from "@/lib/auth/authStorage";
 import type {
   AdminConversationSummary,
+  ContactInquiryMetadata,
   Conversation,
   StaffConversationSummary,
 } from "./conversationTypes";
@@ -99,14 +100,23 @@ async function request<T>(
     headers.set("X-Guest-Token", options.guestToken);
   }
 
-  if (options.body !== undefined) {
+  const isFormData =
+    typeof FormData !== "undefined" && options.body instanceof FormData;
+  const requestBody: BodyInit | undefined =
+    options.body === undefined
+      ? undefined
+      : isFormData
+        ? (options.body as FormData)
+        : JSON.stringify(options.body);
+
+  if (options.body !== undefined && !isFormData) {
     headers.set("Content-Type", "application/json");
   }
 
   const response = await fetch(path, {
     method: options.method ?? "GET",
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: requestBody,
     cache: "no-store",
     signal: options.signal,
   });
@@ -152,13 +162,24 @@ export async function getCurrentConversation(
 export async function startConversation(
   body: string,
   guestToken: string | null,
+  options: {
+    messageType?: "text" | "contact_inquiry";
+    metadata?: ContactInquiryMetadata;
+    attachment?: File | null;
+  } = {},
 ) {
+  const requestBody =
+    options.messageType === "contact_inquiry" ||
+    options.metadata ||
+    options.attachment
+      ? createCustomerMessageFormData(body, guestToken, options)
+      : { body, ...(guestToken ? { guest_token: guestToken } : {}) };
   const response = await request<StartConversationResponse>(
     "/api/conversations",
     {
       method: "POST",
       token: getAuthToken(),
-      body: { body, ...(guestToken ? { guest_token: guestToken } : {}) },
+      body: requestBody,
     },
   );
 
@@ -170,18 +191,60 @@ export async function sendCustomerConversationMessage(
   conversationId: number,
   body: string,
   guestToken: string | null,
+  options: {
+    messageType?: "text" | "contact_inquiry";
+    metadata?: ContactInquiryMetadata;
+    attachment?: File | null;
+  } = {},
 ) {
+  const requestBody =
+    options.messageType === "contact_inquiry" ||
+    options.metadata ||
+    options.attachment
+      ? createCustomerMessageFormData(body, guestToken, options)
+      : { body, ...(guestToken ? { guest_token: guestToken } : {}) };
   const response = await request<ConversationResponse>(
     `/api/conversations/${conversationId}/messages`,
     {
       method: "POST",
       token: getAuthToken(),
-      body: { body, ...(guestToken ? { guest_token: guestToken } : {}) },
+      body: requestBody,
     },
   );
 
   notifyStaffSidebar();
   return response.conversation;
+}
+
+function createCustomerMessageFormData(
+  body: string,
+  guestToken: string | null,
+  options: {
+    messageType?: "text" | "contact_inquiry";
+    metadata?: ContactInquiryMetadata;
+    attachment?: File | null;
+  },
+): FormData {
+  const formData = new FormData();
+  formData.set("body", body);
+
+  if (guestToken) {
+    formData.set("guest_token", guestToken);
+  }
+
+  if (options.messageType) {
+    formData.set("message_type", options.messageType);
+  }
+
+  if (options.metadata) {
+    formData.set("metadata", JSON.stringify(options.metadata));
+  }
+
+  if (options.attachment) {
+    formData.set("attachment", options.attachment, options.attachment.name);
+  }
+
+  return formData;
 }
 
 export async function getStaffConversations(

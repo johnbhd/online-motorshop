@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\User;
+use App\Services\CloudinaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Tests\Fakes\FakeCloudinaryService;
 use Tests\TestCase;
 
 class ConversationsApiTest extends TestCase
@@ -17,6 +20,7 @@ class ConversationsApiTest extends TestCase
         $app = parent::createApplication();
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app->instance(CloudinaryService::class, new FakeCloudinaryService);
 
         return $app;
     }
@@ -96,6 +100,60 @@ class ConversationsApiTest extends TestCase
 
         $this->assertDatabaseCount('conversations', 1);
         $this->assertDatabaseCount('messages', 2);
+    }
+
+    public function test_contact_inquiry_is_saved_as_structured_message_and_can_include_a_photo(): void
+    {
+        $metadata = json_encode([
+            'full_name' => 'Guest Contact',
+            'contact_number' => '09170000009',
+            'email' => 'guest-contact@example.com',
+            'inquiry_type' => 'Product Availability',
+            'preferred_branch' => 'Manila Branch',
+            'motorcycle' => 'Honda Click 125 2024',
+            'product_needed' => 'Front brake pads',
+            'message' => 'Do you have this part available?',
+        ], JSON_THROW_ON_ERROR);
+
+        $response = $this->post('/api/conversations', [
+            'body' => 'Contact inquiry',
+            'message_type' => 'contact_inquiry',
+            'metadata' => $metadata,
+            'attachment' => UploadedFile::fake()->create('brake-pads.jpg', 50, 'image/jpeg'),
+        ])->assertCreated()
+            ->assertJsonPath('conversation.messages.0.message_type', 'contact_inquiry')
+            ->assertJsonPath('conversation.messages.0.metadata.inquiry_type', 'Product Availability')
+            ->assertJsonPath('conversation.messages.0.attachment.url', fn (mixed $url): bool => is_string($url))
+            ->assertJsonPath('conversation.messages.0.body', fn (mixed $body): bool => is_string($body) && str_contains($body, 'CONTACT INQUIRY'));
+
+        $messageId = $response->json('conversation.messages.0.id');
+
+        $this->assertDatabaseHas('messages', [
+            'id' => $messageId,
+            'message_type' => 'contact_inquiry',
+            'attachment_public_id' => 'ald-motorshop/contact-inquiries/fake-1',
+        ]);
+    }
+
+    public function test_contact_inquiry_rejects_an_unowned_order_reference(): void
+    {
+        $metadata = json_encode([
+            'full_name' => 'Guest Contact',
+            'contact_number' => '09170000009',
+            'inquiry_type' => 'Existing Order',
+            'order_reference' => 'ALD-2026-NOT-MINE',
+            'message' => 'Please check this order.',
+        ], JSON_THROW_ON_ERROR);
+
+        $this->postJson('/api/conversations', [
+            'body' => 'Contact inquiry',
+            'message_type' => 'contact_inquiry',
+            'metadata' => $metadata,
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('metadata.order_reference');
+
+        $this->assertDatabaseCount('conversations', 0);
+        $this->assertDatabaseCount('messages', 0);
     }
 
     public function test_staff_can_list_read_and_reply_but_customer_cannot_use_staff_routes(): void

@@ -33,8 +33,14 @@ class ConversationService
     /**
      * @return array{conversation: Conversation, created: bool, guest_token: string|null}
      */
-    public function start(?User $user, ?string $guestToken, string $body): array
-    {
+    public function start(
+        ?User $user,
+        ?string $guestToken,
+        string $body,
+        string $messageType = 'text',
+        ?array $metadata = null,
+        ?array $attachment = null,
+    ): array {
         $customer = $user?->customer;
         $created = false;
         $rawGuestToken = null;
@@ -50,7 +56,14 @@ class ConversationService
             [$conversation, $created] = $this->findOrCreateForGuest($rawGuestToken);
         }
 
-        $this->appendCustomerMessage($conversation, $user, $body);
+        $this->appendCustomerMessage(
+            $conversation,
+            $user,
+            $body,
+            $messageType,
+            $metadata,
+            $attachment,
+        );
 
         return [
             'conversation' => $this->loadConversation($conversation),
@@ -63,8 +76,19 @@ class ConversationService
         Conversation $conversation,
         ?User $user,
         string $body,
+        string $messageType = 'text',
+        ?array $metadata = null,
+        ?array $attachment = null,
     ): Message {
-        $message = $this->appendMessage($conversation, 'customer', $body, $user?->id);
+        $message = $this->appendMessage(
+            $conversation,
+            'customer',
+            $body,
+            $user?->id,
+            $messageType,
+            $metadata,
+            $attachment,
+        );
         $this->staffAdminNotificationService->customerMessageReceived($message);
 
         return $message;
@@ -117,8 +141,19 @@ class ConversationService
         string $senderType,
         string $body,
         ?int $senderUserId,
+        string $messageType = 'text',
+        ?array $metadata = null,
+        ?array $attachment = null,
     ): Message {
-        return DB::transaction(function () use ($conversation, $senderType, $body, $senderUserId): Message {
+        return DB::transaction(function () use (
+            $conversation,
+            $senderType,
+            $body,
+            $senderUserId,
+            $messageType,
+            $metadata,
+            $attachment,
+        ): Message {
             $lockedConversation = Conversation::query()
                 ->lockForUpdate()
                 ->findOrFail($conversation->id);
@@ -129,6 +164,10 @@ class ConversationService
                 'sender_type' => $senderType,
                 'sender_user_id' => $senderUserId,
                 'body' => trim($body),
+                'message_type' => $messageType,
+                'metadata' => $metadata,
+                'attachment_url' => $attachment['secure_url'] ?? null,
+                'attachment_public_id' => $attachment['public_id'] ?? null,
             ]);
 
             $lockedConversation->forceFill([

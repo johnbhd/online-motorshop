@@ -5,9 +5,14 @@ import type { RefObject } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ChatbotComposer from "./ChatbotComposer";
+import ContactInquiryPreview from "./ContactInquiryPreview";
 import ChatbotMessageList from "./ChatbotMessageList";
 import ChatbotQuickActions from "./ChatbotQuickActions";
-import type { ChatMessage, ChatQuickAction } from "./chatbotTypes";
+import type {
+  ChatMessage,
+  ChatQuickAction,
+  ContactInquiryDraft,
+} from "./chatbotTypes";
 
 export type ChatbotMode = "assistant" | "staff";
 
@@ -27,6 +32,10 @@ export type ChatbotPanelProps = {
   isAssistantThinking?: boolean;
   staffError?: string | null;
   staffLoading?: boolean;
+  contactInquiry?: ContactInquiryDraft | null;
+  inquirySending?: boolean;
+  onCancelInquiry: () => void;
+  onConfirmInquiry: () => void;
 };
 
 export default function ChatbotPanel({
@@ -45,6 +54,10 @@ export default function ChatbotPanel({
   isAssistantThinking = false,
   staffError,
   staffLoading = false,
+  contactInquiry,
+  inquirySending = false,
+  onCancelInquiry,
+  onConfirmInquiry,
 }: ChatbotPanelProps) {
   const isStaffMode = mode === "staff";
   const contentClassName = [
@@ -128,6 +141,15 @@ export default function ChatbotPanel({
           <ChatbotQuickActions actions={quickActions} onSelect={onQuickAction} />
         )}
       </div>
+
+      {isStaffMode && contactInquiry && (
+        <ContactInquiryPreview
+          inquiry={contactInquiry}
+          isSending={inquirySending}
+          onCancel={onCancelInquiry}
+          onConfirm={onConfirmInquiry}
+        />
+      )}
 
       <ChatbotComposer
         inputRef={composerInputRef}

@@ -282,6 +282,205 @@
   letter-spacing: 0.02em;
 }
 
+.ald-chatbot__message-text {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.ald-chatbot__message-type {
+  display: inline-flex;
+  margin-bottom: 0.35rem;
+  border-radius: 999px;
+  background: rgba(224, 122, 8, 0.12);
+  color: var(--ald-orange-dark);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.ald-chatbot__message-attachment {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+  color: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
+}
+
+.ald-chatbot__message-attachment img {
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  border-radius: 0.45rem;
+  object-fit: cover;
+}
+
+.ald-chatbot__inquiry-preview {
+  flex: 0 0 auto;
+  max-height: 14rem;
+  margin: 0 0.85rem 0.45rem;
+  overflow-y: auto;
+  border: 1px solid #fed7aa;
+  border-radius: 0.75rem;
+  background: #fffaf2;
+  color: #16234a;
+  scrollbar-color: #fdba74 transparent;
+  scrollbar-width: thin;
+}
+
+.ald-chatbot__inquiry-preview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem 0.35rem;
+}
+
+.ald-chatbot__inquiry-preview-header h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.ald-chatbot__inquiry-preview-eyebrow {
+  margin: 0 0 0.15rem;
+  color: var(--ald-orange-dark);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ald-chatbot__inquiry-close {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.ald-chatbot__inquiry-close:hover {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.ald-chatbot__inquiry-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 0.6rem;
+  margin: 0;
+  padding: 0.3rem 0.75rem;
+}
+
+.ald-chatbot__inquiry-fields div {
+  min-width: 0;
+}
+
+.ald-chatbot__inquiry-fields dt {
+  color: #9a3412;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.ald-chatbot__inquiry-fields dd {
+  margin: 0.05rem 0 0;
+  overflow-wrap: anywhere;
+  color: #334155;
+  font-size: 0.7rem;
+}
+
+.ald-chatbot__inquiry-message {
+  margin: 0.25rem 0.75rem 0;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ald-chatbot__inquiry-photo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0.75rem 0;
+  color: #9a3412;
+  font-size: 0.68rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ald-chatbot__inquiry-photo img {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  border: 1px solid #fed7aa;
+  border-radius: 0.45rem;
+  object-fit: cover;
+}
+
+.ald-chatbot__inquiry-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem 0.7rem;
+}
+
+.ald-chatbot__inquiry-cancel,
+.ald-chatbot__inquiry-send {
+  min-height: 2rem;
+  border-radius: 0.45rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.ald-chatbot__inquiry-cancel {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #fed7aa;
+  background: #ffffff;
+  color: #9a3412;
+}
+
+.ald-chatbot__inquiry-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--ald-orange);
+  background: var(--ald-orange);
+  color: #ffffff;
+}
+
+.ald-chatbot__inquiry-cancel:hover {
+  background: #fff7ed;
+}
+
+.ald-chatbot__inquiry-send:hover:not(:disabled) {
+  border-color: var(--ald-orange-dark);
+  background: var(--ald-orange-dark);
+}
+
+.ald-chatbot__inquiry-close:disabled,
+.ald-chatbot__inquiry-cancel:disabled,
+.ald-chatbot__inquiry-send:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .ald-chatbot__quick-actions {
   flex: 0 0 auto;
   margin-top: auto;
@@ -413,6 +612,9 @@
 .ald-chatbot__mode-toggle:focus-visible,
 .ald-chatbot__composer-menu:focus-visible,
 .ald-chatbot__quick-action:focus-visible,
+.ald-chatbot__inquiry-close:focus-visible,
+.ald-chatbot__inquiry-cancel:focus-visible,
+.ald-chatbot__inquiry-send:focus-visible,
 .ald-chatbot__send:focus-visible {
   outline: 3px solid rgba(224, 122, 8, 0.38);
   outline-offset: 2px;

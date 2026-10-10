@@ -13,7 +13,18 @@ class Message extends Model
         'sender_type',
         'sender_user_id',
         'body',
+        'message_type',
+        'metadata',
+        'attachment_url',
+        'attachment_public_id',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'metadata' => 'array',
+        ];
+    }
 
     public function conversation()
     {

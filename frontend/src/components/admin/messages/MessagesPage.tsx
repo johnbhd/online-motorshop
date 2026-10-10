@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -471,6 +472,26 @@ export default function AdminMessages() {
                               {senderLabel(message, activeConversation)}
                             </p>
                             <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                            {message.message_type === "contact_inquiry" && (
+                              <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                Contact inquiry
+                              </p>
+                            )}
+                            {message.attachment?.url && (
+                              <a
+                                className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-orange-700 underline underline-offset-2"
+                                href={message.attachment.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <img
+                                  className="size-12 rounded-md border border-orange-200 object-cover"
+                                  src={message.attachment.url}
+                                  alt="Contact inquiry attachment"
+                                />
+                                View attachment
+                              </a>
+                            )}
                             <p className="mt-1.5 text-right text-[11px] text-slate-500">
                               {formatTime(message.created_at)}
                             </p>

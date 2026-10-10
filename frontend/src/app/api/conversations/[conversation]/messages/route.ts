@@ -10,13 +10,20 @@ export async function POST(
   { params }: ConversationMessageRouteContext,
 ) {
   const { conversation } = await params;
-  const headers = new Headers({ "Content-Type": "application/json" });
+  const contentType = request.headers.get("content-type");
+  const headers = new Headers({
+    "Content-Type": contentType ?? "application/json",
+  });
   const authorization = request.headers.get("authorization");
 
   if (authorization) headers.set("Authorization", authorization);
 
+  const body = contentType?.startsWith("multipart/form-data")
+    ? await request.arrayBuffer()
+    : await request.text();
+
   return proxyConversationRequest(
     `/conversations/${encodeURIComponent(conversation)}/messages${request.nextUrl.search}`,
-    { method: "POST", headers, body: await request.text() },
+    { method: "POST", headers, body },
   );
 }

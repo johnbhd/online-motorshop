@@ -53,7 +53,7 @@ const ChatbotMessageList = forwardRef<
                 height={28}
               />
             )}
-            <p
+            <div
               className={
                 "ald-chatbot__message ald-chatbot__message--" + displaySender
               }
@@ -63,8 +63,26 @@ const ChatbotMessageList = forwardRef<
                   {isAdminMessage ? "ALD Administrator" : "ALD Staff"}
                 </span>
               )}
-              {message.text}
-            </p>
+              {message.messageType === "contact_inquiry" && (
+                <span className="ald-chatbot__message-type">Contact inquiry</span>
+              )}
+              <span className="ald-chatbot__message-text">{message.text}</span>
+              {message.attachmentUrl && (
+                <a
+                  className="ald-chatbot__message-attachment"
+                  href={message.attachmentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={message.attachmentUrl}
+                    alt="Contact inquiry attachment"
+                  />
+                  <span>View attachment</span>
+                </a>
+              )}
+            </div>
           </div>
         );
       })}

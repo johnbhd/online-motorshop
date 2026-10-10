@@ -1,16 +1,85 @@
 "use client";
 
-import type { FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudArrowUp } from "@fortawesome/free-solid-svg-icons";
+import {
+  OPEN_STAFF_CHAT_EVENT,
+  type OpenStaffChatDetail,
+} from "../chatbot/chatbotEvents";
+import type { ContactInquiryDraft } from "../chatbot/chatbotTypes";
 import {
   contactArrowIcon,
   contactNeeds,
 } from "./contactData";
 
 export default function ContactForm() {
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [status, setStatus] = useState(
+    "Your inquiry will be sent directly to ALD Support for review.",
+  );
+
+  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSelectedPhoto(event.target.files?.[0] ?? null);
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const value = (name: string) => String(formData.get(name) ?? "").trim();
+    const inquiryTypeLabels: Record<string, string> = {
+      availability: "Product Availability",
+      price: "Product Price",
+      compatibility: "Motorcycle Part Compatibility",
+      order: "Existing Order",
+      payment: "Payment Concern",
+      delivery: "Lalamove Delivery",
+      promo: "Store Promo",
+      service: "Maintenance or Repair Service",
+    };
+    const branchLabels: Record<string, string> = {
+      manila: "Manila Branch",
+      makati: "Makati Branch",
+      imus: "Imus Branch",
+    };
+    const brandLabels: Record<string, string> = {
+      honda: "Honda",
+      yamaha: "Yamaha",
+      suzuki: "Suzuki",
+    };
+    const inquiryType = value("inquiryType");
+    const brand = value("brand");
+    const photo = formData.get("photo");
+    const inquiry: ContactInquiryDraft = {
+      fullName: value("fullName"),
+      contactNumber: value("contactNumber"),
+      email: value("email"),
+      inquiryType: inquiryTypeLabels[inquiryType] ?? inquiryType,
+      preferredBranch: branchLabels[value("branch")] ?? value("branch"),
+      motorcycle: [brandLabels[brand] ?? brand, value("modelYear")]
+        .filter(Boolean)
+        .join(" "),
+      productNeeded: value("partNeeded"),
+      orderReference: value("orderRef"),
+      message: value("message"),
+      photo:
+        photo instanceof File && photo.size > 0 ? photo : selectedPhoto,
+    };
+    const detail: OpenStaffChatDetail = {
+      inquiry,
+      onSent: () => {
+        form.reset();
+        setSelectedPhoto(null);
+        setStatus("Your inquiry was sent to ALD Support.");
+      },
+    };
+
+    setStatus("Review your inquiry in ALD Support, then confirm to send it.");
+    window.dispatchEvent(
+      new CustomEvent<OpenStaffChatDetail>(OPEN_STAFF_CHAT_EVENT, { detail }),
+    );
   };
 
   return (
@@ -207,10 +276,12 @@ export default function ContactForm() {
                     type="file"
                     accept="image/png, image/jpeg, image/webp"
                     hidden
+                    onChange={handlePhotoChange}
                   />
                 </label>
                 <span className="contact-upload-hint">
                   Accepted formats: JPG, PNG, WEBP
+                  {selectedPhoto ? ` · ${selectedPhoto.name}` : ""}
                 </span>
               </div>
             </div>
@@ -224,9 +295,8 @@ export default function ContactForm() {
               </span>
             </label>
 
-            <p className="contact-form-status" id="contact-form-status">
-              Online message submission is not connected yet. Please call +63
-              995 869 1174 for a response.
+            <p className="contact-form-status" id="contact-form-status" role="status" aria-live="polite">
+              {status}
             </p>
 
             <button className="contact-submit-button" type="submit">

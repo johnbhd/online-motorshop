@@ -14,14 +14,23 @@ import {
 } from "@/lib/messages/guestTokenStorage";
 import type { Conversation } from "@/lib/messages/conversationTypes";
 import ChatbotLauncher from "./ChatbotLauncher";
-import { OPEN_STAFF_CHAT_EVENT } from "./chatbotEvents";
+import {
+  OPEN_STAFF_CHAT_EVENT,
+  type OpenStaffChatDetail,
+} from "./chatbotEvents";
 import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
 import {
   chatbotQuickActions,
   chatbotWelcomeMessage,
 } from "./chatbotData";
 import { resolveChatbotResponse } from "./chatbotUtils";
-import type { ChatMessage, ChatQuickAction, ChatSender } from "./chatbotTypes";
+import type {
+  ChatMessage,
+  ChatQuickAction,
+  ChatSender,
+  ContactInquiryDraft,
+} from "./chatbotTypes";
+import type { ContactInquiryMetadata } from "@/lib/messages/conversationTypes";
 
 const initialMessages: ChatMessage[] = [
   {
@@ -39,8 +48,27 @@ function toChatMessages(conversation: Conversation): ChatMessage[] {
       sender: message.sender,
       text: message.body,
       createdAt: message.created_at,
+      messageType: message.message_type,
+      metadata: message.metadata,
+      attachmentUrl: message.attachment?.url ?? null,
     };
   });
+}
+
+function toInquiryMetadata(
+  inquiry: ContactInquiryDraft,
+): ContactInquiryMetadata {
+  return {
+    full_name: inquiry.fullName,
+    contact_number: inquiry.contactNumber,
+    email: inquiry.email,
+    inquiry_type: inquiry.inquiryType,
+    preferred_branch: inquiry.preferredBranch,
+    motorcycle: inquiry.motorcycle,
+    product_needed: inquiry.productNeeded,
+    order_reference: inquiry.orderReference,
+    message: inquiry.message,
+  };
 }
 
 export default function ChatbotWidget() {
@@ -53,6 +81,9 @@ export default function ChatbotWidget() {
     useState<Conversation | null>(null);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
+  const [contactInquiry, setContactInquiry] =
+    useState<ContactInquiryDraft | null>(null);
+  const [inquirySending, setInquirySending] = useState(false);
   const { isLoading: isAuthLoading, user } = useAuth();
   const isAuthReady = !isAuthLoading;
   const launcherRef = useRef<HTMLButtonElement>(null);
@@ -60,6 +91,7 @@ export default function ChatbotWidget() {
   const composerInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
   const assistantResponseTimeoutRef = useRef<number | null>(null);
+  const inquirySentCallbackRef = useRef<(() => void) | null>(null);
 
   const createMessage = useCallback(
     (sender: ChatSender, text: string): ChatMessage => {
@@ -144,14 +176,90 @@ export default function ChatbotWidget() {
     }
   }, [isAuthReady]);
 
-  const openStaffChat = useCallback(() => {
-    if (!isAuthReady) {
+  const openStaffChat = useCallback(
+    (event: Event) => {
+      const detail = (event as CustomEvent<OpenStaffChatDetail>).detail;
+
+      if (detail?.inquiry) {
+        setContactInquiry(detail.inquiry);
+        inquirySentCallbackRef.current = detail.onSent ?? null;
+        setStaffError(null);
+      }
+
+      setMode("staff");
+      setShowQuickActions(false);
+      setIsOpen(true);
+
+      if (!isAuthReady) {
+        return;
+      }
+
+      void handleRequestStaff();
+    },
+    [handleRequestStaff, isAuthReady],
+  );
+
+  const handleCancelInquiry = useCallback(() => {
+    setContactInquiry(null);
+    inquirySentCallbackRef.current = null;
+    setStaffError(null);
+  }, []);
+
+  const handleConfirmInquiry = useCallback(async () => {
+    if (!contactInquiry || inquirySending || !isAuthReady) {
       return;
     }
 
-    void handleRequestStaff();
-    setIsOpen(true);
-  }, [handleRequestStaff, isAuthReady]);
+    setInquirySending(true);
+    setStaffLoading(true);
+    setStaffError(null);
+
+    try {
+      const guestToken = getGuestConversationToken();
+      const options = {
+        messageType: "contact_inquiry" as const,
+        metadata: toInquiryMetadata(contactInquiry),
+        attachment: contactInquiry.photo,
+      };
+
+      if (staffConversation) {
+        setStaffConversation(
+          await sendCustomerConversationMessage(
+            staffConversation.id,
+            "Contact inquiry",
+            guestToken,
+            options,
+          ),
+        );
+      } else {
+        const response = await startConversation(
+          "Contact inquiry",
+          guestToken,
+          options,
+        );
+
+        if (response.guest_token) {
+          setGuestConversationToken(response.guest_token);
+        }
+
+        setStaffConversation(response.conversation);
+      }
+
+      setContactInquiry(null);
+      const onSent = inquirySentCallbackRef.current;
+      inquirySentCallbackRef.current = null;
+      onSent?.();
+    } catch (error) {
+      setStaffError(
+        error instanceof Error
+          ? error.message
+          : "Unable to send your contact inquiry.",
+      );
+    } finally {
+      setInquirySending(false);
+      setStaffLoading(false);
+    }
+  }, [contactInquiry, inquirySending, isAuthReady, staffConversation]);
 
   useEffect(() => {
     window.addEventListener(OPEN_STAFF_CHAT_EVENT, openStaffChat);
@@ -204,6 +312,23 @@ export default function ChatbotWidget() {
   );
 
   useEffect(() => {
+    const resetTimeout = window.setTimeout(() => {
+      setStaffConversation(null);
+      setStaffError(null);
+      setContactInquiry(null);
+      inquirySentCallbackRef.current = null;
+    }, 0);
+
+    return () => window.clearTimeout(resetTimeout);
+  }, [user?.id]);
+
+  /*
+   * The remaining effects and render stay below this point. Keeping the
+   * inquiry state in this widget means canceling never creates a message or
+   * uploads the selected file.
+   */
+
+  useEffect(() => {
     return () => {
       if (assistantResponseTimeoutRef.current !== null) {
         window.clearTimeout(assistantResponseTimeoutRef.current);
@@ -237,15 +362,6 @@ export default function ChatbotWidget() {
       window.removeEventListener("focus", refreshStaffConversation);
     };
   }, [isOpen, mode]);
-
-  useEffect(() => {
-    const resetTimeout = window.setTimeout(() => {
-      setStaffConversation(null);
-      setStaffError(null);
-    }, 0);
-
-    return () => window.clearTimeout(resetTimeout);
-  }, [user?.id]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -325,6 +441,10 @@ export default function ChatbotWidget() {
           isAssistantThinking={isAssistantThinking}
           staffError={staffError}
           staffLoading={staffLoading}
+          contactInquiry={contactInquiry}
+          inquirySending={inquirySending}
+          onCancelInquiry={handleCancelInquiry}
+          onConfirmInquiry={() => void handleConfirmInquiry()}
         />
       )}
       <ChatbotLauncher
