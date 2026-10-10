@@ -6,11 +6,13 @@ import type { ChatQuickAction } from "./chatbotTypes";
 export type ChatbotQuickActionsProps = {
   actions: ChatQuickAction[];
   onSelect: (action: ChatQuickAction) => void;
+  disabled?: boolean;
 };
 
 export default function ChatbotQuickActions({
   actions,
   onSelect,
+  disabled = false,
 }: ChatbotQuickActionsProps) {
   return (
     <section className="ald-chatbot__quick-actions" aria-label="Chatbot topics">
@@ -21,6 +23,7 @@ export default function ChatbotQuickActions({
             className={`ald-chatbot__quick-action ald-chatbot__quick-action--${action.id}`}
             type="button"
             key={action.id}
+            disabled={disabled}
             onClick={() => {
               onSelect(action);
             }}

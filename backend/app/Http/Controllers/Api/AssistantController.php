@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssistantChatRequest;
 use App\Services\Assistant\AldAssistantService;
+use App\Services\Assistant\AssistantAbuseGuard;
+use App\Services\Assistant\AssistantRateLimitException;
 use App\Services\Assistant\AssistantUnavailableException;
 use Illuminate\Http\JsonResponse;
 
@@ -12,6 +14,7 @@ class AssistantController extends Controller
 {
     public function __construct(
         private readonly AldAssistantService $assistantService,
+        private readonly AssistantAbuseGuard $abuseGuard,
     ) {}
 
     public function chat(AssistantChatRequest $request): JsonResponse
@@ -19,20 +22,34 @@ class AssistantController extends Controller
         $validated = $request->validated();
 
         try {
+            $this->abuseGuard->assertAllowed($request, $validated['message']);
+
             $message = $this->assistantService->chat(
                 $validated['message'],
                 $validated['history'] ?? [],
             );
+        } catch (AssistantRateLimitException $exception) {
+            return response()->json([
+                'message' => $exception->publicMessage,
+                'code' => $exception->errorCode,
+                'retryAfter' => $exception->retryAfter,
+            ], 429, [
+                'Retry-After' => (string) $exception->retryAfter,
+            ]);
         } catch (AssistantUnavailableException $exception) {
             $status = $exception->reason === 'provider_rate_limited'
                 ? 429
                 : 503;
+            $isProviderBusy = $exception->reason === 'provider_rate_limited';
+            $retryAfter = $isProviderBusy ? ($exception->retryAfter ?? 6) : null;
 
             return response()->json([
                 'message' => $exception->publicMessage,
-            ], $status, $status === 429 ? [
-                'Retry-After' => '30',
-            ] : []);
+                'code' => $isProviderBusy ? 'assistant_busy' : 'assistant_unavailable',
+                ...($retryAfter === null ? [] : ['retryAfter' => $retryAfter]),
+            ], $status, $retryAfter === null ? [] : [
+                'Retry-After' => (string) $retryAfter,
+            ]);
         }
 
         return response()->json([

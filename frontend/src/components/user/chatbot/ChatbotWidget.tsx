@@ -33,7 +33,10 @@ import type {
   ProductInquiryDraft,
 } from "./chatbotTypes";
 import type { ContactInquiryMetadata } from "@/lib/messages/conversationTypes";
-import { sendAssistantMessage } from "@/lib/assistant/assistantApi";
+import {
+  AssistantRequestError,
+  sendAssistantMessage,
+} from "@/lib/assistant/assistantApi";
 import type { AssistantHistoryItem } from "@/lib/assistant/assistantTypes";
 
 const initialMessages: ChatMessage[] = [
@@ -44,6 +47,12 @@ const initialMessages: ChatMessage[] = [
     createdAt: "",
   },
 ];
+
+const ASSISTANT_DUPLICATE_WINDOW_MS = 8_000;
+
+function normalizeAssistantMessage(message: string) {
+  return message.trim().replace(/\s+/g, " ").toLowerCase();
+}
 
 function toChatMessages(conversation: Conversation): ChatMessage[] {
   return conversation.messages.map((message) => {
@@ -89,6 +98,9 @@ export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
+  const [assistantError, setAssistantError] = useState<string | null>(null);
+  const [assistantCooldownUntil, setAssistantCooldownUntil] = useState<number | null>(null);
+  const [assistantCooldownSeconds, setAssistantCooldownSeconds] = useState(0);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [mode, setMode] = useState<ChatbotMode>("assistant");
   const [staffConversation, setStaffConversation] =
@@ -107,6 +119,34 @@ export default function ChatbotWidget() {
   const composerInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
   const inquirySentCallbackRef = useRef<(() => void) | null>(null);
+  const assistantRequestInFlightRef = useRef(false);
+  const lastAssistantMessageRef = useRef<{ message: string; sentAt: number } | null>(null);
+
+  useEffect(() => {
+    if (assistantCooldownUntil === null) {
+      setAssistantCooldownSeconds(0);
+
+      return;
+    }
+
+    const updateCooldown = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((assistantCooldownUntil - Date.now()) / 1000),
+      );
+
+      setAssistantCooldownSeconds(remaining);
+
+      if (remaining === 0) {
+        setAssistantCooldownUntil(null);
+      }
+    };
+
+    updateCooldown();
+    const interval = window.setInterval(updateCooldown, 250);
+
+    return () => window.clearInterval(interval);
+  }, [assistantCooldownUntil]);
 
   const createMessage = useCallback(
     (sender: ChatSender, text: string): ChatMessage => {
@@ -132,9 +172,36 @@ export default function ChatbotWidget() {
 
   const handleSendAssistant = useCallback(
     async (message: string) => {
-      if (isAssistantThinking) {
+      const now = Date.now();
+      const normalizedMessage = normalizeAssistantMessage(message);
+      const previousMessage = lastAssistantMessageRef.current;
+
+      if (
+        assistantRequestInFlightRef.current ||
+        isAssistantThinking ||
+        (assistantCooldownUntil !== null && now < assistantCooldownUntil)
+      ) {
         return false;
       }
+
+      if (
+        previousMessage &&
+        previousMessage.message === normalizedMessage &&
+        now - previousMessage.sentAt < ASSISTANT_DUPLICATE_WINDOW_MS
+      ) {
+        setAssistantError(
+          "That message was already sent. Please wait a moment before sending it again.",
+        );
+
+        return false;
+      }
+
+      assistantRequestInFlightRef.current = true;
+      lastAssistantMessageRef.current = {
+        message: normalizedMessage,
+        sentAt: now,
+      };
+      setAssistantError(null);
 
       const customerMessage = createMessage("customer", message);
 
@@ -151,6 +218,7 @@ export default function ChatbotWidget() {
           createMessage("bot", localResponse.text),
         ]);
         setIsAssistantThinking(false);
+        assistantRequestInFlightRef.current = false;
         return true;
       }
 
@@ -166,6 +234,18 @@ export default function ChatbotWidget() {
         ]);
         return true;
       } catch (error) {
+        if (error instanceof AssistantRequestError) {
+          setAssistantError(error.message);
+
+          if (error.retryAfter) {
+            setAssistantCooldownUntil(
+              Date.now() + error.retryAfter * 1000,
+            );
+          }
+
+          return false;
+        }
+
         setMessages((currentMessages) => [
           ...currentMessages,
           createMessage(
@@ -178,9 +258,10 @@ export default function ChatbotWidget() {
         return true;
       } finally {
         setIsAssistantThinking(false);
+        assistantRequestInFlightRef.current = false;
       }
     },
-    [createMessage, isAssistantThinking, messages],
+    [assistantCooldownUntil, createMessage, isAssistantThinking, messages],
   );
 
   const handleQuickAction = useCallback(
@@ -325,6 +406,7 @@ export default function ChatbotWidget() {
   const handleBackToHelp = useCallback(() => {
     setMode("assistant");
     setShowQuickActions(true);
+    setAssistantError(null);
   }, []);
 
   const handleStaffSend = useCallback(
@@ -502,6 +584,8 @@ export default function ChatbotWidget() {
           }}
           onSend={handleSend}
           isAssistantThinking={isAssistantThinking}
+          assistantError={assistantError}
+          assistantCooldownSeconds={assistantCooldownSeconds}
           staffError={staffError}
           staffLoading={staffLoading}
           contactInquiry={contactInquiry}

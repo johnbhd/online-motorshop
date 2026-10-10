@@ -628,6 +628,11 @@
   background: #fff7ed;
 }
 
+.ald-chatbot__quick-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .ald-chatbot__quick-action--branches {
   grid-column: 1 / -1;
 }
@@ -656,6 +661,20 @@
 .ald-chatbot__composer-menu:hover {
   background: #e2e8f0;
   color: #16234a;
+}
+
+.ald-chatbot__composer-menu:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ald-chatbot__assistant-error {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.35rem 1rem 0.55rem;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .ald-chatbot__input {

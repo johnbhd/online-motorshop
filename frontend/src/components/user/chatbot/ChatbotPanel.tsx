@@ -32,6 +32,8 @@ export type ChatbotPanelProps = {
   onToggleQuickActions: () => void;
   onSend: (message: string) => boolean | Promise<boolean>;
   isAssistantThinking?: boolean;
+  assistantError?: string | null;
+  assistantCooldownSeconds?: number;
   staffError?: string | null;
   staffLoading?: boolean;
   contactInquiry?: ContactInquiryDraft | null;
@@ -56,6 +58,8 @@ export default function ChatbotPanel({
   onToggleQuickActions,
   onSend,
   isAssistantThinking = false,
+  assistantError,
+  assistantCooldownSeconds = 0,
   staffError,
   staffLoading = false,
   contactInquiry,
@@ -142,9 +146,21 @@ export default function ChatbotPanel({
             {staffError}
           </p>
         )}
+        {!isStaffMode && assistantError && (
+          <p className="ald-chatbot__assistant-error" role="alert">
+            {assistantError}
+            {assistantCooldownSeconds > 0 && (
+              <span> Try again in {assistantCooldownSeconds}s.</span>
+            )}
+          </p>
+        )}
 
         {!isStaffMode && showQuickActions && (
-          <ChatbotQuickActions actions={quickActions} onSelect={onQuickAction} />
+          <ChatbotQuickActions
+            actions={quickActions}
+            disabled={isAssistantThinking || assistantCooldownSeconds > 0}
+            onSelect={onQuickAction}
+          />
         )}
       </div>
 
@@ -168,6 +184,7 @@ export default function ChatbotPanel({
         inputRef={composerInputRef}
         isStaffMode={isStaffMode}
         showQuickActions={showQuickActions}
+        cooldownSeconds={assistantCooldownSeconds}
         isSending={
           isStaffMode ? staffLoading || inquirySending : isAssistantThinking
         }

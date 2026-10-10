@@ -54,7 +54,6 @@ Route::get('/health', function () {
 
 // Dedicated customer-facing AI assistant. It is intentionally separate from conversations/messages.
 Route::post('/assistant/chat', [AssistantController::class, 'chat'])
-    ->middleware('throttle:20,1')
     ->name('assistant.chat');
 
 // Public catalog

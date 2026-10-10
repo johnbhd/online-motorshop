@@ -14,6 +14,7 @@ export type ChatbotComposerProps = {
   isStaffMode: boolean;
   showQuickActions: boolean;
   isSending?: boolean;
+  cooldownSeconds?: number;
   onSend: (message: string) => boolean | Promise<boolean>;
   onToggleQuickActions: () => void;
 };
@@ -23,6 +24,7 @@ export default function ChatbotComposer({
   isStaffMode,
   showQuickActions,
   isSending = false,
+  cooldownSeconds = 0,
   onSend,
   onToggleQuickActions,
 }: ChatbotComposerProps) {
@@ -34,7 +36,7 @@ export default function ChatbotComposer({
 
     const normalizedMessage = message.trim();
 
-    if (!normalizedMessage) {
+    if (!normalizedMessage || isSending || cooldownSeconds > 0) {
       return;
     }
 
@@ -60,6 +62,7 @@ export default function ChatbotComposer({
               ? "Hide chatbot quick actions"
               : "Show chatbot quick actions"
           }
+          disabled={isSending || cooldownSeconds > 0}
           onClick={onToggleQuickActions}
         >
           <FontAwesomeIcon
@@ -82,7 +85,7 @@ export default function ChatbotComposer({
           isStaffMode ? "Message ALD Staff..." : "Type your message..."
         }
         autoComplete="off"
-        disabled={isSending}
+        disabled={isStaffMode && isSending}
         onChange={(event) => {
           setMessage(event.target.value);
         }}
@@ -91,7 +94,7 @@ export default function ChatbotComposer({
         className="ald-chatbot__send"
         type="submit"
         aria-label="Send message"
-        disabled={!hasMessage || isSending}
+        disabled={!hasMessage || isSending || cooldownSeconds > 0}
       >
         <FontAwesomeIcon icon={faPaperPlane} aria-hidden="true" />
       </button>

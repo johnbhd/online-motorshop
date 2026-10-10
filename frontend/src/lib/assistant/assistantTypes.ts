@@ -20,3 +20,12 @@ export type AssistantChatRequest = {
 export type AssistantChatResponse = {
   message: string;
 };
+
+export type AssistantErrorCode =
+  | "assistant_unavailable"
+  | "assistant_busy"
+  | "assistant_rate_limited"
+  | "assistant_burst_limited"
+  | "duplicate_message"
+  | "assistant_invalid_request"
+  | "assistant_timeout";
