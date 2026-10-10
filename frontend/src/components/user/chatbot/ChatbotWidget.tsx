@@ -23,7 +23,6 @@ import {
   chatbotQuickActions,
   chatbotWelcomeMessage,
 } from "./chatbotData";
-import { resolveChatbotResponse } from "./chatbotUtils";
 import type {
   ChatMessage,
   ChatQuickAction,
@@ -32,6 +31,8 @@ import type {
   ProductInquiryDraft,
 } from "./chatbotTypes";
 import type { ContactInquiryMetadata } from "@/lib/messages/conversationTypes";
+import { sendAssistantMessage } from "@/lib/assistant/assistantApi";
+import type { AssistantHistoryItem } from "@/lib/assistant/assistantTypes";
 
 const initialMessages: ChatMessage[] = [
   {
@@ -56,6 +57,16 @@ function toChatMessages(conversation: Conversation): ChatMessage[] {
   });
 }
 
+function toAssistantHistory(messages: ChatMessage[]): AssistantHistoryItem[] {
+  return messages
+    .filter((message) => message.id !== "welcome")
+    .slice(-10)
+    .map((message) => ({
+      role: message.sender === "customer" ? "user" : "assistant",
+      content: message.text,
+    }));
+}
+
 function toInquiryMetadata(
   inquiry: ContactInquiryDraft,
 ): ContactInquiryMetadata {
@@ -72,13 +83,7 @@ function toInquiryMetadata(
   };
 }
 
-export type ChatbotWidgetProps = {
-  staffOnly?: boolean;
-};
-
-export default function ChatbotWidget({
-  staffOnly = false,
-}: ChatbotWidgetProps) {
+export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
@@ -99,7 +104,6 @@ export default function ChatbotWidget({
   const messageListRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
-  const assistantResponseTimeoutRef = useRef<number | null>(null);
   const inquirySentCallbackRef = useRef<(() => void) | null>(null);
 
   const createMessage = useCallback(
@@ -125,7 +129,7 @@ export default function ChatbotWidget({
   }, []);
 
   const handleSendAssistant = useCallback(
-    (message: string) => {
+    async (message: string) => {
       if (isAssistantThinking) {
         return false;
       }
@@ -136,25 +140,38 @@ export default function ChatbotWidget({
       setShowQuickActions(false);
 
       setIsAssistantThinking(true);
-      assistantResponseTimeoutRef.current = window.setTimeout(() => {
-        const botMessage = createMessage(
-          "bot",
-          resolveChatbotResponse(message).text,
-        );
+      try {
+        const response = await sendAssistantMessage({
+          message,
+          history: toAssistantHistory(messages),
+        });
 
-        setMessages((currentMessages) => [...currentMessages, botMessage]);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          createMessage("bot", response),
+        ]);
+        return true;
+      } catch (error) {
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          createMessage(
+            "bot",
+            error instanceof Error
+              ? error.message
+              : "I’m having trouble connecting right now. Please try again.",
+          ),
+        ]);
+        return true;
+      } finally {
         setIsAssistantThinking(false);
-        assistantResponseTimeoutRef.current = null;
-      }, 1000);
-
-      return true;
+      }
     },
-    [createMessage, isAssistantThinking],
+    [createMessage, isAssistantThinking, messages],
   );
 
   const handleQuickAction = useCallback(
     (action: ChatQuickAction) => {
-      handleSendAssistant(action.query);
+      void handleSendAssistant(action.query);
     },
     [handleSendAssistant],
   );
@@ -292,14 +309,9 @@ export default function ChatbotWidget({
   }, [openStaffChat]);
 
   const handleBackToHelp = useCallback(() => {
-    if (staffOnly) {
-      closeChatbot();
-      return;
-    }
-
     setMode("assistant");
     setShowQuickActions(true);
-  }, [closeChatbot, staffOnly]);
+  }, []);
 
   const handleStaffSend = useCallback(
     async (message: string) => {
@@ -372,14 +384,6 @@ export default function ChatbotWidget({
    * inquiry state in this widget means canceling never creates a message or
    * uploads the selected file.
    */
-
-  useEffect(() => {
-    return () => {
-      if (assistantResponseTimeoutRef.current !== null) {
-        window.clearTimeout(assistantResponseTimeoutRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (!isOpen || mode !== "staff") {
@@ -467,7 +471,7 @@ export default function ChatbotWidget({
 
   return (
     <div className="ald-chatbot">
-      {isOpen && (!staffOnly || mode === "staff") && (
+      {isOpen && (
         <ChatbotPanel
           messages={visibleMessages}
           messageListRef={messageListRef}
@@ -494,24 +498,22 @@ export default function ChatbotWidget({
           onCancelProductInquiry={handleCancelProductInquiry}
         />
       )}
-      {!staffOnly && (
-        <ChatbotLauncher
-          ref={launcherRef}
-          isOpen={isOpen}
-          onClick={() => {
-            if (isOpen) {
-              closeChatbot();
-              return;
-            }
+      <ChatbotLauncher
+        ref={launcherRef}
+        isOpen={isOpen}
+        onClick={() => {
+          if (isOpen) {
+            closeChatbot();
+            return;
+          }
 
-            if (mode === "assistant") {
-              setShowQuickActions(true);
-            }
+          if (mode === "assistant") {
+            setShowQuickActions(true);
+          }
 
-            setIsOpen(true);
-          }}
-        />
-      )}
+          setIsOpen(true);
+        }}
+      />
     </div>
   );
 }

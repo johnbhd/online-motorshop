@@ -1,5 +1,3 @@
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-
 export type AssistantRole = "user" | "assistant";
 
 export type AssistantMessage = {
@@ -21,11 +19,4 @@ export type AssistantChatRequest = {
 
 export type AssistantChatResponse = {
   message: string;
-};
-
-export type AssistantSuggestion = {
-  id: string;
-  label: string;
-  prompt: string;
-  icon: IconDefinition;
 };

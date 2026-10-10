@@ -1,8 +1,10 @@
-import { assistantUnavailableMessage } from "./assistantConstants";
 import type {
   AssistantChatRequest,
   AssistantChatResponse,
 } from "./assistantTypes";
+
+const assistantUnavailableMessage =
+  "I'm having trouble connecting right now. Please try again.";
 
 export class AssistantRequestError extends Error {
   readonly status: number;
@@ -40,21 +42,15 @@ export async function sendAssistantMessage(
   request: AssistantChatRequest & { signal?: AbortSignal },
 ): Promise<string> {
   const { signal, ...payload } = request;
-  let response: Response;
-
-  try {
-    response = await fetch("/api/assistant/chat", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      signal,
-    });
-  } catch (error) {
-    throw error;
-  }
+  const response = await fetch("/api/assistant/chat", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    signal,
+  });
 
   let body: unknown = null;
 
