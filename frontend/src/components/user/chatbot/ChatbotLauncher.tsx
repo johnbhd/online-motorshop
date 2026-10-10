@@ -19,7 +19,6 @@ const ChatbotLauncher = forwardRef<HTMLButtonElement, ChatbotLauncherProps>(
         aria-label={isOpen ? "Close ALD Assistant" : "Open ALD Assistant"}
         aria-expanded={isOpen}
         aria-controls="ald-chatbot-panel"
-        hidden={isOpen}
         onClick={onClick}
       >
         <FontAwesomeIcon icon={faCommentDots} aria-hidden="true" />
