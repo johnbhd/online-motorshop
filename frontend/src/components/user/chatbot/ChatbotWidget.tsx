@@ -20,9 +20,11 @@ import {
 } from "./chatbotEvents";
 import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
 import {
+  chatbotResponses,
   chatbotQuickActions,
   chatbotWelcomeMessage,
 } from "./chatbotData";
+import { resolveChatbotResponse } from "./chatbotUtils";
 import type {
   ChatMessage,
   ChatQuickAction,
@@ -140,6 +142,18 @@ export default function ChatbotWidget() {
       setShowQuickActions(false);
 
       setIsAssistantThinking(true);
+
+      const localResponse = resolveChatbotResponse(message);
+
+      if (localResponse.text !== chatbotResponses.fallback) {
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          createMessage("bot", localResponse.text),
+        ]);
+        setIsAssistantThinking(false);
+        return true;
+      }
+
       try {
         const response = await sendAssistantMessage({
           message,

@@ -24,9 +24,15 @@ class AssistantController extends Controller
                 $validated['history'] ?? [],
             );
         } catch (AssistantUnavailableException $exception) {
+            $status = $exception->reason === 'provider_rate_limited'
+                ? 429
+                : 503;
+
             return response()->json([
                 'message' => $exception->publicMessage,
-            ], 503);
+            ], $status, $status === 429 ? [
+                'Retry-After' => '30',
+            ] : []);
         }
 
         return response()->json([

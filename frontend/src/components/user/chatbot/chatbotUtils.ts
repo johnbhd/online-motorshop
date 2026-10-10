@@ -4,8 +4,7 @@ import {
 } from "./chatbotData";
 import type { ChatbotResponse } from "./chatbotTypes";
 
-// TEMPORARY FRONTEND CHATBOT DEMO.
-// Replace deterministic responses with the real messaging/chatbot backend later.
+// Keep common ALD topics instant; unknown questions use the Laravel assistant.
 export function resolveChatbotResponse(message: string): ChatbotResponse {
   const normalizedMessage = message.trim().toLowerCase();
 

@@ -96,19 +96,27 @@ class AssistantChatApiTest extends TestCase
 
     public function test_provider_failures_are_normalized_without_exposing_provider_data(): void
     {
-        foreach ([401, 403, 429, 500] as $status) {
-            RateLimiter::clear('127.0.0.1');
-            Http::fake([
-                'https://api.groq.test/*' => Http::response(['error' => 'provider secret'], $status),
-            ]);
+        $providerStatus = 401;
 
-            $this->postJson('/api/assistant/chat', [
+        Http::fake(function () use (&$providerStatus) {
+            return Http::response(['error' => 'provider secret'], $providerStatus);
+        });
+
+        foreach ([401, 403, 429, 500] as $status) {
+            $providerStatus = $status;
+            RateLimiter::clear('127.0.0.1');
+
+            $response = $this->postJson('/api/assistant/chat', [
                 'message' => 'Hello',
-            ])->assertStatus(503)
+            ])->assertStatus($status === 429 ? 429 : 503)
                 ->assertExactJson([
                     'message' => 'The ALD Assistant is temporarily unavailable. Please try again shortly.',
                 ])
                 ->assertJsonMissing(['provider secret']);
+
+            if ($status === 429) {
+                $response->assertHeader('Retry-After', '30');
+            }
         }
     }
 
