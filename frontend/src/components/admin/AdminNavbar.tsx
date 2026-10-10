@@ -90,12 +90,7 @@ export default function AdminNavbar({
           </div>
         </div>
         <div ref={ref} className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            className="hidden size-9 place-items-center text-lg text-[#0B1930] hover:text-orange-500 sm:grid"
-            aria-label="Search"
-          >
-            <FontAwesomeIcon icon={faMagnifyingGlass} />
-          </button>
+  
           <div className="relative">
             <button
               onClick={() =>

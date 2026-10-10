@@ -393,15 +393,14 @@ export function Navbar() {
                           />
                           <span>My Orders</span>
                         </Link>
-                        <button
-                          type="button"
+                        <Link
+                          href="/account/notifications"
                           className="site-header-account-menu-link"
                           role="menuitem"
-                          onClick={openNotifications}
                         >
                           <FontAwesomeIcon icon={faBell} aria-hidden="true" />
                           <span>Notifications</span>
-                        </button>
+                        </Link>
                         <Link
                           href="/account/profile"
                           className="site-header-account-menu-link"

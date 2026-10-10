@@ -47,7 +47,6 @@ const adminIcons = {
 } as const;
 
 const links = [
-  ["Notifications", "/admin/notifications", "!"],
   ["Dashboard", "/admin", "▦"],
   ["Orders", "/admin/orders", "▤"],
   ["Payments", "/admin/payments", "▣"],
@@ -60,9 +59,7 @@ const links = [
   ["Reviews", "/admin/reviews", "☆"],
   ["Branches", "/admin/branches", "▧"],
   ["Staff Management", "/admin/staff-management", "♙"],
-  ["Website Content", "/admin/website-content", "▤"],
-  ["Reports", "/admin/reports", "▥"],
-  ["Activity Logs", "#", "◷"],
+  ["Reports", "/admin/reports", "▥"], 
   ["Settings", "/admin/settings", "⚙"],
   ["Profile", "/admin/profile", "◉"],
 ] as const;
