@@ -316,7 +316,17 @@ export default function RealAdminMediaPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1160px] border-collapse text-left">
+          <table className="w-full min-w-[1160px] table-fixed border-collapse text-left">
+            <colgroup>
+              <col className="w-[105px]" />
+              <col className="w-[275px]" />
+              <col className="w-[150px]" />
+              <col className="w-[250px]" />
+              <col className="w-[110px]" />
+              <col className="w-[185px]" />
+              <col className="w-[200px]" />
+              <col className="w-[210px]" />
+            </colgroup>
             <thead className="bg-slate-50">
               <tr>
                 {["Preview", "Asset", "Purpose", "Linked record", "Status", "Uploaded by", "Uploaded at", "Actions"].map((heading) => (
@@ -345,10 +355,10 @@ export default function RealAdminMediaPage() {
                         <img src={asset.secure_url} alt="" className="size-14 object-cover" />
                       </button>
                     </td>
-                    <td className="max-w-[240px] px-5 py-4">
-                      <button type="button" onClick={() => void openDetails(asset)} className="text-left">
+                    <td className="max-w-[275px] px-5 py-4">
+                      <button type="button" onClick={() => void openDetails(asset)} className="block w-full min-w-0 max-w-full text-left">
                         <span className="block truncate font-semibold text-[#0B1930] hover:text-orange-600">{asset.original_filename ?? "Unnamed asset"}</span>
-                        <span className="mt-1 block truncate text-xs text-slate-500">{asset.cloudinary_public_id ?? "No public ID"}</span>
+                        <span className="mt-1 block max-w-full truncate text-xs text-slate-500" title={asset.cloudinary_public_id ?? "No public ID"}>{asset.cloudinary_public_id ?? "No public ID"}</span>
                       </button>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-600">{asset.purpose_label || label(asset.purpose)}</td>
