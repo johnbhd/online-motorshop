@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerNotificationController;
@@ -50,6 +51,11 @@ Route::get('/health', function () {
         'message' => 'Ilabas mo!!!',
     ]);
 });
+
+// Dedicated customer-facing AI assistant. It is intentionally separate from conversations/messages.
+Route::post('/assistant/chat', [AssistantController::class, 'chat'])
+    ->middleware('throttle:20,1')
+    ->name('assistant.chat');
 
 // Public catalog
 Route::get('/products', [CatalogController::class, 'products'])
