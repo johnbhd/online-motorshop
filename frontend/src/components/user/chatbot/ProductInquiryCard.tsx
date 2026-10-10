@@ -48,7 +48,7 @@ export default function ProductInquiryCard({
         </p>
         <p className="ald-chatbot__product-inquiry-meta">
           {product.partNumber || "Product code unavailable"}
-          {product.brand ? ` · ${product.brand}` : ""}
+          {product.brand ? ` | ${product.brand}` : ""}
         </p>
         <p className="ald-chatbot__product-inquiry-price">{priceLabel}</p>
       </div>

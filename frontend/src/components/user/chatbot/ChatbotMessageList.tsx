@@ -5,6 +5,7 @@ import { forwardRef } from "react";
 import type { ChatMessage } from "./chatbotTypes";
 import ProductInquiryCard from "./ProductInquiryCard";
 import type { ProductInquiryMetadata } from "@/lib/messages/conversationTypes";
+import { getDisplayConversationMessageBody } from "@/lib/messages/conversationUtils";
 
 export type ChatbotMessageListProps = {
   messages: ChatMessage[];
@@ -88,7 +89,12 @@ const ChatbotMessageList = forwardRef<
                   )}
                 </>
               )}
-              <span className="ald-chatbot__message-text">{message.text}</span>
+              <span className="ald-chatbot__message-text">
+                {getDisplayConversationMessageBody(
+                  message.messageType ?? "text",
+                  message.text,
+                )}
+              </span>
               {message.attachmentUrl && (
                 <a
                   className="ald-chatbot__message-attachment"

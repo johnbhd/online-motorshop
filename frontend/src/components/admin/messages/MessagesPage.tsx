@@ -15,7 +15,10 @@ import type {
   AdminConversationSummary,
   Conversation,
   ConversationMessage,
+  ProductInquiryMetadata,
 } from "@/lib/messages/conversationTypes";
+import ProductInquiryCard from "@/components/user/chatbot/ProductInquiryCard";
+import { getDisplayConversationMessageBody } from "@/lib/messages/conversationUtils";
 
 const PAGE_SIZE = 20;
 
@@ -459,6 +462,11 @@ export default function AdminMessages() {
                   {activeConversation.messages.length > 0 ? (
                     activeConversation.messages.map((message) => {
                       const isAdminMessage = message.sender === "admin";
+                      const productMetadata =
+                        message.message_type === "product_inquiry" &&
+                        message.metadata
+                          ? (message.metadata as ProductInquiryMetadata)
+                          : null;
 
                       return (
                         <div
@@ -471,12 +479,35 @@ export default function AdminMessages() {
                             <p className="mb-1 text-[11px] font-semibold text-slate-500">
                               {senderLabel(message, activeConversation)}
                             </p>
-                            <p className="whitespace-pre-wrap break-words">{message.body}</p>
                             {message.message_type === "contact_inquiry" && (
-                              <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
                                 Contact inquiry
                               </p>
                             )}
+                            {message.message_type === "product_inquiry" && (
+                              <>
+                                <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                  Product inquiry
+                                </p>
+                                {productMetadata && (
+                                  <ProductInquiryCard
+                                    product={{
+                                      name: productMetadata.product_name,
+                                      partNumber: productMetadata.part_number,
+                                      price: productMetadata.product_price,
+                                      image: productMetadata.product_image_url,
+                                      brand: productMetadata.brand,
+                                    }}
+                                  />
+                                )}
+                              </>
+                            )}
+                            <p className="whitespace-pre-wrap break-words">
+                              {getDisplayConversationMessageBody(
+                                message.message_type,
+                                message.body,
+                              )}
+                            </p>
                             {message.attachment?.url && (
                               <a
                                 className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-orange-700 underline underline-offset-2"

@@ -14,12 +14,15 @@ import {
 } from "@/lib/messages/conversationApi";
 import type {
   Conversation,
+  ProductInquiryMetadata,
   StaffConversationSummary,
 } from "@/lib/messages/conversationTypes";
 import {
   formatConversationTime,
+  getDisplayConversationMessageBody,
   getLastConversationMessage,
 } from "@/lib/messages/conversationUtils";
+import ProductInquiryCard from "@/components/user/chatbot/ProductInquiryCard";
 
 type ConversationFilter = "all" | "open";
 const PAGE_SIZE = 20;
@@ -400,6 +403,11 @@ export default function MessagesPage() {
                       const isStaffMessage = message.sender === "staff";
                       const isAdminMessage = message.sender === "admin";
                       const isTeamMessage = isStaffMessage || isAdminMessage;
+                      const productMetadata =
+                        message.message_type === "product_inquiry" &&
+                        message.metadata
+                          ? (message.metadata as ProductInquiryMetadata)
+                          : null;
 
                       return (
                         <div
@@ -431,7 +439,30 @@ export default function MessagesPage() {
                                 Contact inquiry
                               </p>
                             )}
-                            <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                            {message.message_type === "product_inquiry" && (
+                              <>
+                                <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                  Product inquiry
+                                </p>
+                                {productMetadata && (
+                                  <ProductInquiryCard
+                                    product={{
+                                      name: productMetadata.product_name,
+                                      partNumber: productMetadata.part_number,
+                                      price: productMetadata.product_price,
+                                      image: productMetadata.product_image_url,
+                                      brand: productMetadata.brand,
+                                    }}
+                                  />
+                                )}
+                              </>
+                            )}
+                            <p className="whitespace-pre-wrap break-words">
+                              {getDisplayConversationMessageBody(
+                                message.message_type,
+                                message.body,
+                              )}
+                            </p>
                             {message.attachment?.url && (
                               <a
                                 className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-orange-700 underline underline-offset-2"

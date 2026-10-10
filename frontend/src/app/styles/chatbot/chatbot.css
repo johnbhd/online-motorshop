@@ -290,6 +290,7 @@
 .ald-chatbot__message-type {
   display: inline-flex;
   margin-bottom: 0.35rem;
+  padding: 0.15rem 0.4rem;
   border-radius: 999px;
   background: rgba(224, 122, 8, 0.12);
   color: var(--ald-orange-dark);
@@ -297,6 +298,11 @@
   font-weight: 800;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+
+.ald-chatbot__message--customer .ald-chatbot__message-type {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .ald-chatbot__message-attachment {
