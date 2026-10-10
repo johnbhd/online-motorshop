@@ -13,6 +13,7 @@ class ConversationService
     public function __construct(
         private readonly CustomerNotificationService $customerNotificationService,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
+        private readonly MediaAssetService $mediaAssetService,
     ) {}
 
     public function findCurrent(?User $user, ?string $guestToken): ?Conversation
@@ -88,6 +89,7 @@ class ConversationService
             $messageType,
             $metadata,
             $attachment,
+            $user,
         );
         $this->staffAdminNotificationService->customerMessageReceived($message);
 
@@ -99,7 +101,16 @@ class ConversationService
         User $staff,
         string $body,
     ): Message {
-        $message = $this->appendMessage($conversation, 'staff', $body, $staff->id);
+        $message = $this->appendMessage(
+            $conversation,
+            'staff',
+            $body,
+            $staff->id,
+            'text',
+            null,
+            null,
+            $staff,
+        );
         $this->customerNotificationService->supportMessageReceived($message);
 
         return $message;
@@ -110,7 +121,16 @@ class ConversationService
         User $admin,
         string $body,
     ): Message {
-        $message = $this->appendMessage($conversation, 'admin', $body, $admin->id);
+        $message = $this->appendMessage(
+            $conversation,
+            'admin',
+            $body,
+            $admin->id,
+            'text',
+            null,
+            null,
+            $admin,
+        );
         $this->customerNotificationService->supportMessageReceived($message);
 
         return $message;
@@ -144,6 +164,7 @@ class ConversationService
         string $messageType = 'text',
         ?array $metadata = null,
         ?array $attachment = null,
+        ?User $actor = null,
     ): Message {
         return DB::transaction(function () use (
             $conversation,
@@ -153,6 +174,7 @@ class ConversationService
             $messageType,
             $metadata,
             $attachment,
+            $actor,
         ): Message {
             $lockedConversation = Conversation::query()
                 ->lockForUpdate()
@@ -169,6 +191,18 @@ class ConversationService
                 'attachment_url' => $attachment['secure_url'] ?? null,
                 'attachment_public_id' => $attachment['public_id'] ?? null,
             ]);
+
+            if ($attachment) {
+                $this->mediaAssetService->registerUploadedAsset(
+                    $attachment,
+                    $messageType === 'contact_inquiry'
+                        ? 'contact_inquiry_attachment'
+                        : 'message_attachment',
+                    'message',
+                    (int) $message->id,
+                    $actor,
+                );
+            }
 
             $lockedConversation->forceFill([
                 'last_message_at' => $message->created_at,

@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use App\Models\AdminArchive;
-use App\Models\Brand;
 use App\Models\Branch;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\MediaAsset;
 use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Models\Product;
@@ -14,13 +15,14 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class AdminArchiveService
 {
-    public function __construct(private readonly CloudinaryService $cloudinaryService) {}
+    public function __construct(
+        private readonly MediaAssetService $mediaAssetService,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $filters
@@ -112,7 +114,7 @@ class AdminArchiveService
     }
 
     /** @return array<string, mixed> */
-    public function permanentlyDelete(string $type, int $recordId): array
+    public function permanentlyDelete(string $type, int $recordId, ?User $actor = null): array
     {
         $this->definition($type);
         $archive = $this->archiveRecord($type, $recordId);
@@ -120,19 +122,45 @@ class AdminArchiveService
 
         $this->assertPermanentlyDeletable($type, $record);
 
+        $linkedType = match ($type) {
+            'product' => 'product',
+            'payment' => 'payment',
+            default => null,
+        };
         $cloudinaryPublicId = match ($type) {
             'product' => $record->img_public_id,
             'payment' => $record->proof_image_public_id,
             default => null,
         };
+        $secureUrl = match ($type) {
+            'product' => $record->img_url,
+            'payment' => $record->proof_image_url,
+            default => null,
+        };
+        $hadMediaAssets = $linkedType !== null
+            && MediaAsset::query()
+                ->where('linked_type', $linkedType)
+                ->where('linked_id', $record->getKey())
+                ->where('status', '!=', MediaAsset::STATUS_DELETED)
+                ->exists();
 
         DB::transaction(function () use ($archive, $record): void {
             $record->delete();
             $archive->delete();
         });
 
-        if ($cloudinaryPublicId) {
-            $this->cloudinaryService->deleteImage($cloudinaryPublicId);
+        if ($linkedType !== null) {
+            $this->mediaAssetService->cleanupOwnerAssets($linkedType, (int) $recordId, $actor);
+
+            if (! $hadMediaAssets && $cloudinaryPublicId) {
+                $this->mediaAssetService->cleanupLinkedAsset(
+                    $linkedType,
+                    (int) $recordId,
+                    $cloudinaryPublicId,
+                    $secureUrl,
+                    $actor,
+                );
+            }
         }
 
         return [

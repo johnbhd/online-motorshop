@@ -1,12 +1,13 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminBranchesController;
 use App\Http\Controllers\Admin\AdminArchiveController;
+use App\Http\Controllers\Admin\AdminBranchesController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminCustomersController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDeliveryRequestsController;
+use App\Http\Controllers\Admin\AdminMediaController;
 use App\Http\Controllers\Admin\AdminMessagesController;
 use App\Http\Controllers\Admin\AdminOrdersController;
 use App\Http\Controllers\Admin\AdminPaymentsController;
@@ -180,6 +181,21 @@ Route::prefix('admin')
 
         Route::delete('/archive/{type}/{record}', [AdminArchiveController::class, 'destroy'])
             ->name('archive.destroy');
+
+        Route::get('/media', [AdminMediaController::class, 'index'])
+            ->name('media.index');
+
+        Route::get('/media/{mediaAsset}', [AdminMediaController::class, 'show'])
+            ->whereNumber('mediaAsset')
+            ->name('media.show');
+
+        Route::delete('/media/{mediaAsset}', [AdminMediaController::class, 'destroy'])
+            ->whereNumber('mediaAsset')
+            ->name('media.destroy');
+
+        Route::post('/media/{mediaAsset}/retry-cleanup', [AdminMediaController::class, 'retryCleanup'])
+            ->whereNumber('mediaAsset')
+            ->name('media.retry-cleanup');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');

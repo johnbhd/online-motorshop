@@ -10,6 +10,7 @@ use App\Services\AdminProductPresenter;
 use App\Services\AdminProductService;
 use App\Services\CloudinaryServiceException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AdminProductController extends Controller
 {
@@ -44,7 +45,7 @@ class AdminProductController extends Controller
     public function store(StoreAdminProductRequest $request): JsonResponse
     {
         try {
-            $product = $this->service->create($request->validated());
+            $product = $this->service->create($request->validated(), $request->user());
         } catch (CloudinaryServiceException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
@@ -66,7 +67,7 @@ class AdminProductController extends Controller
         }
 
         try {
-            $product = $this->service->update($product, $request->validated());
+            $product = $this->service->update($product, $request->validated(), $request->user());
         } catch (CloudinaryServiceException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
@@ -79,7 +80,7 @@ class AdminProductController extends Controller
         ]);
     }
 
-    public function destroy(string $partNumber): JsonResponse
+    public function destroy(Request $request, string $partNumber): JsonResponse
     {
         $product = $this->service->findByPartNumber($partNumber);
 
@@ -87,7 +88,7 @@ class AdminProductController extends Controller
             return response()->json(['message' => 'Product not found.'], 404);
         }
 
-        if (! $this->service->delete($product)) {
+        if (! $this->service->delete($product, $request->user())) {
             return response()->json([
                 'message' => 'Product cannot be deleted because it is referenced by an existing order.',
             ], 409);

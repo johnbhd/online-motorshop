@@ -8,11 +8,13 @@ use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Services\CloudinaryService;
 use App\Services\CloudinaryServiceException;
+use App\Services\MediaAssetService;
 use App\Services\OrderRequestPresenter;
 use App\Services\StaffAdminNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -28,6 +30,7 @@ class CustomerOrderController extends Controller
         private readonly OrderRequestPresenter $orderRequestPresenter,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
         private readonly CloudinaryService $cloudinaryService,
+        private readonly MediaAssetService $mediaAssetService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -207,13 +210,23 @@ class CustomerOrderController extends Controller
         }
 
         try {
-            $payment->update([
-                'proof_image_url' => $asset['secure_url'],
-                'proof_image_public_id' => $asset['public_id'],
-                'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
-                'verified_by' => null,
-                'verified_at' => null,
-            ]);
+            DB::transaction(function () use ($payment, $asset, $request): void {
+                $payment->update([
+                    'proof_image_url' => $asset['secure_url'],
+                    'proof_image_public_id' => $asset['public_id'],
+                    'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
+                    'verified_by' => null,
+                    'verified_at' => null,
+                ]);
+
+                $this->mediaAssetService->registerUploadedAsset(
+                    $asset,
+                    'payment_proof',
+                    'payment',
+                    (int) $payment->id,
+                    $request->user(),
+                );
+            });
         } catch (\Throwable $exception) {
             $this->cloudinaryService->deleteImage($asset['public_id']);
             throw $exception;

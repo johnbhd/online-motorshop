@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\MediaAsset;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\CloudinaryService;
@@ -134,6 +135,13 @@ class ConversationsApiTest extends TestCase
             'id' => $messageId,
             'message_type' => 'contact_inquiry',
             'attachment_public_id' => 'ald-motorshop/contact-inquiries/fake-1',
+        ]);
+        $this->assertDatabaseHas('media_assets', [
+            'purpose' => MediaAsset::PURPOSE_CONTACT_INQUIRY_ATTACHMENT,
+            'linked_type' => 'message',
+            'linked_id' => $messageId,
+            'cloudinary_public_id' => 'ald-motorshop/contact-inquiries/fake-1',
+            'status' => MediaAsset::STATUS_ACTIVE,
         ]);
     }
 

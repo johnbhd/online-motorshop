@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class AdminProductService
@@ -16,6 +18,7 @@ class AdminProductService
         private readonly AdminProductPresenter $presenter,
         private readonly CloudinaryService $cloudinaryService,
         private readonly AdminArchiveService $archiveService,
+        private readonly MediaAssetService $mediaAssetService,
     ) {}
 
     /** @param array<string, mixed> $filters */
@@ -53,7 +56,7 @@ class AdminProductService
     }
 
     /** @param array<string, mixed> $attributes */
-    public function create(array $attributes): Product
+    public function create(array $attributes, ?User $actor = null): Product
     {
         $attributes = $this->withLegacyBrandName($attributes);
         $asset = null;
@@ -70,10 +73,24 @@ class AdminProductService
         unset($attributes['image']);
 
         try {
-            return Product::query()->create($attributes)->load([
-                'category:id,name,status',
-                'brandRecord:id,name,status',
-            ]);
+            return DB::transaction(function () use ($attributes, $asset, $actor): Product {
+                $product = Product::query()->create($attributes);
+
+                if ($asset) {
+                    $this->mediaAssetService->registerUploadedAsset(
+                        $asset,
+                        'product_image',
+                        'product',
+                        (int) $product->id,
+                        $actor,
+                    );
+                }
+
+                return $product->load([
+                    'category:id,name,status',
+                    'brandRecord:id,name,status',
+                ]);
+            });
         } catch (Throwable $exception) {
             if ($asset) {
                 $this->cloudinaryService->deleteImage($asset['public_id']);
@@ -84,11 +101,12 @@ class AdminProductService
     }
 
     /** @param array<string, mixed> $attributes */
-    public function update(Product $product, array $attributes): Product
+    public function update(Product $product, array $attributes, ?User $actor = null): Product
     {
         $attributes = $this->withLegacyBrandName($attributes);
         $asset = null;
         $previousPublicId = $product->img_public_id;
+        $previousUrl = $product->img_url;
 
         if (($attributes['image'] ?? null) instanceof UploadedFile) {
             $asset = $this->cloudinaryService->uploadImage(
@@ -102,8 +120,22 @@ class AdminProductService
         unset($attributes['image']);
 
         try {
-            $product->fill($attributes);
-            $product->save();
+            $product = DB::transaction(function () use ($product, $attributes, $asset, $actor): Product {
+                $product->fill($attributes);
+                $product->save();
+
+                if ($asset) {
+                    $this->mediaAssetService->registerUploadedAsset(
+                        $asset,
+                        'product_image',
+                        'product',
+                        (int) $product->id,
+                        $actor,
+                    );
+                }
+
+                return $product;
+            });
         } catch (Throwable $exception) {
             if ($asset) {
                 $this->cloudinaryService->deleteImage($asset['public_id']);
@@ -113,7 +145,13 @@ class AdminProductService
         }
 
         if ($asset && $previousPublicId && $previousPublicId !== $asset['public_id']) {
-            $this->cloudinaryService->deleteImage($previousPublicId);
+            $this->mediaAssetService->cleanupLinkedAsset(
+                'product',
+                (int) $product->id,
+                $previousPublicId,
+                $previousUrl,
+                $actor,
+            );
         }
 
         return $product->load([
@@ -122,17 +160,25 @@ class AdminProductService
         ]);
     }
 
-    public function delete(Product $product): bool
+    public function delete(Product $product, ?User $actor = null): bool
     {
         if ($product->orderItems()->exists()) {
             return false;
         }
 
         $publicId = $product->img_public_id;
+        $secureUrl = $product->img_url;
         $deleted = (bool) $product->delete();
 
-        if ($deleted && $publicId) {
-            $this->cloudinaryService->deleteImage($publicId);
+        if ($deleted) {
+            $this->mediaAssetService->cleanupLinkedAsset(
+                'product',
+                (int) $product->id,
+                $publicId,
+                $secureUrl,
+                $actor,
+            );
+            $this->mediaAssetService->cleanupOwnerAssets('product', (int) $product->id, $actor);
         }
 
         return $deleted;

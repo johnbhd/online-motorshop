@@ -36,7 +36,7 @@ class AdminArchiveController extends Controller
     {
         return response()->json([
             'message' => 'Record permanently deleted.',
-            'archive' => $this->service->permanentlyDelete($type, $this->recordId($record)),
+            'archive' => $this->service->permanentlyDelete($type, $this->recordId($record), $this->user()),
         ]);
     }
 

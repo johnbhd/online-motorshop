@@ -15,6 +15,7 @@ import {
   faGaugeHigh,
   faGear,
   faGlobe,
+  faImages,
   faLocationDot,
   faStar,
   faStore,
@@ -42,6 +43,7 @@ const adminIcons = {
   "Website Content": faGlobe,
   Reports: faChartColumn,
   "Activity Logs": faChartColumn,
+  Media: faImages,
   Settings: faGear,
   Profile: faUser,
   Notifications: faBell,
@@ -63,6 +65,7 @@ const links = [
   ["Staff Management", "/admin/staff-management", "♙"],
   ["Reports", "/admin/reports", "▥"],
   ["Archive", "/admin/archive", "▰"],
+  ["Media", "/admin/media", "▰"],
   ["Settings", "/admin/settings", "⚙"],
   ["Profile", "/admin/profile", "◉"],
 ] as const;

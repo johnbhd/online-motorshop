@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\MediaAsset;
 use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Models\User;
@@ -50,6 +51,13 @@ class CustomerPaymentProofApiTest extends TestCase
             'ald-motorshop/payment-proofs/'.$order->order_reference.'/fake-1',
             $payment->proof_image_public_id,
         );
+        $this->assertDatabaseHas('media_assets', [
+            'purpose' => MediaAsset::PURPOSE_PAYMENT_PROOF,
+            'linked_type' => 'payment',
+            'linked_id' => $payment->id,
+            'cloudinary_public_id' => $payment->proof_image_public_id,
+            'status' => MediaAsset::STATUS_ACTIVE,
+        ]);
     }
 
     public function test_pending_online_order_cannot_accept_payment_proof(): void
