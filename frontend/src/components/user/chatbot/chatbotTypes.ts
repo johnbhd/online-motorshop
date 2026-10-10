@@ -1,5 +1,8 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import type { ContactInquiryMetadata } from "@/lib/messages/conversationTypes";
+import type {
+  ContactInquiryMetadata,
+  ProductInquiryMetadata,
+} from "@/lib/messages/conversationTypes";
 
 export type ChatSender = "bot" | "customer" | "staff" | "admin";
 
@@ -8,8 +11,8 @@ export type ChatMessage = {
   sender: ChatSender;
   text: string;
   createdAt: string;
-  messageType?: "text" | "contact_inquiry";
-  metadata?: ContactInquiryMetadata | null;
+  messageType?: "text" | "contact_inquiry" | "product_inquiry";
+  metadata?: ContactInquiryMetadata | ProductInquiryMetadata | null;
   attachmentUrl?: string | null;
 };
 
@@ -24,6 +27,15 @@ export type ContactInquiryDraft = {
   orderReference: string;
   message: string;
   photo: File | null;
+};
+
+export type ProductInquiryDraft = {
+  productId: number;
+  name: string;
+  partNumber: string;
+  price: number;
+  image: string;
+  brand: string;
 };
 
 export type ChatQuickAction = {

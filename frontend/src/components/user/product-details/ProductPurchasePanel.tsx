@@ -3,7 +3,6 @@
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
@@ -15,6 +14,10 @@ import type { ProductDisplayItem } from "@/lib/catalog/catalogTypes";
 import { addProductToCart } from "../cart/cartStorage";
 import { formatCartCurrency } from "../cart/cartData";
 import { useToast } from "@/components/ui/toast/ToastProvider";
+import {
+  OPEN_STAFF_CHAT_EVENT,
+  type OpenStaffChatDetail,
+} from "../chatbot/chatbotEvents";
 
 type ProductPurchasePanelProps = {
   product: ProductDisplayItem;
@@ -59,6 +62,23 @@ export default function ProductPurchasePanel({
 
     setCartMessage(
       "This product could not be added in this browser. Please try again.",
+    );
+  };
+
+  const handleAskAboutProduct = () => {
+    const detail: OpenStaffChatDetail = {
+      productInquiry: {
+        productId: product.databaseId,
+        name: product.name,
+        partNumber: product.partNumber,
+        price: product.price,
+        image: product.image,
+        brand: product.brand,
+      },
+    };
+
+    window.dispatchEvent(
+      new CustomEvent<OpenStaffChatDetail>(OPEN_STAFF_CHAT_EVENT, { detail }),
     );
   };
 
@@ -128,10 +148,14 @@ export default function ProductPurchasePanel({
           <FontAwesomeIcon icon={faCartShopping} aria-hidden="true" />
           Add to Cart
         </button>
-        <Link className="product-details-secondary-button" href="/contact">
+        <button
+          className="product-details-secondary-button"
+          type="button"
+          onClick={handleAskAboutProduct}
+        >
           <FontAwesomeIcon icon={faMessage} aria-hidden="true" />
           Ask About This Product
-        </Link>
+        </button>
       </div>
 
       <p className="product-details-cart-note" id="product-details-cart-note">

@@ -332,6 +332,94 @@
   scrollbar-width: thin;
 }
 
+.ald-chatbot__product-inquiry-preview {
+  flex: 0 0 auto;
+  margin: 0 0.85rem 0.45rem;
+  overflow: hidden;
+  border: 1px solid #fed7aa;
+  border-radius: 0.75rem;
+  background: #fffaf2;
+  color: #16234a;
+}
+
+.ald-chatbot__product-inquiry-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.65rem;
+  color: #16234a;
+}
+
+.ald-chatbot__product-inquiry-preview > .ald-chatbot__product-inquiry-card {
+  border-top: 1px solid #fed7aa;
+  padding: 0.55rem 0.75rem 0.65rem;
+}
+
+.ald-chatbot__message .ald-chatbot__product-inquiry-card {
+  margin: 0.45rem 0 0.55rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 0.55rem;
+  background: #ffffff;
+}
+
+.ald-chatbot__product-inquiry-image-wrap {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #fed7aa;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+}
+
+.ald-chatbot__product-inquiry-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ald-chatbot__product-inquiry-image-fallback {
+  padding: 0.25rem;
+  color: #94a3b8;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.ald-chatbot__product-inquiry-details {
+  min-width: 0;
+}
+
+.ald-chatbot__product-inquiry-name,
+.ald-chatbot__product-inquiry-meta,
+.ald-chatbot__product-inquiry-price {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.ald-chatbot__product-inquiry-name {
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.ald-chatbot__product-inquiry-meta {
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.64rem;
+  line-height: 1.25;
+}
+
+.ald-chatbot__product-inquiry-price {
+  margin-top: 0.2rem;
+  color: var(--ald-orange-dark);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
 .ald-chatbot__inquiry-preview-header {
   display: flex;
   align-items: flex-start;

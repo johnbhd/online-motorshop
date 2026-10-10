@@ -8,10 +8,12 @@ import ChatbotComposer from "./ChatbotComposer";
 import ContactInquiryPreview from "./ContactInquiryPreview";
 import ChatbotMessageList from "./ChatbotMessageList";
 import ChatbotQuickActions from "./ChatbotQuickActions";
+import ProductInquiryPreview from "./ProductInquiryPreview";
 import type {
   ChatMessage,
   ChatQuickAction,
   ContactInquiryDraft,
+  ProductInquiryDraft,
 } from "./chatbotTypes";
 
 export type ChatbotMode = "assistant" | "staff";
@@ -28,14 +30,16 @@ export type ChatbotPanelProps = {
   onQuickAction: (action: ChatQuickAction) => void;
   onRequestStaff: () => void;
   onToggleQuickActions: () => void;
-  onSend: (message: string) => void;
+  onSend: (message: string) => boolean | Promise<boolean>;
   isAssistantThinking?: boolean;
   staffError?: string | null;
   staffLoading?: boolean;
   contactInquiry?: ContactInquiryDraft | null;
+  productInquiry?: ProductInquiryDraft | null;
   inquirySending?: boolean;
   onCancelInquiry: () => void;
   onConfirmInquiry: () => void;
+  onCancelProductInquiry: () => void;
 };
 
 export default function ChatbotPanel({
@@ -55,9 +59,11 @@ export default function ChatbotPanel({
   staffError,
   staffLoading = false,
   contactInquiry,
+  productInquiry,
   inquirySending = false,
   onCancelInquiry,
   onConfirmInquiry,
+  onCancelProductInquiry,
 }: ChatbotPanelProps) {
   const isStaffMode = mode === "staff";
   const contentClassName = [
@@ -151,11 +157,20 @@ export default function ChatbotPanel({
         />
       )}
 
+      {isStaffMode && productInquiry && !contactInquiry && (
+        <ProductInquiryPreview
+          product={productInquiry}
+          onCancel={onCancelProductInquiry}
+        />
+      )}
+
       <ChatbotComposer
         inputRef={composerInputRef}
         isStaffMode={isStaffMode}
         showQuickActions={showQuickActions}
-        isSending={!isStaffMode && isAssistantThinking}
+        isSending={
+          isStaffMode ? staffLoading || inquirySending : isAssistantThinking
+        }
         onSend={onSend}
         onToggleQuickActions={onToggleQuickActions}
       />

@@ -6,6 +6,7 @@ use App\Http\Requests\SendConversationMessageRequest;
 use App\Http\Requests\StartConversationRequest;
 use App\Models\Conversation;
 use App\Models\OrderRequest;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\CloudinaryService;
 use App\Services\CloudinaryServiceException;
@@ -166,7 +167,7 @@ class ConversationController extends Controller
 
     /**
      * @param  array<string, mixed>  $validated
-     * @return array{body: string, message_type: string, metadata: array<string, string>|null, attachment: array{secure_url: string, public_id: string}|null}
+     * @return array{body: string, message_type: string, metadata: array<string, mixed>|null, attachment: array{secure_url: string, public_id: string}|null}
      */
     private function customerMessageAttributes(Request $request, ?User $user, array $validated): array
     {
@@ -176,7 +177,7 @@ class ConversationController extends Controller
         if ($messageType === 'text') {
             if ($metadataJson !== null || $request->hasFile('attachment')) {
                 throw ValidationException::withMessages([
-                    'message_type' => ['Metadata and attachments are only supported for contact inquiries.'],
+                    'message_type' => ['Metadata and attachments are only supported for contact or product inquiries.'],
                 ]);
             }
 
@@ -184,6 +185,42 @@ class ConversationController extends Controller
                 'body' => $validated['body'],
                 'message_type' => 'text',
                 'metadata' => null,
+                'attachment' => null,
+            ];
+        }
+
+        if ($messageType === 'product_inquiry') {
+            if ($metadataJson !== null || $request->hasFile('attachment')) {
+                throw ValidationException::withMessages([
+                    'message_type' => ['Product inquiries use the selected product context and do not accept custom metadata or attachments.'],
+                ]);
+            }
+
+            $product = Product::query()
+                ->with([
+                    'category:id,name',
+                    'brandRecord:id,name',
+                ])
+                ->find($validated['product_id'] ?? null);
+
+            if (! $product) {
+                throw ValidationException::withMessages([
+                    'product_id' => ['The selected product could not be found.'],
+                ]);
+            }
+
+            return [
+                'body' => $validated['body'],
+                'message_type' => 'product_inquiry',
+                'metadata' => [
+                    'product_id' => (int) $product->id,
+                    'part_number' => (string) $product->part_number,
+                    'product_name' => (string) $product->name,
+                    'product_image_url' => $product->img_url,
+                    'product_price' => (string) $product->price,
+                    'brand' => $product->brandRecord?->name ?? $product->brand,
+                    'category' => $product->category?->name,
+                ],
                 'attachment' => null,
             ];
         }

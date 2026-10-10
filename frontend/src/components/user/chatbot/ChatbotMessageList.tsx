@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { forwardRef } from "react";
 import type { ChatMessage } from "./chatbotTypes";
+import ProductInquiryCard from "./ProductInquiryCard";
+import type { ProductInquiryMetadata } from "@/lib/messages/conversationTypes";
 
 export type ChatbotMessageListProps = {
   messages: ChatMessage[];
@@ -35,6 +37,10 @@ const ChatbotMessageList = forwardRef<
         const isAdminMessage = message.sender === "admin";
         const isSupportMessage = isStaffMessage || isAdminMessage;
         const displaySender = isAdminMessage ? "staff" : message.sender;
+        const productMetadata =
+          message.messageType === "product_inquiry" && message.metadata
+            ? (message.metadata as ProductInquiryMetadata)
+            : null;
 
         return (
           <div
@@ -65,6 +71,22 @@ const ChatbotMessageList = forwardRef<
               )}
               {message.messageType === "contact_inquiry" && (
                 <span className="ald-chatbot__message-type">Contact inquiry</span>
+              )}
+              {message.messageType === "product_inquiry" && (
+                <>
+                  <span className="ald-chatbot__message-type">Product inquiry</span>
+                  {productMetadata && (
+                    <ProductInquiryCard
+                      product={{
+                        name: productMetadata.product_name,
+                        partNumber: productMetadata.part_number,
+                        price: productMetadata.product_price,
+                        image: productMetadata.product_image_url,
+                        brand: productMetadata.brand,
+                      }}
+                    />
+                  )}
+                </>
               )}
               <span className="ald-chatbot__message-text">{message.text}</span>
               {message.attachmentUrl && (

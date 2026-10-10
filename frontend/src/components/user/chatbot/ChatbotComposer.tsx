@@ -14,7 +14,7 @@ export type ChatbotComposerProps = {
   isStaffMode: boolean;
   showQuickActions: boolean;
   isSending?: boolean;
-  onSend: (message: string) => void;
+  onSend: (message: string) => boolean | Promise<boolean>;
   onToggleQuickActions: () => void;
 };
 
@@ -29,7 +29,7 @@ export default function ChatbotComposer({
   const [message, setMessage] = useState("");
   const hasMessage = message.trim().length > 0;
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const normalizedMessage = message.trim();
@@ -38,7 +38,13 @@ export default function ChatbotComposer({
       return;
     }
 
-    onSend(normalizedMessage);
+    const didSend = await onSend(normalizedMessage);
+
+    if (!didSend) {
+      inputRef.current?.focus();
+      return;
+    }
+
     setMessage("");
     inputRef.current?.focus();
   };

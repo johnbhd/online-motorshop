@@ -2,7 +2,10 @@ export type ConversationParticipantType = "customer" | "guest";
 
 export type ConversationMessageSender = "customer" | "staff" | "admin";
 
-export type ConversationMessageType = "text" | "contact_inquiry";
+export type ConversationMessageType =
+  | "text"
+  | "contact_inquiry"
+  | "product_inquiry";
 
 export type ContactInquiryMetadata = {
   full_name?: string;
@@ -16,6 +19,20 @@ export type ContactInquiryMetadata = {
   message?: string;
 };
 
+export type ProductInquiryMetadata = {
+  product_id?: number;
+  part_number?: string;
+  product_name?: string;
+  product_image_url?: string | null;
+  product_price?: number | string;
+  brand?: string | null;
+  category?: string | null;
+};
+
+export type ConversationMessageMetadata =
+  | ContactInquiryMetadata
+  | ProductInquiryMetadata;
+
 export type ConversationParticipant = {
   id: number | null;
   name: string;
@@ -28,7 +45,7 @@ export type ConversationMessage = {
   sender_name?: string | null;
   body: string;
   message_type: ConversationMessageType;
-  metadata: ContactInquiryMetadata | null;
+  metadata: ConversationMessageMetadata | null;
   attachment: {
     url: string;
   } | null;

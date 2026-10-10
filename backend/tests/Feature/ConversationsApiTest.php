@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\CloudinaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -151,6 +153,58 @@ class ConversationsApiTest extends TestCase
             'metadata' => $metadata,
         ])->assertUnprocessable()
             ->assertJsonValidationErrors('metadata.order_reference');
+
+        $this->assertDatabaseCount('conversations', 0);
+        $this->assertDatabaseCount('messages', 0);
+    }
+
+    public function test_product_inquiry_persists_server_resolved_product_snapshot(): void
+    {
+        $category = Category::create([
+            'name' => 'Brake System',
+            'description' => null,
+            'status' => 'active',
+        ]);
+        $product = Product::create([
+            'category_id' => $category->id,
+            'name' => 'Honda Front Brake Pad',
+            'part_number' => 'HON-004',
+            'brand' => 'Honda',
+            'description' => 'Front brake pad set.',
+            'price' => '650.00',
+            'img_url' => 'https://cdn.example.test/honda-front-brake-pad.jpg',
+            'availability_status' => 'active',
+            'status' => 'active',
+        ]);
+
+        $response = $this->postJson('/api/conversations', [
+            'body' => 'Is this available in Makati?',
+            'message_type' => 'product_inquiry',
+            'product_id' => $product->id,
+        ])->assertCreated()
+            ->assertJsonPath('conversation.messages.0.message_type', 'product_inquiry')
+            ->assertJsonPath('conversation.messages.0.body', 'Is this available in Makati?')
+            ->assertJsonPath('conversation.messages.0.metadata.product_id', $product->id)
+            ->assertJsonPath('conversation.messages.0.metadata.part_number', 'HON-004')
+            ->assertJsonPath('conversation.messages.0.metadata.product_name', 'Honda Front Brake Pad')
+            ->assertJsonPath('conversation.messages.0.metadata.product_image_url', 'https://cdn.example.test/honda-front-brake-pad.jpg')
+            ->assertJsonPath('conversation.messages.0.metadata.product_price', '650.00')
+            ->assertJsonPath('conversation.messages.0.metadata.category', 'Brake System');
+
+        $this->assertDatabaseHas('messages', [
+            'id' => $response->json('conversation.messages.0.id'),
+            'message_type' => 'product_inquiry',
+        ]);
+    }
+
+    public function test_product_inquiry_requires_an_existing_product(): void
+    {
+        $this->postJson('/api/conversations', [
+            'body' => 'Can I ask about a product?',
+            'message_type' => 'product_inquiry',
+            'product_id' => 999999,
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('product_id');
 
         $this->assertDatabaseCount('conversations', 0);
         $this->assertDatabaseCount('messages', 0);

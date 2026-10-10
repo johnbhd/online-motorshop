@@ -29,6 +29,7 @@ import type {
   ChatQuickAction,
   ChatSender,
   ContactInquiryDraft,
+  ProductInquiryDraft,
 } from "./chatbotTypes";
 import type { ContactInquiryMetadata } from "@/lib/messages/conversationTypes";
 
@@ -83,6 +84,8 @@ export default function ChatbotWidget() {
   const [staffError, setStaffError] = useState<string | null>(null);
   const [contactInquiry, setContactInquiry] =
     useState<ContactInquiryDraft | null>(null);
+  const [productInquiry, setProductInquiry] =
+    useState<ProductInquiryDraft | null>(null);
   const [inquirySending, setInquirySending] = useState(false);
   const { isLoading: isAuthLoading, user } = useAuth();
   const isAuthReady = !isAuthLoading;
@@ -118,7 +121,7 @@ export default function ChatbotWidget() {
   const handleSendAssistant = useCallback(
     (message: string) => {
       if (isAssistantThinking) {
-        return;
+        return false;
       }
 
       const customerMessage = createMessage("customer", message);
@@ -137,6 +140,8 @@ export default function ChatbotWidget() {
         setIsAssistantThinking(false);
         assistantResponseTimeoutRef.current = null;
       }, 1000);
+
+      return true;
     },
     [createMessage, isAssistantThinking],
   );
@@ -182,7 +187,13 @@ export default function ChatbotWidget() {
 
       if (detail?.inquiry) {
         setContactInquiry(detail.inquiry);
+        setProductInquiry(null);
         inquirySentCallbackRef.current = detail.onSent ?? null;
+        setStaffError(null);
+      } else if (detail?.productInquiry) {
+        setProductInquiry(detail.productInquiry);
+        setContactInquiry(null);
+        inquirySentCallbackRef.current = null;
         setStaffError(null);
       }
 
@@ -202,6 +213,11 @@ export default function ChatbotWidget() {
   const handleCancelInquiry = useCallback(() => {
     setContactInquiry(null);
     inquirySentCallbackRef.current = null;
+    setStaffError(null);
+  }, []);
+
+  const handleCancelProductInquiry = useCallback(() => {
+    setProductInquiry(null);
     setStaffError(null);
   }, []);
 
@@ -276,10 +292,21 @@ export default function ChatbotWidget() {
 
   const handleStaffSend = useCallback(
     async (message: string) => {
+      if (!isAuthReady) {
+        return false;
+      }
+
       setStaffLoading(true);
 
       try {
         const guestToken = getGuestConversationToken();
+        const pendingProduct = productInquiry;
+        const options = pendingProduct
+          ? {
+              messageType: "product_inquiry" as const,
+              productId: pendingProduct.productId,
+            }
+          : undefined;
 
         if (staffConversation) {
           setStaffConversation(
@@ -287,10 +314,11 @@ export default function ChatbotWidget() {
               staffConversation.id,
               message,
               guestToken,
+              options,
             ),
           );
         } else {
-          const response = await startConversation(message, guestToken);
+          const response = await startConversation(message, guestToken, options);
 
           if (response.guest_token) {
             setGuestConversationToken(response.guest_token);
@@ -300,15 +328,20 @@ export default function ChatbotWidget() {
         }
 
         setStaffError(null);
+        if (pendingProduct) {
+          setProductInquiry(null);
+        }
+        return true;
       } catch (error) {
         setStaffError(
           error instanceof Error ? error.message : "Unable to send your message.",
         );
+        return false;
       } finally {
         setStaffLoading(false);
       }
     },
-    [staffConversation],
+    [isAuthReady, productInquiry, staffConversation],
   );
 
   useEffect(() => {
@@ -316,6 +349,7 @@ export default function ChatbotWidget() {
       setStaffConversation(null);
       setStaffError(null);
       setContactInquiry(null);
+      setProductInquiry(null);
       inquirySentCallbackRef.current = null;
     }, 0);
 
@@ -394,7 +428,7 @@ export default function ChatbotWidget() {
       window.cancelAnimationFrame(focusFrame);
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [closeChatbot, isOpen]);
+  }, [closeChatbot, isOpen, mode, staffLoading]);
 
   const visibleMessages =
     mode === "staff" && staffConversation
@@ -442,9 +476,11 @@ export default function ChatbotWidget() {
           staffError={staffError}
           staffLoading={staffLoading}
           contactInquiry={contactInquiry}
+          productInquiry={productInquiry}
           inquirySending={inquirySending}
           onCancelInquiry={handleCancelInquiry}
           onConfirmInquiry={() => void handleConfirmInquiry()}
+          onCancelProductInquiry={handleCancelProductInquiry}
         />
       )}
       <ChatbotLauncher
