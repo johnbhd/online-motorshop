@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ProfilePage from "@/components/user/account/profile/ProfilePage";
+import EditableProfilePage from "@/components/user/account/profile/EditableProfilePage";
 
 export const metadata: Metadata = {
   title: "Profile | ALD Motorshop",
@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function CustomerProfileRoute() {
-  return <ProfilePage />;
+  return <EditableProfilePage />;
 }

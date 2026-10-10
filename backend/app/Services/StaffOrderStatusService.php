@@ -7,6 +7,10 @@ use Illuminate\Validation\ValidationException;
 
 class StaffOrderStatusService
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+    ) {}
+
     private const ALLOWED_TRANSITIONS = [
         'pending' => [
             'under_review',
@@ -41,6 +45,9 @@ class StaffOrderStatusService
             'order_status' => $targetStatus,
         ]);
 
-        return $order->fresh();
+        $order = $order->fresh();
+        $this->customerNotificationService->orderStatusChanged($order, $targetStatus);
+
+        return $order;
     }
 }

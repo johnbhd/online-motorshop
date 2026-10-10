@@ -18,6 +18,7 @@ class Product extends Model
         'description',
         'price',
         'img_url',
+        'img_public_id',
         'availability_status',
         'status',
     ];
@@ -42,5 +43,10 @@ class Product extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }

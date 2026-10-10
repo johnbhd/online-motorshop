@@ -85,4 +85,9 @@ class OrderRequest extends Model
     {
         return $this->hasOne(DeliveryRequest::class, 'order_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'order_id');
+    }
 }

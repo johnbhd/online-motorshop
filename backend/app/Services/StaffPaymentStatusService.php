@@ -9,6 +9,11 @@ use Illuminate\Validation\ValidationException;
 
 class StaffPaymentStatusService
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+        private readonly StaffAdminNotificationService $staffAdminNotificationService,
+    ) {}
+
     private const TRANSITIONS = [
         'waiting_for_verification' => [
             'paid',
@@ -34,7 +39,7 @@ class StaffPaymentStatusService
             ]);
         }
 
-        return DB::transaction(function () use ($payment, $reviewer, $status): Payment {
+        $payment = DB::transaction(function () use ($payment, $reviewer, $status): Payment {
             $payment->update([
                 'payment_status' => $status,
                 'verified_by' => $reviewer->id,
@@ -43,5 +48,13 @@ class StaffPaymentStatusService
 
             return $payment->fresh();
         });
+
+        $this->customerNotificationService->paymentStatusChanged($payment, $status);
+
+        if ($status === Payment::STATUS_PAID) {
+            $this->staffAdminNotificationService->deliveryReadyForBooking($payment, $reviewer->id);
+        }
+
+        return $payment;
     }
 }

@@ -8,14 +8,9 @@ type ProductRouteContext = {
 function authorizationHeaders(request: NextRequest) {
   const headers = new Headers();
   const authorization = request.headers.get("authorization");
-  const contentType = request.headers.get("content-type");
 
   if (authorization) {
     headers.set("Authorization", authorization);
-  }
-
-  if (contentType) {
-    headers.set("Content-Type", contentType);
   }
 
   return headers;
@@ -45,7 +40,18 @@ export async function PATCH(
   return proxyAdminProductsRequest(await targetPath(context), {
     method: "PATCH",
     headers: authorizationHeaders(request),
-    body: await request.text(),
+    body: await request.formData(),
+  });
+}
+
+export async function POST(
+  request: NextRequest,
+  context: ProductRouteContext,
+) {
+  return proxyAdminProductsRequest(await targetPath(context), {
+    method: "POST",
+    headers: authorizationHeaders(request),
+    body: await request.formData(),
   });
 }
 

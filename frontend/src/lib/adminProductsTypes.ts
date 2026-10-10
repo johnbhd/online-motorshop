@@ -9,6 +9,7 @@ export type AdminProduct = {
   brand_id: number | null;
   price: number;
   img_url: string;
+  img_public_id?: string | null;
   availability_status: string;
   status: string;
   created_at: string | null;
@@ -52,8 +53,11 @@ export type AdminProductsResponse = {
 
 export type AdminProductPayload = Omit<
   AdminProduct,
-  "id" | "category" | "brand" | "created_at" | "updated_at"
->;
+  "id" | "category" | "brand" | "created_at" | "updated_at" | "img_url" | "img_public_id"
+> & {
+  img_url?: string;
+  image?: File | null;
+};
 
 export type AdminProductDetailsResponse = {
   product: AdminProduct;

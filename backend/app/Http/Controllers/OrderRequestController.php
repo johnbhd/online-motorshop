@@ -7,6 +7,7 @@ use App\Http\Requests\TrackOrderRequest;
 use App\Models\OrderRequest;
 use App\Services\OrderRequestCreator;
 use App\Services\OrderRequestPresenter;
+use App\Services\StaffAdminNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,6 +16,7 @@ class OrderRequestController extends Controller
     public function __construct(
         private readonly OrderRequestCreator $orderRequestCreator,
         private readonly OrderRequestPresenter $orderRequestPresenter,
+        private readonly StaffAdminNotificationService $staffAdminNotificationService,
     ) {}
 
     public function store(StoreOrderRequestRequest $request): JsonResponse
@@ -35,6 +37,7 @@ class OrderRequestController extends Controller
         }
 
         $order = $this->orderRequestCreator->create($request->validated(), $user);
+        $this->staffAdminNotificationService->orderCreated($order);
 
         return response()->json([
             'message' => 'Order request submitted successfully.',

@@ -6,12 +6,13 @@ use App\Http\Requests\StoreCustomerPaymentProofRequest;
 use App\Models\Customer;
 use App\Models\OrderRequest;
 use App\Models\Payment;
+use App\Services\CloudinaryService;
+use App\Services\CloudinaryServiceException;
 use App\Services\OrderRequestPresenter;
+use App\Services\StaffAdminNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -25,6 +26,8 @@ class CustomerOrderController extends Controller
 
     public function __construct(
         private readonly OrderRequestPresenter $orderRequestPresenter,
+        private readonly StaffAdminNotificationService $staffAdminNotificationService,
+        private readonly CloudinaryService $cloudinaryService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -189,28 +192,32 @@ class CustomerOrderController extends Controller
         }
 
         $file = $request->file('proof');
-        $disk = Storage::disk('public');
-        $directory = 'payment-proofs/'.$order->order_reference;
-        $filename = Str::uuid()->toString().'.'.$file->extension();
-        $path = $disk->putFileAs($directory, $file, $filename);
 
-        if ($path === false) {
-            throw ValidationException::withMessages([
-                'proof' => ['The payment proof could not be stored. Please try again.'],
-            ]);
+        try {
+            $asset = $this->cloudinaryService->uploadImage(
+                $file,
+                'ald-motorshop/payment-proofs/'.$order->order_reference,
+            );
+        } catch (CloudinaryServiceException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 503);
         }
 
         try {
             $payment->update([
-                'proof_image_url' => $disk->url($path),
+                'proof_image_url' => $asset['secure_url'],
+                'proof_image_public_id' => $asset['public_id'],
                 'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
                 'verified_by' => null,
                 'verified_at' => null,
             ]);
         } catch (\Throwable $exception) {
-            $disk->delete($path);
+            $this->cloudinaryService->deleteImage($asset['public_id']);
             throw $exception;
         }
+
+        $this->staffAdminNotificationService->paymentProofSubmitted($payment->fresh());
 
         $order->load([
             'branch',

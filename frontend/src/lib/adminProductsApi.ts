@@ -96,10 +96,11 @@ export async function createAdminProduct(
   token: string,
   product: AdminProductPayload,
 ): Promise<AdminProductMutationResponse> {
+  const formData = productFormData(product);
   const response = await fetch("/api/admin/products", {
     method: "POST",
-    headers: { ...authHeaders(token), "Content-Type": "application/json" },
-    body: JSON.stringify(product),
+    headers: authHeaders(token),
+    body: formData,
   });
 
   return parseResponse<AdminProductMutationResponse>(response);
@@ -110,16 +111,36 @@ export async function updateAdminProduct(
   originalPartNumber: string,
   product: Partial<AdminProductPayload>,
 ): Promise<AdminProductMutationResponse> {
+  const formData = productFormData(product);
+  formData.append("_method", "PATCH");
   const response = await fetch(
     `/api/admin/products/${encodeURIComponent(originalPartNumber)}`,
     {
-      method: "PATCH",
-      headers: { ...authHeaders(token), "Content-Type": "application/json" },
-      body: JSON.stringify(product),
+      method: "POST",
+      headers: authHeaders(token),
+      body: formData,
     },
   );
 
   return parseResponse<AdminProductMutationResponse>(response);
+}
+
+function productFormData(product: Partial<AdminProductPayload>): FormData {
+  const formData = new FormData();
+
+  for (const [key, value] of Object.entries(product)) {
+    if (key === "image" || value === undefined || value === null) {
+      continue;
+    }
+
+    formData.append(key, String(value));
+  }
+
+  if (product.image) {
+    formData.append("image", product.image);
+  }
+
+  return formData;
 }
 
 export async function deleteAdminProduct(

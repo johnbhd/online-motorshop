@@ -4,16 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
   faBell,
   faCartShopping,
   faCircleUser,
-  faClipboardCheck,
   faClipboardList,
-  faHeadset,
   faRightFromBracket,
   faUser,
   faXmark,
@@ -24,6 +21,8 @@ import {
   CART_UPDATED_EVENT,
   getStoredCartQuantity,
 } from "@/components/user/cart/cartStorage";
+import NotificationDropdown from "@/components/user/notifications/NotificationDropdown";
+import { useCustomerNotifications } from "@/components/user/notifications/useCustomerNotifications";
 
 const navigationItems = [
   { href: "/", label: "Home" },
@@ -35,76 +34,8 @@ const navigationItems = [
 const FLOAT_THRESHOLD = 64;
 const SCROLL_DIRECTION_TOLERANCE = 8;
 
-type NotificationPreview = {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  icon: IconDefinition;
-};
-
-const customerNotificationPreviews: NotificationPreview[] = [
-  {
-    id: "order-updates",
-    title: "Order request updates",
-    description: "Status changes from ALD staff will appear here.",
-    time: "Preview",
-    icon: faClipboardCheck,
-  },
-  {
-    id: "staff-confirmation",
-    title: "Staff confirmation",
-    description: "Availability and final pricing updates will appear here.",
-    time: "Preview",
-    icon: faBell,
-  },
-  {
-    id: "customer-support",
-    title: "Customer support",
-    description: "Support updates from ALD staff will appear here.",
-    time: "Preview",
-    icon: faHeadset,
-  },
-];
-
-function NotificationDropdown({
-  id,
-  isMobile = false,
-}: {
-  id: string;
-  isMobile?: boolean;
-}) {
-  return (
-    <div
-      className={
-        isMobile
-          ? "site-mobile-notifications"
-          : "site-header-notifications-menu"
-      }
-      id={id}
-      role="region"
-      aria-label="Notifications"
-    >
-      <div className="site-notifications-heading">
-        <strong>Notifications</strong>
-        <span>UI preview</span>
-      </div>
-      <ul className="site-notifications-list">
-        {customerNotificationPreviews.map((notification) => (
-          <li className="site-notification-item" key={notification.id}>
-            <span className="site-notification-icon" aria-hidden="true">
-              <FontAwesomeIcon icon={notification.icon} />
-            </span>
-            <span className="site-notification-copy">
-              <strong>{notification.title}</strong>
-              <span>{notification.description}</span>
-              <small>{notification.time}</small>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+function formatNotificationCount(count: number): string {
+  return count > 99 ? "99+" : String(count);
 }
 
 function getSessionLinkLabel(role: "customer" | "staff" | "admin") {
@@ -123,6 +54,10 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isLoading: isAuthLoading, logout, user } = useAuth();
+  const customerNotifications = useCustomerNotifications({
+    enabled: !isAuthLoading && user?.role === "customer",
+    perPage: 5,
+  });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -375,9 +310,27 @@ export function Navbar() {
                   }}
                 >
                   <FontAwesomeIcon icon={faBell} aria-hidden="true" />
+                  {customerNotifications.unreadCount > 0 ? (
+                    <span
+                      className="site-header-notifications-badge"
+                      aria-label={`${customerNotifications.unreadCount} unread notifications`}
+                    >
+                      {formatNotificationCount(customerNotifications.unreadCount)}
+                    </span>
+                  ) : null}
                 </button>
                 {isNotificationsOpen ? (
-                  <NotificationDropdown id="site-header-notifications-menu" />
+                  <NotificationDropdown
+                    id="site-header-notifications-menu"
+                    notifications={customerNotifications.notifications}
+                    unreadCount={customerNotifications.unreadCount}
+                    isLoading={customerNotifications.isLoading}
+                    error={customerNotifications.error}
+                    onRefresh={() => void customerNotifications.refresh()}
+                    onMarkRead={customerNotifications.markRead}
+                    onMarkAllRead={customerNotifications.markAllRead}
+                    onClose={() => setIsNotificationsOpen(false)}
+                  />
                 ) : null}
               </div>
             ) : null}
@@ -581,11 +534,27 @@ export function Navbar() {
                   >
                     <FontAwesomeIcon icon={faBell} aria-hidden="true" />
                     <span>Notifications</span>
+                    {customerNotifications.unreadCount > 0 ? (
+                      <span
+                        className="site-mobile-nav-cart-badge"
+                        aria-label={`${customerNotifications.unreadCount} unread notifications`}
+                      >
+                        {formatNotificationCount(customerNotifications.unreadCount)}
+                      </span>
+                    ) : null}
                   </button>
                   {isNotificationsOpen ? (
                     <NotificationDropdown
                       id="site-mobile-notifications"
                       isMobile
+                      notifications={customerNotifications.notifications}
+                      unreadCount={customerNotifications.unreadCount}
+                      isLoading={customerNotifications.isLoading}
+                      error={customerNotifications.error}
+                      onRefresh={() => void customerNotifications.refresh()}
+                      onMarkRead={customerNotifications.markRead}
+                      onMarkAllRead={customerNotifications.markAllRead}
+                      onClose={() => setIsNotificationsOpen(false)}
                     />
                   ) : null}
                 </div>

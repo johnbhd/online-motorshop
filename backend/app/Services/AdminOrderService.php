@@ -14,6 +14,7 @@ class AdminOrderService
     public function __construct(
         private readonly OrderRequestPresenter $presenter,
         private readonly StaffOrderStatusService $statusService,
+        private readonly StaffAdminNotificationService $staffAdminNotificationService,
     ) {}
 
     public function index(array $filters): array
@@ -83,6 +84,8 @@ class AdminOrderService
         }
 
         $order->update(['assigned_staff_id' => $staff?->id]);
+
+        $this->staffAdminNotificationService->orderAssigned($order, $staff?->id);
 
         return $this->find($order->order_reference) ?? $order;
     }

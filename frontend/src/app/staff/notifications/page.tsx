@@ -1,5 +1,5 @@
-import NotificationsPage from "@/components/staff/notifications/NotificationsPage";
+import PortalNotificationsPage from "@/components/portal/notifications/PortalNotificationsPage";
 
 export default function Page() {
-  return <NotificationsPage />;
+  return <PortalNotificationsPage role="staff" />;
 }

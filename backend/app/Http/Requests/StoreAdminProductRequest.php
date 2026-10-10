@@ -29,7 +29,8 @@ class StoreAdminProductRequest extends FormRequest
             'brand_id' => ['required', 'integer', Rule::exists('brands', 'id')->where('status', 'active')],
             'description' => ['sometimes', 'nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
-            'img_url' => ['required', 'string', 'max:255'],
+            'img_url' => ['required_without:image', 'nullable', 'string', 'max:255'],
+            'image' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'availability_status' => ['required', 'string', 'max:100'],
             'status' => ['required', 'string', 'max:100'],
         ];

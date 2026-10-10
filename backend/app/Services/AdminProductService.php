@@ -6,12 +6,15 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Throwable;
 
 class AdminProductService
 {
     public function __construct(
         private readonly AdminProductPresenter $presenter,
+        private readonly CloudinaryService $cloudinaryService,
     ) {}
 
     /** @param array<string, mixed> $filters */
@@ -52,19 +55,65 @@ class AdminProductService
     public function create(array $attributes): Product
     {
         $attributes = $this->withLegacyBrandName($attributes);
+        $asset = null;
 
-        return Product::query()->create($attributes)->load([
-            'category:id,name,status',
-            'brandRecord:id,name,status',
-        ]);
+        if (($attributes['image'] ?? null) instanceof UploadedFile) {
+            $asset = $this->cloudinaryService->uploadImage(
+                $attributes['image'],
+                'ald-motorshop/products',
+            );
+            $attributes['img_url'] = $asset['secure_url'];
+            $attributes['img_public_id'] = $asset['public_id'];
+        }
+
+        unset($attributes['image']);
+
+        try {
+            return Product::query()->create($attributes)->load([
+                'category:id,name,status',
+                'brandRecord:id,name,status',
+            ]);
+        } catch (Throwable $exception) {
+            if ($asset) {
+                $this->cloudinaryService->deleteImage($asset['public_id']);
+            }
+
+            throw $exception;
+        }
     }
 
     /** @param array<string, mixed> $attributes */
     public function update(Product $product, array $attributes): Product
     {
         $attributes = $this->withLegacyBrandName($attributes);
-        $product->fill($attributes);
-        $product->save();
+        $asset = null;
+        $previousPublicId = $product->img_public_id;
+
+        if (($attributes['image'] ?? null) instanceof UploadedFile) {
+            $asset = $this->cloudinaryService->uploadImage(
+                $attributes['image'],
+                'ald-motorshop/products',
+            );
+            $attributes['img_url'] = $asset['secure_url'];
+            $attributes['img_public_id'] = $asset['public_id'];
+        }
+
+        unset($attributes['image']);
+
+        try {
+            $product->fill($attributes);
+            $product->save();
+        } catch (Throwable $exception) {
+            if ($asset) {
+                $this->cloudinaryService->deleteImage($asset['public_id']);
+            }
+
+            throw $exception;
+        }
+
+        if ($asset && $previousPublicId && $previousPublicId !== $asset['public_id']) {
+            $this->cloudinaryService->deleteImage($previousPublicId);
+        }
 
         return $product->load([
             'category:id,name,status',
@@ -78,7 +127,14 @@ class AdminProductService
             return false;
         }
 
-        return (bool) $product->delete();
+        $publicId = $product->img_public_id;
+        $deleted = (bool) $product->delete();
+
+        if ($deleted && $publicId) {
+            $this->cloudinaryService->deleteImage($publicId);
+        }
+
+        return $deleted;
     }
 
     private function summary(): array

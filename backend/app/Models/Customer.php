@@ -28,4 +28,9 @@ class Customer extends Model
     {
         return $this->hasMany(Conversation::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

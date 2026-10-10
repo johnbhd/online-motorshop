@@ -22,6 +22,7 @@ class AdminProductPresenter
             'category' => $product->category?->name,
             'price' => (float) $product->price,
             'img_url' => $product->img_url,
+            'img_public_id' => $product->img_public_id,
             'availability_status' => $product->availability_status,
             'status' => $product->status,
             'created_at' => $product->created_at?->toISOString(),

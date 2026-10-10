@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminPaymentsController;
 use App\Http\Controllers\Admin\AdminPickupRequestsController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
@@ -19,9 +20,13 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\CustomerProfileController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PaymentInstructionsController;
+use App\Http\Controllers\PortalNotificationController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Staff\StaffConversationsController;
 use App\Http\Controllers\Staff\StaffCustomersController;
 use App\Http\Controllers\Staff\StaffDashboardController;
@@ -33,7 +38,6 @@ use App\Http\Controllers\Staff\StaffPickupRequestsController;
 use App\Http\Controllers\Staff\StaffProductsController;
 use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Controllers\Staff\StaffReportsController;
-use App\Http\Controllers\Staff\StaffReviewsController;
 use App\Http\Controllers\Staff\StaffSidebarController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +54,8 @@ Route::get('/products', [CatalogController::class, 'products'])
     ->name('catalog.products.index');
 Route::get('/products/{identifier}', [CatalogController::class, 'product'])
     ->name('catalog.products.show');
+Route::get('/products/{identifier}/reviews', [ReviewController::class, 'publicIndex'])
+    ->name('catalog.products.reviews');
 Route::get('/categories', [CatalogController::class, 'categories'])
     ->name('catalog.categories.index');
 Route::get('/branches', [CatalogController::class, 'branches'])
@@ -76,12 +82,28 @@ Route::prefix('customer')
         'role:customer',
     ])
     ->group(function () {
+        Route::get('/profile', [CustomerProfileController::class, 'show'])
+            ->name('profile.show');
+        Route::patch('/profile', [CustomerProfileController::class, 'update'])
+            ->name('profile.update');
+        Route::patch('/profile/password', [CustomerProfileController::class, 'updatePassword'])
+            ->name('profile.password');
+        Route::get('/notifications', [CustomerNotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::patch('/notifications/read-all', [CustomerNotificationController::class, 'markAllRead'])
+            ->name('notifications.read-all');
+        Route::patch('/notifications/{notification}/read', [CustomerNotificationController::class, 'markRead'])
+            ->name('notifications.read');
         Route::get('/orders', [CustomerOrderController::class, 'index'])
             ->name('orders.index');
         Route::get('/orders/{reference}', [CustomerOrderController::class, 'show'])
             ->name('orders.show');
         Route::post('/orders/{reference}/payment-proof', [CustomerOrderController::class, 'storePaymentProof'])
             ->name('orders.payment-proof.store');
+        Route::get('/products/{identifier}/reviews/eligibility', [ReviewController::class, 'eligibility'])
+            ->name('products.reviews.eligibility');
+        Route::post('/products/{identifier}/reviews', [ReviewController::class, 'store'])
+            ->name('products.reviews.store');
     });
 
 // Auth
@@ -111,6 +133,9 @@ Route::prefix('admin')
         Route::get('/dashboard/data', [AdminDashboardController::class, 'data'])
             ->name('dashboard.data');
 
+        Route::get('/reports/data', [AdminReportsController::class, 'data'])
+            ->name('reports.data');
+
         Route::get('/settings', [AdminSettingsController::class, 'show'])
             ->name('settings.show');
 
@@ -125,6 +150,23 @@ Route::prefix('admin')
 
         Route::patch('/profile/password', [AdminProfileController::class, 'updatePassword'])
             ->name('profile.password');
+
+        Route::get('/notifications', [PortalNotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::patch('/notifications/read-all', [PortalNotificationController::class, 'markAllRead'])
+            ->name('notifications.read-all');
+        Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
+            ->name('notifications.read');
+
+        Route::get('/reviews', [ReviewController::class, 'adminIndex'])
+            ->name('reviews.index');
+        Route::get('/reviews/{review}', [ReviewController::class, 'adminShow'])
+            ->whereNumber('review')
+            ->name('reviews.show');
+        Route::patch('/reviews/{review}/{action}', [ReviewController::class, 'moderate'])
+            ->whereNumber('review')
+            ->whereIn('action', ['publish', 'hide', 'restore', 'resolve-flag'])
+            ->name('reviews.moderate');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');
@@ -400,6 +442,24 @@ Route::prefix('staff')
 
             Route::patch('/profile', [StaffProfileController::class, 'update'])
                 ->name('profile.update');
+
+            Route::get('/notifications', [PortalNotificationController::class, 'index'])
+                ->name('notifications.index');
+            Route::patch('/notifications/read-all', [PortalNotificationController::class, 'markAllRead'])
+                ->name('notifications.read-all');
+            Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
+                ->name('notifications.read');
+            Route::get('/reviews', [ReviewController::class, 'staffIndex'])
+                ->name('reviews.index');
+            Route::get('/reviews/{review}', [ReviewController::class, 'staffShow'])
+                ->whereNumber('review')
+                ->name('reviews.show');
+            Route::post('/reviews/{review}/response', [ReviewController::class, 'staffResponse'])
+                ->whereNumber('review')
+                ->name('reviews.response');
+            Route::patch('/reviews/{review}/flag', [ReviewController::class, 'staffFlag'])
+                ->whereNumber('review')
+                ->name('reviews.flag');
         });
 
         Route::middleware('role:admin')->group(function () {
@@ -409,7 +469,5 @@ Route::prefix('staff')
             Route::get('/reports/data', [StaffReportsController::class, 'data'])
                 ->name('reports.data');
 
-            Route::get('/reviews/data', [StaffReviewsController::class, 'data'])
-                ->name('reviews.data');
         });
     });

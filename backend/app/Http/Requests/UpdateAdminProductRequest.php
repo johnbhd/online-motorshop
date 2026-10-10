@@ -65,7 +65,8 @@ class UpdateAdminProductRequest extends FormRequest
             'brand_id' => ['sometimes', 'required', 'integer', $activeOrCurrentBrand],
             'description' => ['sometimes', 'nullable', 'string'],
             'price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
-            'img_url' => ['sometimes', 'required', 'string', 'max:255'],
+            'img_url' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'image' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'availability_status' => ['sometimes', 'required', 'string', 'max:100'],
             'status' => ['sometimes', 'required', 'string', 'max:100'],
         ];

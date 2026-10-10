@@ -10,6 +10,10 @@ use Illuminate\Validation\ValidationException;
 
 class StaffDeliveryStatusService
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+    ) {}
+
     private const TRANSITIONS = [
         'waiting_for_booking' => [
             'booked',
@@ -67,7 +71,7 @@ class StaffDeliveryStatusService
             ]),
         );
 
-        return DB::transaction(function () use (
+        $deliveryRequest = DB::transaction(function () use (
             $deliveryRequest,
             $status,
             $allowedAttributes,
@@ -129,6 +133,10 @@ class StaffDeliveryStatusService
 
             return $delivery->fresh();
         });
+
+        $this->customerNotificationService->deliveryStatusChanged($deliveryRequest, $status);
+
+        return $deliveryRequest;
     }
 
     private function hasPaidLatestPayment(DeliveryRequest $deliveryRequest, bool $lock = false): bool
