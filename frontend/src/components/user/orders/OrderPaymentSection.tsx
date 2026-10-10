@@ -29,6 +29,7 @@ function normalize(value: string | null | undefined): string {
 function isEligibleOrderStatus(status: string): boolean {
   return [
     "confirmed",
+    "preparing",
     "preparing_order",
     "ready_for_pickup",
     "booked_for_delivery",

@@ -170,6 +170,101 @@ class OrderRetrievalApiTest extends TestCase
         ])->assertUnprocessable();
     }
 
+    public function test_customer_status_uses_persisted_pickup_state_without_merging_order_or_payment_status(): void
+    {
+        $branch = $this->createBranch();
+        $product = $this->createProduct('RET-STATUS', 250.00);
+        [$user, $customer] = $this->createCustomer('pickup-status@example.com', '09175550000');
+
+        $payAtPickup = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000050',
+            status: 'confirmed',
+        );
+        $payAtPickupPayment = Payment::create([
+            'order_id' => $payAtPickup->id,
+            'payment_method' => Payment::METHOD_PAY_AT_PICKUP,
+            'amount' => $payAtPickup->total_amount,
+            'payment_status' => Payment::STATUS_UNPAID,
+        ]);
+
+        $onlinePayment = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000051',
+            status: 'confirmed',
+        );
+        Payment::create([
+            'order_id' => $onlinePayment->id,
+            'payment_method' => Payment::METHOD_ONLINE_PAYMENT,
+            'amount' => $onlinePayment->total_amount,
+            'payment_status' => Payment::STATUS_PAID,
+        ]);
+        $onlinePayment->pickupRequest()->update(['pickup_status' => 'preparing']);
+
+        $rejected = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000052',
+            status: 'rejected',
+        );
+        $rejected->pickupRequest()->update(['pickup_status' => 'ready_for_pickup']);
+
+        $this->withToken($user->createToken('pickup-status-test')->plainTextToken)
+            ->getJson('/api/customer/orders?scope=active')
+            ->assertOk()
+            ->assertJsonPath('orders.0.reference', $onlinePayment->order_reference)
+            ->assertJsonPath('orders.0.status', 'confirmed')
+            ->assertJsonPath('orders.0.display_status', 'preparing')
+            ->assertJsonPath('orders.0.fulfillment_status', 'preparing')
+            ->assertJsonPath('orders.0.payment.method', Payment::METHOD_ONLINE_PAYMENT)
+            ->assertJsonCount(2, 'orders');
+
+        $payAtPickup->pickupRequest()->update(['pickup_status' => 'ready_for_pickup']);
+
+        $this->withToken($user->createToken('pickup-status-detail-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$payAtPickup->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.status', 'confirmed')
+            ->assertJsonPath('order.display_status', 'ready_for_pickup')
+            ->assertJsonPath('order.fulfillment_status', 'ready_for_pickup')
+            ->assertJsonPath('order.pickup.status', 'ready_for_pickup')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_PAY_AT_PICKUP)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_UNPAID);
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $payAtPickup->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'ready_for_pickup')
+            ->assertJsonPath('order.pickup.status', 'ready_for_pickup');
+
+        $payAtPickup->pickupRequest()->update(['pickup_status' => 'completed']);
+
+        $this->withToken($user->createToken('pickup-status-active-test')->plainTextToken)
+            ->getJson('/api/customer/orders?scope=active')
+            ->assertOk()
+            ->assertJsonPath('orders.0.reference', $onlinePayment->order_reference)
+            ->assertJsonCount(1, 'orders');
+
+        $this->withToken($user->createToken('pickup-status-history-test')->plainTextToken)
+            ->getJson('/api/customer/orders?scope=history')
+            ->assertOk()
+            ->assertJsonPath('orders.1.reference', $payAtPickup->order_reference)
+            ->assertJsonPath('orders.1.display_status', 'completed')
+            ->assertJsonCount(2, 'orders');
+
+        $this->assertDatabaseHas('payments', [
+            'id' => $payAtPickupPayment->id,
+            'payment_method' => Payment::METHOD_PAY_AT_PICKUP,
+            'payment_status' => Payment::STATUS_UNPAID,
+        ]);
+
+        $this->assertSame($branch->id, $payAtPickup->branch_id);
+    }
+
     public function test_guest_tracking_uses_the_reference_and_does_not_list_orders_by_phone(): void
     {
         $this->createBranch();

@@ -19,10 +19,15 @@ import { getPaymentMethodLabel } from "./orderRequestTypes";
 export function toCustomerOrderSummary(
   order: OrderApiSummary,
 ): CustomerOrderSummary {
+  const displayStatus = toStatusLabel(order.display_status ?? order.status);
+
   return {
     id: order.id,
     reference: order.reference,
-    status: toStatusLabel(order.status),
+    status: displayStatus,
+    orderStatus: toStatusLabel(order.status),
+    displayStatus,
+    fulfillmentStatus: order.fulfillment_status ?? null,
     paymentStatus: toStatusLabel(order.payment_status),
     payment: toPayment(order.payment),
     fulfillmentMethod: order.fulfillment_method,
@@ -40,6 +45,7 @@ export function toCustomerOrderSummary(
 
 export function toOrderViewModel(order: OrderApiDetails): OrderViewModel {
   const fulfillmentMethod = order.fulfillment_method.toLowerCase();
+  const displayStatus = toStatusLabel(order.display_status ?? order.status);
   const items = order.items.map(toOrderItem);
   const fulfillment: OrderViewFulfillment =
     fulfillmentMethod === "delivery"
@@ -74,7 +80,10 @@ export function toOrderViewModel(order: OrderApiDetails): OrderViewModel {
     totalAmount: order.total_amount,
     finalAmount: null,
     totalQuantity: items.reduce((total, item) => total + item.quantity, 0),
-    status: toStatusLabel(order.status),
+    status: displayStatus,
+    orderStatus: toStatusLabel(order.status),
+    displayStatus,
+    fulfillmentStatus: order.fulfillment_status ?? null,
     paymentStatus: toStatusLabel(order.payment_status),
     payment: toPayment(order.payment),
     createdAt: order.created_at,
@@ -89,6 +98,7 @@ export function toStatusLabel(value: string): string {
     pending: "Pending",
     under_review: "Under Review",
     confirmed: "Confirmed",
+    preparing: "Preparing",
     waiting_for_payment: "Waiting for Payment",
     payment_verification: "Payment Verification",
     waiting_for_verification: "Waiting for Verification",

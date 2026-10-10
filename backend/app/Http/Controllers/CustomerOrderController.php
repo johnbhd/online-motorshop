@@ -48,6 +48,8 @@ class CustomerOrderController extends Controller
             ->where('customer_id', $customer->id)
             ->with([
                 'branch',
+                'pickupRequest:id,order_id,branch_id,pickup_status,pickup_date,pickup_time,remarks,completed_at',
+                'deliveryRequest:id,order_id,branch_id,delivery_status,delivery_address,delivery_fee,booking_reference,tracking_url,rider_name,rider_contact,remarks,delivered_at',
                 'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
             ])
             ->withCount('items')
@@ -244,15 +246,17 @@ class CustomerOrderController extends Controller
     private function applyScope(Builder $query, ?string $scope): void
     {
         if ($scope === 'history') {
-            $query->whereRaw(
-                'LOWER(order_status) IN (?, ?, ?)',
-                self::HISTORY_STATUSES,
-            );
+            $query->where(function (Builder $history): void {
+                $history
+                    ->whereRaw('LOWER(order_status) IN (?, ?, ?)', self::HISTORY_STATUSES)
+                    ->orWhereHas('pickupRequest', fn (Builder $pickup): Builder => $pickup->where('pickup_status', 'completed'))
+                    ->orWhereHas('deliveryRequest', fn (Builder $delivery): Builder => $delivery->where('delivery_status', 'delivered'));
+            });
         } elseif ($scope === 'active') {
-            $query->whereRaw(
-                'LOWER(order_status) NOT IN (?, ?, ?)',
-                self::HISTORY_STATUSES,
-            );
+            $query
+                ->whereRaw('LOWER(order_status) NOT IN (?, ?, ?)', self::HISTORY_STATUSES)
+                ->whereDoesntHave('pickupRequest', fn (Builder $pickup): Builder => $pickup->where('pickup_status', 'completed'))
+                ->whereDoesntHave('deliveryRequest', fn (Builder $delivery): Builder => $delivery->where('delivery_status', 'delivered'));
         }
     }
 }

@@ -100,6 +100,9 @@ export type CustomerOrderSummary = {
   id: number;
   reference: string;
   status: string;
+  orderStatus: string;
+  displayStatus: string;
+  fulfillmentStatus: string | null;
   paymentStatus: string;
   payment: OrderViewPayment | null;
   fulfillmentMethod: string;
@@ -193,6 +196,9 @@ export type OrderViewModel = {
   finalAmount: number | null;
   totalQuantity: number;
   status: string;
+  orderStatus: string;
+  displayStatus: string;
+  fulfillmentStatus: string | null;
   paymentStatus: string;
   payment: OrderViewPayment | null;
   createdAt: string;

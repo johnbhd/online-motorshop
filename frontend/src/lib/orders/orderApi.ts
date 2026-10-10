@@ -9,6 +9,8 @@ export type OrderApiSummary = {
   id: number;
   reference: string;
   status: string;
+  display_status?: string;
+  fulfillment_status?: string | null;
   payment_status: string;
   payment: OrderApiPayment | null;
   fulfillment_method: string;

@@ -7,6 +7,10 @@ use App\Models\Payment;
 
 class OrderRequestPresenter
 {
+    public function __construct(
+        private readonly CustomerOrderStatusResolver $customerOrderStatusResolver,
+    ) {}
+
     public function confirmation(OrderRequest $order): array
     {
         return $this->payload($order, includeCustomer: true, includePayment: true);
@@ -18,6 +22,8 @@ class OrderRequestPresenter
             'id' => $order->id,
             'reference' => $order->order_reference,
             'status' => $order->order_status,
+            'display_status' => $this->customerOrderStatusResolver->resolve($order),
+            'fulfillment_status' => $this->customerOrderStatusResolver->fulfillmentStatus($order),
             'payment_status' => $this->paymentStatus($order),
             'payment' => $this->paymentPayload($order),
             'fulfillment_method' => $order->fulfillment_type,
@@ -122,6 +128,8 @@ class OrderRequestPresenter
             'id' => $order->id,
             'reference' => $order->order_reference,
             'status' => $order->order_status,
+            'display_status' => $this->customerOrderStatusResolver->resolve($order),
+            'fulfillment_status' => $this->customerOrderStatusResolver->fulfillmentStatus($order),
             'payment_status' => $this->paymentStatus($order),
             'fulfillment_method' => $order->fulfillment_type,
             'branch' => $this->branchPayload($order),
