@@ -176,6 +176,13 @@ export type OrderViewDelivery = {
   vehiclePlate: string | null;
   remarks: string | null;
   deliveredAt: string | null;
+  routeGeometry: {
+    type: "LineString";
+    coordinates: [number, number][];
+  } | null;
+  routeDistanceMeters: number | null;
+  routeProvider: string | null;
+  routeGeneratedAt: string | null;
 };
 
 export type OrderViewFulfillment =

@@ -51,6 +51,60 @@ function isCoordinatePair(
     && typeof longitude === "number" && Number.isFinite(longitude);
 }
 
+function pointAlongRoute(
+  points: [number, number][],
+  fraction: number,
+): [number, number] | null {
+  if (points.length === 0) {
+    return null;
+  }
+
+  if (points.length === 1 || fraction <= 0) {
+    return points[0];
+  }
+
+  if (fraction >= 1) {
+    return points[points.length - 1];
+  }
+
+  const segmentLengths = points.slice(1).map((point, index) => {
+    const previous = points[index];
+    return Math.hypot(point[0] - previous[0], point[1] - previous[1]);
+  });
+  const totalLength = segmentLengths.reduce((total, length) => total + length, 0);
+
+  if (totalLength === 0) {
+    return points[0];
+  }
+
+  let remaining = totalLength * fraction;
+
+  for (let index = 0; index < segmentLengths.length; index += 1) {
+    const segmentLength = segmentLengths[index];
+
+    if (remaining <= segmentLength) {
+      const start = points[index];
+      const end = points[index + 1];
+      const segmentFraction = segmentLength === 0 ? 0 : remaining / segmentLength;
+
+      return [
+        start[0] + (end[0] - start[0]) * segmentFraction,
+        start[1] + (end[1] - start[1]) * segmentFraction,
+      ];
+    }
+
+    remaining -= segmentLength;
+  }
+
+  return points[points.length - 1];
+}
+
+function tooltipContent(text: string): HTMLSpanElement {
+  const element = document.createElement("span");
+  element.textContent = text;
+  return element;
+}
+
 function getMapContextLabel(
   fulfillmentMethod: OrderViewFulfillment["method"],
   orderStatus: string,
@@ -102,13 +156,54 @@ export default function LalamoveTrackingMap({
   const branchLocation = useMemo(() => branch && isCoordinatePair(branch.latitude, branch.longitude)
     ? [branch.latitude, branch.longitude] as [number, number]
     : null, [branch]);
+  const persistedRoutePoints = useMemo(() => {
+    const coordinates = delivery?.routeGeometry?.coordinates;
+
+    if (!Array.isArray(coordinates)) {
+      return [];
+    }
+
+    return coordinates.reduce<[number, number][]>((points, coordinate) => {
+      if (!Array.isArray(coordinate) || coordinate.length < 2) {
+        return points;
+      }
+
+      const [longitude, latitude] = coordinate;
+
+      if (typeof longitude !== "number" || !Number.isFinite(longitude)
+        || typeof latitude !== "number" || !Number.isFinite(latitude)
+        || Math.abs(longitude) > 180 || Math.abs(latitude) > 90) {
+        return points;
+      }
+
+      points.push([latitude, longitude]);
+      return points;
+    }, []);
+  }, [delivery?.routeGeometry]);
+  const routePoints = useMemo(() => persistedRoutePoints.length >= 2
+    ? persistedRoutePoints
+    : branchLocation && destination
+      ? [branchLocation, destination]
+      : [], [branchLocation, destination, persistedRoutePoints]);
+  const hasRoadRoute = persistedRoutePoints.length >= 2;
   const progress = destinationProgress(deliveryStatus);
   const canShowDeliveryProgress = !isPickup
     && isOrderConfirmed
     && progress !== null;
   const shouldDrawRoute = !isPickup
     && !isOrderClosed
-    && Boolean(branchLocation && destination);
+    && routePoints.length >= 2;
+  const branchMarkerLabel = branch?.name?.trim()
+    ? `ALD ${branch.name.trim()}`
+    : "ALD";
+  const branchTooltip = [
+    branch?.name?.trim() ? `ALD Motorshop — ${branch.name.trim()}` : "ALD Motorshop branch",
+    branch?.address?.trim(),
+  ].filter(Boolean).join(" · ");
+  const destinationTooltip = [
+    "Delivery Location",
+    delivery?.completeAddress?.trim() || delivery?.address?.trim(),
+  ].filter(Boolean).join(" · ");
   const mapContextLabel = getMapContextLabel(
     fulfillmentMethod,
     orderStatus,
@@ -210,36 +305,38 @@ export default function LalamoveTrackingMap({
 
       if (branchLocation) {
         points.push(branchLocation);
-        leaflet.marker(branchLocation, { icon: pin("#0b1930", "ALD") }).addTo(layer).bindTooltip("Selected ALD branch");
+        leaflet.marker(branchLocation, { icon: pin("#0b1930", branchMarkerLabel) }).addTo(layer).bindTooltip(tooltipContent(branchTooltip));
       }
 
       if (destination) {
         points.push(destination);
-        leaflet.marker(destination, { icon: pin("#e07a08", "YOU") }).addTo(layer).bindTooltip("Saved delivery location");
+        leaflet.marker(destination, { icon: pin("#e07a08", "YOU") }).addTo(layer).bindTooltip(tooltipContent(destinationTooltip));
       }
 
-      if (shouldDrawRoute && branchLocation && destination) {
-        leaflet.polyline([branchLocation, destination], {
+      if (shouldDrawRoute) {
+        leaflet.polyline(routePoints, {
           color: canShowDeliveryProgress ? "#e07a08" : "#94a3b8",
-          dashArray: canShowDeliveryProgress ? "7 8" : "4 8",
+          dashArray: hasRoadRoute ? "10 7" : (canShowDeliveryProgress ? "7 8" : "4 8"),
           opacity: canShowDeliveryProgress ? 1 : 0.9,
           weight: 3,
         }).addTo(layer);
 
         if (canShowDeliveryProgress && progress !== null) {
-          const motorcycle: [number, number] = [
-            branchLocation[0] + (destination[0] - branchLocation[0]) * progress,
-            branchLocation[1] + (destination[1] - branchLocation[1]) * progress,
-          ];
-          leaflet
-            .marker(motorcycle, { icon: pin("#f59e0b", "", "motorcycle") })
-            .addTo(layer)
-            .bindTooltip("Symbolic delivery progress marker");
+          const motorcycle = pointAlongRoute(routePoints, progress);
+
+          if (motorcycle) {
+            leaflet
+              .marker(motorcycle, { icon: pin("#f59e0b", "", "motorcycle") })
+              .addTo(layer)
+              .bindTooltip(tooltipContent("Suggested delivery progress — not live GPS"));
+          }
         }
       }
 
-      if (points.length > 1) {
-        map.fitBounds(points, { padding: [28, 28] });
+      const boundsPoints = [...points, ...routePoints];
+
+      if (boundsPoints.length > 1) {
+        map.fitBounds(boundsPoints, { padding: [28, 28] });
       } else if (points[0]) {
         map.setView(points[0], 15);
       }
@@ -248,8 +345,13 @@ export default function LalamoveTrackingMap({
     branchLocation,
     canShowDeliveryProgress,
     destination,
+    destinationTooltip,
+    hasRoadRoute,
+    branchMarkerLabel,
+    branchTooltip,
     mapReadyVersion,
     progress,
+    routePoints,
     shouldDrawRoute,
   ]);
 

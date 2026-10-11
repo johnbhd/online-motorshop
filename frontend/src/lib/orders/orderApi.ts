@@ -76,6 +76,15 @@ export type OrderApiDelivery = {
   contact_number?: string | null;
   notes?: string | null;
   vehicle_plate?: string | null;
+  route_geometry?: OrderApiRouteGeometry | null;
+  route_distance_meters?: number | null;
+  route_provider?: string | null;
+  route_generated_at?: string | null;
+};
+
+export type OrderApiRouteGeometry = {
+  type: "LineString";
+  coordinates: [number, number][];
 };
 
 export type OrderApiPayment = {

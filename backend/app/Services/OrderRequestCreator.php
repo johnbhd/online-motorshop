@@ -16,6 +16,10 @@ use RuntimeException;
 
 class OrderRequestCreator
 {
+    public function __construct(
+        private readonly DeliveryRouteService $deliveryRouteService,
+    ) {}
+
     /**
      * Create a pending order request and its fulfillment record atomically.
      *
@@ -95,7 +99,7 @@ class OrderRequestCreator
             ]);
         }
 
-        return DB::transaction(function () use (
+        $order = DB::transaction(function () use (
             $payload,
             $user,
             $branch,
@@ -185,6 +189,12 @@ class OrderRequestCreator
                 'deliveryRequest',
             ]);
         });
+
+        if ($method === 'delivery' && $order->deliveryRequest) {
+            $this->deliveryRouteService->generateFor($order->deliveryRequest);
+        }
+
+        return $order;
     }
 
     private function resolveBranch(int $branchId, string $method): Branch

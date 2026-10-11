@@ -28,6 +28,10 @@ class DeliveryRequest extends Model
         'delivery_barangay_code',
         'delivery_latitude',
         'delivery_longitude',
+        'route_geometry',
+        'route_distance_meters',
+        'route_provider',
+        'route_generated_at',
         'delivery_contact_person',
         'delivery_contact_number',
         'delivery_notes',
@@ -48,6 +52,9 @@ class DeliveryRequest extends Model
             'delivery_fee' => 'decimal:2',
             'delivery_latitude' => 'float',
             'delivery_longitude' => 'float',
+            'route_geometry' => 'array',
+            'route_distance_meters' => 'integer',
+            'route_generated_at' => 'datetime',
             'delivered_at' => 'datetime',
         ];
     }
