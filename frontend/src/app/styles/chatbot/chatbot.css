@@ -223,6 +223,7 @@
 }
 
 .ald-chatbot__message {
+  min-width: 0;
   max-width: 84%;
   margin: 0;
   padding: 0.7rem 0.8rem;
@@ -317,27 +318,35 @@
 
 .ald-chatbot__reply-action {
   display: inline-grid;
-  width: 1.45rem;
-  height: 1.45rem;
-  margin-top: 0.35rem;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  align-self: center;
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: transparent;
-  color: inherit;
+  background: rgba(148, 163, 184, 0.12);
+  color: #64748b;
   cursor: pointer;
-  font-size: 0.68rem;
-  opacity: 0.65;
-  transition: background-color 150ms ease, opacity 150ms ease;
+  font-size: 0.72rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(0.2rem);
+  transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.ald-chatbot__message-row:hover .ald-chatbot__reply-action,
+.ald-chatbot__message-row:focus-within .ald-chatbot__reply-action,
+.ald-chatbot__message-row--actions-visible .ald-chatbot__reply-action {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
 }
 
 .ald-chatbot__reply-action:hover {
   background: rgba(15, 23, 42, 0.08);
-  opacity: 1;
-}
-
-.ald-chatbot__message--customer .ald-chatbot__reply-action {
-  margin-left: auto;
+  color: #334155;
 }
 
 .ald-chatbot__message-type {
@@ -942,6 +951,21 @@
   }
 }
 
+@media (hover: none), (pointer: coarse) {
+  .ald-chatbot__message-row:not(.ald-chatbot__message-row--actions-visible):hover
+    .ald-chatbot__reply-action:not(:focus-visible) {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(0.2rem);
+  }
+
+  .ald-chatbot__message-row--actions-visible .ald-chatbot__reply-action {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ald-chatbot__panel,
   .ald-chatbot__launcher,
@@ -949,6 +973,7 @@
   .ald-chatbot__mode-toggle,
   .ald-chatbot__quick-action,
   .ald-chatbot__composer-menu,
+  .ald-chatbot__reply-action,
   .ald-chatbot__send {
     animation: none;
     transition: none;

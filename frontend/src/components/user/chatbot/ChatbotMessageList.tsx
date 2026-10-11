@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faReply } from "@fortawesome/free-solid-svg-icons";
 import type { ChatMessage } from "./chatbotTypes";
@@ -33,6 +33,8 @@ const ChatbotMessageList = forwardRef<
   HTMLDivElement,
   ChatbotMessageListProps
  >(function ChatbotMessageList({ messages, ariaLabel, isTyping, onReply }, ref) {
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
+
   return (
     <div
       ref={ref}
@@ -58,14 +60,57 @@ const ChatbotMessageList = forwardRef<
           message.messageType === "product_inquiry" && message.metadata
             ? (message.metadata as ProductInquiryMetadata)
             : null;
+        const canReply = Boolean(
+          onReply && (isBotMessage || message.sender === "customer"),
+        );
+        const isReplyActionVisible =
+          canReply && activeMessageId === message.id;
+        const messageRowClassName = [
+          "ald-chatbot__message-row",
+          "ald-chatbot__message-row--" + displaySender,
+          canReply ? "ald-chatbot__message-row--replyable" : "",
+          isReplyActionVisible
+            ? "ald-chatbot__message-row--actions-visible"
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const replyAction = canReply ? (
+          <button
+            className="ald-chatbot__reply-action"
+            type="button"
+            aria-label={`Reply to ${isBotMessage ? "ALD Assistant" : "your message"}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveMessageId(null);
+              onReply?.(message);
+            }}
+          >
+            <FontAwesomeIcon icon={faReply} aria-hidden="true" />
+            <span className="sr-only">Reply</span>
+          </button>
+        ) : null;
 
         return (
           <div
-            className={
-              "ald-chatbot__message-row ald-chatbot__message-row--" +
-              displaySender
-            }
+            className={messageRowClassName}
             key={message.id}
+            onClick={(event) => {
+              if (!canReply) {
+                return;
+              }
+
+              if (
+                event.target instanceof HTMLElement &&
+                event.target.closest("a, button")
+              ) {
+                return;
+              }
+
+              setActiveMessageId((currentMessageId) =>
+                currentMessageId === message.id ? null : message.id,
+              );
+            }}
           >
             {(isBotMessage || isSupportMessage) && (
               <Image
@@ -76,6 +121,7 @@ const ChatbotMessageList = forwardRef<
                 height={28}
               />
             )}
+            {message.sender === "customer" && replyAction}
             <div
               className={
                 "ald-chatbot__message ald-chatbot__message--" + displaySender
@@ -131,18 +177,8 @@ const ChatbotMessageList = forwardRef<
                   <span>View attachment</span>
                 </a>
               )}
-              {onReply && (isBotMessage || message.sender === "customer") && (
-                <button
-                  className="ald-chatbot__reply-action"
-                  type="button"
-                  aria-label={`Reply to ${isBotMessage ? "ALD Assistant" : "your message"}`}
-                  onClick={() => onReply(message)}
-                >
-                  <FontAwesomeIcon icon={faReply} aria-hidden="true" />
-                  <span className="sr-only">Reply</span>
-                </button>
-              )}
             </div>
+            {isBotMessage && replyAction}
           </div>
         );
       })}
