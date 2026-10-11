@@ -287,6 +287,59 @@
   white-space: pre-wrap;
 }
 
+.ald-chatbot__reply-reference {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+  margin-bottom: 0.45rem;
+  border-left: 2px solid currentColor;
+  padding-left: 0.5rem;
+  opacity: 0.78;
+}
+
+.ald-chatbot__reply-reference-label,
+.ald-chatbot__composer-reply-label {
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.ald-chatbot__reply-reference-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: inherit;
+  font-size: 0.69rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.ald-chatbot__reply-action {
+  display: inline-grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  margin-top: 0.35rem;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.68rem;
+  opacity: 0.65;
+  transition: background-color 150ms ease, opacity 150ms ease;
+}
+
+.ald-chatbot__reply-action:hover {
+  background: rgba(15, 23, 42, 0.08);
+  opacity: 1;
+}
+
+.ald-chatbot__message--customer .ald-chatbot__reply-action {
+  margin-left: auto;
+}
+
 .ald-chatbot__message-type {
   display: inline-flex;
   margin-bottom: 0.35rem;
@@ -640,11 +693,60 @@
 .ald-chatbot__composer {
   display: flex;
   flex: 0 0 auto;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: stretch;
   border-top: 1px solid #e2e8f0;
   padding: 0.45rem 0.85rem 0.75rem;
   background: #ffffff;
+}
+
+.ald-chatbot__composer-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.ald-chatbot__composer-reply {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  margin-bottom: 0.45rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.55rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.65rem;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.ald-chatbot__composer-reply-copy {
+  min-width: 0;
+}
+
+.ald-chatbot__composer-reply .ald-chatbot__reply-reference {
+  margin: 0.15rem 0 0;
+  border-left-color: var(--ald-orange);
+  padding-left: 0.4rem;
+}
+
+.ald-chatbot__composer-reply-cancel {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.ald-chatbot__composer-reply-cancel:hover {
+  background: #e2e8f0;
+  color: #16234a;
 }
 
 .ald-chatbot__composer-menu {
@@ -725,6 +827,8 @@
 .ald-chatbot__mode-toggle:focus-visible,
 .ald-chatbot__composer-menu:focus-visible,
 .ald-chatbot__quick-action:focus-visible,
+.ald-chatbot__reply-action:focus-visible,
+.ald-chatbot__composer-reply-cancel:focus-visible,
 .ald-chatbot__inquiry-close:focus-visible,
 .ald-chatbot__inquiry-cancel:focus-visible,
 .ald-chatbot__inquiry-send:focus-visible,

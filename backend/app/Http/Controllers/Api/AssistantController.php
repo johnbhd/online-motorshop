@@ -30,6 +30,7 @@ class AssistantController extends Controller
             $message = $this->assistantService->chat(
                 $validated['message'],
                 $validated['history'] ?? [],
+                $validated['replyTo'] ?? null,
             );
         } catch (AssistantRateLimitException $exception) {
             return response()->json([

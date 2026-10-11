@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import { forwardRef } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faReply } from "@fortawesome/free-solid-svg-icons";
 import type { ChatMessage } from "./chatbotTypes";
+import ChatbotReplyPreview from "./ChatbotReplyPreview";
 import ProductInquiryCard from "./ProductInquiryCard";
 import type { ProductInquiryMetadata } from "@/lib/messages/conversationTypes";
 import { getDisplayConversationMessageBody } from "@/lib/messages/conversationUtils";
@@ -11,6 +14,7 @@ export type ChatbotMessageListProps = {
   messages: ChatMessage[];
   ariaLabel?: string;
   isTyping?: boolean;
+  onReply?: (message: ChatMessage) => void;
 };
 
 function renderMessageText(text: string) {
@@ -28,7 +32,7 @@ function renderMessageText(text: string) {
 const ChatbotMessageList = forwardRef<
   HTMLDivElement,
   ChatbotMessageListProps
->(function ChatbotMessageList({ messages, ariaLabel, isTyping }, ref) {
+ >(function ChatbotMessageList({ messages, ariaLabel, isTyping, onReply }, ref) {
   return (
     <div
       ref={ref}
@@ -101,6 +105,9 @@ const ChatbotMessageList = forwardRef<
                   )}
                 </>
               )}
+              {message.replyTo && (
+                <ChatbotReplyPreview reference={message.replyTo} />
+              )}
               <span className="ald-chatbot__message-text">
                 {renderMessageText(
                   getDisplayConversationMessageBody(
@@ -123,6 +130,17 @@ const ChatbotMessageList = forwardRef<
                   />
                   <span>View attachment</span>
                 </a>
+              )}
+              {onReply && (isBotMessage || message.sender === "customer") && (
+                <button
+                  className="ald-chatbot__reply-action"
+                  type="button"
+                  aria-label={`Reply to ${isBotMessage ? "ALD Assistant" : "your message"}`}
+                  onClick={() => onReply(message)}
+                >
+                  <FontAwesomeIcon icon={faReply} aria-hidden="true" />
+                  <span className="sr-only">Reply</span>
+                </button>
               )}
             </div>
           </div>

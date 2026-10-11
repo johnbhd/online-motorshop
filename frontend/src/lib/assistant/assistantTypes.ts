@@ -1,5 +1,11 @@
 export type AssistantRole = "user" | "assistant";
 
+export type AssistantReplyReference = {
+  id: string;
+  role: AssistantRole;
+  content: string;
+};
+
 export const ASSISTANT_MAX_MESSAGE_LENGTH = 1000;
 
 export const ASSISTANT_HISTORY_LIMIT = 6;
@@ -9,6 +15,7 @@ export type AssistantMessage = {
   role: AssistantRole;
   content: string;
   createdAt: string;
+  replyTo?: AssistantReplyReference | null;
 };
 
 export type AssistantHistoryItem = Pick<
@@ -19,6 +26,7 @@ export type AssistantHistoryItem = Pick<
 export type AssistantChatRequest = {
   message: string;
   history: AssistantHistoryItem[];
+  replyTo?: Pick<AssistantReplyReference, "role" | "content"> | null;
 };
 
 export type AssistantChatResponse = {

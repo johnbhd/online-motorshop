@@ -85,7 +85,7 @@ function parseRequestBody(body: unknown) {
     return { error: "Please send a valid assistant message." } as const;
   }
 
-  const allowedKeys = new Set(["message", "history"]);
+  const allowedKeys = new Set(["message", "history", "replyTo"]);
 
   if (Object.keys(body).some((key) => !allowedKeys.has(key))) {
     return { error: "Please send a valid assistant message." } as const;
@@ -133,7 +133,27 @@ function parseRequestBody(body: unknown) {
     normalizedHistory.push({ role: item.role, content });
   }
 
-  return { value: { message, history: normalizedHistory } } as const;
+  let replyTo: { role: "user" | "assistant"; content: string } | null = null;
+
+  if (body.replyTo !== undefined && body.replyTo !== null) {
+    if (
+      !isRecord(body.replyTo) ||
+      !isAssistantRole(body.replyTo.role) ||
+      typeof body.replyTo.content !== "string"
+    ) {
+      return { error: "Please send a valid reply reference." } as const;
+    }
+
+    const content = body.replyTo.content.trim();
+
+    if (!content || content.length > ASSISTANT_MAX_MESSAGE_LENGTH) {
+      return { error: "Please send a valid reply reference." } as const;
+    }
+
+    replyTo = { role: body.replyTo.role, content };
+  }
+
+  return { value: { message, history: normalizedHistory, replyTo } } as const;
 }
 
 function getLaravelApiUrl() {

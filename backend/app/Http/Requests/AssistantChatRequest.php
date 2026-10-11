@@ -33,6 +33,21 @@ class AssistantChatRequest extends FormRequest
                 'string',
                 'max:'.config('assistant.max_message_length', 1000),
             ],
+            'replyTo' => [
+                'sometimes',
+                'nullable',
+                'array',
+            ],
+            'replyTo.role' => [
+                'required_with:replyTo',
+                'string',
+                'in:user,assistant',
+            ],
+            'replyTo.content' => [
+                'required_with:replyTo',
+                'string',
+                'max:'.config('assistant.max_message_length', 1000),
+            ],
         ];
     }
 

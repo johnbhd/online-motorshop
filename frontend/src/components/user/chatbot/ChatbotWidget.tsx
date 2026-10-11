@@ -19,12 +19,7 @@ import {
   type OpenStaffChatDetail,
 } from "./chatbotEvents";
 import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
-import {
-  chatbotResponses,
-  chatbotQuickActions,
-  chatbotWelcomeMessage,
-} from "./chatbotData";
-import { resolveChatbotResponse } from "./chatbotUtils";
+import { chatbotQuickActions, chatbotWelcomeMessage } from "./chatbotData";
 import type {
   ChatMessage,
   ChatQuickAction,
@@ -40,8 +35,14 @@ import {
 import {
   ASSISTANT_HISTORY_LIMIT,
   ASSISTANT_MAX_MESSAGE_LENGTH,
+  type AssistantMessage,
   type AssistantHistoryItem,
+  type AssistantReplyReference,
 } from "@/lib/assistant/assistantTypes";
+import {
+  loadAssistantHistory,
+  saveAssistantHistory,
+} from "@/lib/assistant/assistantHistoryStorage";
 
 const initialMessages: ChatMessage[] = [
   {
@@ -72,14 +73,66 @@ function toChatMessages(conversation: Conversation): ChatMessage[] {
   });
 }
 
-function toAssistantHistory(messages: ChatMessage[]): AssistantHistoryItem[] {
+function toAssistantReplyReference(
+  message: ChatMessage | null | undefined,
+): AssistantReplyReference | null {
+  if (!message || !["bot", "customer"].includes(message.sender)) {
+    return null;
+  }
+
+  return {
+    id: message.id,
+    role: message.sender === "customer" ? "user" : "assistant",
+    content: message.text,
+  };
+}
+
+function hasSameReplyReference(
+  first: AssistantReplyReference | null | undefined,
+  second: AssistantReplyReference | null | undefined,
+) {
+  return (
+    (first?.role ?? null) === (second?.role ?? null) &&
+    (first?.content ?? null) === (second?.content ?? null)
+  );
+}
+
+function toAssistantHistory(
+  messages: ChatMessage[],
+  excludedMessageId?: string,
+): AssistantHistoryItem[] {
   return messages
-    .filter((message) => message.id !== "welcome")
+    .filter(
+      (message) =>
+        message.id !== "welcome" &&
+        message.id !== excludedMessageId &&
+        ["bot", "customer"].includes(message.sender),
+    )
     .slice(-ASSISTANT_HISTORY_LIMIT)
     .map((message) => ({
       role: message.sender === "customer" ? "user" : "assistant",
       content: message.text,
     }));
+}
+
+function toChatbotMessage(message: AssistantMessage): ChatMessage {
+  return {
+    id: message.id,
+    sender: message.role === "user" ? "customer" : "bot",
+    text: message.content,
+    createdAt: message.createdAt,
+    replyTo: message.replyTo ?? null,
+  };
+}
+
+function toStoredAssistantMessage(message: ChatMessage): AssistantMessage {
+  return {
+    id: message.id,
+    role: message.sender === "customer" ? "user" : "assistant",
+    content: message.text,
+    createdAt: message.createdAt,
+    replyTo: message.replyTo ?? null,
+  };
 }
 
 function toInquiryMetadata(
@@ -101,6 +154,8 @@ function toInquiryMetadata(
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [assistantHistoryLoaded, setAssistantHistoryLoaded] = useState(false);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
   const [assistantError, setAssistantError] = useState<string | null>(null);
   const [assistantCooldownUntil, setAssistantCooldownUntil] = useState<number | null>(null);
@@ -125,11 +180,44 @@ export default function ChatbotWidget() {
   const inquirySentCallbackRef = useRef<(() => void) | null>(null);
   const assistantRequestInFlightRef = useRef(false);
   const lastAssistantMessageRef = useRef<{ message: string; sentAt: number } | null>(null);
+  const pendingAssistantRetryRef = useRef<{
+    messageId: string;
+    message: string;
+    replyTo: AssistantReplyReference | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const storedMessages = loadAssistantHistory();
+
+      if (storedMessages.length > 0) {
+        setMessages([initialMessages[0], ...storedMessages.map(toChatbotMessage)]);
+      }
+
+      setAssistantHistoryLoaded(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!assistantHistoryLoaded) {
+      return;
+    }
+
+    saveAssistantHistory(
+      messages
+        .filter(
+          (message) =>
+            message.id !== "welcome" &&
+            ["bot", "customer"].includes(message.sender),
+        )
+        .map(toStoredAssistantMessage),
+    );
+  }, [assistantHistoryLoaded, messages]);
 
   useEffect(() => {
     if (assistantCooldownUntil === null) {
-      setAssistantCooldownSeconds(0);
-
       return;
     }
 
@@ -153,14 +241,19 @@ export default function ChatbotWidget() {
   }, [assistantCooldownUntil]);
 
   const createMessage = useCallback(
-    (sender: ChatSender, text: string): ChatMessage => {
+    (
+      sender: ChatSender,
+      text: string,
+      replyTo: AssistantReplyReference | null = null,
+    ): ChatMessage => {
       messageIdRef.current += 1;
 
       return {
-        id: sender + "-" + messageIdRef.current,
+        id: `${sender}-${Date.now()}-${messageIdRef.current}`,
         sender,
         text,
         createdAt: new Date().toISOString(),
+        replyTo,
       };
     },
     [],
@@ -179,6 +272,23 @@ export default function ChatbotWidget() {
       const now = Date.now();
       const normalizedMessage = normalizeAssistantMessage(message);
       const previousMessage = lastAssistantMessageRef.current;
+      const requestedReplyReference = toAssistantReplyReference(replyingTo);
+      const pendingRetry = pendingAssistantRetryRef.current;
+      const pendingRetryMessage = pendingRetry
+        ? messages.find((item) => item.id === pendingRetry.messageId) ?? null
+        : null;
+      const shouldReusePendingMessage = Boolean(
+        pendingRetry &&
+          pendingRetryMessage &&
+          pendingRetry.message === normalizedMessage &&
+          hasSameReplyReference(
+            pendingRetry.replyTo,
+            requestedReplyReference,
+          ),
+      );
+      const replyReference = shouldReusePendingMessage
+        ? pendingRetry?.replyTo ?? null
+        : requestedReplyReference;
 
       if (message.length > ASSISTANT_MAX_MESSAGE_LENGTH) {
         setAssistantError(
@@ -197,6 +307,7 @@ export default function ChatbotWidget() {
       }
 
       if (
+        !shouldReusePendingMessage &&
         previousMessage &&
         previousMessage.message === normalizedMessage &&
         now - previousMessage.sentAt < ASSISTANT_DUPLICATE_WINDOW_MS
@@ -215,35 +326,44 @@ export default function ChatbotWidget() {
       };
       setAssistantError(null);
 
-      const customerMessage = createMessage("customer", message);
+      const customerMessage = shouldReusePendingMessage
+        ? pendingRetryMessage!
+        : createMessage("customer", message, replyReference);
 
-      setMessages((currentMessages) => [...currentMessages, customerMessage]);
+      if (!shouldReusePendingMessage) {
+        pendingAssistantRetryRef.current = {
+          messageId: customerMessage.id,
+          message: normalizedMessage,
+          replyTo: replyReference,
+        };
+        setMessages((currentMessages) => [...currentMessages, customerMessage]);
+        setReplyingTo(null);
+      }
       setShowQuickActions(false);
 
       setIsAssistantThinking(true);
 
-      const localResponse = resolveChatbotResponse(message);
-
-      if (localResponse.text !== chatbotResponses.fallback) {
-        setMessages((currentMessages) => [
-          ...currentMessages,
-          createMessage("bot", localResponse.text),
-        ]);
-        setIsAssistantThinking(false);
-        assistantRequestInFlightRef.current = false;
-        return true;
-      }
-
       try {
         const response = await sendAssistantMessage({
           message,
-          history: toAssistantHistory(messages),
+          history: toAssistantHistory(
+            messages,
+            shouldReusePendingMessage ? customerMessage.id : undefined,
+          ),
+          replyTo: replyReference
+            ? {
+                role: replyReference.role,
+                content: replyReference.content,
+              }
+            : null,
         });
 
         setMessages((currentMessages) => [
           ...currentMessages,
           createMessage("bot", response),
         ]);
+        pendingAssistantRetryRef.current = null;
+        setReplyingTo(null);
         return true;
       } catch (error) {
         if (error instanceof AssistantRequestError) {
@@ -255,25 +375,37 @@ export default function ChatbotWidget() {
             );
           }
 
+          setReplyingTo(
+            replyReference
+              ? messages.find((item) => item.id === replyReference.id) ?? null
+              : null,
+          );
           return false;
         }
 
-        setMessages((currentMessages) => [
-          ...currentMessages,
-          createMessage(
-            "bot",
-            error instanceof Error
-              ? error.message
-              : "I’m having trouble connecting right now. Please try again.",
-          ),
-        ]);
-        return true;
+        setAssistantError(
+          error instanceof Error
+            ? error.message
+            : "I’m having trouble connecting right now. Please try again.",
+        );
+        setReplyingTo(
+          replyReference
+            ? messages.find((item) => item.id === replyReference.id) ?? null
+            : null,
+        );
+        return false;
       } finally {
         setIsAssistantThinking(false);
         assistantRequestInFlightRef.current = false;
       }
     },
-    [assistantCooldownUntil, createMessage, isAssistantThinking, messages],
+    [
+      assistantCooldownUntil,
+      createMessage,
+      isAssistantThinking,
+      messages,
+      replyingTo,
+    ],
   );
 
   const handleQuickAction = useCallback(
@@ -288,6 +420,7 @@ export default function ChatbotWidget() {
       return;
     }
 
+    setReplyingTo(null);
     setMode("staff");
     setShowQuickActions(false);
     setStaffLoading(true);
@@ -327,6 +460,7 @@ export default function ChatbotWidget() {
         setStaffError(null);
       }
 
+      setReplyingTo(null);
       setMode("staff");
       setShowQuickActions(false);
       setIsOpen(true);
@@ -419,6 +553,18 @@ export default function ChatbotWidget() {
     setMode("assistant");
     setShowQuickActions(true);
     setAssistantError(null);
+    setReplyingTo(null);
+  }, []);
+
+  const handleReplyToMessage = useCallback((message: ChatMessage) => {
+    if (message.sender !== "bot" && message.sender !== "customer") {
+      return;
+    }
+
+    setReplyingTo(message);
+    window.requestAnimationFrame(() => {
+      composerInputRef.current?.focus();
+    });
   }, []);
 
   const handleStaffSend = useCallback(
@@ -591,6 +737,9 @@ export default function ChatbotWidget() {
           onBackToHelp={handleBackToHelp}
           onQuickAction={handleQuickAction}
           onRequestStaff={handleRequestStaff}
+          onReply={handleReplyToMessage}
+          replyingTo={replyingTo}
+          onCancelReply={() => setReplyingTo(null)}
           onToggleQuickActions={() => {
             setShowQuickActions((currentValue) => !currentValue);
           }}

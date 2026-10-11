@@ -3,6 +3,7 @@ import type {
   ContactInquiryMetadata,
   ProductInquiryMetadata,
 } from "@/lib/messages/conversationTypes";
+import type { AssistantReplyReference } from "@/lib/assistant/assistantTypes";
 
 export type ChatSender = "bot" | "customer" | "staff" | "admin";
 
@@ -14,6 +15,7 @@ export type ChatMessage = {
   messageType?: "text" | "contact_inquiry" | "product_inquiry";
   metadata?: ContactInquiryMetadata | ProductInquiryMetadata | null;
   attachmentUrl?: string | null;
+  replyTo?: AssistantReplyReference | null;
 };
 
 export type ContactInquiryDraft = {
@@ -43,8 +45,4 @@ export type ChatQuickAction = {
   label: string;
   query: string;
   icon: IconDefinition;
-};
-
-export type ChatbotResponse = {
-  text: string;
 };

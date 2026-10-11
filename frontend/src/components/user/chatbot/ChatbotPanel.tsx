@@ -29,6 +29,9 @@ export type ChatbotPanelProps = {
   onBackToHelp: () => void;
   onQuickAction: (action: ChatQuickAction) => void;
   onRequestStaff: () => void;
+  onReply?: (message: ChatMessage) => void;
+  replyingTo?: ChatMessage | null;
+  onCancelReply?: () => void;
   onToggleQuickActions: () => void;
   onSend: (message: string) => boolean | Promise<boolean>;
   isAssistantThinking?: boolean;
@@ -55,6 +58,9 @@ export default function ChatbotPanel({
   onBackToHelp,
   onQuickAction,
   onRequestStaff,
+  onReply,
+  replyingTo = null,
+  onCancelReply,
   onToggleQuickActions,
   onSend,
   isAssistantThinking = false,
@@ -128,6 +134,7 @@ export default function ChatbotPanel({
         <ChatbotMessageList
           ref={messageListRef}
           messages={messages}
+          onReply={isStaffMode ? undefined : onReply}
           isTyping={isAssistantThinking && !isStaffMode}
           ariaLabel={
             isStaffMode
@@ -190,6 +197,8 @@ export default function ChatbotPanel({
         }
         onSend={onSend}
         onToggleQuickActions={onToggleQuickActions}
+        replyingTo={isStaffMode ? null : replyingTo}
+        onCancelReply={onCancelReply}
       />
     </section>
   );
