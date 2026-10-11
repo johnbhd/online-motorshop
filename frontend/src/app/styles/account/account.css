@@ -164,9 +164,8 @@
   border-radius: 50%;
   background: #fff3ec;
   color: var(--customer-orders-orange);
-  font-size: 1.15rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
+  font-size: 2.45rem;
+  line-height: 1;
 }
 
 .customer-profile-form {

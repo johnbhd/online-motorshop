@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faClipboardList,
+  faCircleUser,
   faEnvelope,
   faLocationDot,
   faPhone,
@@ -12,15 +13,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useAuth } from "@/components/auth/AuthProvider";
-
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 function ProfileDetail({
   icon,
@@ -56,8 +48,6 @@ export default function ProfilePage() {
   }
 
   const customer = user.customer;
-  const initials = getInitials(user.name) || "ALD";
-
   return (
     <div className="customer-profile-page">
       <section
@@ -81,7 +71,7 @@ export default function ProfilePage() {
         >
           <div className="customer-profile-card-header">
             <span className="customer-profile-avatar" aria-hidden="true">
-              {initials}
+              <FontAwesomeIcon icon={faCircleUser} />
             </span>
             <div>
               <p className="customer-orders-eyebrow">Signed-in customer</p>

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } fr
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faClipboardList,
+  faCircleUser,
   faEnvelope,
   faLocationDot,
   faLock,
@@ -70,15 +71,6 @@ function profileLocationFromUser(user: AuthUser, fallback = EMPTY_LOCATION): Pro
     city,
     barangay: city ? barangay : "",
   };
-}
-
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 }
 
 export default function EditableProfilePage() {
@@ -270,7 +262,6 @@ export default function EditableProfilePage() {
     );
   }
 
-  const initials = getInitials(profile.name) || "ALD";
   const isProfileDirty = values.name !== profile.name || values.email !== profile.email || values.contact_number !== (profile.customer?.contact_number ?? "") || values.address !== (profile.customer?.address ?? "");
 
   return (
@@ -287,7 +278,7 @@ export default function EditableProfilePage() {
         <main className="customer-profile-main">
           <section className="customer-profile-card" aria-labelledby="profile-details-title">
             <div className="customer-profile-card-header">
-              <span className="customer-profile-avatar" aria-hidden="true">{initials}</span>
+              <span className="customer-profile-avatar" aria-hidden="true"><FontAwesomeIcon icon={faCircleUser} /></span>
               <div>
                 <p className="customer-orders-eyebrow">Signed-in customer</p>
                 <h2 id="profile-details-title">{profile.name}</h2>
