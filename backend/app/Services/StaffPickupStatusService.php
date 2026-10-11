@@ -2,15 +2,12 @@
 
 namespace App\Services;
 
+use App\Events\OrderStatusChanged;
 use App\Models\PickupRequest;
 use Illuminate\Validation\ValidationException;
 
 class StaffPickupStatusService
 {
-    public function __construct(
-        private readonly CustomerNotificationService $customerNotificationService,
-    ) {}
-
     private const TRANSITIONS = [
         'pending' => [
             'preparing',
@@ -40,6 +37,8 @@ class StaffPickupStatusService
             ]);
         }
 
+        $previousStatus = (string) $pickupRequest->pickup_status;
+
         $pickupRequest->update([
             'pickup_status' => $status,
             'completed_at' => $status === 'completed'
@@ -48,7 +47,15 @@ class StaffPickupStatusService
         ]);
 
         $pickupRequest = $pickupRequest->fresh();
-        $this->customerNotificationService->pickupStatusChanged($pickupRequest, $status);
+        $order = $pickupRequest->loadMissing('order')->order;
+
+        OrderStatusChanged::dispatch(
+            $order,
+            'pickup',
+            (int) $pickupRequest->id,
+            $previousStatus,
+            $status,
+        );
 
         return $pickupRequest;
     }

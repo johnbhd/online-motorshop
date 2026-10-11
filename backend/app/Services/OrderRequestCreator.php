@@ -34,6 +34,9 @@ class OrderRequestCreator
             : null;
         $deliveryAddress = $delivery ? $this->deliveryAddress($delivery) : null;
         $deliveryRemarks = $delivery ? $this->deliveryRemarks($delivery) : null;
+        $guestTokenHash = $user === null && filled($payload['guest_token'] ?? null)
+            ? hash('sha256', trim((string) $payload['guest_token']))
+            : null;
 
         $requestedItems = (array) ($payload['items'] ?? []);
         $partNumbers = array_map(
@@ -101,6 +104,7 @@ class OrderRequestCreator
             $delivery,
             $deliveryAddress,
             $deliveryRemarks,
+            $guestTokenHash,
             $calculatedItems,
             $subtotalCents,
         ): OrderRequest {
@@ -115,6 +119,7 @@ class OrderRequestCreator
             $order = OrderRequest::create([
                 'order_reference' => $this->generateReference(),
                 'customer_id' => $customer->id,
+                'guest_token_hash' => $guestTokenHash,
                 'branch_id' => $branch->id,
                 'fulfillment_type' => $method,
                 'order_status' => 'pending',

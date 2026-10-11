@@ -60,6 +60,10 @@ function senderLabel(
   message: ConversationMessage,
   conversation: Conversation,
 ): string {
+  if (message.sender === "system" || message.message_type === "order_update") {
+    return "Order Update";
+  }
+
   if (message.sender === "admin") {
     return "ALD Administrator";
   }
@@ -462,6 +466,9 @@ export default function AdminMessages() {
                   {activeConversation.messages.length > 0 ? (
                     activeConversation.messages.map((message) => {
                       const isAdminMessage = message.sender === "admin";
+                      const isOrderUpdate =
+                        message.sender === "system" ||
+                        message.message_type === "order_update";
                       const productMetadata =
                         message.message_type === "product_inquiry" &&
                         message.metadata
@@ -474,11 +481,16 @@ export default function AdminMessages() {
                           key={message.id}
                         >
                           <div
-                            className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm text-slate-800 sm:max-w-[72%] ${isAdminMessage ? "rounded-br-md border border-orange-200 bg-orange-50" : "rounded-bl-md bg-white shadow-sm ring-1 ring-slate-200"}`}
+                            className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm text-slate-800 sm:max-w-[72%] ${isOrderUpdate ? "rounded-bl-md border border-orange-200 bg-orange-50" : isAdminMessage ? "rounded-br-md border border-orange-200 bg-orange-50" : "rounded-bl-md bg-white shadow-sm ring-1 ring-slate-200"}`}
                           >
                             <p className="mb-1 text-[11px] font-semibold text-slate-500">
                               {senderLabel(message, activeConversation)}
                             </p>
+                            {isOrderUpdate && (
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                Automated update
+                              </p>
+                            )}
                             {message.message_type === "contact_inquiry" && (
                               <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
                                 Contact inquiry

@@ -88,6 +88,8 @@ Route::post('/conversations', [ConversationController::class, 'store'])
     ->name('conversations.store');
 Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'storeMessage'])
     ->name('conversations.messages.store');
+Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markRead'])
+    ->name('conversations.read');
 
 Route::prefix('customer')
     ->name('customer.')

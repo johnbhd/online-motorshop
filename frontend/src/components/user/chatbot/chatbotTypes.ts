@@ -1,19 +1,24 @@
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import type {
   ContactInquiryMetadata,
+  OrderUpdateMetadata,
   ProductInquiryMetadata,
 } from "@/lib/messages/conversationTypes";
 import type { AssistantReplyReference } from "@/lib/assistant/assistantTypes";
 
-export type ChatSender = "bot" | "customer" | "staff" | "admin";
+export type ChatSender = "bot" | "customer" | "staff" | "admin" | "system";
 
 export type ChatMessage = {
   id: string;
   sender: ChatSender;
   text: string;
   createdAt: string;
-  messageType?: "text" | "contact_inquiry" | "product_inquiry";
-  metadata?: ContactInquiryMetadata | ProductInquiryMetadata | null;
+  messageType?: "text" | "contact_inquiry" | "product_inquiry" | "order_update";
+  metadata?:
+    | ContactInquiryMetadata
+    | ProductInquiryMetadata
+    | OrderUpdateMetadata
+    | null;
   attachmentUrl?: string | null;
   replyTo?: AssistantReplyReference | null;
 };

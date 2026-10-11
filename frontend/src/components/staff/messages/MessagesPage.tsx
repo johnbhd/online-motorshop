@@ -402,7 +402,11 @@ export default function MessagesPage() {
                     activeConversation.messages.map((message) => {
                       const isStaffMessage = message.sender === "staff";
                       const isAdminMessage = message.sender === "admin";
-                      const isTeamMessage = isStaffMessage || isAdminMessage;
+                      const isOrderUpdate =
+                        message.sender === "system" ||
+                        message.message_type === "order_update";
+                      const isTeamMessage =
+                        (isStaffMessage || isAdminMessage) && !isOrderUpdate;
                       const productMetadata =
                         message.message_type === "product_inquiry" &&
                         message.metadata
@@ -422,11 +426,15 @@ export default function MessagesPage() {
                             className={
                               isTeamMessage
                                 ? "max-w-[82%] rounded-2xl rounded-br-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-800 sm:max-w-[70%]"
-                                : "max-w-[82%] rounded-2xl rounded-bl-md bg-slate-200/80 px-4 py-3 text-sm text-slate-800 sm:max-w-[70%]"
+                                : isOrderUpdate
+                                  ? "max-w-[82%] rounded-2xl rounded-bl-md border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-slate-800 sm:max-w-[70%]"
+                                  : "max-w-[82%] rounded-2xl rounded-bl-md bg-slate-200/80 px-4 py-3 text-sm text-slate-800 sm:max-w-[70%]"
                             }
                           >
                             <p className="mb-1 text-[11px] font-semibold text-slate-500">
-                              {isAdminMessage
+                              {isOrderUpdate
+                                ? "Order Update"
+                                : isAdminMessage
                                 ? "ALD Administrator"
                                 : isStaffMessage
                                   ? message.sender_name
@@ -434,6 +442,11 @@ export default function MessagesPage() {
                                     : "ALD Staff"
                                   : activeConversation.participant.name}
                             </p>
+                            {isOrderUpdate && (
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                Automated update
+                              </p>
+                            )}
                             {message.message_type === "contact_inquiry" && (
                               <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
                                 Contact inquiry

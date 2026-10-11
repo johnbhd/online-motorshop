@@ -31,6 +31,7 @@ class OrderRequest extends Model
     protected $fillable = [
         'order_reference',
         'customer_id',
+        'guest_token_hash',
         'branch_id',
         'assigned_staff_id',
         'fulfillment_type',

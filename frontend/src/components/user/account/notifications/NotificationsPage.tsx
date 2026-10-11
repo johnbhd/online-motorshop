@@ -35,13 +35,19 @@ export default function NotificationsPage() {
     id: string,
     referenceType: string | null,
     orderReference: string | null,
+    conversationId: number | null,
   ) => {
     await notifications.markRead(id);
-    if (referenceType === "order" && orderReference) {
+    if (conversationId) {
+      window.dispatchEvent(
+        new CustomEvent(OPEN_STAFF_CHAT_EVENT, {
+          detail: { conversationId },
+        }),
+      );
+    } else if (referenceType === "order" && orderReference) {
       router.push(`/account/orders/${encodeURIComponent(orderReference)}`);
-    }
-    if (referenceType === "conversation") {
-      window.dispatchEvent(new Event(OPEN_STAFF_CHAT_EVENT));
+    } else if (referenceType === "conversation") {
+      window.dispatchEvent(new CustomEvent(OPEN_STAFF_CHAT_EVENT));
     }
   };
 
@@ -161,6 +167,7 @@ export default function NotificationsPage() {
                       notification.id,
                       notification.reference.type,
                       notification.reference.order_reference,
+                      notification.reference.conversation_id,
                     )
                   }
                 />

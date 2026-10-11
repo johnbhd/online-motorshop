@@ -167,6 +167,21 @@ export async function getCurrentConversation(
   }
 }
 
+export async function markCustomerConversationRead(
+  conversationId: number,
+  token: string | null,
+  guestToken: string | null,
+): Promise<void> {
+  await request<{ message: string }>(
+    `/api/conversations/${conversationId}/read`,
+    {
+      method: "POST",
+      token,
+      guestToken,
+    },
+  );
+}
+
 export async function startConversation(
   body: string,
   guestToken: string | null,

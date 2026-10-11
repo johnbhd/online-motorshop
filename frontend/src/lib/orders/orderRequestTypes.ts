@@ -29,6 +29,7 @@ export function getPaymentMethodLabel(
 }
 
 export type OrderRequestPayload = {
+  guest_token?: string;
   customer: {
     name: string;
     email: string;

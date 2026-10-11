@@ -127,6 +127,27 @@ class ConversationController extends Controller
         ], 201);
     }
 
+    public function markRead(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = $this->requester($request);
+        $this->ensureCustomerOrGuest($user);
+
+        if (! $this->conversationBelongsToRequester(
+            $conversation,
+            $user,
+            $request->header('X-Guest-Token'),
+        )) {
+            return response()->json([
+                'message' => 'Conversation not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'message' => 'Conversation marked as read.',
+            'read' => $this->conversationService->markCustomerMessagesRead($conversation, $user),
+        ]);
+    }
+
     private function ensureCustomerOrGuest($user): void
     {
         if ($user && $user->role !== 'customer') {

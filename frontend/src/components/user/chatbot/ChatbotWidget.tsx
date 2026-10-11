@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   getCurrentConversation,
+  markCustomerConversationRead,
   sendCustomerConversationMessage,
   startConversation,
 } from "@/lib/messages/conversationApi";
@@ -426,12 +427,15 @@ export default function ChatbotWidget() {
     setStaffLoading(true);
 
     try {
-      setStaffConversation(
-        await getCurrentConversation(
-          getAuthToken(),
-          getGuestConversationToken(),
-        ),
-      );
+      const token = getAuthToken();
+      const guestToken = getGuestConversationToken();
+      const conversation = await getCurrentConversation(token, guestToken);
+
+      setStaffConversation(conversation);
+
+      if (conversation) {
+        await markCustomerConversationRead(conversation.id, token, guestToken);
+      }
       setStaffError(null);
     } catch (error) {
       setStaffError(
@@ -645,13 +649,20 @@ export default function ChatbotWidget() {
     }
 
     const refreshStaffConversation = async () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
       try {
-        setStaffConversation(
-          await getCurrentConversation(
-            getAuthToken(),
-            getGuestConversationToken(),
-          ),
-        );
+        const token = getAuthToken();
+        const guestToken = getGuestConversationToken();
+        const conversation = await getCurrentConversation(token, guestToken);
+
+        setStaffConversation(conversation);
+
+        if (conversation) {
+          await markCustomerConversationRead(conversation.id, token, guestToken);
+        }
       } catch {
         // Keep the current thread visible if a background refresh fails.
       }
@@ -659,10 +670,12 @@ export default function ChatbotWidget() {
 
     const interval = window.setInterval(() => void refreshStaffConversation(), 10000);
     window.addEventListener("focus", refreshStaffConversation);
+    document.addEventListener("visibilitychange", refreshStaffConversation);
 
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", refreshStaffConversation);
+      document.removeEventListener("visibilitychange", refreshStaffConversation);
     };
   }, [isOpen, mode]);
 

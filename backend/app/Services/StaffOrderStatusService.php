@@ -2,15 +2,12 @@
 
 namespace App\Services;
 
+use App\Events\OrderStatusChanged;
 use App\Models\OrderRequest;
 use Illuminate\Validation\ValidationException;
 
 class StaffOrderStatusService
 {
-    public function __construct(
-        private readonly CustomerNotificationService $customerNotificationService,
-    ) {}
-
     private const ALLOWED_TRANSITIONS = [
         'pending' => [
             'under_review',
@@ -41,12 +38,21 @@ class StaffOrderStatusService
             ]);
         }
 
+        $previousStatus = (string) $order->order_status;
+
         $order->update([
             'order_status' => $targetStatus,
         ]);
 
         $order = $order->fresh();
-        $this->customerNotificationService->orderStatusChanged($order, $targetStatus);
+
+        OrderStatusChanged::dispatch(
+            $order,
+            'order',
+            (int) $order->id,
+            $previousStatus,
+            $targetStatus,
+        );
 
         return $order;
     }

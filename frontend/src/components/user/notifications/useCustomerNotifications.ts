@@ -75,6 +75,26 @@ export function useCustomerNotifications(options: {
     return () => controller.abort();
   }, [enabled, refresh]);
 
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refresh();
+      }
+    };
+    const interval = window.setInterval(refreshWhenVisible, 30_000);
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [enabled, refresh]);
+
   const markRead = useCallback(async (id: string) => {
     const token = getAuthToken();
     if (!token) return;

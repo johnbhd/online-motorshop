@@ -68,6 +68,7 @@ class StoreOrderRequestRequest extends FormRequest
             'customer.email' => ['sometimes', 'email', 'max:255'],
             'customer.contact_number' => ['sometimes', 'string', 'max:30'],
             'customer.address' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'guest_token' => ['sometimes', 'nullable', 'string', 'min:32', 'max:128'],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*' => ['required', 'array'],

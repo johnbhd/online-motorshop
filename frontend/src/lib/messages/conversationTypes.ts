@@ -1,11 +1,12 @@
 export type ConversationParticipantType = "customer" | "guest";
 
-export type ConversationMessageSender = "customer" | "staff" | "admin";
+export type ConversationMessageSender = "customer" | "staff" | "admin" | "system";
 
 export type ConversationMessageType =
   | "text"
   | "contact_inquiry"
-  | "product_inquiry";
+  | "product_inquiry"
+  | "order_update";
 
 export type ContactInquiryMetadata = {
   full_name?: string;
@@ -29,9 +30,18 @@ export type ProductInquiryMetadata = {
   category?: string | null;
 };
 
+export type OrderUpdateMetadata = {
+  event_key?: string;
+  source?: string;
+  status?: string;
+  order_id?: number;
+  order_reference?: string;
+};
+
 export type ConversationMessageMetadata =
   | ContactInquiryMetadata
-  | ProductInquiryMetadata;
+  | ProductInquiryMetadata
+  | OrderUpdateMetadata;
 
 export type ConversationParticipant = {
   id: number | null;
@@ -46,6 +56,7 @@ export type ConversationMessage = {
   body: string;
   message_type: ConversationMessageType;
   metadata: ConversationMessageMetadata | null;
+  read_at: string | null;
   attachment: {
     url: string;
   } | null;

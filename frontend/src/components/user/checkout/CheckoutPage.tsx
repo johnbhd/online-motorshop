@@ -18,6 +18,7 @@ import CheckoutPaymentMethod from "./PaymentMethod";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/toast/ToastProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
+import { getOrCreateGuestConversationToken } from "@/lib/messages/guestTokenStorage";
 import { getCustomerProfile } from "@/lib/customerProfileApi";
 import {
   getBarangaysForCity,
@@ -381,7 +382,14 @@ export default function CheckoutPage() {
     submitLockRef.current = true;
     setIsSubmitting(true);
 
-    const payload = buildOrderRequestPayload(formData, cartItems, branches);
+    const authToken = getAuthToken();
+    const guestToken = authToken ? null : getOrCreateGuestConversationToken();
+    const payload = buildOrderRequestPayload(
+      formData,
+      cartItems,
+      branches,
+      guestToken,
+    );
 
     if (!payload) {
       setIsSubmitting(false);
@@ -393,7 +401,7 @@ export default function CheckoutPage() {
     }
 
     try {
-      const response = await submitOrderRequest(payload, getAuthToken());
+      const response = await submitOrderRequest(payload, authToken);
 
       if (!saveOrderConfirmation(response.order)) {
         throw new OrderRequestApiError(

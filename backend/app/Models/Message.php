@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Message extends Model
 {
-    public const SENDER_TYPES = ['customer', 'staff', 'admin'];
+    public const SENDER_TYPES = ['customer', 'staff', 'admin', 'system'];
 
     protected $fillable = [
         'conversation_id',
@@ -17,12 +17,15 @@ class Message extends Model
         'metadata',
         'attachment_url',
         'attachment_public_id',
+        'event_key',
+        'read_at',
     ];
 
     protected function casts(): array
     {
         return [
             'metadata' => 'array',
+            'read_at' => 'datetime',
         ];
     }
 

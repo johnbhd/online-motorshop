@@ -3,11 +3,14 @@
 import Image from "next/image";
 import { forwardRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faReply } from "@fortawesome/free-solid-svg-icons";
+import { faBoxOpen, faReply } from "@fortawesome/free-solid-svg-icons";
 import type { ChatMessage } from "./chatbotTypes";
 import ChatbotReplyPreview from "./ChatbotReplyPreview";
 import ProductInquiryCard from "./ProductInquiryCard";
-import type { ProductInquiryMetadata } from "@/lib/messages/conversationTypes";
+import type {
+  OrderUpdateMetadata,
+  ProductInquiryMetadata,
+} from "@/lib/messages/conversationTypes";
 import { getDisplayConversationMessageBody } from "@/lib/messages/conversationUtils";
 
 export type ChatbotMessageListProps = {
@@ -54,8 +57,19 @@ const ChatbotMessageList = forwardRef<
         const isBotMessage = message.sender === "bot";
         const isStaffMessage = message.sender === "staff";
         const isAdminMessage = message.sender === "admin";
-        const isSupportMessage = isStaffMessage || isAdminMessage;
-        const displaySender = isAdminMessage ? "staff" : message.sender;
+        const isOrderUpdate =
+          message.messageType === "order_update" || message.sender === "system";
+        const isSupportMessage =
+          (isStaffMessage || isAdminMessage) && !isOrderUpdate;
+        const displaySender = isOrderUpdate
+          ? "order-update"
+          : isAdminMessage
+            ? "staff"
+            : message.sender;
+        const orderUpdateMetadata =
+          isOrderUpdate && message.metadata
+            ? (message.metadata as OrderUpdateMetadata)
+            : null;
         const productMetadata =
           message.messageType === "product_inquiry" && message.metadata
             ? (message.metadata as ProductInquiryMetadata)
@@ -112,7 +126,11 @@ const ChatbotMessageList = forwardRef<
               );
             }}
           >
-            {(isBotMessage || isSupportMessage) && (
+            {isOrderUpdate ? (
+              <span className="ald-chatbot__order-update-icon" aria-hidden="true">
+                <FontAwesomeIcon icon={faBoxOpen} />
+              </span>
+            ) : (isBotMessage || isSupportMessage) ? (
               <Image
                 className="ald-chatbot__message-avatar"
                 src="/branding/logo.png"
@@ -120,17 +138,27 @@ const ChatbotMessageList = forwardRef<
                 width={28}
                 height={28}
               />
-            )}
+            ) : null}
             {message.sender === "customer" && replyAction}
             <div
               className={
                 "ald-chatbot__message ald-chatbot__message--" + displaySender
               }
             >
-              {isSupportMessage && (
+              {isOrderUpdate ? (
+                <span className="ald-chatbot__message-label">
+                  Order Update
+                  {orderUpdateMetadata?.order_reference
+                    ? ` · ${orderUpdateMetadata.order_reference}`
+                    : ""}
+                </span>
+              ) : isSupportMessage ? (
                 <span className="ald-chatbot__message-label">
                   {isAdminMessage ? "ALD Administrator" : "ALD Staff"}
                 </span>
+              ) : null}
+              {isOrderUpdate && (
+                <span className="ald-chatbot__message-type">Automated update</span>
               )}
               {message.messageType === "contact_inquiry" && (
                 <span className="ald-chatbot__message-type">Contact inquiry</span>
