@@ -1662,3 +1662,7 @@
 .track-order-progress-list[data-count="7"] {
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
+
+.track-order-progress-list[data-count="8"] {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
