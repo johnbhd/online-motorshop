@@ -25,6 +25,7 @@ import {
   updateCustomerPassword,
   updateCustomerProfile,
 } from "@/lib/customerProfileApi";
+import ProfileAddressFields, { type ProfileLocationValues } from "./ProfileAddressFields";
 
 type ProfileForm = {
   name: string;
@@ -47,12 +48,27 @@ const EMPTY_PASSWORD: PasswordForm = {
   password_confirmation: "",
 };
 
+const EMPTY_LOCATION: ProfileLocationValues = {
+  city: "",
+  barangay: "",
+};
+
 function profileFormFromUser(user: AuthUser): ProfileForm {
   return {
     name: user.name,
     email: user.email,
     contact_number: user.customer?.contact_number ?? "",
     address: user.customer?.address ?? "",
+  };
+}
+
+function profileLocationFromUser(user: AuthUser, fallback = EMPTY_LOCATION): ProfileLocationValues {
+  const city = user.customer?.city === undefined ? fallback.city : user.customer.city ?? "";
+  const barangay = user.customer?.barangay === undefined ? fallback.barangay : user.customer.barangay ?? "";
+
+  return {
+    city,
+    barangay: city ? barangay : "",
   };
 }
 
@@ -75,6 +91,7 @@ export default function EditableProfilePage() {
     contact_number: "",
     address: "",
   });
+  const [location, setLocation] = useState<ProfileLocationValues>(EMPTY_LOCATION);
   const [password, setPassword] = useState<PasswordForm>(EMPTY_PASSWORD);
   const [profileErrors, setProfileErrors] = useState<FieldErrors>({});
   const [passwordErrors, setPasswordErrors] = useState<FieldErrors>({});
@@ -101,6 +118,7 @@ export default function EditableProfilePage() {
         if (!signal?.aborted) {
           setProfile(response.user);
           setValues(profileFormFromUser(response.user));
+          setLocation(profileLocationFromUser(response.user));
           setLoadError(null);
         }
       })
@@ -135,6 +153,7 @@ export default function EditableProfilePage() {
         if (!controller.signal.aborted) {
           setProfile(response.user);
           setValues(profileFormFromUser(response.user));
+          setLocation(profileLocationFromUser(response.user));
           setLoadError(null);
         }
       })
@@ -187,6 +206,7 @@ export default function EditableProfilePage() {
       const response = await updateCustomerProfile(token, nextValues);
       setProfile(response.user);
       setValues(profileFormFromUser(response.user));
+      setLocation(profileLocationFromUser(response.user, location));
       updateUser({ name: response.user.name, email: response.user.email, customer: response.user.customer });
       showToast({ title: "Profile updated", message: "Your customer account details have been saved." });
     } catch (error) {
@@ -281,7 +301,16 @@ export default function EditableProfilePage() {
                 <ProfileField id="customer-profile-name" label="Full name" icon={faUser} value={values.name} error={profileErrors.name?.[0]} autoComplete="name" onChange={(name) => setValues((current) => ({ ...current, name }))} />
                 <ProfileField id="customer-profile-email" label="Email address" icon={faEnvelope} type="email" value={values.email} error={profileErrors.email?.[0]} autoComplete="email" onChange={(email) => setValues((current) => ({ ...current, email }))} />
                 <ProfileField id="customer-profile-contact-number" label="Contact number" icon={faPhone} type="tel" value={values.contact_number} error={profileErrors.contact_number?.[0]} autoComplete="tel" onChange={(contact_number) => setValues((current) => ({ ...current, contact_number }))} />
+              </div>
+              <ProfileSectionHeader icon={faLocationDot} title="Address & location" description="Keep your complete address separate from the future city and barangay selectors." />
+              <div className="customer-profile-form-grid customer-profile-address-grid">
                 <ProfileField id="customer-profile-address" label="Address" icon={faLocationDot} value={values.address} error={profileErrors.address?.[0]} autoComplete="street-address" multiline onChange={(address) => setValues((current) => ({ ...current, address }))} />
+                <ProfileAddressFields
+                  city={location.city}
+                  barangay={location.barangay}
+                  onCityChange={(city) => setLocation({ city, barangay: "" })}
+                  onBarangayChange={(barangay) => setLocation((current) => ({ ...current, barangay }))}
+                />
               </div>
               {profileError ? <p className="customer-profile-form-error" role="alert">{profileError}</p> : null}
               <div className="customer-profile-form-footer"><button type="submit" className="customer-profile-action customer-profile-action--primary" disabled={savingProfile || !isProfileDirty}>{savingProfile ? "Saving…" : "Save changes"}</button></div>

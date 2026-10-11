@@ -6,6 +6,8 @@ export type AuthCustomer = {
   contact_number: string;
   email: string;
   address: string | null;
+  city?: string | null;
+  barangay?: string | null;
 };
 
 export type AuthUser = {
