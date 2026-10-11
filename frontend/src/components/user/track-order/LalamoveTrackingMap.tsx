@@ -65,9 +65,9 @@ export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTracki
       const map = leaflet.map(mapElementRef.current, {
         center,
         zoom: destination && branchLocation ? 12 : 15,
-        scrollWheelZoom: false,
-        dragging: false,
-        doubleClickZoom: false,
+        scrollWheelZoom: true,
+        dragging: true,
+        doubleClickZoom: true,
       });
       leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -158,8 +158,8 @@ export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTracki
         </div>
         <span className="track-order-progress-caption">Illustrative route</span>
       </div>
-      <div ref={mapElementRef} className="track-order-map" aria-label="Read-only map showing the branch and saved delivery location" />
-      <p className="track-order-map-note">This map shows the saved order coordinates and a symbolic progress marker. It is not live rider GPS or an ETA.</p>
+      <div ref={mapElementRef} className="track-order-map" aria-label="Movable map showing the branch and saved delivery location" />
+      <p className="track-order-map-note">Pan or zoom the map to inspect the saved order coordinates and symbolic progress marker. It is not live rider GPS or an ETA.</p>
     </section>
   );
 }
