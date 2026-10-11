@@ -15,6 +15,7 @@ const deliveryStages = [
   "Under Review",
   "Confirmed",
   "Preparing Order",
+  "Waiting for Booking",
   "Booked",
   "Picked Up",
   "In Transit",
@@ -117,36 +118,45 @@ function getCurrentStageIndex(
   }
 
   if (
-    status === "confirmed" ||
+    status === "confirmed"
+  ) {
+    return 2;
+  }
+
+  if (
     status === "waiting_for_booking" ||
     status === "waiting_for_payment" ||
     status === "payment_verification"
   ) {
-    return 2;
+    return method === "delivery" ? 4 : 2;
   }
 
   if (status === "preparing" || status === "preparing_order") {
     return 3;
   }
 
-  if (
-    status === "ready_for_pickup" ||
-    status === "booked_for_delivery" ||
-    status === "booked"
-  ) {
+  if (status === "ready_for_pickup") {
     return 4;
   }
 
-  if (status === "picked_up_by_rider" || status === "picked_up") {
+  if (status === "booked_for_delivery") {
     return method === "delivery" ? 5 : 4;
   }
 
-  if (status === "in_transit") {
+  if (status === "booked") {
+    return method === "delivery" ? 5 : 4;
+  }
+
+  if (status === "picked_up_by_rider" || status === "picked_up") {
     return method === "delivery" ? 6 : 4;
   }
 
-  if (status === "delivered") {
+  if (status === "in_transit") {
     return method === "delivery" ? 7 : 4;
+  }
+
+  if (status === "delivered") {
+    return method === "delivery" ? 8 : 4;
   }
 
   return 0;

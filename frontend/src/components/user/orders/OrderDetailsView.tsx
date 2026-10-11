@@ -45,15 +45,14 @@ export default function OrderDetailsView({
         />
         <OrderSummaryCards order={order} />
         {order.fulfillment.method === "delivery" ? (
-          <>
-            <OrderDeliverySnapshot delivery={order.fulfillment.delivery} />
-            <LalamoveTrackingMap
-              branch={order.fulfillment.branch}
-              delivery={order.fulfillment.delivery}
-              orderStatus={order.orderStatus}
-            />
-          </>
+          <OrderDeliverySnapshot delivery={order.fulfillment.delivery} />
         ) : null}
+        <LalamoveTrackingMap
+          branch={order.fulfillment.branch}
+          delivery={order.fulfillment.method === "delivery" ? order.fulfillment.delivery : null}
+          fulfillmentMethod={order.fulfillment.method}
+          orderStatus={order.orderStatus}
+        />
         <div className="track-order-detail-grid">
           <div className="track-order-primary-column">
             <OrderItems order={order} />

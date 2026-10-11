@@ -1609,6 +1609,17 @@
   line-height: 1.55;
 }
 
+.track-order-map-branch {
+  margin: 1.1rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.track-order-map-branch strong {
+  color: var(--track-order-ink);
+}
+
 .track-order-map-error {
   padding: 0.65rem 0.75rem;
   border: 1px solid #fecaca;
@@ -1644,6 +1655,24 @@
   letter-spacing: 0.04em;
 }
 
+.lalamove-tracking-marker--motorcycle span {
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  place-items: center;
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.lalamove-tracking-marker--motorcycle svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.lalamove-tracking-marker--motorcycle b {
+  display: none;
+}
+
 .track-order-field-error {
   display: block;
   margin-top: 0.35rem;
@@ -1665,4 +1694,8 @@
 
 .track-order-progress-list[data-count="8"] {
   grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.track-order-progress-list[data-count="9"] {
+  grid-template-columns: repeat(9, minmax(0, 1fr));
 }

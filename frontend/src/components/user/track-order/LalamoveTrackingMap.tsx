@@ -1,21 +1,25 @@
 "use client";
 
+import { icon } from "@fortawesome/fontawesome-svg-core";
+import { faMotorcycle } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LatLngExpression, Map as LeafletMap, LayerGroup } from "leaflet";
-import type { OrderViewDelivery, CustomerOrderBranch } from "@/lib/orders/orderTypes";
+import type {
+  CustomerOrderBranch,
+  OrderViewDelivery,
+  OrderViewFulfillment,
+} from "@/lib/orders/orderTypes";
 import { addAldMapBasemap } from "@/lib/mapLibreBasemap";
 import { ALD_MAP_MAX_ZOOM, ALD_MAP_MIN_ZOOM } from "@/lib/mapConfig";
 
 type LalamoveTrackingMapProps = {
   branch: CustomerOrderBranch | null;
   delivery: OrderViewDelivery | null;
+  fulfillmentMethod: OrderViewFulfillment["method"];
   orderStatus: string;
 };
 
-function isCoordinatePair(latitude: number | null | undefined, longitude: number | null | undefined): latitude is number {
-  return typeof latitude === "number" && Number.isFinite(latitude)
-    && typeof longitude === "number" && Number.isFinite(longitude);
-}
+type TrackingMarkerVariant = "point" | "motorcycle";
 
 function normalizeStatus(status: string) {
   return status.trim().toLowerCase().replace(/[-\s]+/g, "_");
@@ -23,12 +27,14 @@ function normalizeStatus(status: string) {
 
 function destinationProgress(status: string): number | null {
   switch (normalizeStatus(status)) {
+    case "waiting_for_booking":
+      return 0;
     case "booked":
-      return 0.2;
+      return 0.08;
     case "picked_up":
-      return 0.55;
+      return 0.25;
     case "in_transit":
-      return 0.78;
+      return 0.7;
     case "delivered":
       return 1;
     default:
@@ -36,9 +42,43 @@ function destinationProgress(status: string): number | null {
   }
 }
 
+function isCoordinatePair(
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+): latitude is number {
+  return typeof latitude === "number" && Number.isFinite(latitude)
+    && typeof longitude === "number" && Number.isFinite(longitude);
+}
+
+function getMapContextLabel(
+  fulfillmentMethod: OrderViewFulfillment["method"],
+  orderStatus: string,
+  deliveryStatus: string,
+  hasDeliveryProgress: boolean,
+) {
+  if (fulfillmentMethod === "pickup") {
+    return "Store Pickup";
+  }
+
+  if (deliveryStatus === "delivered" && hasDeliveryProgress) {
+    return "Delivery Complete";
+  }
+
+  if (hasDeliveryProgress) {
+    return "Delivery Progress";
+  }
+
+  if (["rejected", "cancelled"].includes(normalizeStatus(orderStatus))) {
+    return "Order Closed";
+  }
+
+  return "Route Preview";
+}
+
 export default function LalamoveTrackingMap({
   branch,
   delivery,
+  fulfillmentMethod,
   orderStatus,
 }: LalamoveTrackingMapProps) {
   const mapElementRef = useRef<HTMLDivElement>(null);
@@ -46,15 +86,40 @@ export default function LalamoveTrackingMap({
   const layerRef = useRef<LayerGroup | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
 
-  const destination = useMemo(() => delivery && isCoordinatePair(delivery.latitude, delivery.longitude)
+  const isPickup = fulfillmentMethod === "pickup";
+  const normalizedOrderStatus = normalizeStatus(orderStatus);
+  const deliveryStatus = normalizeStatus(delivery?.status ?? "");
+  const isOrderConfirmed = ["confirmed", "completed"].includes(normalizedOrderStatus);
+  const isOrderClosed = ["rejected", "cancelled"].includes(normalizedOrderStatus);
+  const destination = useMemo(() => !isPickup
+    && delivery
+    && isCoordinatePair(delivery.latitude, delivery.longitude)
     ? [delivery.latitude, delivery.longitude] as [number, number]
-    : null, [delivery]);
+    : null, [delivery, isPickup]);
   const branchLocation = useMemo(() => branch && isCoordinatePair(branch.latitude, branch.longitude)
     ? [branch.latitude, branch.longitude] as [number, number]
     : null, [branch]);
-  const canShowFulfillmentProgress = ["confirmed", "completed"].includes(
-    normalizeStatus(orderStatus),
+  const progress = destinationProgress(deliveryStatus);
+  const canShowDeliveryProgress = !isPickup
+    && isOrderConfirmed
+    && progress !== null;
+  const shouldDrawRoute = !isPickup
+    && !isOrderClosed
+    && Boolean(branchLocation && destination);
+  const mapContextLabel = getMapContextLabel(
+    fulfillmentMethod,
+    orderStatus,
+    deliveryStatus,
+    canShowDeliveryProgress,
   );
+  const mapTitle = isPickup ? "Pickup Branch Location" : "Lalamove Delivery Map";
+  const mapEyebrow = isPickup ? "PICKUP LOCATION" : "DELIVERY LOCATION";
+  const mapAriaLabel = isPickup
+    ? "Map showing the selected ALD pickup branch"
+    : "Interactive map showing the selected ALD branch and saved delivery location";
+  const mapErrorMessage = isPickup
+    ? "Unable to load the branch map. The selected pickup branch remains available in the order summary."
+    : "Unable to load map. Your saved address and delivery information are still available.";
 
   useEffect(() => {
     if (!destination && !branchLocation) {
@@ -93,7 +158,7 @@ export default function LalamoveTrackingMap({
 
         basemap.maplibre.on("error", () => {
           if (!cancelled) {
-            setMapError("Unable to load map. Your saved address and delivery information are still available.");
+            setMapError(mapErrorMessage);
           }
         });
 
@@ -103,7 +168,7 @@ export default function LalamoveTrackingMap({
         window.requestAnimationFrame(() => map.invalidateSize());
       } catch {
         if (!cancelled) {
-          setMapError("Unable to load map. Your saved address and delivery information are still available.");
+          setMapError(mapErrorMessage);
         }
       }
     };
@@ -112,7 +177,7 @@ export default function LalamoveTrackingMap({
     return () => {
       cancelled = true;
     };
-  }, [branchLocation, destination]);
+  }, [branchLocation, destination, mapErrorMessage]);
 
   useEffect(() => {
     if (!mapRef.current || !layerRef.current) return;
@@ -124,9 +189,17 @@ export default function LalamoveTrackingMap({
 
       layer.clearLayers();
       const points: [number, number][] = [];
-      const pin = (color: string, label: string) => leaflet.divIcon({
-        className: "lalamove-tracking-marker",
-        html: `<span style="--tracking-marker-color:${color}" aria-hidden="true"></span><b>${label}</b>`,
+      const pin = (
+        color: string,
+        label: string,
+        variant: TrackingMarkerVariant = "point",
+      ) => leaflet.divIcon({
+        className: variant === "motorcycle"
+          ? "lalamove-tracking-marker lalamove-tracking-marker--motorcycle"
+          : "lalamove-tracking-marker",
+        html: variant === "motorcycle"
+          ? `<span style="--tracking-marker-color:${color}" aria-hidden="true">${icon(faMotorcycle).html.join("")}</span><b>${label}</b>`
+          : `<span style="--tracking-marker-color:${color}" aria-hidden="true"></span><b>${label}</b>`,
         iconSize: [34, 34],
         iconAnchor: [17, 17],
       });
@@ -141,21 +214,23 @@ export default function LalamoveTrackingMap({
         leaflet.marker(destination, { icon: pin("#e07a08", "YOU") }).addTo(layer).bindTooltip("Saved delivery location");
       }
 
-      if (branchLocation && destination && canShowFulfillmentProgress) {
+      if (shouldDrawRoute && branchLocation && destination) {
         leaflet.polyline([branchLocation, destination], {
-          color: "#e07a08",
-          dashArray: "7 8",
+          color: canShowDeliveryProgress ? "#e07a08" : "#94a3b8",
+          dashArray: canShowDeliveryProgress ? "7 8" : "4 8",
+          opacity: canShowDeliveryProgress ? 1 : 0.9,
           weight: 3,
         }).addTo(layer);
 
-        const progress = destinationProgress(delivery?.status ?? "");
-
-        if (progress !== null) {
-          const truck: [number, number] = [
+        if (canShowDeliveryProgress && progress !== null) {
+          const motorcycle: [number, number] = [
             branchLocation[0] + (destination[0] - branchLocation[0]) * progress,
             branchLocation[1] + (destination[1] - branchLocation[1]) * progress,
           ];
-          leaflet.marker(truck, { icon: pin("#f59e0b", "") }).addTo(layer).bindTooltip("Illustrative progress marker");
+          leaflet
+            .marker(motorcycle, { icon: pin("#f59e0b", "", "motorcycle") })
+            .addTo(layer)
+            .bindTooltip("Symbolic delivery progress marker");
         }
       }
 
@@ -165,37 +240,58 @@ export default function LalamoveTrackingMap({
         map.setView(points[0], 15);
       }
     });
-  }, [branchLocation, canShowFulfillmentProgress, delivery?.status, destination]);
+  }, [
+    branchLocation,
+    canShowDeliveryProgress,
+    destination,
+    progress,
+    shouldDrawRoute,
+  ]);
 
   if (!destination && !branchLocation) {
+    const fallbackMessage = isPickup
+      ? "The selected pickup branch does not have saved coordinates. Its address remains available in the order summary."
+      : "This order does not have saved delivery or branch coordinates. The persisted address and delivery status remain available above.";
+
     return (
-      <section className="track-order-card track-order-map-card" aria-labelledby="lalamove-map-title">
+      <section className="track-order-card track-order-map-card" aria-labelledby="fulfillment-map-title">
         <div className="track-order-section-heading">
           <div>
-            <p className="track-order-section-eyebrow">DELIVERY LOCATION</p>
-            <h2 id="lalamove-map-title">Map preview unavailable</h2>
+            <p className="track-order-section-eyebrow">{mapEyebrow}</p>
+            <h2 id="fulfillment-map-title">Map preview unavailable</h2>
           </div>
+          <span className="track-order-progress-caption">{mapContextLabel}</span>
         </div>
-        <p className="track-order-map-fallback">This order does not have saved delivery or branch coordinates. The persisted address and delivery status remain available above.</p>
+        <p className="track-order-map-fallback">{fallbackMessage}</p>
       </section>
     );
   }
 
   return (
-    <section className="track-order-card track-order-map-card" aria-labelledby="lalamove-map-title">
+    <section className="track-order-card track-order-map-card" aria-labelledby="fulfillment-map-title">
       <div className="track-order-section-heading">
         <div>
-          <p className="track-order-section-eyebrow">DELIVERY LOCATION</p>
-          <h2 id="lalamove-map-title">Lalamove Delivery Map</h2>
+          <p className="track-order-section-eyebrow">{mapEyebrow}</p>
+          <h2 id="fulfillment-map-title">{mapTitle}</h2>
         </div>
-        <span className="track-order-progress-caption">Delivery Progress</span>
+        <span className="track-order-progress-caption">{mapContextLabel}</span>
       </div>
-      <div ref={mapElementRef} className="track-order-map" aria-label="Interactive map showing the branch and saved delivery location" />
+      {isPickup && branch ? (
+        <p className="track-order-map-branch">
+          <strong>{branch.name}</strong>
+          {branch.address ? ` - ${branch.address}` : null}
+        </p>
+      ) : null}
+      <div ref={mapElementRef} className="track-order-map" aria-label={mapAriaLabel} />
       {mapError ? <p className="track-order-map-error" role="alert">{mapError}</p> : null}
       <p className="track-order-map-note">
-        {canShowFulfillmentProgress
-          ? "Pan or zoom the map to inspect the saved order coordinates and symbolic progress marker. It is not live rider GPS or an ETA."
-          : "Pan or zoom the map to inspect the saved branch and delivery coordinates. Delivery tracking begins after ALD staff confirms the order request."}
+        {isPickup
+          ? "Pan or zoom the map to inspect the selected ALD branch. Store pickup does not use a delivery route or rider tracking."
+          : canShowDeliveryProgress
+            ? "Pan or zoom the map to inspect the saved order coordinates and symbolic delivery progress. It is not live rider GPS or an ETA."
+            : isOrderClosed
+              ? "This order is closed. The saved branch and delivery location are shown for context only."
+              : "This route preview shows the selected ALD branch and saved delivery location. Delivery tracking begins after ALD staff confirms the order request."}
       </p>
     </section>
   );
