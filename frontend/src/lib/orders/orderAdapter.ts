@@ -45,11 +45,7 @@ export function toCustomerOrderSummary(
 
 export function toOrderViewModel(order: OrderApiDetails): OrderViewModel {
   const fulfillmentMethod = order.fulfillment_method.toLowerCase();
-  const displayStatus = toStatusLabel(
-    fulfillmentMethod === "delivery"
-      ? order.fulfillment_status ?? order.display_status ?? order.status
-      : order.display_status ?? order.status,
-  );
+  const displayStatus = toStatusLabel(order.display_status ?? order.status);
   const items = order.items.map(toOrderItem);
   const fulfillment: OrderViewFulfillment =
     fulfillmentMethod === "delivery"

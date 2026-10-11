@@ -7,6 +7,7 @@ import type { OrderViewDelivery, CustomerOrderBranch } from "@/lib/orders/orderT
 type LalamoveTrackingMapProps = {
   branch: CustomerOrderBranch | null;
   delivery: OrderViewDelivery | null;
+  orderStatus: string;
 };
 
 function isCoordinatePair(latitude: number | null | undefined, longitude: number | null | undefined): latitude is number {
@@ -18,7 +19,7 @@ function normalizeStatus(status: string) {
   return status.trim().toLowerCase().replace(/[-\s]+/g, "_");
 }
 
-function destinationProgress(status: string) {
+function destinationProgress(status: string): number | null {
   switch (normalizeStatus(status)) {
     case "booked":
       return 0.2;
@@ -29,11 +30,15 @@ function destinationProgress(status: string) {
     case "delivered":
       return 1;
     default:
-      return 0;
+      return null;
   }
 }
 
-export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTrackingMapProps) {
+export default function LalamoveTrackingMap({
+  branch,
+  delivery,
+  orderStatus,
+}: LalamoveTrackingMapProps) {
   const mapElementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
@@ -44,6 +49,9 @@ export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTracki
   const branchLocation = useMemo(() => branch && isCoordinatePair(branch.latitude, branch.longitude)
     ? [branch.latitude, branch.longitude] as [number, number]
     : null, [branch]);
+  const canShowFulfillmentProgress = ["confirmed", "completed"].includes(
+    normalizeStatus(orderStatus),
+  );
 
   useEffect(() => {
     if (!destination && !branchLocation) {
@@ -112,7 +120,7 @@ export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTracki
         leaflet.marker(destination, { icon: pin("#e07a08", "YOU") }).addTo(layer).bindTooltip("Saved delivery location");
       }
 
-      if (branchLocation && destination) {
+      if (branchLocation && destination && canShowFulfillmentProgress) {
         leaflet.polyline([branchLocation, destination], {
           color: "#e07a08",
           dashArray: "7 8",
@@ -120,11 +128,14 @@ export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTracki
         }).addTo(layer);
 
         const progress = destinationProgress(delivery?.status ?? "");
-        const truck: [number, number] = [
-          branchLocation[0] + (destination[0] - branchLocation[0]) * progress,
-          branchLocation[1] + (destination[1] - branchLocation[1]) * progress,
-        ];
-        leaflet.marker(truck, { icon: pin("#f59e0b", "") }).addTo(layer).bindTooltip("Illustrative progress marker");
+
+        if (progress !== null) {
+          const truck: [number, number] = [
+            branchLocation[0] + (destination[0] - branchLocation[0]) * progress,
+            branchLocation[1] + (destination[1] - branchLocation[1]) * progress,
+          ];
+          leaflet.marker(truck, { icon: pin("#f59e0b", "") }).addTo(layer).bindTooltip("Illustrative progress marker");
+        }
       }
 
       if (points.length > 1) {
@@ -133,7 +144,7 @@ export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTracki
         map.setView(points[0], 15);
       }
     });
-  }, [branchLocation, delivery?.status, destination]);
+  }, [branchLocation, canShowFulfillmentProgress, delivery?.status, destination]);
 
   if (!destination && !branchLocation) {
     return (
@@ -156,10 +167,16 @@ export default function LalamoveTrackingMap({ branch, delivery }: LalamoveTracki
           <p className="track-order-section-eyebrow">DELIVERY LOCATION</p>
           <h2 id="lalamove-map-title">Lalamove Delivery Map</h2>
         </div>
-        <span className="track-order-progress-caption">Illustrative route</span>
+        <span className="track-order-progress-caption">
+          {canShowFulfillmentProgress ? "Illustrative route" : "Location context"}
+        </span>
       </div>
       <div ref={mapElementRef} className="track-order-map" aria-label="Movable map showing the branch and saved delivery location" />
-      <p className="track-order-map-note">Pan or zoom the map to inspect the saved order coordinates and symbolic progress marker. It is not live rider GPS or an ETA.</p>
+      <p className="track-order-map-note">
+        {canShowFulfillmentProgress
+          ? "Pan or zoom the map to inspect the saved order coordinates and symbolic progress marker. It is not live rider GPS or an ETA."
+          : "Pan or zoom the map to inspect the saved branch and delivery coordinates. Delivery tracking begins after ALD staff confirms the order request."}
+      </p>
     </section>
   );
 }

@@ -294,6 +294,89 @@ class OrderRetrievalApiTest extends TestCase
         $this->assertSame($branch->id, $payAtPickup->branch_id);
     }
 
+    public function test_delivery_status_does_not_override_order_review_lifecycle(): void
+    {
+        $this->createBranch();
+        $product = $this->createProduct('RET-DELIVERY-STATUS', 350.00);
+        [, $customer] = $this->createCustomer(null, '09175551111', guestName: 'Delivery Status Guest');
+
+        $pending = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000060',
+            status: 'pending',
+            fulfillmentType: 'delivery',
+        );
+        $underReview = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000061',
+            status: 'under_review',
+            fulfillmentType: 'delivery',
+        );
+        $confirmed = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000062',
+            status: 'confirmed',
+            fulfillmentType: 'delivery',
+        );
+        $rejected = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000063',
+            status: 'rejected',
+            fulfillmentType: 'delivery',
+            delivery: ['delivery_status' => 'booked'],
+        );
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $pending->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'pending')
+            ->assertJsonPath('order.display_status', 'pending')
+            ->assertJsonPath('order.fulfillment_status', 'waiting_for_booking');
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $underReview->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'under_review')
+            ->assertJsonPath('order.display_status', 'under_review')
+            ->assertJsonPath('order.fulfillment_status', 'waiting_for_booking');
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $confirmed->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'confirmed')
+            ->assertJsonPath('order.display_status', 'waiting_for_booking')
+            ->assertJsonPath('order.fulfillment_status', 'waiting_for_booking');
+
+        $confirmed->deliveryRequest()->update(['delivery_status' => 'booked']);
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $confirmed->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'booked')
+            ->assertJsonPath('order.delivery.status', 'booked');
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $rejected->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'rejected')
+            ->assertJsonPath('order.display_status', 'rejected')
+            ->assertJsonPath('order.fulfillment_status', 'booked');
+    }
+
     public function test_guest_tracking_uses_the_reference_and_does_not_list_orders_by_phone(): void
     {
         $this->createBranch();

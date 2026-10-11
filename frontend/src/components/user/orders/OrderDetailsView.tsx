@@ -47,7 +47,11 @@ export default function OrderDetailsView({
         {order.fulfillment.method === "delivery" ? (
           <>
             <OrderDeliverySnapshot delivery={order.fulfillment.delivery} />
-            <LalamoveTrackingMap branch={order.fulfillment.branch} delivery={order.fulfillment.delivery} />
+            <LalamoveTrackingMap
+              branch={order.fulfillment.branch}
+              delivery={order.fulfillment.delivery}
+              orderStatus={order.orderStatus}
+            />
           </>
         ) : null}
         <div className="track-order-detail-grid">

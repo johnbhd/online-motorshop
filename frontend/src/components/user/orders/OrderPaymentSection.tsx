@@ -49,14 +49,15 @@ export default function OrderPaymentSection({
   const payment = order.payment;
   const paymentMethod = payment?.method ?? "Payment method unavailable";
   const paymentStatus = normalize(payment?.status ?? order.paymentStatus);
-  const orderStatus = normalize(order.status);
+  const orderStatus = normalize(order.orderStatus);
+  const customerStatus = normalize(order.status);
   const isPickup = paymentMethod.toLowerCase().includes("pay at pickup");
   const isOnline = paymentMethod.toLowerCase().includes("online");
   const isPaid = paymentStatus === "paid";
   const isWaitingForVerification = paymentStatus === "waiting_for_verification";
   const isRejectedProof = paymentStatus === "failed";
   const isInteractive = Boolean(paymentToken && onOrderUpdated);
-  const isTerminalOrder = ["cancelled", "rejected"].includes(orderStatus);
+  const isTerminalOrder = ["completed", "cancelled", "rejected"].includes(orderStatus);
   const amount = payment?.amount ?? order.totalAmount ?? order.estimatedTotal;
   const canSubmitOnlineProof =
     Boolean(paymentToken && onOrderUpdated) &&
@@ -64,13 +65,13 @@ export default function OrderPaymentSection({
     !isTerminalOrder &&
     !isPaid &&
     !isWaitingForVerification &&
-    (isRejectedProof || (paymentStatus === "unpaid" && isEligibleOrderStatus(order.status)));
+    (isRejectedProof || (paymentStatus === "unpaid" && isEligibleOrderStatus(order.orderStatus)));
   const canViewInstructions =
     isOnline &&
     !isTerminalOrder &&
     !isPaid &&
     !isWaitingForVerification &&
-    (isRejectedProof || (paymentStatus === "unpaid" && isEligibleOrderStatus(order.status)));
+    (isRejectedProof || (paymentStatus === "unpaid" && isEligibleOrderStatus(order.orderStatus)));
 
   const handleSubmit = async (file: File) => {
     if (!paymentToken || !onOrderUpdated) {
@@ -113,7 +114,7 @@ export default function OrderPaymentSection({
           ? "Waiting for Verification"
           : isRejectedProof
             ? "Proof Rejected"
-            : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.status)
+            : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.orderStatus)
               ? "Payment Not Available Yet"
               : "Unpaid";
 
@@ -124,14 +125,14 @@ export default function OrderPaymentSection({
     : isTerminalOrder
       ? "This order is closed, so no payment action is available."
       : isPickup
-        ? orderStatus === "ready_for_pickup"
+        ? customerStatus === "ready_for_pickup"
           ? "Pay the amount due at the pickup branch when you collect your order."
           : "Pay the amount due at the pickup branch after ALD Staff confirms it is ready."
         : paymentStatus === "waiting_for_verification"
           ? "Your proof was submitted successfully. ALD Staff will verify it before marking the payment paid."
           : isRejectedProof
             ? "Your submitted payment proof could not be verified. Review the instructions and submit a new proof."
-            : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.status)
+            : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.orderStatus)
               ? "Payment instructions will become available after ALD Staff confirms your order."
               : "Complete your payment, then upload the receipt for ALD Staff verification.";
 

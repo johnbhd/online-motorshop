@@ -14,8 +14,16 @@ class CustomerOrderStatusResolver
             return $orderStatus;
         }
 
-        if ($orderStatus !== 'confirmed' || $order->fulfillment_type !== 'pickup') {
+        if ($orderStatus !== 'confirmed') {
             return $orderStatus;
+        }
+
+        if ($order->fulfillment_type === 'delivery') {
+            return $order->deliveryRequest?->delivery_status ?? 'confirmed';
+        }
+
+        if ($order->fulfillment_type !== 'pickup') {
+            return 'confirmed';
         }
 
         return match ($order->pickupRequest?->pickup_status) {
