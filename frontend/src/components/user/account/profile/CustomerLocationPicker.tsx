@@ -7,6 +7,13 @@ import {
   faLocationDot,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  ALD_MAP_MAX_ZOOM,
+  ALD_MAP_MIN_ZOOM,
+  ALD_MAP_TILE_ATTRIBUTION,
+  ALD_MAP_TILE_SUBDOMAINS,
+  ALD_MAP_TILE_URL,
+} from "@/lib/mapConfig";
 import type { LatLngExpression, Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
 
 type CustomerLocationPickerProps = {
@@ -72,12 +79,18 @@ export default function CustomerLocationPicker({
           scrollWheelZoom: false,
         });
 
-        leaflet
-          .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19,
-          })
-          .addTo(map);
+        const tiles = leaflet.tileLayer(ALD_MAP_TILE_URL, {
+          attribution: ALD_MAP_TILE_ATTRIBUTION,
+          minZoom: ALD_MAP_MIN_ZOOM,
+          maxZoom: ALD_MAP_MAX_ZOOM,
+          subdomains: ALD_MAP_TILE_SUBDOMAINS,
+        }).addTo(map);
+
+        tiles.on("tileerror", () => {
+          if (!cancelled) {
+            setError("Unable to load map. You can still save your address and delivery information without a map pin.");
+          }
+        });
 
         const marker = leaflet
           .marker(center, {

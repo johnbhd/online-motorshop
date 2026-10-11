@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LatLngExpression, Map as LeafletMap, LayerGroup } from "leaflet";
 import type { OrderViewDelivery, CustomerOrderBranch } from "@/lib/orders/orderTypes";
+import {
+  ALD_MAP_MAX_ZOOM,
+  ALD_MAP_MIN_ZOOM,
+  ALD_MAP_TILE_ATTRIBUTION,
+  ALD_MAP_TILE_SUBDOMAINS,
+  ALD_MAP_TILE_URL,
+} from "@/lib/mapConfig";
 
 type LalamoveTrackingMapProps = {
   branch: CustomerOrderBranch | null;
@@ -42,6 +49,7 @@ export default function LalamoveTrackingMap({
   const mapElementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const destination = useMemo(() => delivery && isCoordinatePair(delivery.latitude, delivery.longitude)
     ? [delivery.latitude, delivery.longitude] as [number, number]
@@ -66,25 +74,40 @@ export default function LalamoveTrackingMap({
     const initialize = async () => {
       if (!mapElementRef.current || mapRef.current) return;
 
-      const { default: leaflet } = await import("leaflet");
-      if (cancelled || !mapElementRef.current) return;
+      try {
+        const { default: leaflet } = await import("leaflet");
+        if (cancelled || !mapElementRef.current) return;
 
-      const center: LatLngExpression = destination ?? branchLocation!;
-      const map = leaflet.map(mapElementRef.current, {
-        center,
-        zoom: destination && branchLocation ? 12 : 15,
-        scrollWheelZoom: true,
-        dragging: true,
-        doubleClickZoom: true,
-      });
-      leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
+        const center: LatLngExpression = destination ?? branchLocation!;
+        const map = leaflet.map(mapElementRef.current, {
+          center,
+          zoom: destination && branchLocation ? 12 : 15,
+          scrollWheelZoom: true,
+          dragging: true,
+          doubleClickZoom: true,
+        });
+        const tiles = leaflet.tileLayer(ALD_MAP_TILE_URL, {
+          attribution: ALD_MAP_TILE_ATTRIBUTION,
+          minZoom: ALD_MAP_MIN_ZOOM,
+          maxZoom: ALD_MAP_MAX_ZOOM,
+          subdomains: ALD_MAP_TILE_SUBDOMAINS,
+        }).addTo(map);
 
-      mapRef.current = map;
-      layerRef.current = leaflet.layerGroup().addTo(map);
-      window.requestAnimationFrame(() => map.invalidateSize());
+        tiles.on("tileerror", () => {
+          if (!cancelled) {
+            setMapError("Unable to load map. Your saved address and delivery information are still available.");
+          }
+        });
+
+        mapRef.current = map;
+        layerRef.current = leaflet.layerGroup().addTo(map);
+        setMapError(null);
+        window.requestAnimationFrame(() => map.invalidateSize());
+      } catch {
+        if (!cancelled) {
+          setMapError("Unable to load map. Your saved address and delivery information are still available.");
+        }
+      }
     };
 
     void initialize();
@@ -172,6 +195,7 @@ export default function LalamoveTrackingMap({
         </span>
       </div>
       <div ref={mapElementRef} className="track-order-map" aria-label="Movable map showing the branch and saved delivery location" />
+      {mapError ? <p className="track-order-map-error" role="alert">{mapError}</p> : null}
       <p className="track-order-map-note">
         {canShowFulfillmentProgress
           ? "Pan or zoom the map to inspect the saved order coordinates and symbolic progress marker. It is not live rider GPS or an ETA."

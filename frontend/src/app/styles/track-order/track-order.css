@@ -1591,11 +1591,20 @@
 }
 
 .track-order-map-note,
-.track-order-map-fallback {
+.track-order-map-fallback,
+.track-order-map-error {
   margin: 0.85rem 0 0;
   color: var(--track-order-muted);
   font-size: 0.78rem;
   line-height: 1.55;
+}
+
+.track-order-map-error {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.45rem;
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 .lalamove-tracking-marker {
