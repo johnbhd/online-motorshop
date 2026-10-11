@@ -62,7 +62,11 @@ class DeliveryRouteServiceTest extends TestCase
         $this->assertSame(2346, $route['route_distance_meters']);
         $this->assertSame('openrouteservice', $route['route_provider']);
 
-        Http::assertSent(fn ($request): bool => $request->hasHeader('Authorization', 'test-route-key')
+        Http::assertSent(fn ($request): bool => $request->hasHeaders([
+            'Authorization' => 'test-route-key',
+            'Accept' => 'application/json, application/geo+json, application/gpx+xml, image/png; charset=utf-8',
+            'Content-Type' => 'application/json',
+        ])
             && $request->data()['coordinates'] === [[121.0, 14.0], [121.02, 14.01]]);
     }
 

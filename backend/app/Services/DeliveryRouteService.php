@@ -73,8 +73,11 @@ class DeliveryRouteService
 
         try {
             $response = Http::timeout($timeout)
-                ->acceptJson()
-                ->withHeaders(['Authorization' => $apiKey])
+                ->withHeaders([
+                    'Authorization' => $apiKey,
+                    'Accept' => 'application/json, application/geo+json, application/gpx+xml, image/png; charset=utf-8',
+                    'Content-Type' => 'application/json',
+                ])
                 ->post($baseUrl.'/v2/directions/driving-car/geojson', [
                     'coordinates' => [$origin, $destination],
                     'instructions' => false,
