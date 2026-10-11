@@ -18,14 +18,15 @@ use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
+use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProfileController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PaymentInstructionsController;
 use App\Http\Controllers\PortalNotificationController;
@@ -55,6 +56,12 @@ Route::get('/health', function () {
 // Dedicated customer-facing AI assistant. It is intentionally separate from conversations/messages.
 Route::post('/assistant/chat', [AssistantController::class, 'chat'])
     ->name('assistant.chat');
+
+Route::get('/locations/cities-municipalities', [LocationController::class, 'cities'])
+    ->name('locations.cities-municipalities');
+Route::get('/locations/cities-municipalities/{code}/barangays', [LocationController::class, 'barangays'])
+    ->where('code', '[A-Za-z0-9_-]+')
+    ->name('locations.barangays');
 
 // Public catalog
 Route::get('/products', [CatalogController::class, 'products'])

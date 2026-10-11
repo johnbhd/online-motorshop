@@ -3,15 +3,19 @@ import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
 import LocationSelect, { type LocationOption } from "./LocationSelect";
 
 export type ProfileLocationValues = {
-  city: string;
-  barangay: string;
+  cityCode: string;
+  cityName: string;
+  barangayCode: string;
+  barangayName: string;
 };
 
 export const EMPTY_LOCATION_OPTIONS: readonly LocationOption[] = [];
 
 type ProfileAddressFieldsProps = {
-  city: string;
-  barangay: string;
+  cityCode: string;
+  cityName: string;
+  barangayCode: string;
+  barangayName: string;
   cityOptions?: readonly LocationOption[];
   barangayOptions?: readonly LocationOption[];
   cityLoading?: boolean;
@@ -25,8 +29,10 @@ type ProfileAddressFieldsProps = {
 };
 
 export default function ProfileAddressFields({
-  city,
-  barangay,
+  cityCode,
+  cityName,
+  barangayCode,
+  barangayName,
   cityOptions = EMPTY_LOCATION_OPTIONS,
   barangayOptions = EMPTY_LOCATION_OPTIONS,
   cityLoading = false,
@@ -41,34 +47,36 @@ export default function ProfileAddressFields({
   return (
     <div className="customer-profile-location-fields">
       <LocationSelect
-        key={`city-${city}`}
+        key={`city-${cityCode}-${cityName}`}
         id="customer-profile-city"
         label="City / Municipality"
         icon={faLocationDot}
-        value={city}
+        value={cityCode || cityName}
+        displayValue={cityName}
         options={cityOptions}
         placeholder="Select City / Municipality"
-        emptyMessage="No cities available yet."
+        emptyMessage="No cities or municipalities found."
         isLoading={cityLoading}
         error={cityError}
         onRetry={onCityRetry}
-        helpText="Ready for a future PSGC location source."
+        helpText="Search by city or municipality name."
         onChange={onCityChange}
       />
       <LocationSelect
-        key={`barangay-${city}-${barangay}`}
+        key={`barangay-${cityCode}-${barangayCode}-${barangayName}`}
         id="customer-profile-barangay"
         label="Barangay"
         icon={faLocationDot}
-        value={barangay}
+        value={barangayCode || barangayName}
+        displayValue={barangayName}
         options={barangayOptions}
-        placeholder={city ? "Select Barangay" : "Select a city first"}
-        emptyMessage="No barangays available yet."
+        placeholder={cityCode ? "Select Barangay" : "Select a city first"}
+        emptyMessage="No barangays found for this city or municipality."
         isLoading={barangayLoading}
-        disabled={!city}
+        disabled={!cityCode}
         error={barangayError}
         onRetry={onBarangayRetry}
-        helpText={city ? "Barangay options will load after a location source is connected." : "Select a city first."}
+        helpText={cityCode ? "Options are limited to the selected city or municipality." : "Select a city or municipality first."}
         onChange={onBarangayChange}
       />
     </div>

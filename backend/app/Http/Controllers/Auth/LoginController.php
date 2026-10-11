@@ -90,6 +90,10 @@ class LoginController extends Controller
                 'contact_number',
                 'email',
                 'address',
+                'city_municipality_code',
+                'barangay_code',
+                'city',
+                'barangay',
             ]),
         ];
     }

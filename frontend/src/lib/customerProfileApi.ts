@@ -124,6 +124,8 @@ export function updateCustomerProfile(
     email: string;
     contact_number: string;
     address: string;
+    city_municipality_code?: string | null;
+    barangay_code?: string | null;
   },
 ): Promise<CustomerProfileResponse> {
   return requestCustomerProfileApi<CustomerProfileResponse>(token, "", {

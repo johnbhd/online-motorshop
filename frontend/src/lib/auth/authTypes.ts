@@ -8,6 +8,8 @@ export type AuthCustomer = {
   address: string | null;
   city?: string | null;
   barangay?: string | null;
+  city_municipality_code?: string | null;
+  barangay_code?: string | null;
 };
 
 export type AuthUser = {

@@ -4,12 +4,9 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faLocationDot } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import type { LocationOption } from "@/lib/locationTypes";
 
-export type LocationOption = {
-  value: string;
-  label: string;
-  code?: string;
-};
+export type { LocationOption } from "@/lib/locationTypes";
 
 type LocationSelectProps = {
   id: string;
@@ -18,6 +15,7 @@ type LocationSelectProps = {
   value: string;
   options: readonly LocationOption[];
   placeholder: string;
+  displayValue?: string;
   emptyMessage: string;
   isLoading?: boolean;
   disabled?: boolean;
@@ -34,6 +32,7 @@ export default function LocationSelect({
   value,
   options,
   placeholder,
+  displayValue,
   emptyMessage,
   isLoading = false,
   disabled = false,
@@ -42,7 +41,9 @@ export default function LocationSelect({
   helpText,
   onChange,
 }: LocationSelectProps) {
-  const [query, setQuery] = useState(value);
+  const selectedOption = options.find((option) => option.value === value);
+  const selectedLabel = selectedOption?.label ?? displayValue ?? value;
+  const [query, setQuery] = useState(selectedLabel);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -57,16 +58,16 @@ export default function LocationSelect({
     const handlePointerDown = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
-        setQuery(value);
+        setQuery(selectedLabel);
       }
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [isOpen, value]);
+  }, [isOpen, selectedLabel]);
 
   const savedOption: LocationOption | null = value && !options.some((option) => option.value === value)
-    ? { value, label: value }
+    ? { value, label: displayValue || value }
     : null;
   const availableOptions = savedOption ? [savedOption, ...options] : options;
   const normalizedQuery = query.trim().toLowerCase();
@@ -112,7 +113,7 @@ export default function LocationSelect({
 
     if (event.key === "Escape") {
       setIsOpen(false);
-      setQuery(value);
+      setQuery(selectedLabel);
     }
   };
 

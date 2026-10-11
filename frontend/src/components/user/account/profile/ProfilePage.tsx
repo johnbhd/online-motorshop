@@ -96,6 +96,16 @@ export default function ProfilePage() {
               label="Address"
               value={customer?.address || "Not provided"}
             />
+            <ProfileDetail
+              icon={faLocationDot}
+              label="City / Municipality"
+              value={customer?.city || "Not provided"}
+            />
+            <ProfileDetail
+              icon={faLocationDot}
+              label="Barangay"
+              value={customer?.barangay || "Not provided"}
+            />
           </dl>
         </section>
 

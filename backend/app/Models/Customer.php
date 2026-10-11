@@ -12,6 +12,10 @@ class Customer extends Model
         'contact_number',
         'email',
         'address',
+        'city_municipality_code',
+        'barangay_code',
+        'city',
+        'barangay',
     ];
 
     public function user()
