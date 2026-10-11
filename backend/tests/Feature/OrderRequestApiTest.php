@@ -116,6 +116,8 @@ class OrderRequestApiTest extends TestCase
 
         $response
             ->assertCreated()
+            ->assertJsonPath('order.status', 'pending')
+            ->assertJsonPath('order.display_status', 'pending')
             ->assertJsonPath('order.payment.method', 'online_payment')
             ->assertJsonPath('order.payment.status', 'unpaid')
             ->assertJsonPath('order.fulfillment_method', 'delivery')
