@@ -98,6 +98,7 @@ class OrderRequestCreator
             $branch,
             $method,
             $paymentMethod,
+            $delivery,
             $deliveryAddress,
             $deliveryRemarks,
             $calculatedItems,
@@ -150,6 +151,20 @@ class OrderRequestCreator
                     'order_id' => $order->id,
                     'branch_id' => $branch->id,
                     'delivery_address' => $deliveryAddress,
+                    'delivery_complete_address' => trim((string) ($delivery['address'] ?? '')),
+                    'delivery_city_municipality' => filled($delivery['city'] ?? null) ? trim((string) $delivery['city']) : null,
+                    'delivery_city_municipality_code' => $delivery['city_municipality_code'] ?? null,
+                    'delivery_barangay' => filled($delivery['barangay'] ?? null) ? trim((string) $delivery['barangay']) : null,
+                    'delivery_barangay_code' => $delivery['barangay_code'] ?? null,
+                    'delivery_latitude' => $delivery['latitude'] ?? null,
+                    'delivery_longitude' => $delivery['longitude'] ?? null,
+                    'delivery_contact_person' => filled($delivery['contact_person'] ?? null)
+                        ? trim((string) $delivery['contact_person'])
+                        : $customer->full_name,
+                    'delivery_contact_number' => filled($delivery['contact_number'] ?? null)
+                        ? trim((string) $delivery['contact_number'])
+                        : $customer->contact_number,
+                    'delivery_notes' => filled($delivery['notes'] ?? null) ? trim((string) $delivery['notes']) : null,
                     'delivery_fee' => '0.00',
                     'delivery_status' => 'waiting_for_booking',
                     'remarks' => $deliveryRemarks,

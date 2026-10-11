@@ -45,7 +45,11 @@ export function toCustomerOrderSummary(
 
 export function toOrderViewModel(order: OrderApiDetails): OrderViewModel {
   const fulfillmentMethod = order.fulfillment_method.toLowerCase();
-  const displayStatus = toStatusLabel(order.display_status ?? order.status);
+  const displayStatus = toStatusLabel(
+    fulfillmentMethod === "delivery"
+      ? order.fulfillment_status ?? order.display_status ?? order.status
+      : order.display_status ?? order.status,
+  );
   const items = order.items.map(toOrderItem);
   const fulfillment: OrderViewFulfillment =
     fulfillmentMethod === "delivery"
@@ -106,6 +110,10 @@ export function toStatusLabel(value: string): string {
     ready_for_pickup: "Ready for Pickup",
     booked_for_delivery: "Booked for Delivery",
     picked_up_by_rider: "Picked Up by Rider",
+    booked: "Booked",
+    picked_up: "Picked Up",
+    in_transit: "In Transit",
+    delivered: "Delivered",
     waiting_for_booking: "Waiting for Booking",
     completed: "Completed",
     rejected: "Rejected",
@@ -136,6 +144,8 @@ function toBranch(branch: OrderApiBranch | null): CustomerOrderBranch | null {
     name: branch.name,
     address: branch.address,
     contactNumber: branch.contact_number,
+    latitude: branch.latitude ?? null,
+    longitude: branch.longitude ?? null,
   };
 }
 
@@ -182,12 +192,23 @@ function toDelivery(
   return {
     branchId: delivery.branch_id,
     address: delivery.address,
+    completeAddress: delivery.complete_address ?? delivery.address,
+    cityMunicipality: delivery.city_municipality ?? null,
+    cityMunicipalityCode: delivery.city_municipality_code ?? null,
+    barangay: delivery.barangay ?? null,
+    barangayCode: delivery.barangay_code ?? null,
+    latitude: delivery.latitude ?? null,
+    longitude: delivery.longitude ?? null,
+    contactPerson: delivery.contact_person ?? null,
+    contactNumber: delivery.contact_number ?? null,
+    notes: delivery.notes ?? null,
     fee: delivery.fee,
     status: toStatusLabel(delivery.status),
     bookingReference: delivery.booking_reference,
     trackingUrl: delivery.tracking_url,
     riderName: delivery.rider_name,
     riderContact: delivery.rider_contact,
+    vehiclePlate: delivery.vehicle_plate ?? null,
     remarks: delivery.remarks,
     deliveredAt: delivery.delivered_at,
   };

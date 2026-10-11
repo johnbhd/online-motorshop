@@ -36,6 +36,8 @@ class UpdateAdminBranchRequest extends FormRequest
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('branches', 'name')->ignore($this->route('branch'))],
             'address' => ['sometimes', 'required', 'string', 'max:255'],
+            'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'contact_number' => ['sometimes', 'required', 'string', 'max:255'],
             'pickup_available' => ['sometimes', 'boolean'],
             'status' => ['sometimes', 'required', 'in:active,inactive'],

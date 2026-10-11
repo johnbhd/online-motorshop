@@ -13,6 +13,7 @@ type CustomerLocationPickerProps = {
   latitude: number | null;
   longitude: number | null;
   onChange: (latitude: number | null, longitude: number | null) => void;
+  mode?: "profile" | "checkout";
 };
 
 const DEFAULT_ZOOM = 16;
@@ -25,6 +26,7 @@ export default function CustomerLocationPicker({
   latitude,
   longitude,
   onChange,
+  mode = "profile",
 }: CustomerLocationPickerProps) {
   const mapElementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -182,8 +184,8 @@ export default function CustomerLocationPicker({
       <div className="customer-location-picker-header">
         <div>
           <p className="customer-location-picker-eyebrow">Location — optional</p>
-          <h3 id="customer-location-title">Save a delivery map pin</h3>
-          <p>Your written address stays primary. This optional pin can be reused later for Lalamove delivery.</p>
+          <h3 id="customer-location-title">{mode === "checkout" ? "Confirm delivery map pin" : "Save a delivery map pin"}</h3>
+          <p>{mode === "checkout" ? "Your saved profile pin is shown when available. Changes here apply only to this order." : "Your written address stays primary. This optional pin can be reused later for Lalamove delivery."}</p>
         </div>
         <FontAwesomeIcon icon={faLocationDot} aria-hidden="true" />
       </div>
@@ -234,7 +236,7 @@ export default function CustomerLocationPicker({
         </p>
       ) : null}
       {error ? <p className="customer-location-error-message" role="alert">{error}</p> : null}
-      <p className="customer-location-help">Drag the pin or click the map to adjust the saved location. Press Save changes to persist it.</p>
+      <p className="customer-location-help">{mode === "checkout" ? "Drag the pin or click the map to adjust this order's delivery location. It will not change your profile." : "Drag the pin or click the map to adjust the saved location. Press Save changes to persist it."}</p>
     </section>
   );
 }

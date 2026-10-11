@@ -221,6 +221,10 @@ export function validateCheckoutForm(
     if (!formData.delivery.contactPerson.trim()) {
       errors.contactPerson = "Enter the delivery contact person.";
     }
+
+    if (!formData.delivery.contactNumber.trim()) {
+      errors.deliveryContactNumber = "Enter the delivery contact number.";
+    }
   }
 
   if (!formData.paymentMethod) {

@@ -131,6 +131,79 @@ class OrderRequestApiTest extends TestCase
         $this->assertDatabaseCount('pickup_requests', 0);
     }
 
+    public function test_registered_delivery_persists_an_order_snapshot_separate_from_the_profile(): void
+    {
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-SNAPSHOT-001', 350.00);
+        $user = User::create([
+            'name' => 'Snapshot Customer',
+            'email' => 'snapshot@example.com',
+            'password' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'customer',
+        ]);
+        $customer = Customer::create([
+            'user_id' => $user->id,
+            'full_name' => 'Snapshot Customer',
+            'contact_number' => '09170000000',
+            'email' => 'snapshot@example.com',
+            'address' => 'Original Profile Address',
+            'city' => 'Makati City',
+            'barangay' => 'Original Barangay',
+            'latitude' => 14.599512,
+            'longitude' => 120.984222,
+        ]);
+        $token = $user->createToken('delivery-snapshot-test')->plainTextToken;
+
+        $response = $this->withToken($token)->postJson('/api/order-requests', [
+            'items' => [['part_number' => $product->part_number, 'quantity' => 1]],
+            'payment_method' => 'online_payment',
+            'fulfillment' => [
+                'method' => 'delivery',
+                'branch_id' => $branch->id,
+                'delivery' => [
+                    'address' => 'Edited Order Address',
+                    'barangay' => 'Order Barangay',
+                    'city' => 'Imus City',
+                    'contact_person' => 'Order Recipient',
+                    'contact_number' => '09179999999',
+                    'latitude' => 14.4064,
+                    'longitude' => 120.9406,
+                    'notes' => 'Call before arrival',
+                ],
+            ],
+        ])->assertCreated();
+
+        $response
+            ->assertJsonPath('order.delivery.complete_address', 'Edited Order Address')
+            ->assertJsonPath('order.delivery.barangay', 'Order Barangay')
+            ->assertJsonPath('order.delivery.city_municipality', 'Imus City')
+            ->assertJsonPath('order.delivery.contact_person', 'Order Recipient')
+            ->assertJsonPath('order.delivery.contact_number', '09179999999')
+            ->assertJsonPath('order.delivery.latitude', 14.4064)
+            ->assertJsonPath('order.delivery.longitude', 120.9406)
+            ->assertJsonPath('order.delivery.notes', 'Call before arrival');
+
+        $order = \App\Models\OrderRequest::query()->where('customer_id', $customer->id)->firstOrFail();
+        $this->assertDatabaseHas('delivery_requests', [
+            'order_id' => $order->id,
+            'delivery_complete_address' => 'Edited Order Address',
+            'delivery_contact_number' => '09179999999',
+            'delivery_city_municipality' => 'Imus City',
+        ]);
+
+        $customer->update([
+            'address' => 'Changed Profile Address',
+            'city' => 'Different City',
+        ]);
+
+        $this->withToken($token)
+            ->getJson('/api/customer/orders/'.$order->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.delivery.complete_address', 'Edited Order Address')
+            ->assertJsonPath('order.delivery.city_municipality', 'Imus City');
+    }
+
     public function test_registered_customer_order_uses_the_linked_profile(): void
     {
         $branch = $this->createBranch();

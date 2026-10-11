@@ -114,6 +114,7 @@ class StaffDeliveryRequestsController extends Controller
                 'tracking_url',
                 'rider_name',
                 'rider_contact',
+                'vehicle_plate',
                 'remarks',
             ]),
         );
@@ -199,7 +200,7 @@ class StaffDeliveryRequestsController extends Controller
             'order.items:id,order_id,product_id,product_name,unit_price,quantity,subtotal',
             'order.items.product:id,part_number',
             'order.payments:id,order_id,payment_method,amount,payment_reference,payment_status,verified_at,created_at',
-            'branch:id,name,address,contact_number',
+            'branch:id,name,address,latitude,longitude,contact_number',
             'assignedStaff:id,name',
         ];
     }

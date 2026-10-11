@@ -6,6 +6,7 @@ import {
   faCartShopping,
   faCheck,
   faCircleInfo,
+  faCopy,
   faCreditCard,
   faFileLines,
   faLocationDot,
@@ -125,7 +126,9 @@ export default function RealStaffDeliveryDetailsModal({
   const [trackingUrl, setTrackingUrl] = useState("");
   const [riderName, setRiderName] = useState("");
   const [riderContact, setRiderContact] = useState("");
+  const [vehiclePlate, setVehiclePlate] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen || deliveryId === null || user?.role !== "staff") {
@@ -161,7 +164,9 @@ export default function RealStaffDeliveryDetailsModal({
           setTrackingUrl(nextDelivery.tracking_url ?? "");
           setRiderName(nextDelivery.rider_name ?? "");
           setRiderContact(nextDelivery.rider_contact ?? "");
+          setVehiclePlate(nextDelivery.vehicle_plate ?? "");
           setRemarks(nextDelivery.remarks ?? "");
+          setCopyMessage(null);
         })
         .catch((requestError) => {
           if (
@@ -267,6 +272,10 @@ export default function RealStaffDeliveryDetailsModal({
       update.rider_contact = riderContact.trim();
     }
 
+    if (vehiclePlate.trim()) {
+      update.vehicle_plate = vehiclePlate.trim();
+    }
+
     if (remarks.trim()) {
       update.remarks = remarks.trim();
     }
@@ -303,6 +312,29 @@ export default function RealStaffDeliveryDetailsModal({
   const nextStatus = delivery?.allowed_statuses[0] ?? null;
   const needsBookingFields = nextStatus === "booked";
   const needsRiderFields = nextStatus === "picked_up";
+
+  const messengerText = delivery ? [
+    "Good day! We would like to arrange a Lalamove delivery.",
+    `ALD order: ${delivery.order_reference ?? "Not available"}`,
+    `Customer: ${delivery.delivery_contact_person ?? delivery.customer?.full_name ?? "Not available"}`,
+    `Contact: ${delivery.delivery_contact_number ?? delivery.customer?.contact_number ?? "Not available"}`,
+    `Destination: ${delivery.delivery_complete_address ?? delivery.delivery_address ?? "Not available"}`,
+    `Barangay: ${delivery.delivery_barangay ?? "Not available"}`,
+    `City / Municipality: ${delivery.delivery_city_municipality ?? "Not available"}`,
+    delivery.delivery_notes ? `Notes: ${delivery.delivery_notes}` : null,
+    `Items: ${delivery.order?.items.reduce((total, item) => total + item.quantity, 0) ?? delivery.item_count}`,
+  ].filter(Boolean).join("\n") : "";
+
+  const copyMessengerText = async () => {
+    if (!messengerText) return;
+
+    try {
+      await navigator.clipboard.writeText(messengerText);
+      setCopyMessage("Messenger text copied.");
+    } catch {
+      setCopyMessage("Copy was unavailable. Select the text manually.");
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4">
@@ -454,7 +486,23 @@ export default function RealStaffDeliveryDetailsModal({
                 <dl className="grid gap-4 rounded-lg border border-slate-200 p-4 text-sm sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <dt className="text-slate-500">Destination</dt>
-                    <dd className="mt-1 text-slate-700">{displayValue(delivery.delivery_address)}</dd>
+                    <dd className="mt-1 text-slate-700">{displayValue(delivery.delivery_complete_address ?? delivery.delivery_address)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">Barangay</dt>
+                    <dd className="mt-1 text-slate-700">{displayValue(delivery.delivery_barangay)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">City / Municipality</dt>
+                    <dd className="mt-1 text-slate-700">{displayValue(delivery.delivery_city_municipality)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">Contact Person</dt>
+                    <dd className="mt-1 text-slate-700">{displayValue(delivery.delivery_contact_person ?? delivery.customer?.full_name)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-slate-500">Delivery Contact</dt>
+                    <dd className="mt-1 text-slate-700">{displayValue(delivery.delivery_contact_number ?? delivery.customer?.contact_number)}</dd>
                   </div>
                   <div>
                     <dt className="text-slate-500">Delivery Fee</dt>
@@ -473,13 +521,13 @@ export default function RealStaffDeliveryDetailsModal({
                     <dd className="mt-1 text-slate-700">{displayValue(delivery.rider_contact)}</dd>
                   </div>
                   <div className="sm:col-span-2">
-                    <dt className="text-slate-500">Remarks</dt>
-                    <dd className="mt-1 text-slate-700">{displayValue(delivery.remarks)}</dd>
+                    <dt className="text-slate-500">Delivery Notes</dt>
+                    <dd className="mt-1 text-slate-700">{displayValue(delivery.delivery_notes ?? delivery.remarks)}</dd>
                   </div>
                 </dl>
                 <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500">
                   <FontAwesomeIcon icon={faLocationDot} className="mt-0.5 shrink-0 text-orange-500" aria-hidden="true" />
-                  The destination and delivery fields shown here are persisted by Laravel; no address, fee, ETA, or route is fabricated.
+                  The destination, contact, notes, and coordinates shown here are the persisted order snapshot; no address, fee, ETA, or route is fabricated.
                 </p>
               </section>
 
@@ -528,7 +576,19 @@ export default function RealStaffDeliveryDetailsModal({
                     <dt className="text-slate-500">Tracking URL</dt>
                     <dd className="mt-1 break-all text-slate-700">{displayValue(delivery.tracking_url)}</dd>
                   </div>
+                  <div>
+                    <dt className="text-slate-500">Vehicle Plate</dt>
+                    <dd className="mt-1 text-slate-700">{displayValue(delivery.vehicle_plate)}</dd>
+                  </div>
                 </dl>
+                <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-[#0B1930]">Prepare Lalamove Booking</p>
+                  <p className="mt-1 whitespace-pre-line text-xs leading-5 text-slate-600">{messengerText}</p>
+                  <button type="button" onClick={() => void copyMessengerText()} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">
+                    <FontAwesomeIcon icon={faCopy} aria-hidden="true" /> Copy Messenger text
+                  </button>
+                  {copyMessage ? <p className="mt-2 text-xs text-emerald-700" role="status">{copyMessage}</p> : null}
+                </div>
                 <p className="mt-4 text-xs leading-5 text-slate-500">
                   Staff books Lalamove outside ALD. This screen only records supported booking and rider information; it never contacts Lalamove.
                 </p>
@@ -585,6 +645,15 @@ export default function RealStaffDeliveryDetailsModal({
                           value={riderContact}
                           onChange={(event) => setRiderContact(event.target.value)}
                           placeholder="Persisted rider contact"
+                          className="mt-1 min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                        />
+                      </label>
+                      <label className="text-sm font-medium text-slate-700">
+                        Vehicle Plate
+                        <input
+                          value={vehiclePlate}
+                          onChange={(event) => setVehiclePlate(event.target.value)}
+                          placeholder="Optional plate number"
                           className="mt-1 min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                         />
                       </label>

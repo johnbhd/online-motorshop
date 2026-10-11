@@ -2,6 +2,8 @@ export type OrderApiBranch = {
   id: number;
   name: string;
   address: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   contact_number: string | null;
 };
 
@@ -63,6 +65,17 @@ export type OrderApiDelivery = {
   rider_contact: string | null;
   remarks: string | null;
   delivered_at: string | null;
+  complete_address?: string | null;
+  city_municipality?: string | null;
+  city_municipality_code?: string | null;
+  barangay?: string | null;
+  barangay_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  contact_person?: string | null;
+  contact_number?: string | null;
+  notes?: string | null;
+  vehicle_plate?: string | null;
 };
 
 export type OrderApiPayment = {

@@ -1,15 +1,39 @@
+import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import type { LocationOption, LocationSelection } from "../account/profile/LocationSelect";
+import CustomerLocationPicker from "../account/profile/CustomerLocationPicker";
+import LocationSelect from "../account/profile/LocationSelect";
 import type { CheckoutDeliveryData, CheckoutFieldErrors } from "./checkoutTypes";
 
 type DeliveryFieldsProps = {
   values: CheckoutDeliveryData;
   errors: CheckoutFieldErrors;
+  cityOptions?: readonly LocationOption[];
+  barangayOptions?: readonly LocationOption[];
+  cityLoading?: boolean;
+  barangayLoading?: boolean;
+  cityError?: string | null;
+  barangayError?: string | null;
+  onCityRetry?: () => void;
+  onBarangayRetry?: () => void;
   onChange: (field: keyof CheckoutDeliveryData, value: string) => void;
+  onLocationChange?: (field: "city" | "barangay", selection: LocationSelection) => void;
+  onCoordinatesChange?: (latitude: number | null, longitude: number | null) => void;
 };
 
 export default function DeliveryFields({
   values,
   errors,
+  cityOptions = [],
+  barangayOptions = [],
+  cityLoading = false,
+  barangayLoading = false,
+  cityError,
+  barangayError,
+  onCityRetry,
+  onBarangayRetry,
   onChange,
+  onLocationChange,
+  onCoordinatesChange,
 }: DeliveryFieldsProps) {
   return (
     <section className="checkout-sub-panel checkout-sub-panel--delivery">
@@ -49,47 +73,58 @@ export default function DeliveryFields({
           ) : null}
         </div>
 
-        <div className="checkout-field">
-          <label htmlFor="checkout-barangay">Barangay</label>
-          <input
-            id="checkout-barangay"
-            name="barangay"
-            type="text"
-            value={values.barangay}
-            autoComplete="address-level3"
-            aria-invalid={Boolean(errors.barangay)}
-            aria-describedby={errors.barangay ? "checkout-barangay-error" : undefined}
-            onChange={(event) => {
-              onChange("barangay", event.target.value);
-            }}
-          />
-          {errors.barangay ? (
-            <p className="checkout-field-error" id="checkout-barangay-error">
-              {errors.barangay}
-            </p>
-          ) : null}
-        </div>
-
-        <div className="checkout-field">
-          <label htmlFor="checkout-city">City / Municipality</label>
-          <input
-            id="checkout-city"
-            name="city"
-            type="text"
-            value={values.city}
-            autoComplete="address-level2"
-            aria-invalid={Boolean(errors.city)}
-            aria-describedby={errors.city ? "checkout-city-error" : undefined}
-            onChange={(event) => {
-              onChange("city", event.target.value);
-            }}
-          />
-          {errors.city ? (
-            <p className="checkout-field-error" id="checkout-city-error">
-              {errors.city}
-            </p>
-          ) : null}
-        </div>
+        {onLocationChange ? (
+          <>
+            <div className="checkout-field">
+              <LocationSelect
+                id="checkout-city"
+                label="City / Municipality"
+                icon={faLocationDot}
+                value={values.cityMunicipalityCode || values.city}
+                displayValue={values.city}
+                options={cityOptions}
+                placeholder={cityLoading ? "Loading cities..." : "Type or select City / Municipality"}
+                emptyMessage="No city suggestions found. A custom value can still be saved."
+                isLoading={cityLoading}
+                error={cityError ?? errors.city}
+                onRetry={onCityRetry}
+                helpText="Search PSGC suggestions or enter a custom city or municipality."
+                onChange={(selection) => onLocationChange("city", selection)}
+              />
+            </div>
+            <div className="checkout-field">
+              <LocationSelect
+                id="checkout-barangay"
+                label="Barangay"
+                icon={faLocationDot}
+                value={values.barangayCode || values.barangay}
+                displayValue={values.barangay}
+                options={barangayOptions}
+                placeholder={barangayLoading ? "Loading barangays..." : "Type or select Barangay"}
+                emptyMessage="No barangay suggestions found. A custom value can still be saved."
+                isLoading={barangayLoading}
+                disabled={!values.city}
+                error={barangayError ?? errors.barangay}
+                onRetry={onBarangayRetry}
+                helpText="Suggestions are limited to the selected city when a PSGC city is available."
+                onChange={(selection) => onLocationChange("barangay", selection)}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="checkout-field">
+              <label htmlFor="checkout-barangay">Barangay</label>
+              <input id="checkout-barangay" name="barangay" type="text" value={values.barangay} autoComplete="address-level3" aria-invalid={Boolean(errors.barangay)} onChange={(event) => onChange("barangay", event.target.value)} />
+              {errors.barangay ? <p className="checkout-field-error">{errors.barangay}</p> : null}
+            </div>
+            <div className="checkout-field">
+              <label htmlFor="checkout-city">City / Municipality</label>
+              <input id="checkout-city" name="city" type="text" value={values.city} autoComplete="address-level2" aria-invalid={Boolean(errors.city)} onChange={(event) => onChange("city", event.target.value)} />
+              {errors.city ? <p className="checkout-field-error">{errors.city}</p> : null}
+            </div>
+          </>
+        )}
 
         <div className="checkout-field">
           <label htmlFor="checkout-contact-person">Delivery Contact Person</label>
@@ -118,6 +153,22 @@ export default function DeliveryFields({
         </div>
 
         <div className="checkout-field">
+          <label htmlFor="checkout-delivery-contact-number">Delivery Contact Number</label>
+          <input
+            id="checkout-delivery-contact-number"
+            name="deliveryContactNumber"
+            type="tel"
+            value={values.contactNumber}
+            autoComplete="tel"
+            placeholder="Contact number for the rider"
+            aria-invalid={Boolean(errors.deliveryContactNumber)}
+            aria-describedby={errors.deliveryContactNumber ? "checkout-delivery-contact-number-error" : undefined}
+            onChange={(event) => onChange("contactNumber", event.target.value)}
+          />
+          {errors.deliveryContactNumber ? <p className="checkout-field-error" id="checkout-delivery-contact-number-error">{errors.deliveryContactNumber}</p> : null}
+        </div>
+
+        <div className="checkout-field">
           <label htmlFor="checkout-delivery-notes">Delivery Notes — Optional</label>
           <input
             id="checkout-delivery-notes"
@@ -131,6 +182,15 @@ export default function DeliveryFields({
           />
         </div>
       </div>
+
+      {onCoordinatesChange ? (
+        <CustomerLocationPicker
+          latitude={values.latitude}
+          longitude={values.longitude}
+          mode="checkout"
+          onChange={onCoordinatesChange}
+        />
+      ) : null}
     </section>
   );
 }

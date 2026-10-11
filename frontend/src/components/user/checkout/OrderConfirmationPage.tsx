@@ -79,7 +79,7 @@ export default function OrderConfirmationPage({
   const fulfillmentLabel = isPickup ? "Store Pickup" : "Lalamove Delivery";
   const fulfillmentValue = isPickup
     ? order.branch?.name ?? "Branch details unavailable"
-    : order.delivery?.address ?? "Delivery address unavailable";
+    : order.delivery?.complete_address ?? order.delivery?.address ?? "Delivery address unavailable";
   const fulfillmentIcon = isPickup ? faStore : faTruck;
   const totalQuantity = order.items.reduce(
     (total, item) => total + item.quantity,
@@ -184,7 +184,35 @@ export default function OrderConfirmationPage({
                 {order.customer?.contact_number || "Contact number unavailable"}
               </span>
             </div>
+            {!isPickup && order.delivery ? (
+              <>
+                <div>
+                  <span className="order-confirmation-detail-icon" aria-hidden="true">
+                    <FontAwesomeIcon icon={faTruck} />
+                  </span>
+                  <span>
+                    <strong>Delivery contact</strong>
+                    {order.delivery.contact_person || "Contact person unavailable"}
+                  </span>
+                </div>
+                <div>
+                  <span className="order-confirmation-detail-icon" aria-hidden="true">
+                    <FontAwesomeIcon icon={faPhone} />
+                  </span>
+                  <span>
+                    <strong>Delivery phone</strong>
+                    {order.delivery.contact_number || order.customer?.contact_number || "Contact number unavailable"}
+                  </span>
+                </div>
+              </>
+            ) : null}
           </div>
+
+          {!isPickup && order.delivery?.notes ? (
+            <p className="order-confirmation-order-note">
+              <strong>Delivery notes:</strong> {order.delivery.notes}
+            </p>
+          ) : null}
 
           <section className="order-confirmation-items" aria-labelledby="order-confirmation-items-title">
             <div className="order-confirmation-items-heading">

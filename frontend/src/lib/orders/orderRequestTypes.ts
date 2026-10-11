@@ -48,7 +48,12 @@ export type OrderRequestPayload = {
           address: string;
           barangay: string;
           city: string;
+          city_municipality_code?: string;
+          barangay_code?: string;
+          latitude?: number | null;
+          longitude?: number | null;
           contact_person: string;
+          contact_number?: string;
           notes?: string;
         };
       };
@@ -102,6 +107,17 @@ export type OrderConfirmationData = {
   delivery?: {
     branch_id: number | null;
     address: string | null;
+    complete_address?: string | null;
+    city_municipality?: string | null;
+    city_municipality_code?: string | null;
+    barangay?: string | null;
+    barangay_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    contact_person?: string | null;
+    contact_number?: string | null;
+    notes?: string | null;
+    vehicle_plate?: string | null;
     status: string | null;
     remarks: string | null;
   };

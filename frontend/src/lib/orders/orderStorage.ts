@@ -478,7 +478,12 @@ function parseDelivery(value: unknown): OrderDeliverySnapshot | null {
     address: candidate.address,
     barangay: candidate.barangay,
     city: candidate.city,
+    cityMunicipalityCode: candidate.cityMunicipalityCode ?? "",
+    barangayCode: candidate.barangayCode ?? "",
+    latitude: candidate.latitude ?? null,
+    longitude: candidate.longitude ?? null,
     contactPerson: candidate.contactPerson,
+    contactNumber: candidate.contactNumber ?? "",
     notes: candidate.notes,
   };
 }

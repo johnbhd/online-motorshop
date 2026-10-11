@@ -67,6 +67,7 @@ class StaffDeliveryStatusService
                 'tracking_url',
                 'rider_name',
                 'rider_contact',
+                'vehicle_plate',
                 'remarks',
             ]),
         );

@@ -94,6 +94,8 @@ class LoginController extends Controller
                 'barangay_code',
                 'city',
                 'barangay',
+                'latitude',
+                'longitude',
             ]),
         ];
     }

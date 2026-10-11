@@ -4,6 +4,8 @@ export type StaffDeliveryCustomer = {
   contact_number: string | null;
   email: string | null;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type StaffDeliveryBranch = {
@@ -31,11 +33,22 @@ export type StaffDeliveryRequest = {
   amount: number | null;
   payment: StaffDeliveryPayment | null;
   delivery_address: string | null;
+  delivery_complete_address: string | null;
+  delivery_city_municipality: string | null;
+  delivery_city_municipality_code: string | null;
+  delivery_barangay: string | null;
+  delivery_barangay_code: string | null;
+  delivery_latitude: number | null;
+  delivery_longitude: number | null;
+  delivery_contact_person: string | null;
+  delivery_contact_number: string | null;
+  delivery_notes: string | null;
   delivery_fee: number | null;
   booking_reference: string | null;
   tracking_url: string | null;
   rider_name: string | null;
   rider_contact: string | null;
+  vehicle_plate: string | null;
   delivery_status: string;
   remarks: string | null;
   delivered_at: string | null;

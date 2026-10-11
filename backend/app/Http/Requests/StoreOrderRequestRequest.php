@@ -5,11 +5,53 @@ namespace App\Http\Requests;
 use App\Models\Payment;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class StoreOrderRequestRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $user = Auth::guard('sanctum')->user();
+
+        if ($this->input('fulfillment.method') !== 'delivery' || ! $user) {
+            return;
+        }
+
+        $customer = $user->loadMissing('customer')->customer;
+
+        if (! $customer) {
+            return;
+        }
+
+        $delivery = (array) $this->input('fulfillment.delivery', []);
+        $defaults = [
+            'address' => $customer->address,
+            'barangay' => $customer->barangay,
+            'barangay_code' => $customer->barangay_code,
+            'city' => $customer->city,
+            'city_municipality_code' => $customer->city_municipality_code,
+            'contact_number' => $customer->contact_number,
+            'contact_person' => $customer->full_name,
+            'latitude' => $customer->latitude,
+            'longitude' => $customer->longitude,
+        ];
+
+        foreach ($defaults as $field => $value) {
+            if (! array_key_exists($field, $delivery) || $delivery[$field] === null || $delivery[$field] === '') {
+                $delivery[$field] = $value;
+            }
+        }
+
+        $this->merge([
+            'fulfillment' => [
+                ...(array) $this->input('fulfillment'),
+                'delivery' => $delivery,
+            ],
+        ]);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -64,15 +106,47 @@ class StoreOrderRequestRequest extends FormRequest
                 'string',
                 'max:255',
             ],
+            'fulfillment.delivery.barangay_code' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'regex:/^\d{10}$/',
+            ],
             'fulfillment.delivery.city' => [
                 'required_if:fulfillment.method,delivery',
                 'string',
                 'max:255',
             ],
+            'fulfillment.delivery.city_municipality_code' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'regex:/^\d{10}$/',
+            ],
             'fulfillment.delivery.contact_person' => [
                 'required_if:fulfillment.method,delivery',
                 'string',
                 'max:200',
+            ],
+            'fulfillment.delivery.contact_number' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:30',
+            ],
+            'fulfillment.delivery.latitude' => [
+                'sometimes',
+                'nullable',
+                'numeric',
+                'between:-90,90',
+                Rule::requiredIf(fn (): bool => $this->filled('fulfillment.delivery.longitude')),
+            ],
+            'fulfillment.delivery.longitude' => [
+                'sometimes',
+                'nullable',
+                'numeric',
+                'between:-180,180',
+                Rule::requiredIf(fn (): bool => $this->filled('fulfillment.delivery.latitude')),
             ],
             'fulfillment.delivery.notes' => [
                 'sometimes',

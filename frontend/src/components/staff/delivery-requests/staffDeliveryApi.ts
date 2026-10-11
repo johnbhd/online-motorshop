@@ -140,6 +140,7 @@ export type StaffDeliveryStatusUpdate = {
   tracking_url?: string;
   rider_name?: string;
   rider_contact?: string;
+  vehicle_plate?: string;
   remarks?: string;
 };
 

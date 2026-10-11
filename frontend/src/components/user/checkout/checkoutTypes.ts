@@ -39,6 +39,7 @@ export type CheckoutFieldErrorKey =
   | "barangay"
   | "city"
   | "contactPerson"
+  | "deliveryContactNumber"
   | "paymentMethod"
   | "confirmDetails";
 

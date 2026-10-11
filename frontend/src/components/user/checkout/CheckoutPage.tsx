@@ -18,6 +18,14 @@ import CheckoutPaymentMethod from "./PaymentMethod";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/toast/ToastProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
+import { getCustomerProfile } from "@/lib/customerProfileApi";
+import {
+  getBarangaysForCity,
+  getCitiesMunicipalities,
+  getLocationErrorMessage,
+} from "@/lib/locationApi";
+import type { LocationOption } from "@/lib/locationTypes";
+import type { LocationSelection } from "../account/profile/LocationSelect";
 import {
   getCheckoutBranches,
   type CheckoutBranch,
@@ -55,7 +63,12 @@ const initialDeliveryData: CheckoutDeliveryData = {
   address: "",
   barangay: "",
   city: "",
+  cityMunicipalityCode: "",
+  barangayCode: "",
+  latitude: null,
+  longitude: null,
   contactPerson: "",
+  contactNumber: "",
   notes: "",
 };
 
@@ -80,6 +93,13 @@ export default function CheckoutPage() {
   const [branches, setBranches] = useState<CheckoutBranch[]>([]);
   const [isLoadingBranches, setIsLoadingBranches] = useState(false);
   const [branchLoadError, setBranchLoadError] = useState("");
+  const [cityOptions, setCityOptions] = useState<readonly LocationOption[]>([]);
+  const [barangayOptions, setBarangayOptions] = useState<readonly LocationOption[]>([]);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [barangayLoading, setBarangayLoading] = useState(false);
+  const [cityError, setCityError] = useState<string | null>(null);
+  const [barangayError, setBarangayError] = useState<string | null>(null);
+  const [locationReloadNonce, setLocationReloadNonce] = useState(0);
   const [formData, setFormData] = useState<CheckoutFormData>(initialFormData);
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
   const [submitError, setSubmitError] = useState("");
@@ -126,6 +146,7 @@ export default function CheckoutPage() {
             contactNumber: user.customer?.contact_number ?? "",
           }
         : null;
+    const profileCustomer = user?.role === "customer" ? user.customer : null;
 
     // Browser storage is read after hydration to avoid server/client markup drift.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate shared cart and customer data after the client mounts
@@ -133,6 +154,18 @@ export default function CheckoutPage() {
     setFormData((currentFormData) => ({
       ...currentFormData,
       ...(loggedInCustomer ?? {}),
+      delivery: {
+        ...currentFormData.delivery,
+        address: profileCustomer?.address ?? "",
+        city: profileCustomer?.city ?? "",
+        barangay: profileCustomer?.barangay ?? "",
+        cityMunicipalityCode: profileCustomer?.city_municipality_code ?? "",
+        barangayCode: profileCustomer?.barangay_code ?? "",
+        latitude: profileCustomer?.latitude ?? null,
+        longitude: profileCustomer?.longitude ?? null,
+        contactPerson: user?.name ?? "",
+        contactNumber: profileCustomer?.contact_number ?? "",
+      },
       fulfillmentMethod:
         new URLSearchParams(window.location.search).get("fulfillment") ===
         "delivery"
@@ -143,7 +176,86 @@ export default function CheckoutPage() {
     }));
     setIsReady(true);
     void loadBranches();
+
+    const token = getAuthToken();
+    if (token && user?.role === "customer") {
+      const controller = new AbortController();
+      void getCustomerProfile(token, controller.signal)
+        .then((response) => {
+          const customer = response.user.customer;
+          setFormData((currentFormData) => ({
+            ...currentFormData,
+            fullName: response.user.name,
+            email: response.user.email,
+            contactNumber: customer?.contact_number ?? currentFormData.contactNumber,
+            delivery: {
+              ...currentFormData.delivery,
+              address: customer?.address ?? "",
+              city: customer?.city ?? "",
+              barangay: customer?.barangay ?? "",
+              cityMunicipalityCode: customer?.city_municipality_code ?? "",
+              barangayCode: customer?.barangay_code ?? "",
+              latitude: customer?.latitude ?? null,
+              longitude: customer?.longitude ?? null,
+              contactPerson: response.user.name,
+              contactNumber: customer?.contact_number ?? "",
+            },
+          }));
+        })
+        .catch(() => undefined);
+      return () => controller.abort();
+    }
   }, [isAuthReady, loadBranches, user]);
+
+  useEffect(() => {
+    if (!isReady || formData.fulfillmentMethod !== "delivery") {
+      return;
+    }
+
+    const controller = new AbortController();
+    queueMicrotask(() => {
+      if (controller.signal.aborted) return;
+      setCityLoading(true);
+      setCityError(null);
+      void getCitiesMunicipalities(controller.signal)
+        .then(setCityOptions)
+        .catch((error: unknown) => {
+          if (!controller.signal.aborted) setCityError(getLocationErrorMessage(error));
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setCityLoading(false);
+        });
+    });
+
+    return () => controller.abort();
+  }, [formData.fulfillmentMethod, isReady, locationReloadNonce]);
+
+  useEffect(() => {
+    if (!isReady || formData.fulfillmentMethod !== "delivery" || !formData.delivery.cityMunicipalityCode) {
+      const resetController = new AbortController();
+      queueMicrotask(() => {
+        if (!resetController.signal.aborted) setBarangayOptions([]);
+      });
+      return () => resetController.abort();
+    }
+
+    const controller = new AbortController();
+    queueMicrotask(() => {
+      if (controller.signal.aborted) return;
+      setBarangayLoading(true);
+      setBarangayError(null);
+      void getBarangaysForCity(formData.delivery.cityMunicipalityCode, controller.signal)
+        .then(setBarangayOptions)
+        .catch((error: unknown) => {
+          if (!controller.signal.aborted) setBarangayError(getLocationErrorMessage(error));
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setBarangayLoading(false);
+        });
+    });
+
+    return () => controller.abort();
+  }, [formData.delivery.cityMunicipalityCode, formData.fulfillmentMethod, isReady, locationReloadNonce]);
 
   const updateCustomer = (
     field: keyof CheckoutCustomerData,
@@ -171,10 +283,16 @@ export default function CheckoutPage() {
         [field]: value,
       },
     }));
-    setErrors((currentErrors) => ({
-      ...currentErrors,
-      [field === "address" ? "deliveryAddress" : field]: undefined,
-    }));
+    const errorKey = field === "address"
+      ? "deliveryAddress"
+      : field === "city" || field === "barangay" || field === "contactPerson"
+        ? field
+        : field === "contactNumber"
+          ? "deliveryContactNumber"
+        : null;
+    if (errorKey) {
+      setErrors((currentErrors) => ({ ...currentErrors, [errorKey]: undefined }));
+    }
     setSubmitError("");
   };
 
@@ -191,6 +309,7 @@ export default function CheckoutPage() {
       barangay: undefined,
       city: undefined,
       contactPerson: undefined,
+      deliveryContactNumber: undefined,
       paymentMethod: undefined,
     }));
     setSubmitError("");
@@ -318,6 +437,7 @@ export default function CheckoutPage() {
             "fulfillment.delivery.barangay": "barangay",
             "fulfillment.delivery.city": "city",
             "fulfillment.delivery.contact_person": "contactPerson",
+            "fulfillment.delivery.contact_number": "deliveryContactNumber",
             payment_method: "paymentMethod",
           };
 
@@ -456,6 +576,33 @@ export default function CheckoutPage() {
                 values={formData.delivery}
                 errors={errors}
                 onChange={updateDelivery}
+                cityOptions={cityOptions}
+                barangayOptions={barangayOptions}
+                cityLoading={cityLoading}
+                barangayLoading={barangayLoading}
+                cityError={cityError}
+                barangayError={barangayError}
+                onCityRetry={() => {
+                  setCityError(null);
+                  setLocationReloadNonce((value) => value + 1);
+                }}
+                onBarangayRetry={() => {
+                  setBarangayError(null);
+                  setLocationReloadNonce((value) => value + 1);
+                }}
+                onLocationChange={(field: "city" | "barangay", selection: LocationSelection) => {
+                  setFormData((current) => ({
+                    ...current,
+                    delivery: field === "city"
+                      ? { ...current.delivery, city: selection.label, cityMunicipalityCode: selection.code ?? "", barangay: "", barangayCode: "" }
+                      : { ...current.delivery, barangay: selection.label, barangayCode: selection.code ?? "" },
+                  }));
+                  setSubmitError("");
+                }}
+                onCoordinatesChange={(latitude, longitude) => setFormData((current) => ({
+                  ...current,
+                  delivery: { ...current.delivery, latitude, longitude },
+                }))}
               />
             ) : null}
 

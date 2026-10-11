@@ -203,6 +203,7 @@ class StaffDeliveryRequestsApiTest extends TestCase
                 'status' => 'picked_up',
                 'rider_name' => 'Rider Two',
                 'rider_contact' => '09170000002',
+                'vehicle_plate' => 'ABC-1234',
             ])
             ->assertOk()
             ->assertJsonPath('delivery_request.delivery_status', 'picked_up')
@@ -229,6 +230,7 @@ class StaffDeliveryRequestsApiTest extends TestCase
             'delivery_status' => 'delivered',
             'booking_reference' => 'LAL-224',
             'rider_name' => 'Rider Two',
+            'vehicle_plate' => 'ABC-1234',
         ]);
         $this->assertNotNull($order->deliveryRequest->fresh()->delivered_at);
         $this->assertSame($pickupCount, PickupRequest::count());

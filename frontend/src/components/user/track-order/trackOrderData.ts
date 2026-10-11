@@ -15,9 +15,10 @@ const deliveryStages = [
   "Under Review",
   "Confirmed",
   "Preparing Order",
-  "Booked for Delivery",
-  "Picked Up by Rider",
-  "Completed",
+  "Booked",
+  "Picked Up",
+  "In Transit",
+  "Delivered",
 ] as const;
 
 const statusDescriptions: Record<string, string> = {
@@ -32,6 +33,10 @@ const statusDescriptions: Record<string, string> = {
   ready_for_pickup: "Your order is ready for pickup at the submitted branch.",
   booked_for_delivery: "The delivery request has been arranged for the submitted address.",
   picked_up_by_rider: "The delivery has been picked up by the assigned rider.",
+  booked: "ALD staff recorded the manual Lalamove booking.",
+  picked_up: "The assigned rider has picked up the delivery.",
+  in_transit: "The delivery is in transit to the saved delivery location.",
+  delivered: "The delivery has been recorded as delivered.",
   completed: "This order request has reached its recorded completed state.",
   rejected: "ALD staff could not approve this order request. Please contact us if you need help.",
   cancelled: "This order request was cancelled and will not continue through fulfillment.",
@@ -126,13 +131,22 @@ function getCurrentStageIndex(
 
   if (
     status === "ready_for_pickup" ||
-    status === "booked_for_delivery"
+    status === "booked_for_delivery" ||
+    status === "booked"
   ) {
     return 4;
   }
 
-  if (status === "picked_up_by_rider") {
+  if (status === "picked_up_by_rider" || status === "picked_up") {
     return method === "delivery" ? 5 : 4;
+  }
+
+  if (status === "in_transit") {
+    return method === "delivery" ? 6 : 4;
+  }
+
+  if (status === "delivered") {
+    return method === "delivery" ? 7 : 4;
   }
 
   return 0;
