@@ -538,7 +538,7 @@
   margin: -0.875rem 0 0 -0.875rem !important;
   border: 3px solid #ffffff;
   border-radius: 50%;
-  background: var(--customer-orders-orange);
+  background: var(--customer-orders-orange, #e07a08);
   box-shadow: 0 0.2rem 0.65rem rgba(15, 23, 42, 0.3);
 }
 
