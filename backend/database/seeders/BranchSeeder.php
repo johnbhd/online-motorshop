@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Branch;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class BranchSeeder extends Seeder
@@ -17,6 +16,8 @@ class BranchSeeder extends Seeder
             [
                 'name' => 'Manila Branch',
                 'address' => '3333 New Panaderos, Sta. Ana, Manila, 1016 Metro Manila',
+                'latitude' => 14.5828278,
+                'longitude' => 121.0151083,
                 'contact_number' => '+63 995 869 1174',
                 'pickup_available' => true,
                 'status' => 'active',
@@ -24,6 +25,8 @@ class BranchSeeder extends Seeder
             [
                 'name' => 'Makati Branch',
                 'address' => '3678 Bautista Street, Makati City',
+                'latitude' => 14.55413,
+                'longitude' => 121.00258,
                 'contact_number' => '+63 995 869 1174',
                 'pickup_available' => true,
                 'status' => 'active',
@@ -31,13 +34,15 @@ class BranchSeeder extends Seeder
             [
                 'name' => 'Imus Branch',
                 'address' => 'LYS Building, General Aguinaldo Highway, Imus, 4103 Cavite',
+                'latitude' => 14.4214,
+                'longitude' => 120.94197,
                 'contact_number' => '+63 995 869 1174',
                 'pickup_available' => true,
                 'status' => 'active',
             ],
         ];
 
-        foreach($branches as $branch) {
+        foreach ($branches as $branch) {
             Branch::updateOrCreate(
                 ['name' => $branch['name']],
                 $branch

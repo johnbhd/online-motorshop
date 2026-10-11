@@ -84,6 +84,7 @@ export default function LalamoveTrackingMap({
   const mapElementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
+  const [mapReadyVersion, setMapReadyVersion] = useState(0);
   const [mapError, setMapError] = useState<string | null>(null);
 
   const isPickup = fulfillmentMethod === "pickup";
@@ -164,6 +165,7 @@ export default function LalamoveTrackingMap({
 
         mapRef.current = map;
         layerRef.current = leaflet.layerGroup().addTo(map);
+        setMapReadyVersion((version) => version + 1);
         setMapError(null);
         window.requestAnimationFrame(() => map.invalidateSize());
       } catch {
@@ -180,7 +182,7 @@ export default function LalamoveTrackingMap({
   }, [branchLocation, destination, mapErrorMessage]);
 
   useEffect(() => {
-    if (!mapRef.current || !layerRef.current) return;
+    if (!mapReadyVersion || !mapRef.current || !layerRef.current) return;
 
     void import("leaflet").then(({ default: leaflet }) => {
       const map = mapRef.current;
@@ -244,6 +246,7 @@ export default function LalamoveTrackingMap({
     branchLocation,
     canShowDeliveryProgress,
     destination,
+    mapReadyVersion,
     progress,
     shouldDrawRoute,
   ]);
