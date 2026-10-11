@@ -8,6 +8,12 @@ import type { LocationOption } from "@/lib/locationTypes";
 
 export type { LocationOption } from "@/lib/locationTypes";
 
+export type LocationSelection = {
+  value: string;
+  label: string;
+  code?: string;
+};
+
 type LocationSelectProps = {
   id: string;
   label: string;
@@ -22,7 +28,7 @@ type LocationSelectProps = {
   error?: string;
   onRetry?: () => void;
   helpText?: string;
-  onChange: (value: string) => void;
+  onChange: (selection: LocationSelection) => void;
 };
 
 export default function LocationSelect({
@@ -43,7 +49,6 @@ export default function LocationSelect({
 }: LocationSelectProps) {
   const selectedOption = options.find((option) => option.value === value);
   const selectedLabel = selectedOption?.label ?? displayValue ?? value;
-  const [query, setQuery] = useState(selectedLabel);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -58,20 +63,16 @@ export default function LocationSelect({
     const handlePointerDown = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
-        setQuery(selectedLabel);
       }
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [isOpen, selectedLabel]);
+  }, [isOpen]);
 
-  const savedOption: LocationOption | null = value && !options.some((option) => option.value === value)
-    ? { value, label: displayValue || value }
-    : null;
-  const availableOptions = savedOption ? [savedOption, ...options] : options;
+  const query = displayValue ?? selectedLabel;
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredOptions = availableOptions.filter((option) => {
+  const filteredOptions = options.filter((option) => {
     if (!normalizedQuery || option.value === value) return true;
 
     return option.label.toLowerCase().includes(normalizedQuery) || option.value.toLowerCase().includes(normalizedQuery);
@@ -79,11 +80,14 @@ export default function LocationSelect({
   const activeOption = activeIndex >= 0 ? filteredOptions[activeIndex] : undefined;
   const optionId = (option: LocationOption) => `${listboxId}-${(option.code ?? option.value).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   const describedBy = [helpText ? descriptionId : "", error ? errorId : ""].filter(Boolean).join(" ") || undefined;
-  const isDisabled = disabled || isLoading;
+  const isDisabled = disabled;
 
   const selectOption = (option: LocationOption) => {
-    onChange(option.value);
-    setQuery(option.label);
+    onChange({
+      value: option.value,
+      label: option.label,
+      code: option.code ?? option.value,
+    });
     setActiveIndex(-1);
     setIsOpen(false);
   };
@@ -113,7 +117,6 @@ export default function LocationSelect({
 
     if (event.key === "Escape") {
       setIsOpen(false);
-      setQuery(selectedLabel);
     }
   };
 
@@ -142,9 +145,10 @@ export default function LocationSelect({
             if (!isDisabled) setIsOpen(true);
           }}
           onChange={(event) => {
-            setQuery(event.target.value);
-            setActiveIndex(0);
+            const nextQuery = event.target.value;
+            setActiveIndex(filteredOptions.length > 0 ? 0 : -1);
             setIsOpen(true);
+            onChange({ value: nextQuery, label: nextQuery });
           }}
           onKeyDown={handleKeyDown}
         />
@@ -185,7 +189,9 @@ export default function LocationSelect({
               </button>
             ))
           ) : (
-            <p className="customer-location-menu-status">{emptyMessage}</p>
+            <p className="customer-location-menu-status">
+              {query.trim() ? `No matching ${label.toLowerCase()} found. Your custom value will be saved.` : emptyMessage}
+            </p>
           )}
         </div>
       ) : null}

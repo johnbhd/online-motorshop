@@ -247,8 +247,14 @@ export default function EditableProfilePage() {
     if (!nextValues.contact_number) errors.contact_number = ["Enter your contact number."];
     else if (nextValues.contact_number.length > 30) errors.contact_number = ["Use 30 characters or fewer."];
     if (nextValues.address.length > 255) errors.address = ["Use 255 characters or fewer."];
-    if (location.cityCode && !location.barangayCode) errors.barangay_code = ["Choose a barangay from the selected city or municipality."];
-    if (!location.cityCode && location.barangayCode) errors.city_municipality_code = ["Choose a city or municipality first."];
+    const hasCity = Boolean(location.cityName.trim());
+    const hasBarangay = Boolean(location.barangayName.trim());
+
+    if (hasCity && !hasBarangay) errors.barangay = ["Enter a barangay."];
+    if (!hasCity && hasBarangay) errors.city_municipality = ["Enter a city or municipality first."];
+    if (location.barangayCode && !location.cityCode) {
+      errors.city_municipality_code = ["Choose an official city or municipality before selecting a PSGC barangay."];
+    }
 
     if (Object.keys(errors).length > 0) {
       setProfileErrors(errors);
@@ -266,12 +272,12 @@ export default function EditableProfilePage() {
     setProfileErrors({});
 
     try {
-      const locationPayload = location.cityCode && location.barangayCode
-        ? {
-            city_municipality_code: location.cityCode,
-            barangay_code: location.barangayCode,
-          }
-        : {};
+      const locationPayload = {
+        city_municipality: location.cityName.trim() || null,
+        barangay: location.barangayName.trim() || null,
+        city_municipality_code: location.cityCode || null,
+        barangay_code: location.barangayCode || null,
+      };
       const response = await updateCustomerProfile(token, { ...nextValues, ...locationPayload });
       setProfile(response.user);
       setValues(profileFormFromUser(response.user));
@@ -390,17 +396,24 @@ export default function EditableProfilePage() {
                   barangayOptions={barangayOptions}
                   cityLoading={cityLoading}
                   barangayLoading={barangayLoading}
-                  cityError={cityLoadError ?? profileErrors.city_municipality_code?.[0]}
-                  barangayError={barangayLoadError ?? profileErrors.barangay_code?.[0]}
+                  cityError={cityLoadError ?? profileErrors.city_municipality?.[0] ?? profileErrors.city_municipality_code?.[0]}
+                  barangayError={barangayLoadError ?? profileErrors.barangay?.[0] ?? profileErrors.barangay_code?.[0]}
                   onCityRetry={cityLoadError ? () => void loadCities() : undefined}
                   onBarangayRetry={barangayLoadError ? () => void loadBarangays(location.cityCode) : undefined}
-                  onCityChange={(cityCode) => {
-                    const cityName = cityOptions.find((option) => option.value === cityCode)?.label ?? "";
-                    setLocation({ cityCode, cityName, barangayCode: "", barangayName: "" });
+                  onCityChange={(selection) => {
+                    setLocation({
+                      cityCode: selection.code ?? "",
+                      cityName: selection.label,
+                      barangayCode: "",
+                      barangayName: "",
+                    });
                   }}
-                  onBarangayChange={(barangayCode) => {
-                    const barangayName = barangayOptions.find((option) => option.value === barangayCode)?.label ?? "";
-                    setLocation((current) => ({ ...current, barangayCode, barangayName }));
+                  onBarangayChange={(selection) => {
+                    setLocation((current) => ({
+                      ...current,
+                      barangayCode: selection.code ?? "",
+                      barangayName: selection.label,
+                    }));
                   }}
                 />
               </div>

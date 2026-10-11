@@ -59,53 +59,92 @@ class PsgcLocationService
     }
 
     /**
-     * Resolve only server-owned PSGC codes into canonical names.
+     * Resolve verified PSGC codes while allowing validated custom location text.
+     *
+     * A code always wins over its submitted name so clients cannot override a
+     * canonical PSGC label. Without a code, the trimmed custom name is kept.
+     * A barangay code is only accepted with a verified city/municipality code so
+     * a custom city cannot be paired with a barangay from another city.
+     *
+     * @return array{city_municipality_code: string|null, barangay_code: string|null, city: string, barangay: string}
+     */
+    public function resolveLocation(
+        ?string $cityCode,
+        ?string $barangayCode,
+        ?string $cityName,
+        ?string $barangayName,
+    ): array {
+        $cityCode = $this->normalizeCode($cityCode);
+        $barangayCode = $this->normalizeCode($barangayCode);
+        $cityName = $this->normalizeName($cityName);
+        $barangayName = $this->normalizeName($barangayName);
+        $errors = [];
+        $city = null;
+        $barangay = null;
+
+        if ($cityCode !== null) {
+            $city = $this->city($cityCode);
+
+            if ($city === null) {
+                $errors['city_municipality_code'] = ['Choose a valid city or municipality.'];
+            }
+        } elseif ($cityName === null) {
+            $errors['city_municipality'] = ['Enter a city or municipality.'];
+        }
+
+        if ($barangayCode !== null) {
+            if ($cityCode === null) {
+                $errors['city_municipality_code'] = [
+                    'Choose a verified city or municipality before using a barangay code.',
+                ];
+            } elseif ($city !== null) {
+                foreach ($this->barangaysByCity()[$cityCode] ?? [] as $candidate) {
+                    if ($candidate['code'] === $barangayCode) {
+                        $barangay = $candidate;
+                        break;
+                    }
+                }
+
+                if ($barangay === null) {
+                    $errors['barangay_code'] = [
+                        'Choose a barangay from the selected city or municipality.',
+                    ];
+                }
+            }
+        } elseif ($barangayName === null) {
+            $errors['barangay'] = ['Enter a barangay.'];
+        }
+
+        if ($errors !== []) {
+            throw new PsgcLocationSelectionException(
+                'Choose a valid city or municipality and barangay.',
+                $errors,
+            );
+        }
+
+        return [
+            'city_municipality_code' => $cityCode,
+            'barangay_code' => $barangayCode,
+            'city' => $city !== null ? (string) $city['name'] : (string) $cityName,
+            'barangay' => $barangay !== null ? $barangay['name'] : (string) $barangayName,
+        ];
+    }
+
+    /**
+     * Resolve a fully verified PSGC selection for existing callers.
      *
      * @return array{city_municipality_code: string, barangay_code: string, city: string, barangay: string}
      */
     public function resolveSelection(?string $cityCode, ?string $barangayCode): array
     {
-        $cityCode = $this->normalizeCode($cityCode);
-        $barangayCode = $this->normalizeCode($barangayCode);
+        $location = $this->resolveLocation($cityCode, $barangayCode, null, null);
 
-        if ($cityCode === null || $barangayCode === null) {
-            throw new PsgcLocationSelectionException(
-                'Choose both a city or municipality and a barangay.',
-                [
-                    'city_municipality_code' => $cityCode === null
-                        ? ['Choose a city or municipality.']
-                        : [],
-                    'barangay_code' => $barangayCode === null
-                        ? ['Choose a barangay.']
-                        : [],
-                ],
-            );
-        }
-
-        $city = $this->city($cityCode);
-
-        if ($city === null) {
-            throw new PsgcLocationSelectionException(
-                'The selected city or municipality is not available.',
-                ['city_municipality_code' => ['Choose a valid city or municipality.']],
-            );
-        }
-
-        foreach ($this->barangaysByCity()[$cityCode] ?? [] as $barangay) {
-            if ($barangay['code'] === $barangayCode) {
-                return [
-                    'city_municipality_code' => $cityCode,
-                    'barangay_code' => $barangayCode,
-                    'city' => (string) $city['name'],
-                    'barangay' => $barangay['name'],
-                ];
-            }
-        }
-
-        throw new PsgcLocationSelectionException(
-            'The selected barangay does not belong to the selected city or municipality.',
-            ['barangay_code' => ['Choose a barangay from the selected city or municipality.']],
-        );
+        return [
+            'city_municipality_code' => (string) $location['city_municipality_code'],
+            'barangay_code' => (string) $location['barangay_code'],
+            'city' => $location['city'],
+            'barangay' => $location['barangay'],
+        ];
     }
 
     /**
@@ -251,5 +290,12 @@ class PsgcLocationService
         $code = trim((string) $code);
 
         return $code === '' ? null : $code;
+    }
+
+    private function normalizeName(?string $name): ?string
+    {
+        $name = trim((string) $name);
+
+        return $name === '' ? null : $name;
     }
 }

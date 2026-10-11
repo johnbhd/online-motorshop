@@ -148,6 +148,68 @@ class LocationApiTest extends TestCase
             ->assertJsonValidationErrors(['barangay_code']);
     }
 
+    public function test_customer_profile_accepts_custom_values_and_verified_city_with_custom_barangay(): void
+    {
+        $customer = User::create([
+            'name' => 'Flexible Location Customer',
+            'email' => 'flexible-location@example.com',
+            'password' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'customer',
+        ]);
+        $customer->customer()->create([
+            'full_name' => 'Flexible Location Customer',
+            'contact_number' => '09170000000',
+            'email' => 'flexible-location@example.com',
+        ]);
+        $token = $customer->createToken('flexible-location-test')->plainTextToken;
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', [
+                'name' => 'Flexible Location Customer',
+                'email' => 'flexible-location@example.com',
+                'contact_number' => '09170000000',
+                'city_municipality' => 'Near Makati CBD',
+                'barangay' => 'San Antonio Village',
+                'city_municipality_code' => null,
+                'barangay_code' => null,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.customer.city_municipality_code', null)
+            ->assertJsonPath('user.customer.barangay_code', null)
+            ->assertJsonPath('user.customer.city', 'Near Makati CBD')
+            ->assertJsonPath('user.customer.barangay', 'San Antonio Village');
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', [
+                'name' => 'Flexible Location Customer',
+                'email' => 'flexible-location@example.com',
+                'contact_number' => '09170000000',
+                'city_municipality' => 'Client-supplied city label',
+                'barangay' => 'Local Barangay Name',
+                'city_municipality_code' => '1300000000',
+                'barangay_code' => null,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.customer.city_municipality_code', '1300000000')
+            ->assertJsonPath('user.customer.barangay_code', null)
+            ->assertJsonPath('user.customer.city', 'Manila')
+            ->assertJsonPath('user.customer.barangay', 'Local Barangay Name');
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', [
+                'name' => 'Flexible Location Customer',
+                'email' => 'flexible-location@example.com',
+                'contact_number' => '09170000000',
+                'city_municipality' => 'Custom City',
+                'barangay' => 'Barangay One',
+                'city_municipality_code' => null,
+                'barangay_code' => '1300000001',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['city_municipality_code']);
+    }
+
     public function test_legacy_customer_location_names_are_returned_when_codes_are_missing(): void
     {
         $customer = User::create([

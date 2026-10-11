@@ -1,6 +1,6 @@
 import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
 
-import LocationSelect, { type LocationOption } from "./LocationSelect";
+import LocationSelect, { type LocationOption, type LocationSelection } from "./LocationSelect";
 
 export type ProfileLocationValues = {
   cityCode: string;
@@ -24,8 +24,8 @@ type ProfileAddressFieldsProps = {
   barangayError?: string;
   onCityRetry?: () => void;
   onBarangayRetry?: () => void;
-  onCityChange: (value: string) => void;
-  onBarangayChange: (value: string) => void;
+  onCityChange: (selection: LocationSelection) => void;
+  onBarangayChange: (selection: LocationSelection) => void;
 };
 
 export default function ProfileAddressFields({
@@ -47,36 +47,33 @@ export default function ProfileAddressFields({
   return (
     <div className="customer-profile-location-fields">
       <LocationSelect
-        key={`city-${cityCode}-${cityName}`}
         id="customer-profile-city"
         label="City / Municipality"
         icon={faLocationDot}
         value={cityCode || cityName}
         displayValue={cityName}
         options={cityOptions}
-        placeholder="Select City / Municipality"
-        emptyMessage="No cities or municipalities found."
+        placeholder="Type or select City / Municipality"
+        emptyMessage="No cities or municipalities found. You can enter a custom value."
         isLoading={cityLoading}
         error={cityError}
         onRetry={onCityRetry}
-        helpText="Search by city or municipality name."
+        helpText="Search PSGC suggestions or enter a custom city or municipality."
         onChange={onCityChange}
       />
       <LocationSelect
-        key={`barangay-${cityCode}-${barangayCode}-${barangayName}`}
         id="customer-profile-barangay"
         label="Barangay"
         icon={faLocationDot}
         value={barangayCode || barangayName}
         displayValue={barangayName}
         options={barangayOptions}
-        placeholder={cityCode ? "Select Barangay" : "Select a city first"}
-        emptyMessage="No barangays found for this city or municipality."
+        placeholder={cityCode ? "Type or select Barangay" : "Enter Barangay"}
+        emptyMessage="No barangays found for this city. You can enter a custom value."
         isLoading={barangayLoading}
-        disabled={!cityCode}
         error={barangayError}
         onRetry={onBarangayRetry}
-        helpText={cityCode ? "Options are limited to the selected city or municipality." : "Select a city or municipality first."}
+        helpText={cityCode ? "Suggestions are limited to the selected city or municipality; custom values are allowed." : "Enter a custom barangay or select an official city to see PSGC suggestions."}
         onChange={onBarangayChange}
       />
     </div>

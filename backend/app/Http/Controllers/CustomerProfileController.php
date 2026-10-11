@@ -37,14 +37,18 @@ class CustomerProfileController extends Controller
 
         $validated = $request->validated();
         $locationFieldsProvided = array_key_exists('city_municipality_code', $validated)
-            || array_key_exists('barangay_code', $validated);
+            || array_key_exists('barangay_code', $validated)
+            || array_key_exists('city_municipality', $validated)
+            || array_key_exists('barangay', $validated);
         $location = null;
 
         if ($locationFieldsProvided) {
             $cityCode = $validated['city_municipality_code'] ?? null;
             $barangayCode = $validated['barangay_code'] ?? null;
+            $cityName = $validated['city_municipality'] ?? null;
+            $barangayName = $validated['barangay'] ?? null;
 
-            if ($cityCode === null && $barangayCode === null) {
+            if ($cityCode === null && $barangayCode === null && $cityName === null && $barangayName === null) {
                 $location = [
                     'city_municipality_code' => null,
                     'barangay_code' => null,
@@ -53,7 +57,12 @@ class CustomerProfileController extends Controller
                 ];
             } else {
                 try {
-                    $location = $this->locationService->resolveSelection($cityCode, $barangayCode);
+                    $location = $this->locationService->resolveLocation(
+                        $cityCode,
+                        $barangayCode,
+                        $cityName,
+                        $barangayName,
+                    );
                 } catch (PsgcLocationSelectionException $exception) {
                     return response()->json([
                         'message' => $exception->getMessage(),

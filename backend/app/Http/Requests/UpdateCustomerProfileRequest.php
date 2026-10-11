@@ -11,7 +11,16 @@ class UpdateCustomerProfileRequest extends FormRequest
     {
         $values = [];
 
-        foreach (['name', 'email', 'contact_number', 'address', 'city_municipality_code', 'barangay_code'] as $field) {
+        foreach ([
+            'name',
+            'email',
+            'contact_number',
+            'address',
+            'city_municipality',
+            'barangay',
+            'city_municipality_code',
+            'barangay_code',
+        ] as $field) {
             if ($this->has($field) && is_string($this->input($field))) {
                 $values[$field] = trim($this->input($field));
             }
@@ -25,7 +34,7 @@ class UpdateCustomerProfileRequest extends FormRequest
             $values['address'] = null;
         }
 
-        foreach (['city_municipality_code', 'barangay_code'] as $field) {
+        foreach (['city_municipality', 'barangay', 'city_municipality_code', 'barangay_code'] as $field) {
             if (array_key_exists($field, $values) && $values[$field] === '') {
                 $values[$field] = null;
             }
@@ -41,6 +50,9 @@ class UpdateCustomerProfileRequest extends FormRequest
 
     public function rules(): array
     {
+        $locationFieldsSubmitted = $this->locationFieldsSubmitted();
+        $locationHasValue = $this->locationHasValue();
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -51,18 +63,53 @@ class UpdateCustomerProfileRequest extends FormRequest
             ],
             'contact_number' => ['required', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:255'],
+            'city_municipality' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::requiredIf(fn (): bool => $locationFieldsSubmitted
+                    && $locationHasValue
+                    && ! $this->filled('city_municipality_code')),
+            ],
+            'barangay' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::requiredIf(fn (): bool => $locationFieldsSubmitted
+                    && $locationHasValue
+                    && ! $this->filled('barangay_code')),
+            ],
             'city_municipality_code' => [
                 'nullable',
                 'string',
                 'regex:/^\d{10}$/',
-                'required_with:barangay_code',
             ],
             'barangay_code' => [
                 'nullable',
                 'string',
                 'regex:/^\d{10}$/',
-                'required_with:city_municipality_code',
             ],
         ];
+    }
+
+    private function locationFieldsSubmitted(): bool
+    {
+        return array_intersect([
+            'city_municipality',
+            'barangay',
+            'city_municipality_code',
+            'barangay_code',
+        ], array_keys($this->all())) !== [];
+    }
+
+    private function locationHasValue(): bool
+    {
+        foreach (['city_municipality', 'barangay', 'city_municipality_code', 'barangay_code'] as $field) {
+            if ($this->input($field) !== null && $this->input($field) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
