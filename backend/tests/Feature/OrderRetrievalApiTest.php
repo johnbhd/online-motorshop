@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OrderRetrievalApiTest extends TestCase
@@ -451,6 +452,75 @@ class OrderRetrievalApiTest extends TestCase
             ->assertJsonPath('order.delivery.booking_reference', null)
             ->assertJsonPath('order.payment', null)
             ->assertJsonMissingPath('order.pickup');
+    }
+
+    public function test_pending_and_under_review_delivery_details_lazy_generate_and_reuse_a_road_route(): void
+    {
+        config()->set([
+            'services.openrouteservice.key' => 'test-route-key',
+            'services.openrouteservice.base_url' => 'https://router.test',
+        ]);
+        Http::fake([
+            'https://router.test/*' => Http::response([
+                'features' => [[
+                    'geometry' => [
+                        'type' => 'LineString',
+                        'coordinates' => [
+                            [121.0000, 14.0000],
+                            [121.0100, 14.0050],
+                            [121.0200, 14.0100],
+                        ],
+                    ],
+                    'properties' => [
+                        'summary' => ['distance' => 2345],
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        $branch = $this->createBranch();
+        $branch->update([
+            'latitude' => 14.0000,
+            'longitude' => 121.0000,
+        ]);
+        $product = $this->createProduct('RET-ROUTE-001', 480.00);
+        [$user, $customer] = $this->createCustomer('route-detail@example.com', '09176666666');
+        $order = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000041',
+            fulfillmentType: 'delivery',
+        );
+        $order->deliveryRequest()->update([
+            'delivery_latitude' => 14.0100,
+            'delivery_longitude' => 121.0200,
+        ]);
+        $token = $user->createToken('route-retrieval-test')->plainTextToken;
+
+        $this->withToken($token)
+            ->getJson('/api/customer/orders/'.$order->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.status', 'pending')
+            ->assertJsonPath('order.delivery.route_geometry.type', 'LineString')
+            ->assertJsonPath('order.delivery.route_geometry.coordinates.1.0', 121.01)
+            ->assertJsonPath('order.delivery.route_geometry.coordinates.1.1', 14.005)
+            ->assertJsonPath('order.delivery.route_provider', 'openrouteservice');
+
+        Http::assertSentCount(1);
+        $order->update(['order_status' => 'under_review']);
+
+        $this->withToken($token)
+            ->getJson('/api/customer/orders/'.$order->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.status', 'under_review')
+            ->assertJsonPath('order.delivery.route_geometry.coordinates.1.0', 121.01);
+
+        Http::assertSentCount(1);
+        $this->assertDatabaseHas('delivery_requests', [
+            'order_id' => $order->id,
+            'route_provider' => 'openrouteservice',
+            'route_distance_meters' => 2345,
+        ]);
     }
 
     /**

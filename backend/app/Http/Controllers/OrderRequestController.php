@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreOrderRequestRequest;
 use App\Http\Requests\TrackOrderRequest;
 use App\Models\OrderRequest;
+use App\Services\DeliveryRouteService;
 use App\Services\OrderRequestCreator;
 use App\Services\OrderRequestPresenter;
 use App\Services\StaffAdminNotificationService;
@@ -15,6 +16,7 @@ class OrderRequestController extends Controller
 {
     public function __construct(
         private readonly OrderRequestCreator $orderRequestCreator,
+        private readonly DeliveryRouteService $deliveryRouteService,
         private readonly OrderRequestPresenter $orderRequestPresenter,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
     ) {}
@@ -64,6 +66,10 @@ class OrderRequestController extends Controller
             return response()->json([
                 'message' => 'Order not found or verification information is incorrect.',
             ], 404);
+        }
+
+        if ($order->fulfillment_type === 'delivery' && $order->deliveryRequest) {
+            $this->deliveryRouteService->generateFor($order->deliveryRequest);
         }
 
         return response()->json([

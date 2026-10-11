@@ -26,6 +26,10 @@ class DeliveryRouteService
             return;
         }
 
+        if ($deliveryRequest->route_attempted_at !== null) {
+            return;
+        }
+
         $branch = $deliveryRequest->branch;
 
         if (! $branch instanceof Branch || blank(config('services.openrouteservice.key'))) {
@@ -35,10 +39,17 @@ class DeliveryRouteService
         $route = $this->generate($branch, $deliveryRequest);
 
         if ($route === null) {
+            $deliveryRequest->forceFill([
+                'route_attempted_at' => now(),
+            ])->save();
+
             return;
         }
 
-        $deliveryRequest->forceFill($route)->save();
+        $deliveryRequest->forceFill([
+            ...$route,
+            'route_attempted_at' => now(),
+        ])->save();
     }
 
     /**

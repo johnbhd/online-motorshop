@@ -8,6 +8,7 @@ use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Services\CloudinaryService;
 use App\Services\CloudinaryServiceException;
+use App\Services\DeliveryRouteService;
 use App\Services\MediaAssetService;
 use App\Services\OrderRequestPresenter;
 use App\Services\StaffAdminNotificationService;
@@ -28,6 +29,7 @@ class CustomerOrderController extends Controller
 
     public function __construct(
         private readonly OrderRequestPresenter $orderRequestPresenter,
+        private readonly DeliveryRouteService $deliveryRouteService,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
         private readonly CloudinaryService $cloudinaryService,
         private readonly MediaAssetService $mediaAssetService,
@@ -103,6 +105,8 @@ class CustomerOrderController extends Controller
                 'message' => 'Order not found.',
             ], 404);
         }
+
+        $this->ensureDeliveryRoute($order);
 
         return response()->json([
             'order' => $this->orderRequestPresenter->detail($order),
@@ -243,6 +247,8 @@ class CustomerOrderController extends Controller
             'deliveryRequest.branch',
         ]);
 
+        $this->ensureDeliveryRoute($order);
+
         return response()->json([
             'message' => 'Payment proof submitted for staff verification.',
             'order' => $this->orderRequestPresenter->detail($order),
@@ -271,5 +277,14 @@ class CustomerOrderController extends Controller
                 ->whereDoesntHave('pickupRequest', fn (Builder $pickup): Builder => $pickup->where('pickup_status', 'completed'))
                 ->whereDoesntHave('deliveryRequest', fn (Builder $delivery): Builder => $delivery->where('delivery_status', 'delivered'));
         }
+    }
+
+    private function ensureDeliveryRoute(OrderRequest $order): void
+    {
+        if ($order->fulfillment_type !== 'delivery' || ! $order->deliveryRequest) {
+            return;
+        }
+
+        $this->deliveryRouteService->generateFor($order->deliveryRequest);
     }
 }

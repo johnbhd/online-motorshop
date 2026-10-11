@@ -32,6 +32,7 @@ class DeliveryRequest extends Model
         'route_distance_meters',
         'route_provider',
         'route_generated_at',
+        'route_attempted_at',
         'delivery_contact_person',
         'delivery_contact_number',
         'delivery_notes',
@@ -55,6 +56,7 @@ class DeliveryRequest extends Model
             'route_geometry' => 'array',
             'route_distance_meters' => 'integer',
             'route_generated_at' => 'datetime',
+            'route_attempted_at' => 'datetime',
             'delivered_at' => 'datetime',
         ];
     }
