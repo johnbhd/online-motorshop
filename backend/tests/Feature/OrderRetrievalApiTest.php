@@ -367,6 +367,18 @@ class OrderRetrievalApiTest extends TestCase
             ->assertJsonPath('order.display_status', 'booked')
             ->assertJsonPath('order.delivery.status', 'booked');
 
+        foreach (['picked_up', 'in_transit', 'delivered'] as $deliveryStatus) {
+            $confirmed->deliveryRequest()->update(['delivery_status' => $deliveryStatus]);
+
+            $this->postJson('/api/order-requests/track', [
+                'order_reference' => $confirmed->order_reference,
+                'contact_number' => $customer->contact_number,
+            ])
+                ->assertOk()
+                ->assertJsonPath('order.display_status', $deliveryStatus)
+                ->assertJsonPath('order.delivery.status', $deliveryStatus);
+        }
+
         $this->postJson('/api/order-requests/track', [
             'order_reference' => $rejected->order_reference,
             'contact_number' => $customer->contact_number,
