@@ -433,6 +433,197 @@
   text-decoration: underline;
 }
 
+.customer-location-picker {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--customer-orders-border);
+  border-radius: 0.7rem;
+  background: #f8fafc;
+}
+
+.customer-location-picker-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.customer-location-picker-header > svg {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--customer-orders-orange);
+  font-size: 1.2rem;
+}
+
+.customer-location-picker-eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--customer-orders-orange);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.customer-location-picker h3 {
+  margin: 0;
+  color: var(--customer-orders-ink);
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.customer-location-picker-header p:last-child {
+  max-width: 42rem;
+  margin: 0.35rem 0 0;
+  color: var(--customer-orders-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.customer-location-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.customer-location-remove {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.15rem;
+  border: 0;
+  background: transparent;
+  color: #b91c1c;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.customer-location-remove:hover,
+.customer-location-remove:focus-visible {
+  color: #991b1b;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.customer-location-map-shell {
+  position: relative;
+  overflow: hidden;
+  min-height: 15rem;
+  border: 1px solid var(--customer-orders-border);
+  border-radius: 0.6rem;
+  background: #e2e8f0;
+}
+
+.customer-location-map {
+  min-height: 15rem;
+  width: 100%;
+}
+
+.customer-location-map-shell .leaflet-container {
+  min-height: 15rem;
+  color: var(--customer-orders-ink);
+  font: inherit;
+}
+
+.customer-location-marker {
+  display: grid;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  place-items: center;
+  margin: -0.875rem 0 0 -0.875rem !important;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  background: var(--customer-orders-orange);
+  box-shadow: 0 0.2rem 0.65rem rgba(15, 23, 42, 0.3);
+}
+
+.customer-location-marker span {
+  display: block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.customer-location-empty-map {
+  display: grid;
+  min-height: 15rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.35rem;
+  padding: 1.5rem;
+  color: var(--customer-orders-muted);
+  text-align: center;
+}
+
+.customer-location-empty-map svg {
+  margin-bottom: 0.15rem;
+  color: var(--customer-orders-orange);
+  font-size: 1.35rem;
+}
+
+.customer-location-empty-map strong {
+  color: var(--customer-orders-ink);
+  font-size: 0.82rem;
+}
+
+.customer-location-empty-map span {
+  max-width: 20rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.customer-location-map-status {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  z-index: 500;
+  margin: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.35rem;
+  background: rgba(8, 16, 29, 0.84);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.customer-location-status,
+.customer-location-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.customer-location-status {
+  color: #166534;
+  font-weight: 800;
+}
+
+.customer-location-status svg {
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
+}
+
+.customer-location-error-message {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.45rem;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.customer-location-picker > .customer-location-help {
+  margin-top: -0.2rem;
+}
+
 .customer-profile-field-error,
 .customer-profile-form-error {
   color: #b91c1c;
@@ -1366,6 +1557,10 @@
   }
 
   .customer-profile-form-error {
+    margin-inline: 1.25rem;
+  }
+
+  .customer-location-picker {
     margin-inline: 1.25rem;
   }
 

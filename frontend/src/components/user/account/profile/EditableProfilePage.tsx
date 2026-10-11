@@ -33,6 +33,7 @@ import {
 } from "@/lib/locationApi";
 import type { LocationOption } from "@/lib/locationTypes";
 import ProfileAddressFields, { type ProfileLocationValues } from "./ProfileAddressFields";
+import CustomerLocationPicker from "./CustomerLocationPicker";
 
 type ProfileForm = {
   name: string;
@@ -60,6 +61,16 @@ const EMPTY_LOCATION: ProfileLocationValues = {
   cityName: "",
   barangayCode: "",
   barangayName: "",
+};
+
+type ProfileCoordinates = {
+  latitude: number | null;
+  longitude: number | null;
+};
+
+const EMPTY_COORDINATES: ProfileCoordinates = {
+  latitude: null,
+  longitude: null,
 };
 
 function profileFormFromUser(user: AuthUser): ProfileForm {
@@ -91,6 +102,34 @@ function profileLocationFromUser(user: AuthUser, fallback = EMPTY_LOCATION): Pro
   };
 }
 
+function coordinateFromValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function profileCoordinatesFromUser(user: AuthUser, fallback = EMPTY_COORDINATES): ProfileCoordinates {
+  const latitude = user.customer?.latitude === undefined
+    ? fallback.latitude
+    : coordinateFromValue(user.customer.latitude);
+  const longitude = user.customer?.longitude === undefined
+    ? fallback.longitude
+    : coordinateFromValue(user.customer.longitude);
+
+  return {
+    latitude: latitude !== null && longitude !== null ? latitude : null,
+    longitude: latitude !== null && longitude !== null ? longitude : null,
+  };
+}
+
 export default function EditableProfilePage() {
   const { isLoading: authLoading, user, updateUser } = useAuth();
   const { showToast } = useToast();
@@ -102,6 +141,7 @@ export default function EditableProfilePage() {
     address: "",
   });
   const [location, setLocation] = useState<ProfileLocationValues>(EMPTY_LOCATION);
+  const [coordinates, setCoordinates] = useState<ProfileCoordinates>(EMPTY_COORDINATES);
   const [password, setPassword] = useState<PasswordForm>(EMPTY_PASSWORD);
   const [profileErrors, setProfileErrors] = useState<FieldErrors>({});
   const [passwordErrors, setPasswordErrors] = useState<FieldErrors>({});
@@ -136,6 +176,7 @@ export default function EditableProfilePage() {
           setProfile(response.user);
           setValues(profileFormFromUser(response.user));
           setLocation(profileLocationFromUser(response.user));
+          setCoordinates(profileCoordinatesFromUser(response.user));
           setLoadError(null);
         }
       })
@@ -277,11 +318,14 @@ export default function EditableProfilePage() {
         barangay: location.barangayName.trim() || null,
         city_municipality_code: location.cityCode || null,
         barangay_code: location.barangayCode || null,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
       };
       const response = await updateCustomerProfile(token, { ...nextValues, ...locationPayload });
       setProfile(response.user);
       setValues(profileFormFromUser(response.user));
       setLocation(profileLocationFromUser(response.user, location));
+      setCoordinates(profileCoordinatesFromUser(response.user, coordinates));
       updateUser({ name: response.user.name, email: response.user.email, customer: response.user.customer });
       showToast({ title: "Profile updated", message: "Your customer account details have been saved." });
     } catch (error) {
@@ -346,6 +390,7 @@ export default function EditableProfilePage() {
   }
 
   const savedLocation = profileLocationFromUser(profile);
+  const savedCoordinates = profileCoordinatesFromUser(profile);
   const isProfileDirty = values.name !== profile.name
     || values.email !== profile.email
     || values.contact_number !== (profile.customer?.contact_number ?? "")
@@ -353,7 +398,9 @@ export default function EditableProfilePage() {
     || location.cityCode !== savedLocation.cityCode
     || location.cityName !== savedLocation.cityName
     || location.barangayCode !== savedLocation.barangayCode
-    || location.barangayName !== savedLocation.barangayName;
+    || location.barangayName !== savedLocation.barangayName
+    || coordinates.latitude !== savedCoordinates.latitude
+    || coordinates.longitude !== savedCoordinates.longitude;
 
   return (
     <div className="customer-profile-page">
@@ -417,6 +464,11 @@ export default function EditableProfilePage() {
                   }}
                 />
               </div>
+              <CustomerLocationPicker
+                latitude={coordinates.latitude}
+                longitude={coordinates.longitude}
+                onChange={(latitude, longitude) => setCoordinates({ latitude, longitude })}
+              />
               {profileError ? <p className="customer-profile-form-error" role="alert">{profileError}</p> : null}
               <div className="customer-profile-form-footer"><button type="submit" className="customer-profile-action customer-profile-action--primary" disabled={savingProfile || !isProfileDirty}>{savingProfile ? "Saving…" : "Save changes"}</button></div>
             </form>

@@ -139,6 +139,68 @@ class CustomerProfileApiTest extends TestCase
         $this->assertDatabaseCount('personal_access_tokens', 1);
     }
 
+    public function test_customer_can_save_and_clear_an_optional_location_pin(): void
+    {
+        $customer = $this->createCustomer();
+        $token = $customer->createToken('customer-profile-location-test')->plainTextToken;
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', [
+                'name' => 'Profile Customer',
+                'email' => 'profile-customer@example.com',
+                'contact_number' => '09170000000',
+                'latitude' => 14.599512,
+                'longitude' => 120.984222,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.customer.latitude', 14.599512)
+            ->assertJsonPath('user.customer.longitude', 120.984222);
+
+        $this->assertDatabaseHas('customers', [
+            'user_id' => $customer->id,
+            'latitude' => 14.599512,
+            'longitude' => 120.984222,
+        ]);
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', [
+                'name' => 'Profile Customer',
+                'email' => 'profile-customer@example.com',
+                'contact_number' => '09170000000',
+                'latitude' => null,
+                'longitude' => null,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.customer.latitude', null)
+            ->assertJsonPath('user.customer.longitude', null);
+    }
+
+    public function test_customer_profile_rejects_invalid_or_partial_location_coordinates(): void
+    {
+        $customer = $this->createCustomer();
+        $token = $customer->createToken('customer-profile-location-test')->plainTextToken;
+        $payload = [
+            'name' => 'Profile Customer',
+            'email' => 'profile-customer@example.com',
+            'contact_number' => '09170000000',
+        ];
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', $payload + ['latitude' => 91, 'longitude' => 120])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['latitude']);
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', $payload + ['latitude' => 14.5])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['longitude']);
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', $payload + ['longitude' => 181])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['longitude']);
+    }
+
     private function createCustomer(): User
     {
         $customer = User::create([

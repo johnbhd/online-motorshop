@@ -10,6 +10,8 @@ export type AuthCustomer = {
   barangay?: string | null;
   city_municipality_code?: string | null;
   barangay_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export type AuthUser = {

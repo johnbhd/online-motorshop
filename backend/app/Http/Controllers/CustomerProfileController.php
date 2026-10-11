@@ -40,6 +40,8 @@ class CustomerProfileController extends Controller
             || array_key_exists('barangay_code', $validated)
             || array_key_exists('city_municipality', $validated)
             || array_key_exists('barangay', $validated);
+        $coordinatesProvided = array_key_exists('latitude', $validated)
+            || array_key_exists('longitude', $validated);
         $location = null;
 
         if ($locationFieldsProvided) {
@@ -76,7 +78,7 @@ class CustomerProfileController extends Controller
             }
         }
 
-        DB::transaction(function () use ($user, $customer, $validated, $locationFieldsProvided, $location): void {
+        DB::transaction(function () use ($user, $customer, $validated, $locationFieldsProvided, $location, $coordinatesProvided): void {
             $user->fill([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
@@ -96,6 +98,13 @@ class CustomerProfileController extends Controller
                     'barangay_code' => null,
                     'city' => null,
                     'barangay' => null,
+                ]);
+            }
+
+            if ($coordinatesProvided) {
+                $customer->fill([
+                    'latitude' => $validated['latitude'] ?? null,
+                    'longitude' => $validated['longitude'] ?? null,
                 ]);
             }
 
@@ -150,6 +159,8 @@ class CustomerProfileController extends Controller
                 'barangay_code',
                 'city',
                 'barangay',
+                'latitude',
+                'longitude',
             ]),
         ];
     }

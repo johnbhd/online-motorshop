@@ -20,6 +20,8 @@ class UpdateCustomerProfileRequest extends FormRequest
             'barangay',
             'city_municipality_code',
             'barangay_code',
+            'latitude',
+            'longitude',
         ] as $field) {
             if ($this->has($field) && is_string($this->input($field))) {
                 $values[$field] = trim($this->input($field));
@@ -35,6 +37,12 @@ class UpdateCustomerProfileRequest extends FormRequest
         }
 
         foreach (['city_municipality', 'barangay', 'city_municipality_code', 'barangay_code'] as $field) {
+            if (array_key_exists($field, $values) && $values[$field] === '') {
+                $values[$field] = null;
+            }
+        }
+
+        foreach (['latitude', 'longitude'] as $field) {
             if (array_key_exists($field, $values) && $values[$field] === '') {
                 $values[$field] = null;
             }
@@ -89,6 +97,18 @@ class UpdateCustomerProfileRequest extends FormRequest
                 'string',
                 'regex:/^\d{10}$/',
             ],
+            'latitude' => [
+                'nullable',
+                'numeric',
+                'between:-90,90',
+                Rule::requiredIf(fn (): bool => $this->coordinateFieldHasValue('longitude')),
+            ],
+            'longitude' => [
+                'nullable',
+                'numeric',
+                'between:-180,180',
+                Rule::requiredIf(fn (): bool => $this->coordinateFieldHasValue('latitude')),
+            ],
         ];
     }
 
@@ -111,5 +131,10 @@ class UpdateCustomerProfileRequest extends FormRequest
         }
 
         return false;
+    }
+
+    private function coordinateFieldHasValue(string $field): bool
+    {
+        return $this->input($field) !== null && $this->input($field) !== '';
     }
 }
