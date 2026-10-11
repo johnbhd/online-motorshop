@@ -522,14 +522,25 @@
 }
 
 .customer-location-map {
+  position: relative;
   min-height: 15rem;
   width: 100%;
 }
 
 .customer-location-map-shell .leaflet-container {
+  position: relative;
   min-height: 15rem;
   color: var(--customer-orders-ink);
   font: inherit;
+}
+
+.customer-location-map-shell .leaflet-gl-layer {
+  z-index: 0;
+}
+
+.customer-location-map-shell .leaflet-gl-layer .maplibregl-map {
+  position: absolute;
+  inset: 0;
 }
 
 .customer-location-marker {

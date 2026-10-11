@@ -1585,9 +1585,19 @@
 }
 
 .track-order-map .leaflet-container {
+  position: relative;
   min-height: 18rem;
   width: 100%;
   font: inherit;
+}
+
+.track-order-map .leaflet-gl-layer {
+  z-index: 0;
+}
+
+.track-order-map .leaflet-gl-layer .maplibregl-map {
+  position: absolute;
+  inset: 0;
 }
 
 .track-order-map-note,

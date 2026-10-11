@@ -7,13 +7,8 @@ import {
   faLocationDot,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  ALD_MAP_MAX_ZOOM,
-  ALD_MAP_MIN_ZOOM,
-  ALD_MAP_TILE_ATTRIBUTION,
-  ALD_MAP_TILE_SUBDOMAINS,
-  ALD_MAP_TILE_URL,
-} from "@/lib/mapConfig";
+import { addAldMapBasemap } from "@/lib/mapLibreBasemap";
+import { ALD_MAP_MAX_ZOOM, ALD_MAP_MIN_ZOOM } from "@/lib/mapConfig";
 import type { LatLngExpression, Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
 
 type CustomerLocationPickerProps = {
@@ -75,18 +70,20 @@ export default function CustomerLocationPicker({
         const center: LatLngExpression = [latitude, longitude];
         const map = leaflet.map(mapElementRef.current, {
           center,
+          maxZoom: ALD_MAP_MAX_ZOOM,
+          minZoom: ALD_MAP_MIN_ZOOM,
           zoom: DEFAULT_ZOOM,
           scrollWheelZoom: false,
         });
 
-        const tiles = leaflet.tileLayer(ALD_MAP_TILE_URL, {
-          attribution: ALD_MAP_TILE_ATTRIBUTION,
-          minZoom: ALD_MAP_MIN_ZOOM,
-          maxZoom: ALD_MAP_MAX_ZOOM,
-          subdomains: ALD_MAP_TILE_SUBDOMAINS,
-        }).addTo(map);
+        const basemap = await addAldMapBasemap(map);
 
-        tiles.on("tileerror", () => {
+        if (cancelled) {
+          map.remove();
+          return;
+        }
+
+        basemap.maplibre.on("error", () => {
           if (!cancelled) {
             setError("Unable to load map. You can still save your address and delivery information without a map pin.");
           }

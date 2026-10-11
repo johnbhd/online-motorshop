@@ -3,13 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LatLngExpression, Map as LeafletMap, LayerGroup } from "leaflet";
 import type { OrderViewDelivery, CustomerOrderBranch } from "@/lib/orders/orderTypes";
-import {
-  ALD_MAP_MAX_ZOOM,
-  ALD_MAP_MIN_ZOOM,
-  ALD_MAP_TILE_ATTRIBUTION,
-  ALD_MAP_TILE_SUBDOMAINS,
-  ALD_MAP_TILE_URL,
-} from "@/lib/mapConfig";
+import { addAldMapBasemap } from "@/lib/mapLibreBasemap";
+import { ALD_MAP_MAX_ZOOM, ALD_MAP_MIN_ZOOM } from "@/lib/mapConfig";
 
 type LalamoveTrackingMapProps = {
   branch: CustomerOrderBranch | null;
@@ -81,19 +76,22 @@ export default function LalamoveTrackingMap({
         const center: LatLngExpression = destination ?? branchLocation!;
         const map = leaflet.map(mapElementRef.current, {
           center,
+          maxZoom: ALD_MAP_MAX_ZOOM,
+          minZoom: ALD_MAP_MIN_ZOOM,
           zoom: destination && branchLocation ? 12 : 15,
           scrollWheelZoom: true,
           dragging: true,
           doubleClickZoom: true,
         });
-        const tiles = leaflet.tileLayer(ALD_MAP_TILE_URL, {
-          attribution: ALD_MAP_TILE_ATTRIBUTION,
-          minZoom: ALD_MAP_MIN_ZOOM,
-          maxZoom: ALD_MAP_MAX_ZOOM,
-          subdomains: ALD_MAP_TILE_SUBDOMAINS,
-        }).addTo(map);
 
-        tiles.on("tileerror", () => {
+        const basemap = await addAldMapBasemap(map);
+
+        if (cancelled) {
+          map.remove();
+          return;
+        }
+
+        basemap.maplibre.on("error", () => {
           if (!cancelled) {
             setMapError("Unable to load map. Your saved address and delivery information are still available.");
           }
@@ -190,11 +188,9 @@ export default function LalamoveTrackingMap({
           <p className="track-order-section-eyebrow">DELIVERY LOCATION</p>
           <h2 id="lalamove-map-title">Lalamove Delivery Map</h2>
         </div>
-        <span className="track-order-progress-caption">
-          {canShowFulfillmentProgress ? "Illustrative route" : "Location context"}
-        </span>
+        <span className="track-order-progress-caption">Delivery Progress</span>
       </div>
-      <div ref={mapElementRef} className="track-order-map" aria-label="Movable map showing the branch and saved delivery location" />
+      <div ref={mapElementRef} className="track-order-map" aria-label="Interactive map showing the branch and saved delivery location" />
       {mapError ? <p className="track-order-map-error" role="alert">{mapError}</p> : null}
       <p className="track-order-map-note">
         {canShowFulfillmentProgress
