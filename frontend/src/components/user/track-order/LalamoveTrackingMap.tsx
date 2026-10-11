@@ -11,6 +11,7 @@ import type {
 } from "@/lib/orders/orderTypes";
 import { addAldMapBasemap } from "@/lib/mapLibreBasemap";
 import { ALD_MAP_MAX_ZOOM, ALD_MAP_MIN_ZOOM } from "@/lib/mapConfig";
+import MapFullscreenFrame from "@/components/ui/MapFullscreenFrame";
 
 type LalamoveTrackingMapProps = {
   branch: CustomerOrderBranch | null;
@@ -85,6 +86,7 @@ export default function LalamoveTrackingMap({
   const mapRef = useRef<LeafletMap | null>(null);
   const layerRef = useRef<LayerGroup | null>(null);
   const [mapReadyVersion, setMapReadyVersion] = useState(0);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
   const isPickup = fulfillmentMethod === "pickup";
@@ -251,6 +253,18 @@ export default function LalamoveTrackingMap({
     shouldDrawRoute,
   ]);
 
+  useEffect(() => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    const resizeFrame = window.requestAnimationFrame(() => {
+      mapRef.current?.invalidateSize();
+    });
+
+    return () => window.cancelAnimationFrame(resizeFrame);
+  }, [isMapFullscreen]);
+
   if (!destination && !branchLocation) {
     const fallbackMessage = isPickup
       ? "The selected pickup branch does not have saved coordinates. Its address remains available in the order summary."
@@ -285,7 +299,13 @@ export default function LalamoveTrackingMap({
           {branch.address ? ` - ${branch.address}` : null}
         </p>
       ) : null}
-      <div ref={mapElementRef} className="track-order-map" aria-label={mapAriaLabel} />
+      <MapFullscreenFrame
+        title={mapTitle}
+        mapLabel={isPickup ? "pickup branch map" : "Lalamove delivery map"}
+        onFullscreenChange={setIsMapFullscreen}
+      >
+        <div ref={mapElementRef} className="track-order-map" aria-label={mapAriaLabel} />
+      </MapFullscreenFrame>
       {mapError ? <p className="track-order-map-error" role="alert">{mapError}</p> : null}
       <p className="track-order-map-note">
         {isPickup

@@ -9,6 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { addAldMapBasemap } from "@/lib/mapLibreBasemap";
 import { ALD_MAP_MAX_ZOOM, ALD_MAP_MIN_ZOOM } from "@/lib/mapConfig";
+import MapFullscreenFrame from "@/components/ui/MapFullscreenFrame";
 import type { LatLngExpression, Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
 
 type CustomerLocationPickerProps = {
@@ -36,6 +37,7 @@ export default function CustomerLocationPicker({
   const onChangeRef = useRef(onChange);
   const [detecting, setDetecting] = useState(false);
   const [mapLoading, setMapLoading] = useState(false);
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasCoordinates = latitude !== null && longitude !== null;
 
@@ -147,6 +149,18 @@ export default function CustomerLocationPicker({
   }, [hasCoordinates, latitude, longitude]);
 
   useEffect(() => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    const resizeFrame = window.requestAnimationFrame(() => {
+      mapRef.current?.invalidateSize();
+    });
+
+    return () => window.cancelAnimationFrame(resizeFrame);
+  }, [isMapFullscreen]);
+
+  useEffect(() => {
     return () => {
       mapRef.current?.remove();
       mapRef.current = null;
@@ -222,22 +236,30 @@ export default function CustomerLocationPicker({
         ) : null}
       </div>
 
-      <div className="customer-location-map-shell">
-        {hasCoordinates ? (
-          <div
-            ref={mapElementRef}
-            className="customer-location-map"
-            aria-label="Saved customer location map. Click the map or drag the pin to adjust the location."
-          />
-        ) : (
+      {hasCoordinates ? (
+        <MapFullscreenFrame
+          title={mode === "checkout" ? "Confirm delivery map pin" : "Saved delivery map pin"}
+          mapLabel={mode === "checkout" ? "checkout delivery map" : "saved customer location map"}
+          onFullscreenChange={setIsMapFullscreen}
+        >
+          <div className="customer-location-map-shell">
+            <div
+              ref={mapElementRef}
+              className="customer-location-map"
+              aria-label="Saved customer location map. Click the map or drag the pin to adjust the location."
+            />
+            {mapLoading ? <p className="customer-location-map-status" role="status">Loading map preview...</p> : null}
+          </div>
+        </MapFullscreenFrame>
+      ) : (
+        <div className="customer-location-map-shell">
           <div className="customer-location-empty-map">
             <FontAwesomeIcon icon={faLocationDot} aria-hidden="true" />
             <strong>No location pinned yet.</strong>
             <span>Use “Use My Current Location” to add an optional map pin.</span>
           </div>
-        )}
-        {hasCoordinates && mapLoading ? <p className="customer-location-map-status" role="status">Loading map preview...</p> : null}
-      </div>
+        </div>
+      )}
 
       {hasCoordinates ? (
         <p className="customer-location-status" role="status">

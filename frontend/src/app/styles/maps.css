@@ -1,0 +1,193 @@
+.ald-map-fullscreen-frame {
+  position: relative;
+  z-index: 0;
+}
+
+.ald-map-fullscreen-surface {
+  position: relative;
+  z-index: 1;
+}
+
+.ald-map-fullscreen-backdrop {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(8, 16, 29, 0.78);
+  cursor: default;
+}
+
+.ald-map-fullscreen-open,
+.ald-map-fullscreen-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid #d7dee8;
+  border-radius: 0.45rem;
+  background: #ffffff;
+  color: #16234a;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.25;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.ald-map-fullscreen-open {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 650;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.7rem;
+  box-shadow: 0 0.25rem 0.8rem rgba(15, 23, 42, 0.14);
+}
+
+.ald-map-fullscreen-open:hover,
+.ald-map-fullscreen-close:hover {
+  border-color: #e07a08;
+  background: #fff7ed;
+  color: #b95f00;
+}
+
+.ald-map-fullscreen-close {
+  width: 2.45rem;
+  height: 2.45rem;
+  flex: 0 0 auto;
+  font-size: 1rem;
+}
+
+.ald-map-fullscreen-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.7rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.15rem;
+  background: #ffffff;
+}
+
+.ald-map-fullscreen-header p {
+  margin: 0;
+  color: #e07a08;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  line-height: 1.4;
+}
+
+.ald-map-fullscreen-header h2 {
+  margin: 0.25rem 0 0;
+  color: #16234a;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  line-height: 1.25;
+}
+
+.ald-map-fullscreen-open:focus-visible,
+.ald-map-fullscreen-close:focus-visible {
+  outline: 3px solid rgba(247, 148, 29, 0.42);
+  outline-offset: 3px;
+}
+
+.ald-map-fullscreen-frame--open {
+  position: fixed;
+  z-index: 1400;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem);
+}
+
+.ald-map-fullscreen-frame--open .ald-map-fullscreen-surface {
+  display: flex;
+  width: min(100%, 78rem);
+  height: min(100%, 54rem);
+  max-height: calc(100dvh - 1.5rem);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #d7dee8;
+  border-radius: 0.8rem;
+  background: #ffffff;
+  box-shadow: 0 1.5rem 4rem rgba(8, 16, 29, 0.34);
+}
+
+.ald-map-fullscreen-frame--open .ald-map-fullscreen-backdrop {
+  z-index: 0;
+}
+
+.ald-map-fullscreen-frame--open .customer-location-map-shell,
+.ald-map-fullscreen-frame--open .track-order-map {
+  min-height: 0;
+  margin-top: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.ald-map-fullscreen-frame--open .customer-location-map-shell {
+  height: min(72vh, 48rem);
+  flex: 1 1 auto;
+}
+
+.ald-map-fullscreen-frame--open .customer-location-map,
+.ald-map-fullscreen-frame--open .customer-location-map-shell .leaflet-container {
+  height: 100%;
+  min-height: 0;
+}
+
+.ald-map-fullscreen-frame--open .track-order-map {
+  height: min(72vh, 48rem);
+  flex: 1 1 auto;
+}
+
+.ald-map-fullscreen-frame--open .track-order-map .leaflet-container {
+  height: 100%;
+  min-height: 0;
+}
+
+@media (max-width: 560px) {
+  .ald-map-fullscreen-open {
+    top: 0.55rem;
+    right: 0.55rem;
+    min-height: 2.15rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .ald-map-fullscreen-open span {
+    display: none;
+  }
+
+  .ald-map-fullscreen-frame--open {
+    padding: 0;
+  }
+
+  .ald-map-fullscreen-frame--open .ald-map-fullscreen-surface {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ald-map-fullscreen-header {
+    min-height: 4.25rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .ald-map-fullscreen-frame--open .customer-location-map-shell,
+  .ald-map-fullscreen-frame--open .track-order-map {
+    height: auto;
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ald-map-fullscreen-open,
+  .ald-map-fullscreen-close {
+    transition: none;
+  }
+}
