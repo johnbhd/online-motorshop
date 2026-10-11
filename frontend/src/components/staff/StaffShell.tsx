@@ -20,7 +20,7 @@ export default function StaffShell({
 
   return (
     <RoleGuard allowedRole="staff">
-      <div className="min-h-screen bg-slate-50">
+      <div className="staff-portal min-h-screen bg-slate-50">
         <StaffSidebar open={open} onClose={() => setOpen(false)} />
         <div className="lg:pl-72">
           <StaffNavbar onMenu={() => setOpen(true)} />
