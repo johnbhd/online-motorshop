@@ -90,7 +90,6 @@ export default function CustomerLocationPicker({
           return;
         }
 
-        onDetectedRef.current?.(result);
         setDetectedArea(result.detected.area);
         setDetectedCity(
           result.psgc.city_municipality ?? result.detected.city_municipality,
@@ -100,6 +99,7 @@ export default function CustomerLocationPicker({
             ? "matched"
             : "partial",
         );
+        onDetectedRef.current?.(result);
       })
       .catch((reverseError: unknown) => {
         if (controller.signal.aborted || requestId !== reverseRequestIdRef.current) {
@@ -357,6 +357,8 @@ export default function CustomerLocationPicker({
               ? "Pin matches the selected PSGC city and barangay."
               : currentDetectionState === "partial"
                 ? `Location detected${detectedArea ? ` in ${detectedArea}` : ""}${detectedCity ? `, ${detectedCity}` : ""}. We could not determine the exact barangay automatically. Please select or enter your barangay before saving.`
+                : currentDetectionState === "manual"
+                  ? `Location detected${detectedArea ? ` in ${detectedArea}` : ""}${detectedCity ? `, ${detectedCity}` : ""}. The barangay was completed manually and will be checked when you save.`
                 : currentDetectionState === "mismatch"
                   ? "The location fields changed after this pin. Use the map again to verify the new address."
                   : "Pin saved, but its address could not be verified. You can continue with manual fields."}

@@ -172,6 +172,53 @@ class OrderRequestApiTest extends TestCase
         $this->assertDatabaseCount('pickup_requests', 0);
     }
 
+    public function test_delivery_order_accepts_a_canonical_manual_barangay_when_the_pin_resolves_only_an_area(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Manila',
+                    'suburb' => 'Santa Mesa',
+                ],
+            ], 200),
+        ]);
+
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-MANUAL-BARANGAY-001', 350.00);
+
+        $this->postJson('/api/order-requests', [
+            'customer' => [
+                'name' => 'Manual Delivery Guest',
+                'email' => 'manual-delivery@example.com',
+                'contact_number' => '09179876543',
+            ],
+            'items' => [[
+                'part_number' => $product->part_number,
+                'quantity' => 1,
+            ]],
+            'payment_method' => 'online_payment',
+            'fulfillment' => [
+                'method' => 'delivery',
+                'branch_id' => $branch->id,
+                'delivery' => [
+                    'address' => '12 Main Street',
+                    'barangay' => 'Barangay One',
+                    'barangay_code' => '1300000001',
+                    'city' => 'Manila',
+                    'city_municipality_code' => '1300000000',
+                    'latitude' => 14.5995,
+                    'longitude' => 120.9842,
+                    'contact_person' => 'Manual Delivery Guest',
+                ],
+            ],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('order.delivery.city_municipality', 'Manila')
+            ->assertJsonPath('order.delivery.city_municipality_code', '1300000000')
+            ->assertJsonPath('order.delivery.barangay', 'Barangay One')
+            ->assertJsonPath('order.delivery.barangay_code', '1300000001');
+    }
+
     public function test_delivery_order_rejects_a_confident_pinned_location_mismatch(): void
     {
         Http::fake([

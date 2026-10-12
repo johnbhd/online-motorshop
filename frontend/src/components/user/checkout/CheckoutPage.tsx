@@ -26,11 +26,16 @@ import {
   getLocationErrorMessage,
 } from "@/lib/locationApi";
 import type {
+  LocationDetectionBaseline,
   LocationDetectionState,
   LocationOption,
   ReverseGeocodeResponse,
 } from "@/lib/locationTypes";
-import { locationNamesMatch } from "@/lib/locationTypes";
+import {
+  locationDetectionBaselineFromResult,
+  locationNamesMatch,
+  resolveLocationDetectionState,
+} from "@/lib/locationTypes";
 import type { LocationSelection } from "../account/profile/LocationSelect";
 import {
   getCheckoutBranches,
@@ -108,6 +113,7 @@ export default function CheckoutPage() {
   const [locationReloadNonce, setLocationReloadNonce] = useState(0);
   const [formData, setFormData] = useState<CheckoutFormData>(initialFormData);
   const [locationDetectionState, setLocationDetectionState] = useState<LocationDetectionState>("idle");
+  const [locationDetectionBaseline, setLocationDetectionBaseline] = useState<LocationDetectionBaseline | null>(null);
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
   const [submitError, setSubmitError] = useState("");
   const [isReady, setIsReady] = useState(false);
@@ -312,6 +318,7 @@ export default function CheckoutPage() {
   };
 
   const handleFulfillmentChange = (method: CartFulfillmentMethod) => {
+    setLocationDetectionBaseline(null);
     setLocationDetectionState("idle");
     setFormData((currentFormData) => ({
       ...currentFormData,
@@ -630,18 +637,22 @@ export default function CheckoutPage() {
                   setLocationReloadNonce((value) => value + 1);
                 }}
                 onLocationChange={(field: "city" | "barangay", selection: LocationSelection) => {
-                  if (formData.delivery.latitude !== null && formData.delivery.longitude !== null) {
-                    setLocationDetectionState("mismatch");
-                  }
+                  const nextDelivery = field === "city"
+                    ? { ...formData.delivery, city: selection.label, cityMunicipalityCode: selection.code ?? "", barangay: "", barangayCode: "" }
+                    : { ...formData.delivery, barangay: selection.label, barangayCode: selection.code ?? "" };
                   setFormData((current) => ({
                     ...current,
-                    delivery: field === "city"
-                      ? { ...current.delivery, city: selection.label, cityMunicipalityCode: selection.code ?? "", barangay: "", barangayCode: "" }
-                      : { ...current.delivery, barangay: selection.label, barangayCode: selection.code ?? "" },
+                    delivery: nextDelivery,
                   }));
+                  setLocationDetectionState(resolveLocationDetectionState(
+                    locationDetectionBaseline,
+                    { label: nextDelivery.city, code: nextDelivery.cityMunicipalityCode },
+                    { label: nextDelivery.barangay, code: nextDelivery.barangayCode },
+                  ));
                   setSubmitError("");
                 }}
                 onCoordinatesChange={(latitude, longitude) => {
+                  setLocationDetectionBaseline(null);
                   setFormData((current) => ({
                     ...current,
                     delivery: { ...current.delivery, latitude, longitude },
@@ -651,41 +662,46 @@ export default function CheckoutPage() {
                   }
                 }}
                 onDetected={(result: ReverseGeocodeResponse) => {
-                  setFormData((current) => {
-                    const city = result.psgc.city_municipality
-                      ?? result.detected.city_municipality
-                      ?? current.delivery.city;
-                    const cityCode = result.psgc.city_municipality_code ?? "";
-                    const cityChanged = (
-                      (current.delivery.city.trim() !== ""
-                        && city.trim() !== ""
-                        && !locationNamesMatch(current.delivery.city, city))
-                      || (current.delivery.cityMunicipalityCode !== ""
-                        && current.delivery.cityMunicipalityCode !== cityCode)
-                    );
-                    const barangayMatched = result.psgc.barangay !== null;
+                  const baseline = locationDetectionBaselineFromResult(result);
+                  const city = result.psgc.city_municipality
+                    ?? result.detected.city_municipality
+                    ?? formData.delivery.city;
+                  const cityCode = result.psgc.city_municipality_code ?? "";
+                  const cityChanged = (
+                    (formData.delivery.city.trim() !== ""
+                      && city.trim() !== ""
+                      && !locationNamesMatch(formData.delivery.city, city))
+                    || (formData.delivery.cityMunicipalityCode !== ""
+                      && cityCode !== ""
+                      && formData.delivery.cityMunicipalityCode !== cityCode)
+                  );
+                  const barangayMatched = result.psgc.barangay !== null;
+                  const nextDelivery = {
+                    ...formData.delivery,
+                    city,
+                    cityMunicipalityCode: cityCode,
+                    barangay: barangayMatched
+                      ? result.psgc.barangay
+                        ?? result.detected.barangay
+                        ?? ""
+                      : cityChanged
+                        ? ""
+                        : formData.delivery.barangay,
+                    barangayCode: barangayMatched
+                      ? result.psgc.barangay_code ?? ""
+                      : cityChanged
+                        ? ""
+                        : formData.delivery.barangayCode,
+                  };
 
-                    return {
-                      ...current,
-                      delivery: {
-                        ...current.delivery,
-                        city,
-                        cityMunicipalityCode: cityCode,
-                        barangay: barangayMatched
-                          ? result.psgc.barangay
-                            ?? result.detected.barangay
-                            ?? ""
-                          : cityChanged
-                            ? ""
-                            : current.delivery.barangay,
-                        barangayCode: barangayMatched
-                          ? result.psgc.barangay_code ?? ""
-                          : cityChanged
-                            ? ""
-                            : current.delivery.barangayCode,
-                      },
-                    };
-                  });
+                  setLocationDetectionBaseline(baseline);
+                  setFormData((current) => ({
+                    ...current,
+                    delivery: nextDelivery,
+                  }));
+                  if (baseline.cityMatched && !baseline.barangayMatched && nextDelivery.barangay.trim() !== "") {
+                    setLocationDetectionState("manual");
+                  }
                 }}
                 onDetectionStateChange={setLocationDetectionState}
               />

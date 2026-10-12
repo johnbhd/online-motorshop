@@ -355,6 +355,50 @@ class LocationApiTest extends TestCase
             ->assertJsonPath('user.customer.barangay_code', null);
     }
 
+    public function test_customer_profile_accepts_a_canonical_manual_barangay_when_the_pin_has_no_barangay_match(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Manila',
+                    'suburb' => 'Santa Mesa',
+                ],
+            ], 200),
+        ]);
+
+        $customer = User::create([
+            'name' => 'Canonical Manual Customer',
+            'email' => 'canonical-manual@example.com',
+            'password' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'customer',
+        ]);
+        $customer->customer()->create([
+            'full_name' => 'Canonical Manual Customer',
+            'contact_number' => '09170000000',
+            'email' => 'canonical-manual@example.com',
+        ]);
+        $token = $customer->createToken('canonical-manual-test')->plainTextToken;
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', [
+                'name' => 'Canonical Manual Customer',
+                'email' => 'canonical-manual@example.com',
+                'contact_number' => '09170000000',
+                'city_municipality' => 'Manila',
+                'city_municipality_code' => '1300000000',
+                'barangay' => 'Barangay One',
+                'barangay_code' => '1300000001',
+                'latitude' => 14.5995,
+                'longitude' => 120.9842,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.customer.city', 'Manila')
+            ->assertJsonPath('user.customer.city_municipality_code', '1300000000')
+            ->assertJsonPath('user.customer.barangay', 'Barangay One')
+            ->assertJsonPath('user.customer.barangay_code', '1300000001');
+    }
+
     public function test_customer_profile_rejects_a_confident_pin_city_mismatch(): void
     {
         Http::fake([

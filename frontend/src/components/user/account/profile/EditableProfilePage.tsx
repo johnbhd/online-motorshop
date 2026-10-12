@@ -32,11 +32,16 @@ import {
   getLocationErrorMessage,
 } from "@/lib/locationApi";
 import type {
+  LocationDetectionBaseline,
   LocationDetectionState,
   LocationOption,
   ReverseGeocodeResponse,
 } from "@/lib/locationTypes";
-import { locationNamesMatch } from "@/lib/locationTypes";
+import {
+  locationDetectionBaselineFromResult,
+  locationNamesMatch,
+  resolveLocationDetectionState,
+} from "@/lib/locationTypes";
 import ProfileAddressFields, { type ProfileLocationValues } from "./ProfileAddressFields";
 import CustomerLocationPicker from "./CustomerLocationPicker";
 
@@ -148,6 +153,7 @@ export default function EditableProfilePage() {
   const [location, setLocation] = useState<ProfileLocationValues>(EMPTY_LOCATION);
   const [coordinates, setCoordinates] = useState<ProfileCoordinates>(EMPTY_COORDINATES);
   const [locationDetectionState, setLocationDetectionState] = useState<LocationDetectionState>("idle");
+  const [locationDetectionBaseline, setLocationDetectionBaseline] = useState<LocationDetectionBaseline | null>(null);
   const [password, setPassword] = useState<PasswordForm>(EMPTY_PASSWORD);
   const [profileErrors, setProfileErrors] = useState<FieldErrors>({});
   const [passwordErrors, setPasswordErrors] = useState<FieldErrors>({});
@@ -184,6 +190,7 @@ export default function EditableProfilePage() {
           setLocation(profileLocationFromUser(response.user));
           setCoordinates(profileCoordinatesFromUser(response.user));
           setLocationDetectionState("idle");
+          setLocationDetectionBaseline(null);
           setLoadError(null);
         }
       })
@@ -341,6 +348,7 @@ export default function EditableProfilePage() {
       setLocation(profileLocationFromUser(response.user, location));
       setCoordinates(profileCoordinatesFromUser(response.user, coordinates));
       setLocationDetectionState("idle");
+      setLocationDetectionBaseline(null);
       updateUser({ name: response.user.name, email: response.user.email, customer: response.user.customer });
       showToast({ title: "Profile updated", message: "Your customer account details have been saved." });
     } catch (error) {
@@ -463,25 +471,31 @@ export default function EditableProfilePage() {
                   onCityRetry={cityLoadError ? () => void loadCities() : undefined}
                   onBarangayRetry={barangayLoadError ? () => void loadBarangays(location.cityCode) : undefined}
                   onCityChange={(selection) => {
-                    if (coordinates.latitude !== null && coordinates.longitude !== null) {
-                      setLocationDetectionState("mismatch");
-                    }
-                    setLocation({
+                    const nextLocation = {
                       cityCode: selection.code ?? "",
                       cityName: selection.label,
                       barangayCode: "",
                       barangayName: "",
-                    });
+                    };
+                    setLocation(nextLocation);
+                    setLocationDetectionState(resolveLocationDetectionState(
+                      locationDetectionBaseline,
+                      { label: nextLocation.cityName, code: nextLocation.cityCode },
+                      { label: nextLocation.barangayName, code: nextLocation.barangayCode },
+                    ));
                   }}
                   onBarangayChange={(selection) => {
-                    if (coordinates.latitude !== null && coordinates.longitude !== null) {
-                      setLocationDetectionState("mismatch");
-                    }
-                    setLocation((current) => ({
-                      ...current,
+                    const nextLocation = {
+                      ...location,
                       barangayCode: selection.code ?? "",
                       barangayName: selection.label,
-                    }));
+                    };
+                    setLocation(nextLocation);
+                    setLocationDetectionState(resolveLocationDetectionState(
+                      locationDetectionBaseline,
+                      { label: nextLocation.cityName, code: nextLocation.cityCode },
+                      { label: nextLocation.barangayName, code: nextLocation.barangayCode },
+                    ));
                   }}
                 />
               </div>
@@ -491,42 +505,48 @@ export default function EditableProfilePage() {
                 detectionState={locationDetectionState}
                 onChange={(latitude, longitude) => {
                   setCoordinates({ latitude, longitude });
+                  setLocationDetectionBaseline(null);
                   if (latitude === null || longitude === null) {
                     setLocationDetectionState("idle");
                   }
                 }}
                 onDetected={(result: ReverseGeocodeResponse) => {
-                  setLocation((current) => {
-                    const cityName = result.psgc.city_municipality
-                      ?? result.detected.city_municipality
-                      ?? current.cityName;
-                    const cityCode = result.psgc.city_municipality_code ?? "";
-                    const cityChanged = (
-                      (current.cityName.trim() !== ""
-                        && cityName.trim() !== ""
-                        && !locationNamesMatch(current.cityName, cityName))
-                      || (current.cityCode !== ""
-                        && current.cityCode !== cityCode)
-                    );
-                    const barangayMatched = result.psgc.barangay !== null;
+                  const baseline = locationDetectionBaselineFromResult(result);
+                  const cityName = result.psgc.city_municipality
+                    ?? result.detected.city_municipality
+                    ?? location.cityName;
+                  const cityCode = result.psgc.city_municipality_code ?? "";
+                  const cityChanged = (
+                    (location.cityName.trim() !== ""
+                      && cityName.trim() !== ""
+                      && !locationNamesMatch(location.cityName, cityName))
+                    || (location.cityCode !== ""
+                      && cityCode !== ""
+                      && location.cityCode !== cityCode)
+                  );
+                  const barangayMatched = result.psgc.barangay !== null;
+                  const nextLocation = {
+                    cityCode,
+                    cityName,
+                    barangayCode: barangayMatched
+                      ? result.psgc.barangay_code ?? ""
+                      : cityChanged
+                        ? ""
+                        : location.barangayCode,
+                    barangayName: barangayMatched
+                      ? result.psgc.barangay
+                        ?? result.detected.barangay
+                        ?? ""
+                      : cityChanged
+                        ? ""
+                        : location.barangayName,
+                  };
 
-                    return {
-                      cityCode,
-                      cityName,
-                      barangayCode: barangayMatched
-                        ? result.psgc.barangay_code ?? ""
-                        : cityChanged
-                          ? ""
-                          : current.barangayCode,
-                      barangayName: barangayMatched
-                        ? result.psgc.barangay
-                          ?? result.detected.barangay
-                          ?? ""
-                        : cityChanged
-                          ? ""
-                          : current.barangayName,
-                    };
-                  });
+                  setLocationDetectionBaseline(baseline);
+                  setLocation(nextLocation);
+                  if (baseline.cityMatched && !baseline.barangayMatched && nextLocation.barangayName.trim() !== "") {
+                    setLocationDetectionState("manual");
+                  }
                 }}
                 onDetectionStateChange={setLocationDetectionState}
               />
