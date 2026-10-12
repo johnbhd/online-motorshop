@@ -42,6 +42,10 @@ class StaffDeliveryStatusService
             return array_values(array_intersect($statuses, ['cancelled']));
         }
 
+        if ($orderStatus !== 'confirmed') {
+            return array_values(array_intersect($statuses, ['cancelled']));
+        }
+
         if (
             $deliveryRequest->delivery_status === 'waiting_for_booking'
             && ! $this->hasPaidLatestPayment($deliveryRequest)
@@ -98,6 +102,14 @@ class StaffDeliveryStatusService
                 throw ValidationException::withMessages([
                     'status' => [
                         'A delivery linked to a completed, rejected, or cancelled order cannot progress.',
+                    ],
+                ]);
+            }
+
+            if ($status !== 'cancelled' && $order->order_status !== 'confirmed') {
+                throw ValidationException::withMessages([
+                    'status' => [
+                        'The parent order must be confirmed before delivery can progress.',
                     ],
                 ]);
             }
