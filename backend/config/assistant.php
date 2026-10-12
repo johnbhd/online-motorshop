@@ -25,4 +25,10 @@ return [
 
     'max_knowledge_file_characters' => 6000,
 
+    'catalog_max_products' => 12,
+
+    'catalog_max_branches' => 10,
+
+    'catalog_max_description_characters' => 500,
+
 ];

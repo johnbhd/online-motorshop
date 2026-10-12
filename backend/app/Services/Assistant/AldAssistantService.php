@@ -5,7 +5,7 @@ namespace App\Services\Assistant;
 class AldAssistantService
 {
     public function __construct(
-        private readonly AldKnowledgeService $knowledgeService,
+        private readonly AldAssistantContextService $contextService,
         private readonly AldSystemPrompt $systemPrompt,
         private readonly GroqService $groqService,
     ) {}
@@ -16,7 +16,7 @@ class AldAssistantService
      */
     public function chat(string $message, array $history = [], ?array $replyTo = null): string
     {
-        $knowledgeContext = $this->knowledgeService->contextFor($message);
+        $knowledgeContext = $this->contextService->contextFor($message);
         $messages = [
             [
                 'role' => 'system',

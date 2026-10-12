@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Services\Assistant\AldAssistantContextService;
+use App\Services\Assistant\AssistantUnavailableException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -418,8 +420,39 @@ class AssistantChatApiTest extends TestCase
             ]);
     }
 
+    public function test_catalog_failure_returns_a_safe_unavailable_response_without_provider_access(): void
+    {
+        $this->mock(AldAssistantContextService::class, function ($mock): void {
+            $mock->shouldReceive('contextFor')
+                ->once()
+                ->andThrow(AssistantUnavailableException::unavailable('catalog_unavailable'));
+        });
+
+        $this->postJson('/api/assistant/chat', [
+            'message' => 'What batteries do you have?',
+        ], [
+            'X-Assistant-Session' => '00000000-0000-4000-8000-000000000008',
+        ])->assertStatus(503)
+            ->assertExactJson([
+                'message' => 'I am having trouble accessing the current ALD catalog right now. Please try again or talk to ALD Staff.',
+                'code' => 'assistant_unavailable',
+            ]);
+
+        Http::assertNothingSent();
+    }
+
     public function test_topic_selection_adds_only_relevant_optional_knowledge(): void
     {
+        $this->mock(AldAssistantContextService::class, function ($mock): void {
+            $mock->shouldReceive('contextFor')
+                ->once()
+                ->with('Where is your branch?')
+                ->andReturn(json_encode([
+                    'source' => 'CURRENT_BRANCH_DATA',
+                    'data' => ['branches' => []],
+                ]));
+        });
+
         Http::fake([
             'https://api.groq.test/*' => Http::response([
                 'choices' => [['message' => ['content' => 'Here is the approved information.']]],
@@ -433,7 +466,8 @@ class AssistantChatApiTest extends TestCase
         Http::assertSent(function ($request): bool {
             $knowledge = $request->data()['messages'][1]['content'];
 
-            return str_contains($knowledge, 'ald-branches-contact.md')
+            return str_contains($knowledge, 'CURRENT_BRANCH_DATA')
+                && str_contains($knowledge, 'branches')
                 && ! str_contains($knowledge, 'ald-team.md')
                 && ! str_contains($knowledge, 'ald-ai-rules.md')
                 && ! str_contains($knowledge, 'ald-faq.md');
