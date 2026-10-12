@@ -151,6 +151,7 @@ export type OrderViewPickup = {
   pickupDate: string | null;
   pickupTime: string | null;
   remarks: string | null;
+  notes: string | null;
   completedAt: string | null;
 };
 

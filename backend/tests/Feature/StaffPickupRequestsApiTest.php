@@ -132,6 +132,8 @@ class StaffPickupRequestsApiTest extends TestCase
             'ALD-2026-000125',
             $branch,
         );
+        $order->update(['customer_notes' => 'Staff should see the shared order note.']);
+        $order->pickupRequest()->update(['pickup_notes' => 'Call before the customer arrives.']);
         $product->update([
             'price' => 220.00,
         ]);
@@ -146,6 +148,8 @@ class StaffPickupRequestsApiTest extends TestCase
             ->assertJsonPath('pickup_request.payment', null)
             ->assertJsonPath('pickup_request.order.items.0.unit_price', 180)
             ->assertJsonPath('pickup_request.order.items.0.part_number', 'PICKUP-002')
+            ->assertJsonPath('pickup_request.pickup_notes', 'Call before the customer arrives.')
+            ->assertJsonPath('pickup_request.order.customer_notes', 'Staff should see the shared order note.')
             ->assertJsonPath('pickup_request.pickup_status', 'pending')
             ->assertJsonPath('pickup_request.allowed_statuses.0', 'preparing');
     }

@@ -24,6 +24,7 @@ class StaffPickupRequestPresenter
             'pickup_date' => $pickupRequest->pickup_date?->toDateString(),
             'pickup_time' => $pickupRequest->pickup_time,
             'remarks' => $pickupRequest->remarks,
+            'pickup_notes' => $pickupRequest->pickup_notes,
             'completed_at' => $pickupRequest->completed_at?->toISOString(),
             'item_count' => $order?->items_count ?? $order?->items->sum('quantity') ?? 0,
             'assigned_staff' => $pickupRequest->assignedStaff?->only([
@@ -108,6 +109,7 @@ class StaffPickupRequestPresenter
             'subtotal' => (float) $order->subtotal,
             'delivery_fee' => (float) $order->delivery_fee,
             'total_amount' => (float) $order->total_amount,
+            'customer_notes' => $order->customer_notes,
             'items' => $order->items
                 ->map(fn ($item): array => [
                     'product_id' => $item->product_id,

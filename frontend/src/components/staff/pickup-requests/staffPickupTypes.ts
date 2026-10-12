@@ -34,6 +34,7 @@ export type StaffPickupRequest = {
   pickup_date: string | null;
   pickup_time: string | null;
   remarks: string | null;
+  pickup_notes: string | null;
   completed_at: string | null;
   item_count: number;
   assigned_staff: {
@@ -63,6 +64,7 @@ export type StaffPickupDetails = StaffPickupRequest & {
     subtotal: number;
     delivery_fee: number;
     total_amount: number;
+    customer_notes: string | null;
     items: StaffPickupOrderItem[];
   } | null;
 };

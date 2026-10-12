@@ -67,6 +67,9 @@ export function buildOrderRequestPayload(
       fulfillment: {
         method: "pickup",
         branch_id: branch.id,
+        pickup: {
+          notes: formData.pickupNotes.trim() || undefined,
+        },
       },
     };
   }

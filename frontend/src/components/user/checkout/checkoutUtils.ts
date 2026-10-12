@@ -205,6 +205,10 @@ export function validateCheckoutForm(
     errors.branchId = "Choose an ALD branch for pickup.";
   }
 
+  if (formData.fulfillmentMethod === "pickup" && formData.pickupNotes.length > 200) {
+    errors.pickupNotes = "Pickup notes must be 200 characters or fewer.";
+  }
+
   if (formData.fulfillmentMethod === "delivery") {
     if (!formData.delivery.address.trim()) {
       errors.deliveryAddress = "Enter the complete delivery address.";

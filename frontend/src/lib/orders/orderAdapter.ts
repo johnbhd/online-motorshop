@@ -174,6 +174,7 @@ function toPickup(
     pickupDate: pickup.pickup_date,
     pickupTime: pickup.pickup_time,
     remarks: pickup.remarks,
+    notes: pickup.notes ?? null,
     completedAt: pickup.completed_at,
   };
 }

@@ -97,6 +97,17 @@ class StoreOrderRequestRequest extends FormRequest
                 'array',
                 'prohibited_unless:fulfillment.method,delivery',
             ],
+            'fulfillment.pickup' => [
+                'sometimes',
+                'array',
+                'prohibited_unless:fulfillment.method,pickup',
+            ],
+            'fulfillment.pickup.notes' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:200',
+            ],
             'fulfillment.delivery.address' => [
                 'required_if:fulfillment.method,delivery',
                 'string',

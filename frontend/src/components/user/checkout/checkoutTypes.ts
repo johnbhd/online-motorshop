@@ -17,6 +17,7 @@ export type CheckoutFormData = CheckoutCustomerData & {
   branchId: string;
   delivery: CheckoutDeliveryData;
   paymentMethod: PaymentMethod | "";
+  pickupNotes: string;
   orderNotes: string;
   confirmDetails: boolean;
 };
@@ -35,6 +36,7 @@ export type CheckoutFieldErrorKey =
   | "email"
   | "contactNumber"
   | "branchId"
+  | "pickupNotes"
   | "deliveryAddress"
   | "barangay"
   | "city"

@@ -25,6 +25,7 @@ class PickupRequest extends Model
         'pickup_time',
         'pickup_status',
         'remarks',
+        'pickup_notes',
         'completed_at',
     ];
 

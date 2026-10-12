@@ -9,7 +9,10 @@ type StorePickupFieldsProps = {
   selectedBranchId: string;
   isLoading: boolean;
   error?: string;
+  notesError?: string;
+  pickupNotes: string;
   onChange: (branchId: string) => void;
+  onNotesChange: (value: string) => void;
 };
 
 export default function StorePickupFields({
@@ -18,7 +21,10 @@ export default function StorePickupFields({
   selectedBranchId,
   isLoading,
   error,
+  notesError,
+  pickupNotes,
   onChange,
+  onNotesChange,
 }: StorePickupFieldsProps) {
   const selectableBranches =
     fulfillmentMethod === "pickup"
@@ -80,6 +86,28 @@ export default function StorePickupFields({
           <FontAwesomeIcon icon={faLocationDot} aria-hidden="true" />
           <span>{selectedBranch.address}</span>
         </address>
+      ) : null}
+
+      {!isDelivery ? (
+        <div className="checkout-field">
+          <label htmlFor="checkout-pickup-notes">Pickup Notes — Optional</label>
+          <textarea
+            id="checkout-pickup-notes"
+            name="pickupNotes"
+            rows={4}
+            maxLength={200}
+            value={pickupNotes}
+            aria-invalid={Boolean(notesError)}
+            aria-describedby={notesError ? "checkout-pickup-notes-error" : undefined}
+            placeholder="Tell ALD staff anything they should know about your store pickup."
+            onChange={(event) => onNotesChange(event.target.value)}
+          />
+          {notesError ? (
+            <p className="checkout-field-error" id="checkout-pickup-notes-error">{notesError}</p>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500">These notes are saved only with this Store Pickup request.</p>
+          )}
+        </div>
       ) : null}
     </section>
   );

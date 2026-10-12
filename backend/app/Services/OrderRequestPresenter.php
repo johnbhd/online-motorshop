@@ -206,6 +206,7 @@ class OrderRequestPresenter
             'pickup_date' => $pickup->pickup_date?->toDateString(),
             'pickup_time' => $pickup->pickup_time,
             'remarks' => $pickup->remarks,
+            'notes' => $pickup->pickup_notes,
             'completed_at' => $pickup->completed_at?->toISOString(),
         ];
     }

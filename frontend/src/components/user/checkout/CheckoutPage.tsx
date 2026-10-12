@@ -91,6 +91,7 @@ const initialFormData: CheckoutFormData = {
   branchId: "",
   delivery: initialDeliveryData,
   paymentMethod: "",
+  pickupNotes: "",
   orderNotes: "",
   confirmDetails: false,
 };
@@ -476,6 +477,7 @@ export default function CheckoutPage() {
             "customer.email": "email",
             "customer.contact_number": "contactNumber",
             "fulfillment.branch_id": "branchId",
+            "fulfillment.pickup.notes": "pickupNotes",
             "fulfillment.delivery.address": "deliveryAddress",
             "fulfillment.delivery.barangay": "barangay",
             "fulfillment.delivery.city": "city",
@@ -603,6 +605,8 @@ export default function CheckoutPage() {
               selectedBranchId={formData.branchId}
               isLoading={isLoadingBranches}
               error={errors.branchId}
+              notesError={errors.pickupNotes}
+              pickupNotes={formData.pickupNotes}
               onChange={(branchId) => {
                 setFormData((currentFormData) => ({
                   ...currentFormData,
@@ -611,6 +615,17 @@ export default function CheckoutPage() {
                 setErrors((currentErrors) => ({
                   ...currentErrors,
                   branchId: undefined,
+                }));
+                setSubmitError("");
+              }}
+              onNotesChange={(pickupNotes) => {
+                setFormData((currentFormData) => ({
+                  ...currentFormData,
+                  pickupNotes,
+                }));
+                setErrors((currentErrors) => ({
+                  ...currentErrors,
+                  pickupNotes: undefined,
                 }));
                 setSubmitError("");
               }}

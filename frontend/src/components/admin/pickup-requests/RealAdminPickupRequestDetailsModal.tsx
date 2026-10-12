@@ -177,6 +177,7 @@ export default function RealAdminPickupRequestDetailsModal({
                 <div><dt>Order Status</dt><dd>{label(pickup.order?.status ?? pickup.order_status)}</dd></div>
                 <div><dt>Fulfillment</dt><dd>{label(pickup.order?.fulfillment_method)}</dd></div>
                 <div><dt>Order Total</dt><dd className="admin-order-modal-total">{money(pickup.order?.total_amount ?? pickup.amount)}</dd></div>
+                <div className="sm:col-span-2"><dt>Order Notes</dt><dd className="whitespace-pre-wrap">{pickup.order?.customer_notes || "No order notes recorded"}</dd></div>
               </dl>
             </section>
 
@@ -193,7 +194,8 @@ export default function RealAdminPickupRequestDetailsModal({
                 <div><dt>Assigned Staff</dt><dd>{pickup.assigned_staff?.name ?? "Unassigned"}</dd></div>
                 <div><dt>Request Created</dt><dd>{date(pickup.created_at)}</dd></div>
                 <div><dt>Completed At</dt><dd>{date(pickup.completed_at)}</dd></div>
-                <div><dt>Remarks</dt><dd>{pickup.remarks || "No remarks recorded"}</dd></div>
+                <div><dt>Pickup Notes</dt><dd className="whitespace-pre-wrap">{pickup.pickup_notes || "No pickup notes recorded"}</dd></div>
+                <div><dt>Remarks</dt><dd className="whitespace-pre-wrap">{pickup.remarks || "No remarks recorded"}</dd></div>
               </dl>
             </section>
 

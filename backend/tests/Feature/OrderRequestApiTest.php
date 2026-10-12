@@ -84,7 +84,11 @@ class OrderRequestApiTest extends TestCase
             'fulfillment' => [
                 'method' => 'pickup',
                 'branch_id' => $branch->id,
+                'pickup' => [
+                    'notes' => 'Bring the original order reference when collecting.',
+                ],
             ],
+            'order_notes' => 'Please confirm part compatibility at the counter.',
         ]);
 
         $response
@@ -100,7 +104,9 @@ class OrderRequestApiTest extends TestCase
             ->assertJsonPath('order.items.0.image', 'https://example.com/test-product.png')
             ->assertJsonPath('order.items.0.unit_price', 180)
             ->assertJsonPath('order.items.0.line_total', 360)
-            ->assertJsonPath('order.pickup.status', 'pending');
+            ->assertJsonPath('order.pickup.status', 'pending')
+            ->assertJsonPath('order.pickup.notes', 'Bring the original order reference when collecting.')
+            ->assertJsonPath('order.customer_notes', 'Please confirm part compatibility at the counter.');
 
         $this->assertDatabaseHas('customers', [
             'user_id' => null,
@@ -120,6 +126,7 @@ class OrderRequestApiTest extends TestCase
         $this->assertDatabaseHas('pickup_requests', [
             'branch_id' => $branch->id,
             'pickup_status' => 'pending',
+            'pickup_notes' => 'Bring the original order reference when collecting.',
         ]);
         $this->assertDatabaseCount('delivery_requests', 0);
     }
@@ -170,6 +177,36 @@ class OrderRequestApiTest extends TestCase
             'delivery_address' => '12 Main Street, Barangay San Isidro, Makati City',
         ]);
         $this->assertDatabaseCount('pickup_requests', 0);
+    }
+
+    public function test_pickup_notes_are_optional_but_bounded(): void
+    {
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-PICKUP-NOTES-001', 180.00);
+
+        $this->postJson('/api/order-requests', [
+            'customer' => [
+                'name' => 'Pickup Notes Guest',
+                'email' => 'pickup-notes@example.com',
+                'contact_number' => '09171234567',
+            ],
+            'items' => [[
+                'part_number' => $product->part_number,
+                'quantity' => 1,
+            ]],
+            'payment_method' => 'pay_at_pickup',
+            'fulfillment' => [
+                'method' => 'pickup',
+                'branch_id' => $branch->id,
+                'pickup' => [
+                    'notes' => str_repeat('x', 201),
+                ],
+            ],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['fulfillment.pickup.notes']);
+
+        $this->assertDatabaseCount('order_requests', 0);
     }
 
     public function test_delivery_order_accepts_a_canonical_manual_barangay_when_the_pin_resolves_only_an_area(): void

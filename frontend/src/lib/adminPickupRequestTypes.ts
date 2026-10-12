@@ -30,6 +30,7 @@ export type AdminPickupRequest = {
   pickup_date: string | null;
   pickup_time: string | null;
   remarks: string | null;
+  pickup_notes: string | null;
   completed_at: string | null;
   item_count: number;
   assigned_staff: { id: number; name: string } | null;
@@ -49,6 +50,7 @@ export type AdminPickupDetails = AdminPickupRequest & {
     subtotal: number;
     delivery_fee: number;
     total_amount: number;
+    customer_notes: string | null;
     items: Array<{
       product_id: number;
       part_number: string | null;

@@ -38,6 +38,9 @@ class OrderRequestCreator
         $delivery = $method === 'delivery'
             ? (array) data_get($payload, 'fulfillment.delivery', [])
             : null;
+        $pickupNotes = $method === 'pickup' && filled(data_get($payload, 'fulfillment.pickup.notes'))
+            ? trim((string) data_get($payload, 'fulfillment.pickup.notes'))
+            : null;
 
         if ($delivery !== null) {
             $this->canonicalizeDeliveryLocation($delivery);
@@ -124,6 +127,7 @@ class OrderRequestCreator
             $method,
             $paymentMethod,
             $delivery,
+            $pickupNotes,
             $deliveryAddress,
             $deliveryRemarks,
             $guestTokenHash,
@@ -172,6 +176,7 @@ class OrderRequestCreator
                     'order_id' => $order->id,
                     'branch_id' => $branch->id,
                     'pickup_status' => 'pending',
+                    'pickup_notes' => $pickupNotes,
                 ]);
             } else {
                 DeliveryRequest::create([

@@ -53,6 +53,7 @@ export type OrderApiPickup = {
   pickup_date: string | null;
   pickup_time: string | null;
   remarks: string | null;
+  notes?: string | null;
   completed_at: string | null;
 };
 

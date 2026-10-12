@@ -181,7 +181,7 @@ class StaffPickupRequestsController extends Controller
     private function pickupRelations(): array
     {
         return [
-            'order:id,order_reference,customer_id,branch_id,fulfillment_type,order_status,subtotal,delivery_fee,total_amount',
+            'order:id,order_reference,customer_id,branch_id,fulfillment_type,order_status,subtotal,delivery_fee,total_amount,customer_notes',
             'order.customer:id,full_name,contact_number,email,address',
             'order.items:id,order_id,product_id,product_name,unit_price,quantity,subtotal',
             'order.items.product:id,part_number',

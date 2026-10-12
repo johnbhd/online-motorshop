@@ -80,6 +80,8 @@ class AdminPickupRequestsApiTest extends TestCase
         $branch = $this->createBranch('Admin Pickup Detail Branch');
         $staff = $this->createUser('staff', $branch, 'Pickup Detail Staff');
         $order = $this->createPickup('Pickup Detail Customer', $branch, 'ALD-2026-PICK-003', 'ready_for_pickup', $staff);
+        $order->update(['customer_notes' => 'Admin should see the shared order note.']);
+        $order->pickupRequest()->update(['pickup_notes' => 'Keep the package at the counter.']);
         $order->payments()->create([
             'payment_method' => 'Online Payment',
             'amount' => 250,
@@ -101,6 +103,8 @@ class AdminPickupRequestsApiTest extends TestCase
             ->assertJsonPath('pickup_request.order.fulfillment_method', 'pickup')
             ->assertJsonPath('pickup_request.order.items.0.name', 'Test Pickup Product 003')
             ->assertJsonPath('pickup_request.order.items.0.unit_price', 250)
+            ->assertJsonPath('pickup_request.pickup_notes', 'Keep the package at the counter.')
+            ->assertJsonPath('pickup_request.order.customer_notes', 'Admin should see the shared order note.')
             ->assertJsonPath('pickup_request.allowed_statuses', ['completed']);
 
         $this->requestAs($admin)

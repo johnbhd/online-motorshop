@@ -214,6 +214,12 @@ export default function OrderConfirmationPage({
             </p>
           ) : null}
 
+          {isPickup && order.pickup?.notes ? (
+            <p className="order-confirmation-order-note">
+              <strong>Pickup notes:</strong> {order.pickup.notes}
+            </p>
+          ) : null}
+
           <section className="order-confirmation-items" aria-labelledby="order-confirmation-items-title">
             <div className="order-confirmation-items-heading">
               <h3 id="order-confirmation-items-title">Submitted Items</h3>

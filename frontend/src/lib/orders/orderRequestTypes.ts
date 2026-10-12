@@ -41,6 +41,9 @@ export type OrderRequestPayload = {
     | {
         method: "pickup";
         branch_id: number;
+        pickup?: {
+          notes?: string;
+        };
       }
     | {
         method: "delivery";
@@ -104,6 +107,11 @@ export type OrderConfirmationData = {
   pickup?: {
     branch_id: number | null;
     status: string | null;
+    pickup_date?: string | null;
+    pickup_time?: string | null;
+    notes?: string | null;
+    remarks?: string | null;
+    completed_at?: string | null;
   };
   delivery?: {
     branch_id: number | null;

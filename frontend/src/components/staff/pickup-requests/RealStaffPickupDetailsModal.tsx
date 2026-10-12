@@ -347,6 +347,10 @@ export default function RealStaffPickupDetailsModal({
                     <dt className="text-slate-500">Order Total</dt>
                     <dd className="mt-1 font-semibold text-[#0B1930]">{formatPeso(pickup.amount)}</dd>
                   </div>
+                  <div className="sm:col-span-3">
+                    <dt className="text-slate-500">Order Notes</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-slate-700">{displayValue(pickup.order?.customer_notes)}</dd>
+                  </div>
                 </dl>
               </section>
 
@@ -411,13 +415,17 @@ export default function RealStaffPickupDetailsModal({
                     <dd className="mt-1 text-slate-700">{displayValue(pickup.pickup_time)}</dd>
                   </div>
                   <div className="sm:col-span-2">
+                    <dt className="text-slate-500">Pickup Notes</dt>
+                    <dd className="mt-1 whitespace-pre-wrap text-slate-700">{displayValue(pickup.pickup_notes)}</dd>
+                  </div>
+                  <div className="sm:col-span-2">
                     <dt className="text-slate-500">Remarks</dt>
                     <dd className="mt-1 text-slate-700">{displayValue(pickup.remarks)}</dd>
                   </div>
                 </dl>
                 <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500">
                   <FontAwesomeIcon icon={faLocationDot} className="mt-0.5 shrink-0 text-orange-500" aria-hidden="true" />
-                  Only pickup date, time, remarks, and completion timestamps persisted by Laravel are shown.
+                  Pickup notes and order notes are separate persisted fields. Staff can review them here but cannot change them from the pickup workflow.
                 </p>
               </section>
 

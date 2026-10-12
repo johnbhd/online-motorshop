@@ -53,7 +53,7 @@ class CustomerOrderController extends Controller
             ->where('customer_id', $customer->id)
             ->with([
                 'branch',
-                'pickupRequest:id,order_id,branch_id,pickup_status,pickup_date,pickup_time,remarks,completed_at',
+                'pickupRequest:id,order_id,branch_id,pickup_status,pickup_date,pickup_time,remarks,pickup_notes,completed_at',
                 'deliveryRequest:id,order_id,branch_id,delivery_status,delivery_address,delivery_complete_address,delivery_city_municipality,delivery_city_municipality_code,delivery_barangay,delivery_barangay_code,delivery_latitude,delivery_longitude,route_geometry,route_distance_meters,route_provider,route_generated_at,delivery_contact_person,delivery_contact_number,delivery_notes,delivery_fee,booking_reference,tracking_url,rider_name,rider_contact,vehicle_plate,remarks,delivered_at',
                 'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
             ])

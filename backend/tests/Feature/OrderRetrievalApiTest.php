@@ -111,6 +111,8 @@ class OrderRetrievalApiTest extends TestCase
         [, $otherCustomer] = $this->createCustomer('detail-b@example.com', '09172222222');
         $order = $this->createOrder($customer, $product, 'ALD-2026-000010', quantity: 2);
         $otherOrder = $this->createOrder($otherCustomer, $product, 'ALD-2026-000011');
+        $order->update(['customer_notes' => 'Keep the order notes separate.']);
+        $order->pickupRequest()->update(['pickup_notes' => 'Call when the pickup is ready.']);
 
         $product->update(['price' => 220.00]);
         $token = $user->createToken('retrieval-test')->plainTextToken;
@@ -125,6 +127,8 @@ class OrderRetrievalApiTest extends TestCase
             ->assertJsonPath('order.total_amount', 360)
             ->assertJsonPath('order.payment', null)
             ->assertJsonPath('order.pickup.status', 'pending')
+            ->assertJsonPath('order.pickup.notes', 'Call when the pickup is ready.')
+            ->assertJsonPath('order.customer_notes', 'Keep the order notes separate.')
             ->assertJsonMissingPath('order.delivery');
 
         $this->withToken($token)

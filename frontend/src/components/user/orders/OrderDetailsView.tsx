@@ -8,6 +8,7 @@ import OrderSummaryCards from "../track-order/OrderSummaryCards";
 import OrderSupportSection from "../track-order/OrderSupportSection";
 import LalamoveTrackingMap from "../track-order/LalamoveTrackingMap";
 import OrderDeliverySnapshot from "./OrderDeliverySnapshot";
+import OrderPickupSnapshot from "./OrderPickupSnapshot";
 import {
   getOrderProgressCaption,
   getOrderProgressSteps,
@@ -46,6 +47,13 @@ export default function OrderDetailsView({
         <OrderSummaryCards order={order} />
         {order.fulfillment.method === "delivery" ? (
           <OrderDeliverySnapshot delivery={order.fulfillment.delivery} />
+        ) : null}
+        {order.fulfillment.method === "pickup" ? (
+          <OrderPickupSnapshot
+            pickup={order.fulfillment.pickup}
+            branchName={order.fulfillment.branch?.name ?? null}
+            orderNotes={order.orderNotes}
+          />
         ) : null}
         <LalamoveTrackingMap
           branch={order.fulfillment.branch}
