@@ -113,37 +113,37 @@ export default function OrderPaymentSection({
 
   const paymentHeading = isPaid
     ? "Paid"
-    : isTerminalOrder
-      ? "No payment action available"
+    : isWaitingForVerification
+      ? "Waiting for Verification"
+      : isTerminalOrder
+        ? "No payment action available"
       : isPickup
         ? orderStatus === "pending" || orderStatus === "under_review"
           ? "Not Yet Due"
           : "Payment Due at Pickup"
-        : paymentStatus === "waiting_for_verification"
-          ? "Waiting for Verification"
-          : isRejectedProof
-            ? "Proof Rejected"
-            : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.orderStatus)
-              ? "Payment Not Available Yet"
-              : "Unpaid";
+        : isRejectedProof
+          ? "Proof Rejected"
+          : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.orderStatus)
+            ? "Payment Not Available Yet"
+            : "Unpaid";
 
   const paymentDescription = isPaid
     ? payment?.verifiedAt
       ? `Verified on ${new Date(payment.verifiedAt).toLocaleDateString("en-PH")}.`
       : "ALD Staff has verified this payment."
-    : isTerminalOrder
-      ? "This order is closed, so no payment action is available."
+    : isWaitingForVerification
+      ? "Your proof was submitted successfully. ALD Staff will verify it before marking the payment paid."
+      : isTerminalOrder
+        ? "This order is closed, so no payment action is available."
       : isPickup
         ? customerStatus === "ready_for_pickup"
           ? "Pay the amount due at the pickup branch when you collect your order."
           : "Pay the amount due at the pickup branch after ALD Staff confirms it is ready."
-        : paymentStatus === "waiting_for_verification"
-          ? "Your proof was submitted successfully. ALD Staff will verify it before marking the payment paid."
-          : isRejectedProof
-            ? "Your submitted payment proof could not be verified. Review the instructions and submit a new proof."
-            : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.orderStatus)
-              ? "Payment instructions will become available after ALD Staff confirms your order."
-              : "Complete your payment, then upload the receipt for ALD Staff verification.";
+        : isRejectedProof
+          ? "Your submitted payment proof could not be verified. Review the instructions and submit a new proof."
+          : paymentStatus === "unpaid" && !isEligibleOrderStatus(order.orderStatus)
+            ? "Payment instructions will become available after ALD Staff confirms your order."
+            : "Complete your payment, then upload the receipt for ALD Staff verification.";
 
   const actionLabel = isWaitingForVerification ? "View Submitted Proof" : isRejectedProof ? "Upload New Proof" : "View Payment Instructions";
   const canOpenModal =
@@ -177,7 +177,7 @@ export default function OrderPaymentSection({
         <p>{paymentDescription}</p>
         {amount !== null ? (
           <div className="track-order-support-detail">
-            <span>{isPaid ? "Amount paid" : "Amount due"}</span>
+            <span>{isPaid ? "Amount paid" : isWaitingForVerification ? "Amount submitted" : "Amount due"}</span>
             <strong>{formatPeso(amount)}</strong>
           </div>
         ) : null}
