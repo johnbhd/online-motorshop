@@ -175,10 +175,6 @@
   text-decoration: none;
 }
 
-.auth-google-button svg {
-  color: #4285f4;
-}
-
 .auth-google-state {
   display: flex;
   flex-direction: column;
