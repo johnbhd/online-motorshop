@@ -96,6 +96,32 @@ class GoogleAuthApiTest extends TestCase
         ]))->assertRedirectContains('google_auth_failed');
     }
 
+    public function test_google_redirect_does_not_fall_back_to_a_localhost_frontend(): void
+    {
+        $this->app['config']->set('services.frontend.url', '');
+
+        $this->get('/api/auth/google/callback?state=missing&code=provider-code')
+            ->assertStatus(503);
+    }
+
+    public function test_google_callback_uses_the_configured_frontend_url(): void
+    {
+        $this->app['config']->set('services.frontend.url', 'https://frontend.example.test');
+        $this->fakeGoogleIdentity([
+            'sub' => 'google-configured-frontend',
+            'email' => 'configured-frontend@example.com',
+            'email_verified' => true,
+            'name' => 'Configured Frontend',
+        ]);
+
+        $redirect = $this->redirectQuery($this->completeGoogleCallback());
+
+        $this->assertStringStartsWith(
+            'https://frontend.example.test/register/google/complete?',
+            $redirect['location'],
+        );
+    }
+
     public function test_new_google_customer_can_complete_registration_and_use_password_login(): void
     {
         $this->fakeGoogleIdentity([

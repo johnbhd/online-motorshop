@@ -440,7 +440,15 @@ class GoogleAuthController extends Controller
 
     private function frontendRedirect(string $path, array $query): RedirectResponse
     {
-        $url = rtrim((string) config('services.frontend.url', 'http://localhost:3000'), '/')
+        $frontendUrl = trim((string) config('services.frontend.url'));
+
+        if ($frontendUrl === '') {
+            Log::error('Google OAuth frontend redirect URL is not configured.');
+
+            abort(503, 'Google authentication is not configured.');
+        }
+
+        $url = rtrim($frontendUrl, '/')
             .$path;
 
         if ($query !== []) {
