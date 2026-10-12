@@ -20,6 +20,11 @@ import { AdminBadge } from "@/components/admin/AdminDataTable";
 import ArchiveRecordButton from "@/components/admin/archive/ArchiveRecordButton";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  IMAGE_UPLOAD_HELP_TEXT,
+  validateImageFile,
+} from "@/lib/imageValidation";
+import {
   createAdminProduct,
   deleteAdminProduct,
   getAdminProduct,
@@ -154,6 +159,12 @@ function clientFormErrors(values: ProductFormValues, isEditing: boolean): Produc
 
   if (!isEditing && !values.image && !values.img_url.trim()) {
     errors.image = ["Choose a product image to upload."];
+  }
+
+  const imageError = validateImageFile(values.image, "product image");
+
+  if (imageError) {
+    errors.image = [imageError];
   }
 
   const price = Number(values.price);
@@ -577,6 +588,7 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
   const categoryOptions = productCategory ? [...activeCategories, productCategory] : activeCategories;
   const brandOptions = productBrand ? [...activeBrands, productBrand] : activeBrands;
   const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(activeCategories, activeBrands, initialCategoryId, initialBrandId));
+  const [localImageError, setLocalImageError] = useState<string | null>(null);
   const previewUrl = useMemo(
     () => (values.image ? URL.createObjectURL(values.image) : null),
     [values.image],
@@ -594,9 +606,18 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
 
   const update = (field: Exclude<keyof ProductFormValues, "image">, value: string) => setValues((current) => ({ ...current, [field]: value }));
   const updateImage = (image: File | null) => setValues((current) => ({ ...current, image }));
-  const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); onSubmit(values); };
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (localImageError) {
+      return;
+    }
+
+    onSubmit(values);
+  };
   const allErrors = fieldErrors;
   const fieldError = (field: keyof ProductFormValues) => allErrors[field]?.[0];
+  const imageError = localImageError ?? fieldError("image");
 
   return <ModalShell title={isEditing ? "Manage Product" : "Add Product"} description="Persisted catalog fields used by the public product catalog." onClose={onClose} footer={<div className="flex w-full items-center justify-between gap-3"><div>{isEditing && product ? <button type="button" onClick={() => onDelete(product)} disabled={submitLoading || detailLoading} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"><FontAwesomeIcon icon={faTrash} aria-hidden="true" /> Delete product</button> : null}</div><div className="flex items-center gap-3"><button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button><button type="submit" form="admin-product-form" disabled={submitLoading || detailLoading} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><FontAwesomeIcon icon={faCheck} aria-hidden="true" />{submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Product"}</button></div></div>}>
     {detailLoading ? <div className="rounded-lg bg-slate-50 px-4 py-5 text-sm text-slate-600" aria-live="polite">Loading the latest product details...</div> : null}
@@ -616,14 +637,28 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
           </span>
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
             required={!isEditing && !values.img_url}
-            aria-invalid={Boolean(fieldError("image"))}
-            onChange={(event) => updateImage(event.target.files?.[0] ?? null)}
+            aria-invalid={Boolean(imageError)}
+            aria-describedby="admin-product-image-help admin-product-image-error"
+            onChange={(event) => {
+              const input = event.currentTarget;
+              const file = input.files?.[0] ?? null;
+              input.value = "";
+              const validationError = validateImageFile(file, "product image");
+
+              if (validationError) {
+                setLocalImageError(validationError);
+                return;
+              }
+
+              setLocalImageError(null);
+              updateImage(file);
+            }}
             className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-700 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
           />
-          {fieldError("image") ? <span className="mt-1 block text-xs font-medium text-red-600" role="alert">{fieldError("image")}</span> : null}
-          <span className="mt-1 block text-xs text-slate-500">JPG, PNG, or WEBP up to 5 MB. Leave this empty while editing to keep the current image.</span>
+          {imageError ? <span id="admin-product-image-error" className="mt-1 block text-xs font-medium text-red-600" role="alert">{imageError}</span> : null}
+          <span id="admin-product-image-help" className="mt-1 block text-xs text-slate-500">{IMAGE_UPLOAD_HELP_TEXT} Leave this empty while editing to keep the current image.</span>
         </label>
       </div>
       <label className="block"><span className="mb-1 block text-sm font-semibold text-slate-700">Description</span><textarea value={values.description} onChange={(event) => update("description", event.target.value)} rows={3} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" /></label>

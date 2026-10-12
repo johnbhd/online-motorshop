@@ -36,6 +36,15 @@ class StoreAdminProductRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'image.image' => 'Product image must be a valid image.',
+            'image.mimes' => 'Product image must be a JPG, JPEG, PNG, or WEBP image.',
+            'image.max' => 'Product image must be 5 MB or smaller.',
+        ];
+    }
+
     private function mergeTrimmedStrings(): void
     {
         $values = [];

@@ -1,4 +1,5 @@
 import { getAuthToken } from "@/lib/auth/authStorage";
+import { getImageUploadTransportError } from "@/lib/imageValidation";
 import type {
   AdminConversationSummary,
   ContactInquiryMetadata,
@@ -83,6 +84,24 @@ function messageFromPayload(payload: unknown, status: number) {
     if (typeof message === "string") {
       return message;
     }
+  }
+
+  if (typeof payload === "object" && payload !== null && "errors" in payload) {
+    const errors = (payload as { errors?: unknown }).errors;
+
+    if (typeof errors === "object" && errors !== null) {
+      const firstError = Object.values(errors).flat()[0];
+
+      if (typeof firstError === "string") {
+        return firstError;
+      }
+    }
+  }
+
+  const transportError = getImageUploadTransportError(status);
+
+  if (transportError) {
+    return transportError;
   }
 
   return `Conversation request failed with status ${status}.`;

@@ -1220,6 +1220,13 @@
   line-height: 1.5;
 }
 
+.track-order-payment-help {
+  margin: 0.65rem 0 0;
+  color: #667085;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
 .track-order-payment-modal-footer {
   justify-content: flex-end;
   border-top: 1px solid #e7e9f0;

@@ -6,6 +6,7 @@ import type {
   AdminProductPayload,
   AdminProductsResponse,
 } from "./adminProductsTypes";
+import { getImageUploadTransportError } from "./imageValidation";
 
 type RequestOptions = {
   signal?: AbortSignal;
@@ -166,6 +167,12 @@ export function getAdminProductsErrorMessage(error: unknown): string {
 
     if (error.status === 403) {
       return "You are not authorized to manage products.";
+    }
+
+    const transportError = getImageUploadTransportError(error.status);
+
+    if (transportError) {
+      return transportError;
     }
 
     if (error.status >= 500) {

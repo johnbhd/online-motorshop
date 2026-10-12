@@ -16,12 +16,18 @@ import {
 } from "../chatbot/chatbotEvents";
 import type { ContactInquiryDraft } from "../chatbot/chatbotTypes";
 import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  IMAGE_UPLOAD_HELP_TEXT,
+  validateImageFile,
+} from "@/lib/imageValidation";
+import {
   contactArrowIcon,
   contactNeeds,
 } from "./contactData";
 
 export default function ContactForm() {
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState("");
   const [status, setStatus] = useState(
     "Your inquiry will be sent directly to ALD Support for review.",
   );
@@ -50,11 +56,33 @@ export default function ContactForm() {
   }, [user]);
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSelectedPhoto(event.target.files?.[0] ?? null);
+    const input = event.currentTarget;
+    const file = input.files?.[0] ?? null;
+    input.value = "";
+    setPhotoError("");
+
+    if (!file) {
+      setSelectedPhoto(null);
+      return;
+    }
+
+    const validationError = validateImageFile(file, "inquiry photo");
+
+    if (validationError) {
+      setSelectedPhoto(null);
+      setPhotoError(validationError);
+      return;
+    }
+
+    setSelectedPhoto(file);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (photoError) {
+      return;
+    }
 
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -102,6 +130,7 @@ export default function ContactForm() {
       onSent: () => {
         form.reset();
         setSelectedPhoto(null);
+        setPhotoError("");
         setStatus("Your inquiry was sent to ALD Support.");
       },
     };
@@ -307,15 +336,21 @@ export default function ContactForm() {
                     id="photo"
                     name="photo"
                     type="file"
-                    accept="image/png, image/jpeg, image/webp"
+                    accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
                     hidden
                     onChange={handlePhotoChange}
+                    aria-describedby="contact-photo-help contact-photo-error"
                   />
                 </label>
-                <span className="contact-upload-hint">
-                  Accepted formats: JPG, PNG, WEBP
+                <span id="contact-photo-help" className="contact-upload-hint">
+                  {IMAGE_UPLOAD_HELP_TEXT}
                   {selectedPhoto ? ` · ${selectedPhoto.name}` : ""}
                 </span>
+                {photoError ? (
+                  <p id="contact-photo-error" className="contact-upload-hint" role="alert">
+                    {photoError}
+                  </p>
+                ) : null}
               </div>
             </div>
 

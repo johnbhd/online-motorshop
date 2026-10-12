@@ -145,6 +145,30 @@ class ConversationsApiTest extends TestCase
         ]);
     }
 
+    public function test_oversized_contact_attachment_is_rejected_before_cloudinary(): void
+    {
+        $metadata = json_encode([
+            'full_name' => 'Guest Contact',
+            'contact_number' => '09170000009',
+            'email' => 'guest-contact@example.com',
+            'inquiry_type' => 'Product Availability',
+            'message' => 'The selected attachment is too large.',
+        ], JSON_THROW_ON_ERROR);
+
+        $this->withHeader('Accept', 'application/json')
+            ->post('/api/conversations', [
+            'body' => 'Contact inquiry',
+            'message_type' => 'contact_inquiry',
+            'metadata' => $metadata,
+            'attachment' => UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['attachment'])
+            ->assertJsonPath('errors.attachment.0', 'Inquiry attachment must be 5 MB or smaller.');
+
+        $this->assertEmpty(app(CloudinaryService::class)->uploads);
+    }
+
     public function test_contact_inquiry_rejects_an_unowned_order_reference(): void
     {
         $metadata = json_encode([

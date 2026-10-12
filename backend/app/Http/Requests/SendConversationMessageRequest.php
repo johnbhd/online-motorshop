@@ -30,9 +30,19 @@ class SendConversationMessageRequest extends FormRequest
                 'sometimes',
                 'nullable',
                 'file',
+                'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:5120',
             ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'attachment.image' => 'Inquiry attachment must be a valid image.',
+            'attachment.mimes' => 'Inquiry attachment must be a JPG, JPEG, PNG, or WEBP image.',
+            'attachment.max' => 'Inquiry attachment must be 5 MB or smaller.',
         ];
     }
 }

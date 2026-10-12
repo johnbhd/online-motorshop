@@ -12,6 +12,8 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+COPY php.ini /usr/local/etc/php/conf.d/ald-uploads.ini
+
 COPY . .
 
 RUN composer install \
@@ -22,4 +24,4 @@ RUN composer install \
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "php artisan migrate --force && if [ \"$RUN_DEMO_SEEDER\" = \"true\" ]; then php artisan db:seed --class=DemoDatasetSeeder --force; fi && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
+CMD ["sh", "-c", "php artisan storage:link --force || true && php artisan migrate --force && if [ \"$RUN_DEMO_SEEDER\" = \"true\" ]; then php artisan db:seed --class=DemoDatasetSeeder --force; fi && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]

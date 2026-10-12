@@ -11,6 +11,8 @@ class MediaAsset extends Model
 
     public const PURPOSE_PAYMENT_PROOF = 'payment_proof';
 
+    public const PURPOSE_PAYMENT_QR = 'payment_qr';
+
     public const PURPOSE_CONTACT_INQUIRY_ATTACHMENT = 'contact_inquiry_attachment';
 
     public const PURPOSE_MESSAGE_ATTACHMENT = 'message_attachment';
@@ -18,6 +20,7 @@ class MediaAsset extends Model
     public const PURPOSE_VALUES = [
         self::PURPOSE_PRODUCT_IMAGE,
         self::PURPOSE_PAYMENT_PROOF,
+        self::PURPOSE_PAYMENT_QR,
         self::PURPOSE_CONTACT_INQUIRY_ATTACHMENT,
         self::PURPOSE_MESSAGE_ATTACHMENT,
     ];

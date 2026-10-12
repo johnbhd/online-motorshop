@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\MediaAsset;
 use App\Models\Message;
 use App\Models\Payment;
+use App\Models\PaymentSetting;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -204,6 +205,7 @@ class MediaAssetService
                 purpose: match ($linkedType) {
                     'product' => MediaAsset::PURPOSE_PRODUCT_IMAGE,
                     'payment' => MediaAsset::PURPOSE_PAYMENT_PROOF,
+                    'payment_setting' => MediaAsset::PURPOSE_PAYMENT_QR,
                     'message' => MediaAsset::PURPOSE_MESSAGE_ATTACHMENT,
                     default => 'legacy_asset',
                 },
@@ -294,6 +296,7 @@ class MediaAssetService
         return match ($asset->linked_type) {
             'product' => Product::query()->whereKey($asset->linked_id)->exists(),
             'payment' => Payment::query()->whereKey($asset->linked_id)->exists(),
+            'payment_setting' => PaymentSetting::query()->whereKey($asset->linked_id)->exists(),
             'message' => Message::query()->whereKey($asset->linked_id)->exists(),
             default => false,
         };
@@ -414,6 +417,7 @@ class MediaAssetService
         return match ($asset->linked_type) {
             'product' => $this->productLink($asset->linked_id),
             'payment' => $this->paymentLink($asset->linked_id),
+            'payment_setting' => $this->paymentSettingLink($asset->linked_id),
             'message' => $this->messageLink($asset->linked_id),
             default => [
                 'type' => $asset->linked_type,
@@ -470,11 +474,27 @@ class MediaAssetService
         ];
     }
 
+    /** @return array<string, mixed> */
+    private function paymentSettingLink(int $id): array
+    {
+        $exists = PaymentSetting::query()->whereKey($id)->exists();
+
+        return [
+            'type' => 'payment_setting',
+            'id' => $id,
+            'exists' => $exists,
+            'title' => 'Customer payment QR',
+            'reference' => $exists ? 'Payment settings #'.$id : null,
+            'destination' => '/admin/settings',
+        ];
+    }
+
     private function purposeLabel(string $purpose): string
     {
         return match ($purpose) {
             MediaAsset::PURPOSE_PRODUCT_IMAGE => 'Product Image',
             MediaAsset::PURPOSE_PAYMENT_PROOF => 'Payment Proof',
+            MediaAsset::PURPOSE_PAYMENT_QR => 'Payment QR',
             MediaAsset::PURPOSE_CONTACT_INQUIRY_ATTACHMENT => 'Contact Inquiry',
             MediaAsset::PURPOSE_MESSAGE_ATTACHMENT => 'Message Attachment',
             default => ucwords(str_replace('_', ' ', $purpose)),

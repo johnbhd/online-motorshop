@@ -1,3 +1,5 @@
+import { getImageUploadTransportError } from "@/lib/imageValidation";
+
 export type OrderApiBranch = {
   id: number;
   name: string;
@@ -304,6 +306,12 @@ export function getOrderApiErrorMessage(
 
     if (error.status === 403) {
       return "You are not authorized to view these orders.";
+    }
+
+    const transportError = getImageUploadTransportError(error.status);
+
+    if (transportError) {
+      return transportError;
     }
 
     if (error.status === 422 && isApiErrorPayload(error.payload)) {

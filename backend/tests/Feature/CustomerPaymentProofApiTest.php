@@ -166,6 +166,23 @@ class CustomerPaymentProofApiTest extends TestCase
             ->assertJsonValidationErrors('proof');
     }
 
+    public function test_oversized_payment_proof_is_rejected_before_cloudinary(): void
+    {
+        [$user, $customer] = $this->createCustomer('oversized-payment@example.com');
+        $order = $this->createOrder($customer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT);
+
+        $this->postProof(
+            $user->createToken('oversized-payment-test')->plainTextToken,
+            $order->order_reference,
+            UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+        )
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('proof')
+            ->assertJsonPath('errors.proof.0', 'Payment proof must be 5 MB or smaller.');
+
+        $this->assertEmpty(app(CloudinaryService::class)->uploads);
+    }
+
     public function test_cancelled_order_cannot_accept_payment_proof(): void
     {
         [$user, $customer] = $this->createCustomer('cancelled-payment@example.com');

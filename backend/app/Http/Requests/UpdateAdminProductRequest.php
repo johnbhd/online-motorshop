@@ -71,4 +71,13 @@ class UpdateAdminProductRequest extends FormRequest
             'status' => ['sometimes', 'required', 'string', 'max:100'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'image.image' => 'Product image must be a valid image.',
+            'image.mimes' => 'Product image must be a JPG, JPEG, PNG, or WEBP image.',
+            'image.max' => 'Product image must be 5 MB or smaller.',
+        ];
+    }
 }

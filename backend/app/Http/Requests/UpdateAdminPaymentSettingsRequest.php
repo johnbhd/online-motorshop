@@ -35,4 +35,13 @@ class UpdateAdminPaymentSettingsRequest extends FormRequest
             'remove_qr_image' => ['sometimes', 'boolean'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'qr_image.image' => 'Payment QR image must be a valid image.',
+            'qr_image.mimes' => 'Payment QR image must be a JPG, JPEG, PNG, or WEBP image.',
+            'qr_image.max' => 'Payment QR image must be 5 MB or smaller.',
+        ];
+    }
 }

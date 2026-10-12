@@ -1,4 +1,5 @@
 import type { AdminPaymentSettingsResponse } from "./adminSettingsTypes";
+import { getImageUploadTransportError } from "./imageValidation";
 
 type ApiErrorPayload = {
   message?: unknown;
@@ -38,6 +39,12 @@ export function getAdminSettingsErrorMessage(error: unknown): string {
 
     if (error.status === 403) {
       return "You are not authorized to manage payment settings.";
+    }
+
+    const transportError = getImageUploadTransportError(error.status);
+
+    if (transportError) {
+      return transportError;
     }
 
     if (error.status >= 500) {
