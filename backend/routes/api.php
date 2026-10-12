@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Api\AssistantController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
@@ -126,6 +127,28 @@ Route::prefix('customer')
 
 // Auth
 Route::prefix('auth')->group(function () {
+    Route::get('/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->middleware('throttle:10,1')
+        ->name('auth.google.redirect');
+    Route::get('/google/callback', [GoogleAuthController::class, 'callback'])
+        ->middleware('throttle:20,1')
+        ->name('auth.google.callback');
+    Route::get('/google/setup/{token}', [GoogleAuthController::class, 'setup'])
+        ->middleware('throttle:20,1')
+        ->name('auth.google.setup');
+    Route::post('/google/complete', [GoogleAuthController::class, 'complete'])
+        ->middleware('throttle:10,1')
+        ->name('auth.google.complete');
+    Route::get('/google/link/{token}', [GoogleAuthController::class, 'linkProfile'])
+        ->middleware('throttle:20,1')
+        ->name('auth.google.link.profile');
+    Route::post('/google/link', [GoogleAuthController::class, 'link'])
+        ->middleware('throttle:5,1')
+        ->name('auth.google.link');
+    Route::post('/google/exchange', [GoogleAuthController::class, 'exchange'])
+        ->middleware('throttle:10,1')
+        ->name('auth.google.exchange');
+
     Route::post('/login', [LoginController::class, 'store'])
         ->name('auth.login');
     Route::post('/register', [RegisterController::class, 'store'])
