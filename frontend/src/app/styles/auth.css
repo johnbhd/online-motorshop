@@ -152,6 +152,11 @@
   border-color: var(--ald-orange-dark);
   background: var(--ald-orange-dark);
 }
+.auth-primary-button:disabled,
+.auth-secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
 .auth-secondary-button {
   margin-top: 0.75rem;
   border: 1px solid #cbd5e1;
@@ -162,8 +167,64 @@
   border-color: var(--ald-orange);
   background: #fff7ed;
 }
+.auth-secondary-button:disabled:hover {
+  border-color: #cbd5e1;
+  background: #fff;
+}
 .auth-secondary-button {
   text-decoration: none;
+}
+
+.auth-google-button svg {
+  color: #4285f4;
+}
+
+.auth-google-state {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.auth-google-loading {
+  margin: 1rem 0;
+  color: var(--ald-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.auth-google-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem 1rem;
+  background: #e5e7eb;
+}
+
+.auth-input-readonly {
+  background: #f8fafc !important;
+  color: #475569 !important;
+}
+
+.auth-field-note,
+.auth-field-error {
+  display: block;
+  margin: 0.35rem 0.25rem 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.auth-field-note {
+  color: #166534;
+}
+
+.auth-field-error {
+  color: #b91c1c;
+}
+
+.auth-field input[aria-invalid="true"] {
+  border-color: #dc2626;
 }
 
 .auth-feedback {

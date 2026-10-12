@@ -12,12 +12,12 @@ import {
   faPhone,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
   getAuthErrorMessage,
   getRedirectPathForRole,
   register,
 } from "@/lib/auth/authApi";
+import { GoogleAuthButton } from "./google/GoogleAuthButton";
 import { useAuth } from "./AuthProvider";
 
 export function RegisterForm() {
@@ -176,9 +176,7 @@ export function RegisterForm() {
           {isSubmitting ? "Creating Account…" : "Create Account"}
         </button>
       </form>
-      <button type="button" className="auth-secondary-button">
-        <FontAwesomeIcon icon={faGoogle} />&nbsp; Continue with Google
-      </button>
+      <GoogleAuthButton />
       <p className="auth-register-line">
         Already have an account?{" "}
         <Link href="/auth/login" className="auth-register-link">

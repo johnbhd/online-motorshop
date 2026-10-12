@@ -11,12 +11,12 @@ import {
   faLock,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
   getAuthErrorMessage,
   getRedirectPathForRole,
   login,
 } from "@/lib/auth/authApi";
+import { GoogleAuthButton } from "./google/GoogleAuthButton";
 import { useToast } from "@/components/ui/toast/ToastProvider";
 import { useAuth } from "./AuthProvider";
 
@@ -155,9 +155,7 @@ export function LoginForm() {
           {isSubmitting ? "Signing In…" : "Sign In"}
         </button>
       </form>
-      <button type="button" className="auth-secondary-button">
-        <FontAwesomeIcon icon={faGoogle} />&nbsp; Continue with Google
-      </button>
+      <GoogleAuthButton />
       <div className="auth-divider"><hr /><span>OR</span><hr /></div>
       <Link href="/" className="auth-secondary-button">
         <FontAwesomeIcon icon={faUser} />&nbsp; Continue as a Guest
