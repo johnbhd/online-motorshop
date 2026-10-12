@@ -16,6 +16,7 @@ const filters: Array<{ value: NotificationCategory; label: string }> = [
   { value: "orders", label: "Orders" },
   { value: "payments", label: "Payments" },
   { value: "support", label: "Support" },
+  { value: "account", label: "Account" },
 ];
 
 export default function NotificationsPage() {
@@ -48,6 +49,8 @@ export default function NotificationsPage() {
       router.push(`/account/orders/${encodeURIComponent(orderReference)}`);
     } else if (referenceType === "conversation") {
       window.dispatchEvent(new CustomEvent(OPEN_STAFF_CHAT_EVENT));
+    } else if (referenceType === "profile") {
+      router.push("/account/profile");
     }
   };
 
@@ -85,7 +88,7 @@ export default function NotificationsPage() {
           </p>
           <p className="customer-orders-eyebrow">Customer Account</p>
           <h1 id="customer-notifications-title">Notifications</h1>
-          <p>Stay updated on your orders, payments, and support messages.</p>
+          <p>Stay updated on your account, orders, payments, and support messages.</p>
         </div>
       </section>
 

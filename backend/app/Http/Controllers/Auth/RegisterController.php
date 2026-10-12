@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CustomerNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,10 @@ use Illuminate\Validation\Rule;
 
 class RegisterController extends Controller
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+    ) {}
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -48,6 +53,8 @@ class RegisterController extends Controller
                 'user' => $user->load('customer'),
             ];
         });
+
+        $this->customerNotificationService->customerSignedIn($result['user']);
 
         return response()->json([
             'message' => 'Registration successful',

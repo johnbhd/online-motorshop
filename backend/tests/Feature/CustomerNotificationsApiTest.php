@@ -57,6 +57,30 @@ class CustomerNotificationsApiTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_customer_login_creates_welcome_and_profile_reminder_once(): void
+    {
+        $customer = $this->customer('first-login');
+
+        $this->postJson('/api/auth/login', [
+            'email' => $customer->email,
+            'password' => 'password',
+        ])->assertOk();
+
+        $notifications = $customer->fresh()->notifications()->get();
+
+        $this->assertCount(2, $notifications);
+        $this->assertTrue($notifications->contains(fn ($notification): bool => $notification->data['event_key'] === 'account:welcome'));
+        $this->assertTrue($notifications->contains(fn ($notification): bool => $notification->data['notification_type'] === 'profile_incomplete'));
+        $this->assertTrue($notifications->every(fn ($notification): bool => $notification->data['category'] === 'account'));
+
+        $this->postJson('/api/auth/login', [
+            'email' => $customer->email,
+            'password' => 'password',
+        ])->assertOk();
+
+        $this->assertCount(2, $customer->fresh()->notifications);
+    }
+
     public function test_mark_all_read_persists_and_category_filter_is_server_side(): void
     {
         $customer = $this->customer('notifications-filter');

@@ -3,7 +3,8 @@ export type NotificationCategory =
   | "unread"
   | "orders"
   | "payments"
-  | "support";
+  | "support"
+  | "account";
 
 export type CustomerNotification = {
   id: string;
@@ -15,7 +16,7 @@ export type CustomerNotification = {
   read_at: string | null;
   created_at: string | null;
   reference: {
-    type: "order" | "conversation" | null;
+    type: "order" | "conversation" | "profile" | null;
     order_id: number | null;
     order_reference: string | null;
     conversation_id: number | null;

@@ -15,7 +15,7 @@ class CustomerNotificationIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category' => ['sometimes', 'string', Rule::in(['all', 'unread', 'orders', 'payments', 'support'])],
+            'category' => ['sometimes', 'string', Rule::in(['all', 'unread', 'account', 'orders', 'payments', 'support'])],
             'page' => ['sometimes', 'integer', 'min:1'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ];

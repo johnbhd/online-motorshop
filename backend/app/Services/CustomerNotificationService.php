@@ -12,6 +12,44 @@ use App\Notifications\CustomerNotification;
 
 class CustomerNotificationService
 {
+    public function customerSignedIn(User $user): void
+    {
+        if ($user->role !== 'customer') {
+            return;
+        }
+
+        $user->loadMissing('customer');
+
+        $this->send($user, [
+            'notification_type' => 'account_welcome',
+            'category' => 'account',
+            'title' => 'Welcome to ALD Motorshop',
+            'message' => "Welcome to ALD Motorshop, {$user->name}. You can now browse products, submit order requests, and track your orders.",
+            'reference' => ['type' => 'profile'],
+            'event_key' => 'account:welcome',
+        ]);
+
+        $missingFields = $this->missingProfileFields($user);
+
+        if ($missingFields === []) {
+            return;
+        }
+
+        $labels = array_map(
+            fn (string $field): string => $this->profileFieldLabel($field),
+            $missingFields,
+        );
+
+        $this->send($user, [
+            'notification_type' => 'profile_incomplete',
+            'category' => 'account',
+            'title' => 'Complete Your Profile',
+            'message' => 'Please fill in your '.$this->joinList($labels).' in your profile. This helps make checkout and delivery details faster.',
+            'reference' => ['type' => 'profile'],
+            'event_key' => 'account:profile-incomplete:'.sha1(implode('|', $missingFields)),
+        ]);
+    }
+
     public function orderStatusChanged(
         OrderRequest $order,
         string $status,
@@ -202,5 +240,62 @@ class CustomerNotificationService
         if (! $duplicate) {
             $user->notify(new CustomerNotification($data));
         }
+    }
+
+    private function missingProfileFields(User $user): array
+    {
+        $customer = $user->customer;
+        $missing = [];
+
+        if (blank($user->name)) {
+            $missing[] = 'name';
+        }
+
+        if (blank($user->email)) {
+            $missing[] = 'email';
+        }
+
+        if (blank($customer?->contact_number)) {
+            $missing[] = 'contact_number';
+        }
+
+        if (blank($customer?->address)) {
+            $missing[] = 'address';
+        }
+
+        if (blank($customer?->city) && blank($customer?->city_municipality_code)) {
+            $missing[] = 'city';
+        }
+
+        if (blank($customer?->barangay) && blank($customer?->barangay_code)) {
+            $missing[] = 'barangay';
+        }
+
+        return $missing;
+    }
+
+    private function profileFieldLabel(string $field): string
+    {
+        return match ($field) {
+            'contact_number' => 'contact number',
+            'city' => 'city or municipality',
+            'barangay' => 'barangay',
+            default => $field,
+        };
+    }
+
+    private function joinList(array $items): string
+    {
+        $count = count($items);
+
+        if ($count <= 1) {
+            return $items[0] ?? 'your details';
+        }
+
+        if ($count === 2) {
+            return $items[0].' and '.$items[1];
+        }
+
+        return implode(', ', array_slice($items, 0, -1)).' and '.$items[$count - 1];
     }
 }

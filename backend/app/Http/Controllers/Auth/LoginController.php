@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\CustomerNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+    ) {}
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -36,6 +41,7 @@ class LoginController extends Controller
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
+        $this->customerNotificationService->customerSignedIn($user);
 
         return response()->json([
             'message' => 'Login successful',
