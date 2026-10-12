@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\PaymentSetting;
+use App\Models\MediaAsset;
 use App\Models\User;
+use App\Services\CloudinaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Tests\Fakes\FakeCloudinaryService;
 use Tests\TestCase;
 
 class AdminPaymentSettingsApiTest extends TestCase
@@ -19,6 +22,7 @@ class AdminPaymentSettingsApiTest extends TestCase
         $app = parent::createApplication();
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app->instance(CloudinaryService::class, new FakeCloudinaryService);
 
         return $app;
     }
@@ -52,12 +56,12 @@ class AdminPaymentSettingsApiTest extends TestCase
             ->assertJsonMissingPath('payment_instructions.qr_image_path');
     }
 
-    public function test_admin_can_upload_replace_and_remove_payment_qr_using_public_storage(): void
+    public function test_admin_can_upload_replace_and_remove_payment_qr_using_cloudinary(): void
     {
-        Storage::fake('public');
         $admin = $this->createUser('admin');
 
         $this->requestAs($admin)
+            ->withHeader('Accept', 'application/json')
             ->post('/api/admin/settings', [
                 '_method' => 'PATCH',
                 'gcash_account_name' => 'ALD Motorshop',
@@ -68,9 +72,20 @@ class AdminPaymentSettingsApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('settings.is_configured', true);
 
-        $originalPath = PaymentSetting::query()->firstOrFail()->qr_image_path;
-        $this->assertNotNull($originalPath);
-        Storage::disk('public')->assertExists($originalPath);
+        $setting = PaymentSetting::query()->firstOrFail();
+        $originalPublicId = $setting->qr_image_public_id;
+        $this->assertSame(
+            'ald-motorshop/payment-settings/fake-1',
+            $originalPublicId,
+        );
+        $this->assertNull($setting->qr_image_path);
+        $this->assertDatabaseHas('media_assets', [
+            'purpose' => MediaAsset::PURPOSE_PAYMENT_QR,
+            'linked_type' => 'payment_setting',
+            'linked_id' => 1,
+            'cloudinary_public_id' => $originalPublicId,
+            'status' => MediaAsset::STATUS_ACTIVE,
+        ]);
 
         $this->requestAs($admin)
             ->post('/api/admin/settings', [
@@ -82,17 +97,74 @@ class AdminPaymentSettingsApiTest extends TestCase
             ])
             ->assertOk();
 
-        $replacementPath = PaymentSetting::query()->firstOrFail()->qr_image_path;
-        $this->assertNotSame($originalPath, $replacementPath);
-        Storage::disk('public')->assertMissing($originalPath);
-        Storage::disk('public')->assertExists($replacementPath);
+        $replacementPublicId = PaymentSetting::query()->firstOrFail()->qr_image_public_id;
+        $this->assertSame(
+            'ald-motorshop/payment-settings/fake-2',
+            $replacementPublicId,
+        );
+        $this->assertDatabaseHas('media_assets', [
+            'cloudinary_public_id' => $originalPublicId,
+            'status' => MediaAsset::STATUS_DELETED,
+        ]);
 
         $this->requestAs($admin)
             ->patchJson('/api/admin/settings', ['remove_qr_image' => true])
             ->assertOk()
             ->assertJsonPath('settings.qr_image_url', null);
 
-        Storage::disk('public')->assertMissing($replacementPath);
+        $this->assertDatabaseHas('media_assets', [
+            'cloudinary_public_id' => $replacementPublicId,
+            'status' => MediaAsset::STATUS_DELETED,
+        ]);
+    }
+
+    public function test_legacy_local_payment_qr_still_has_a_public_url(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('payment-settings/legacy.png', 'legacy');
+        PaymentSetting::create([
+            'qr_image_path' => 'payment-settings/legacy.png',
+        ]);
+
+        $this->getJson('/api/payment-instructions')
+            ->assertOk()
+            ->assertJsonPath(
+                'payment_instructions.qr_image_url',
+                Storage::disk('public')->url('payment-settings/legacy.png'),
+            );
+    }
+
+    public function test_oversized_payment_qr_is_rejected_before_storage(): void
+    {
+        $admin = $this->createUser('admin');
+
+        $this->requestAs($admin)
+            ->withHeader('Accept', 'application/json')
+            ->post('/api/admin/settings', [
+                '_method' => 'PATCH',
+                'qr_image' => UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['qr_image'])
+            ->assertJsonPath('errors.qr_image.0', 'Payment QR image must be 5 MB or smaller.');
+
+        $this->assertDatabaseCount('payment_settings', 0);
+        $this->assertDatabaseCount('media_assets', 0);
+    }
+
+    public function test_cloudinary_failure_returns_a_safe_payment_qr_error(): void
+    {
+        $admin = $this->createUser('admin');
+        $cloudinary = app(CloudinaryService::class);
+        $cloudinary->failUploads = true;
+
+        $this->requestAs($admin)
+            ->post('/api/admin/settings', [
+                '_method' => 'PATCH',
+                'qr_image' => $this->fakeQrImage('qr.png'),
+            ])
+            ->assertStatus(503)
+            ->assertJsonPath('message', 'Image storage is temporarily unavailable. Please try again.');
     }
 
     public function test_invalid_settings_and_non_admin_access_are_rejected(): void

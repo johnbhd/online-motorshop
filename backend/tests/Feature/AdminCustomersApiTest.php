@@ -206,6 +206,70 @@ class AdminCustomersApiTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => $registeredUser->id]);
     }
 
+    public function test_admin_can_suspend_and_restore_only_a_registered_customer_without_changing_history(): void
+    {
+        $admin = $this->createUser('admin');
+        [$customerUser, $customer] = $this->createRegistered(
+            'Lifecycle Customer',
+            'lifecycle@example.com',
+        );
+        $branch = $this->createBranch('Lifecycle Branch');
+        $order = $this->createOrder($customer, $branch, 'confirmed', 310);
+        $customerUser->createToken('existing-customer-session');
+
+        $this->requestAs($admin)
+            ->patchJson('/api/admin/customers/'.$customer->id, ['status' => 'inactive'])
+            ->assertOk()
+            ->assertJsonPath('customer.account_status', 'inactive');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $customerUser->id,
+            'status' => 'inactive',
+        ]);
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'tokenable_id' => $customerUser->id,
+        ]);
+        $this->assertDatabaseHas('order_requests', [
+            'id' => $order->id,
+            'order_status' => 'confirmed',
+        ]);
+
+        $this->postJson('/api/auth/login', [
+            'email' => $customerUser->email,
+            'password' => 'password',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email']);
+
+        $this->requestAs($admin)
+            ->patchJson('/api/admin/customers/'.$customer->id, ['status' => 'active'])
+            ->assertOk()
+            ->assertJsonPath('customer.account_status', 'active');
+
+        $this->postJson('/api/auth/login', [
+            'email' => $customerUser->email,
+            'password' => 'password',
+        ])->assertOk();
+
+        $staff = $this->createUser('staff', 'active', 'Mislinked Staff');
+        $mislinkedCustomer = Customer::create([
+            'user_id' => $staff->id,
+            'full_name' => $staff->name,
+            'contact_number' => '09170000009',
+            'email' => $staff->email,
+        ]);
+
+        $this->requestAs($admin)
+            ->patchJson('/api/admin/customers/'.$mislinkedCustomer->id, ['status' => 'inactive'])
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('users', [
+            'id' => $staff->id,
+            'status' => 'active',
+            'role' => 'staff',
+        ]);
+    }
+
     private function requestAs(User $user)
     {
         return $this->withToken($user->createToken('admin-customers-test')->plainTextToken);

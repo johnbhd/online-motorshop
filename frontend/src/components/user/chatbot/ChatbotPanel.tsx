@@ -5,9 +5,16 @@ import type { RefObject } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ChatbotComposer from "./ChatbotComposer";
+import ContactInquiryPreview from "./ContactInquiryPreview";
 import ChatbotMessageList from "./ChatbotMessageList";
 import ChatbotQuickActions from "./ChatbotQuickActions";
-import type { ChatMessage, ChatQuickAction } from "./chatbotTypes";
+import ProductInquiryPreview from "./ProductInquiryPreview";
+import type {
+  ChatMessage,
+  ChatQuickAction,
+  ContactInquiryDraft,
+  ProductInquiryDraft,
+} from "./chatbotTypes";
 
 export type ChatbotMode = "assistant" | "staff";
 
@@ -22,11 +29,22 @@ export type ChatbotPanelProps = {
   onBackToHelp: () => void;
   onQuickAction: (action: ChatQuickAction) => void;
   onRequestStaff: () => void;
+  onReply?: (message: ChatMessage) => void;
+  replyingTo?: ChatMessage | null;
+  onCancelReply?: () => void;
   onToggleQuickActions: () => void;
-  onSend: (message: string) => void;
+  onSend: (message: string) => boolean | Promise<boolean>;
   isAssistantThinking?: boolean;
+  assistantError?: string | null;
+  assistantCooldownSeconds?: number;
   staffError?: string | null;
   staffLoading?: boolean;
+  contactInquiry?: ContactInquiryDraft | null;
+  productInquiry?: ProductInquiryDraft | null;
+  inquirySending?: boolean;
+  onCancelInquiry: () => void;
+  onConfirmInquiry: () => void;
+  onCancelProductInquiry: () => void;
 };
 
 export default function ChatbotPanel({
@@ -40,11 +58,22 @@ export default function ChatbotPanel({
   onBackToHelp,
   onQuickAction,
   onRequestStaff,
+  onReply,
+  replyingTo = null,
+  onCancelReply,
   onToggleQuickActions,
   onSend,
   isAssistantThinking = false,
+  assistantError,
+  assistantCooldownSeconds = 0,
   staffError,
   staffLoading = false,
+  contactInquiry,
+  productInquiry,
+  inquirySending = false,
+  onCancelInquiry,
+  onConfirmInquiry,
+  onCancelProductInquiry,
 }: ChatbotPanelProps) {
   const isStaffMode = mode === "staff";
   const contentClassName = [
@@ -74,7 +103,7 @@ export default function ChatbotPanel({
           />
           <div>
             <h2 id="ald-chatbot-title">
-              {isStaffMode ? "ALD Support" : "ALD Assistant"}
+              {isStaffMode ? "ALD Support" : "ALD AI Assistant"}
             </h2>
             <p>
               <span className="ald-chatbot__status-dot" aria-hidden="true" />
@@ -105,6 +134,7 @@ export default function ChatbotPanel({
         <ChatbotMessageList
           ref={messageListRef}
           messages={messages}
+          onReply={isStaffMode ? undefined : onReply}
           isTyping={isAssistantThinking && !isStaffMode}
           ariaLabel={
             isStaffMode
@@ -123,19 +153,52 @@ export default function ChatbotPanel({
             {staffError}
           </p>
         )}
+        {!isStaffMode && assistantError && (
+          <p className="ald-chatbot__assistant-error" role="alert">
+            {assistantError}
+            {assistantCooldownSeconds > 0 && (
+              <span> Try again in {assistantCooldownSeconds}s.</span>
+            )}
+          </p>
+        )}
 
         {!isStaffMode && showQuickActions && (
-          <ChatbotQuickActions actions={quickActions} onSelect={onQuickAction} />
+          <ChatbotQuickActions
+            actions={quickActions}
+            disabled={isAssistantThinking || assistantCooldownSeconds > 0}
+            onSelect={onQuickAction}
+          />
         )}
       </div>
+
+      {isStaffMode && contactInquiry && (
+        <ContactInquiryPreview
+          inquiry={contactInquiry}
+          isSending={inquirySending}
+          onCancel={onCancelInquiry}
+          onConfirm={onConfirmInquiry}
+        />
+      )}
+
+      {isStaffMode && productInquiry && !contactInquiry && (
+        <ProductInquiryPreview
+          product={productInquiry}
+          onCancel={onCancelProductInquiry}
+        />
+      )}
 
       <ChatbotComposer
         inputRef={composerInputRef}
         isStaffMode={isStaffMode}
         showQuickActions={showQuickActions}
-        isSending={!isStaffMode && isAssistantThinking}
+        cooldownSeconds={assistantCooldownSeconds}
+        isSending={
+          isStaffMode ? staffLoading || inquirySending : isAssistantThinking
+        }
         onSend={onSend}
         onToggleQuickActions={onToggleQuickActions}
+        replyingTo={isStaffMode ? null : replyingTo}
+        onCancelReply={onCancelReply}
       />
     </section>
   );

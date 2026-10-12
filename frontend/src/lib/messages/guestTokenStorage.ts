@@ -23,3 +23,25 @@ export function setGuestConversationToken(token: string) {
     // Continue without local persistence if browser storage is unavailable.
   }
 }
+
+export function getOrCreateGuestConversationToken(): string {
+  const existingToken = getGuestConversationToken();
+
+  if (existingToken) {
+    return existingToken;
+  }
+
+  let token = "";
+
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    token = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  } else {
+    token = `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`.padEnd(64, "0").slice(0, 64);
+  }
+
+  setGuestConversationToken(token);
+
+  return token;
+}

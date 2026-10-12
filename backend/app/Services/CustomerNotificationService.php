@@ -12,9 +12,13 @@ use App\Notifications\CustomerNotification;
 
 class CustomerNotificationService
 {
-    public function orderStatusChanged(OrderRequest $order, string $status): void
-    {
+    public function orderStatusChanged(
+        OrderRequest $order,
+        string $status,
+        ?int $conversationId = null,
+    ): void {
         $copy = match ($status) {
+            'under_review' => ['type' => 'order_under_review', 'title' => 'Order Request Under Review', 'message' => "Your order request {$order->order_reference} is now under review by ALD Motorshop."],
             'confirmed' => ['type' => 'order_confirmed', 'title' => 'Order Request Confirmed', 'message' => "Your order request {$order->order_reference} has been confirmed by ALD Motorshop."],
             'rejected' => ['type' => 'order_rejected', 'title' => 'Order Request Rejected', 'message' => "Your order request {$order->order_reference} was not approved by ALD Motorshop."],
             'cancelled' => ['type' => 'order_cancelled', 'title' => 'Order Request Cancelled', 'message' => "Your order request {$order->order_reference} has been cancelled."],
@@ -22,7 +26,15 @@ class CustomerNotificationService
         };
 
         if ($copy !== null) {
-            $this->notifyOrder($order, $copy['type'], $copy['title'], $copy['message'], $status);
+            $this->notifyOrder(
+                $order,
+                $copy['type'],
+                $copy['title'],
+                $copy['message'],
+                $status,
+                null,
+                $conversationId,
+            );
         }
     }
 
@@ -50,8 +62,11 @@ class CustomerNotificationService
         );
     }
 
-    public function pickupStatusChanged(PickupRequest $pickupRequest, string $status): void
-    {
+    public function pickupStatusChanged(
+        PickupRequest $pickupRequest,
+        string $status,
+        ?int $conversationId = null,
+    ): void {
         $copy = match ($status) {
             'preparing' => ['type' => 'order_preparing', 'title' => 'Order Preparing', 'message' => 'Your order :reference is now being prepared.'],
             'ready_for_pickup' => ['type' => 'ready_for_pickup', 'title' => 'Ready for Pickup', 'message' => 'Your order :reference is ready for pickup at :branch.'],
@@ -71,11 +86,22 @@ class CustomerNotificationService
             $copy['message'],
         );
 
-        $this->notifyOrder($order, $copy['type'], $copy['title'], $message, $status, "pickup:{$pickupRequest->id}");
+        $this->notifyOrder(
+            $order,
+            $copy['type'],
+            $copy['title'],
+            $message,
+            $status,
+            "pickup:{$pickupRequest->id}",
+            $conversationId,
+        );
     }
 
-    public function deliveryStatusChanged(DeliveryRequest $deliveryRequest, string $status): void
-    {
+    public function deliveryStatusChanged(
+        DeliveryRequest $deliveryRequest,
+        string $status,
+        ?int $conversationId = null,
+    ): void {
         $copy = match ($status) {
             'booked' => ['type' => 'delivery_booked', 'title' => 'Delivery Booking Confirmed', 'message' => 'Delivery for order :reference has been booked.'],
             'picked_up', 'in_transit' => ['type' => 'delivery_in_transit', 'title' => 'Delivery In Transit', 'message' => 'Your order :reference is on the way.'],
@@ -98,6 +124,7 @@ class CustomerNotificationService
             str_replace(':reference', $order->order_reference, $copy['message']),
             $status,
             "delivery:{$deliveryRequest->id}",
+            $conversationId,
         );
     }
 
@@ -120,8 +147,15 @@ class CustomerNotificationService
         ]);
     }
 
-    private function notifyOrder(OrderRequest $order, string $type, string $title, string $message, string $status, ?string $scope = null): void
-    {
+    private function notifyOrder(
+        OrderRequest $order,
+        string $type,
+        string $title,
+        string $message,
+        string $status,
+        ?string $scope = null,
+        ?int $conversationId = null,
+    ): void {
         $order->loadMissing('customer.user');
         $user = $order->customer?->user;
 
@@ -129,12 +163,22 @@ class CustomerNotificationService
             return;
         }
 
+        $reference = [
+            'type' => 'order',
+            'order_id' => $order->id,
+            'order_reference' => $order->order_reference,
+        ];
+
+        if ($conversationId !== null) {
+            $reference['conversation_id'] = $conversationId;
+        }
+
         $this->send($user, [
             'notification_type' => $type,
             'category' => str_starts_with($type, 'payment_') ? 'payments' : 'orders',
             'title' => $title,
             'message' => $message,
-            'reference' => ['type' => 'order', 'order_id' => $order->id, 'order_reference' => $order->order_reference],
+            'reference' => $reference,
             'event_key' => $scope === null ? "order:{$order->id}:{$status}" : "{$scope}:{$status}",
         ]);
     }
@@ -142,10 +186,18 @@ class CustomerNotificationService
     private function send(User $user, array $data): void
     {
         $eventKey = (string) $data['event_key'];
-        $duplicate = $user->notifications()
-            ->where('type', CustomerNotification::class)
-            ->where('data', 'like', '%"event_key":"'.addslashes($eventKey).'"%')
-            ->exists();
+        $query = $user->notifications()
+            ->where('type', CustomerNotification::class);
+
+        if ($query->getModel()->getConnection()->getDriverName() === 'pgsql') {
+            $duplicate = $query
+                ->whereRaw("data::jsonb->>'event_key' = ?", [$eventKey])
+                ->exists();
+        } else {
+            $duplicate = $query
+                ->where('data->event_key', $eventKey)
+                ->exists();
+        }
 
         if (! $duplicate) {
             $user->notify(new CustomerNotification($data));

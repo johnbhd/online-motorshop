@@ -29,6 +29,7 @@ const labels: Record<string, string> = {
   "/admin/staff-management": "Staff Management",
   "/admin/website-content": "Website Content",
   "/admin/reports": "Reports",
+  "/admin/archive": "Archive",
   "/admin/settings": "Settings",
   "/admin/profile": "My Profile",
 };
@@ -90,12 +91,7 @@ export default function AdminNavbar({
           </div>
         </div>
         <div ref={ref} className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            className="hidden size-9 place-items-center text-lg text-[#0B1930] hover:text-orange-500 sm:grid"
-            aria-label="Search"
-          >
-            <FontAwesomeIcon icon={faMagnifyingGlass} />
-          </button>
+  
           <div className="relative">
             <button
               onClick={() =>

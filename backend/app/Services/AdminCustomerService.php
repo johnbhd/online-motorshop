@@ -11,6 +11,7 @@ class AdminCustomerService
 {
     public function __construct(
         private readonly AdminCustomerPresenter $presenter,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     public function index(array $filters): array
@@ -160,7 +161,11 @@ class AdminCustomerService
 
     private function customerQuery(): Builder
     {
-        return Customer::query();
+        return $this->archiveService->excludeArchived(Customer::query(), 'customer')->where(function (Builder $query): void {
+            $query
+                ->whereNull('user_id')
+                ->orWhereHas('user', fn (Builder $user): Builder => $user->where('role', 'customer'));
+        });
     }
 
     private function applyFilters(Builder $query, array $filters): Builder

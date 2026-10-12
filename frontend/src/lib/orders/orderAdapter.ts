@@ -19,10 +19,15 @@ import { getPaymentMethodLabel } from "./orderRequestTypes";
 export function toCustomerOrderSummary(
   order: OrderApiSummary,
 ): CustomerOrderSummary {
+  const displayStatus = toStatusLabel(order.display_status ?? order.status);
+
   return {
     id: order.id,
     reference: order.reference,
-    status: toStatusLabel(order.status),
+    status: displayStatus,
+    orderStatus: toStatusLabel(order.status),
+    displayStatus,
+    fulfillmentStatus: order.fulfillment_status ?? null,
     paymentStatus: toStatusLabel(order.payment_status),
     payment: toPayment(order.payment),
     fulfillmentMethod: order.fulfillment_method,
@@ -40,6 +45,7 @@ export function toCustomerOrderSummary(
 
 export function toOrderViewModel(order: OrderApiDetails): OrderViewModel {
   const fulfillmentMethod = order.fulfillment_method.toLowerCase();
+  const displayStatus = toStatusLabel(order.display_status ?? order.status);
   const items = order.items.map(toOrderItem);
   const fulfillment: OrderViewFulfillment =
     fulfillmentMethod === "delivery"
@@ -74,7 +80,10 @@ export function toOrderViewModel(order: OrderApiDetails): OrderViewModel {
     totalAmount: order.total_amount,
     finalAmount: null,
     totalQuantity: items.reduce((total, item) => total + item.quantity, 0),
-    status: toStatusLabel(order.status),
+    status: displayStatus,
+    orderStatus: toStatusLabel(order.status),
+    displayStatus,
+    fulfillmentStatus: order.fulfillment_status ?? null,
     paymentStatus: toStatusLabel(order.payment_status),
     payment: toPayment(order.payment),
     createdAt: order.created_at,
@@ -89,6 +98,7 @@ export function toStatusLabel(value: string): string {
     pending: "Pending",
     under_review: "Under Review",
     confirmed: "Confirmed",
+    preparing: "Preparing",
     waiting_for_payment: "Waiting for Payment",
     payment_verification: "Payment Verification",
     waiting_for_verification: "Waiting for Verification",
@@ -96,6 +106,10 @@ export function toStatusLabel(value: string): string {
     ready_for_pickup: "Ready for Pickup",
     booked_for_delivery: "Booked for Delivery",
     picked_up_by_rider: "Picked Up by Rider",
+    booked: "Booked",
+    picked_up: "Picked Up",
+    in_transit: "In Transit",
+    delivered: "Delivered",
     waiting_for_booking: "Waiting for Booking",
     completed: "Completed",
     rejected: "Rejected",
@@ -126,6 +140,8 @@ function toBranch(branch: OrderApiBranch | null): CustomerOrderBranch | null {
     name: branch.name,
     address: branch.address,
     contactNumber: branch.contact_number,
+    latitude: branch.latitude ?? null,
+    longitude: branch.longitude ?? null,
   };
 }
 
@@ -172,12 +188,27 @@ function toDelivery(
   return {
     branchId: delivery.branch_id,
     address: delivery.address,
+    completeAddress: delivery.complete_address ?? delivery.address,
+    cityMunicipality: delivery.city_municipality ?? null,
+    cityMunicipalityCode: delivery.city_municipality_code ?? null,
+    barangay: delivery.barangay ?? null,
+    barangayCode: delivery.barangay_code ?? null,
+    latitude: delivery.latitude ?? null,
+    longitude: delivery.longitude ?? null,
+    routeGeometry: delivery.route_geometry ?? null,
+    routeDistanceMeters: delivery.route_distance_meters ?? null,
+    routeProvider: delivery.route_provider ?? null,
+    routeGeneratedAt: delivery.route_generated_at ?? null,
+    contactPerson: delivery.contact_person ?? null,
+    contactNumber: delivery.contact_number ?? null,
+    notes: delivery.notes ?? null,
     fee: delivery.fee,
     status: toStatusLabel(delivery.status),
     bookingReference: delivery.booking_reference,
     trackingUrl: delivery.tracking_url,
     riderName: delivery.rider_name,
     riderContact: delivery.rider_contact,
+    vehiclePlate: delivery.vehicle_plate ?? null,
     remarks: delivery.remarks,
     deliveredAt: delivery.delivered_at,
   };

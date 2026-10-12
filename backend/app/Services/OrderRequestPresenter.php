@@ -7,6 +7,10 @@ use App\Models\Payment;
 
 class OrderRequestPresenter
 {
+    public function __construct(
+        private readonly CustomerOrderStatusResolver $customerOrderStatusResolver,
+    ) {}
+
     public function confirmation(OrderRequest $order): array
     {
         return $this->payload($order, includeCustomer: true, includePayment: true);
@@ -18,6 +22,8 @@ class OrderRequestPresenter
             'id' => $order->id,
             'reference' => $order->order_reference,
             'status' => $order->order_status,
+            'display_status' => $this->customerOrderStatusResolver->resolve($order),
+            'fulfillment_status' => $this->customerOrderStatusResolver->fulfillmentStatus($order),
             'payment_status' => $this->paymentStatus($order),
             'payment' => $this->paymentPayload($order),
             'fulfillment_method' => $order->fulfillment_type,
@@ -122,6 +128,8 @@ class OrderRequestPresenter
             'id' => $order->id,
             'reference' => $order->order_reference,
             'status' => $order->order_status,
+            'display_status' => $this->customerOrderStatusResolver->resolve($order),
+            'fulfillment_status' => $this->customerOrderStatusResolver->fulfillmentStatus($order),
             'payment_status' => $this->paymentStatus($order),
             'fulfillment_method' => $order->fulfillment_type,
             'branch' => $this->branchPayload($order),
@@ -172,6 +180,8 @@ class OrderRequestPresenter
             'id',
             'name',
             'address',
+            'latitude',
+            'longitude',
             'contact_number',
         ]);
     }
@@ -205,12 +215,27 @@ class OrderRequestPresenter
         return [
             'branch_id' => $delivery->branch_id,
             'address' => $delivery->delivery_address,
+            'complete_address' => $delivery->delivery_complete_address ?? $delivery->delivery_address,
+            'city_municipality' => $delivery->delivery_city_municipality,
+            'city_municipality_code' => $delivery->delivery_city_municipality_code,
+            'barangay' => $delivery->delivery_barangay,
+            'barangay_code' => $delivery->delivery_barangay_code,
+            'latitude' => $delivery->delivery_latitude,
+            'longitude' => $delivery->delivery_longitude,
+            'route_geometry' => $delivery->route_geometry,
+            'route_distance_meters' => $delivery->route_distance_meters,
+            'route_provider' => $delivery->route_provider,
+            'route_generated_at' => $delivery->route_generated_at?->toISOString(),
+            'contact_person' => $delivery->delivery_contact_person,
+            'contact_number' => $delivery->delivery_contact_number,
+            'notes' => $delivery->delivery_notes,
             'fee' => (float) $delivery->delivery_fee,
             'status' => $delivery->delivery_status,
             'booking_reference' => $delivery->booking_reference,
             'tracking_url' => $delivery->tracking_url,
             'rider_name' => $delivery->rider_name,
             'rider_contact' => $delivery->rider_contact,
+            'vehicle_plate' => $delivery->vehicle_plate,
             'remarks' => $delivery->remarks,
             'delivered_at' => $delivery->delivered_at?->toISOString(),
         ];

@@ -1,19 +1,43 @@
 "use client";
 
 import Image from "next/image";
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBoxOpen, faReply } from "@fortawesome/free-solid-svg-icons";
 import type { ChatMessage } from "./chatbotTypes";
+import ChatbotReplyPreview from "./ChatbotReplyPreview";
+import ProductInquiryCard from "./ProductInquiryCard";
+import type {
+  OrderUpdateMetadata,
+  ProductInquiryMetadata,
+} from "@/lib/messages/conversationTypes";
+import { getDisplayConversationMessageBody } from "@/lib/messages/conversationUtils";
 
 export type ChatbotMessageListProps = {
   messages: ChatMessage[];
   ariaLabel?: string;
   isTyping?: boolean;
+  onReply?: (message: ChatMessage) => void;
 };
+
+function renderMessageText(text: string) {
+  return text.split(/(\*\*[\s\S]+?\*\*)/g).map((part, index) => {
+    const boldText = part.match(/^\*\*([\s\S]+)\*\*$/);
+
+    return boldText ? (
+      <strong key={`${part}-${index}`}>{boldText[1]}</strong>
+    ) : (
+      part
+    );
+  });
+}
 
 const ChatbotMessageList = forwardRef<
   HTMLDivElement,
   ChatbotMessageListProps
->(function ChatbotMessageList({ messages, ariaLabel, isTyping }, ref) {
+ >(function ChatbotMessageList({ messages, ariaLabel, isTyping, onReply }, ref) {
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
+
   return (
     <div
       ref={ref}
@@ -33,18 +57,80 @@ const ChatbotMessageList = forwardRef<
         const isBotMessage = message.sender === "bot";
         const isStaffMessage = message.sender === "staff";
         const isAdminMessage = message.sender === "admin";
-        const isSupportMessage = isStaffMessage || isAdminMessage;
-        const displaySender = isAdminMessage ? "staff" : message.sender;
+        const isOrderUpdate =
+          message.messageType === "order_update" || message.sender === "system";
+        const isSupportMessage =
+          (isStaffMessage || isAdminMessage) && !isOrderUpdate;
+        const displaySender = isOrderUpdate
+          ? "order-update"
+          : isAdminMessage
+            ? "staff"
+            : message.sender;
+        const orderUpdateMetadata =
+          isOrderUpdate && message.metadata
+            ? (message.metadata as OrderUpdateMetadata)
+            : null;
+        const productMetadata =
+          message.messageType === "product_inquiry" && message.metadata
+            ? (message.metadata as ProductInquiryMetadata)
+            : null;
+        const canReply = Boolean(
+          onReply && (isBotMessage || message.sender === "customer"),
+        );
+        const isReplyActionVisible =
+          canReply && activeMessageId === message.id;
+        const messageRowClassName = [
+          "ald-chatbot__message-row",
+          "ald-chatbot__message-row--" + displaySender,
+          canReply ? "ald-chatbot__message-row--replyable" : "",
+          isReplyActionVisible
+            ? "ald-chatbot__message-row--actions-visible"
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const replyAction = canReply ? (
+          <button
+            className="ald-chatbot__reply-action"
+            type="button"
+            aria-label={`Reply to ${isBotMessage ? "ALD Assistant" : "your message"}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setActiveMessageId(null);
+              onReply?.(message);
+            }}
+          >
+            <FontAwesomeIcon icon={faReply} aria-hidden="true" />
+            <span className="sr-only">Reply</span>
+          </button>
+        ) : null;
 
         return (
           <div
-            className={
-              "ald-chatbot__message-row ald-chatbot__message-row--" +
-              displaySender
-            }
+            className={messageRowClassName}
             key={message.id}
+            onClick={(event) => {
+              if (!canReply) {
+                return;
+              }
+
+              if (
+                event.target instanceof HTMLElement &&
+                event.target.closest("a, button")
+              ) {
+                return;
+              }
+
+              setActiveMessageId((currentMessageId) =>
+                currentMessageId === message.id ? null : message.id,
+              );
+            }}
           >
-            {(isBotMessage || isSupportMessage) && (
+            {isOrderUpdate ? (
+              <span className="ald-chatbot__order-update-icon" aria-hidden="true">
+                <FontAwesomeIcon icon={faBoxOpen} />
+              </span>
+            ) : (isBotMessage || isSupportMessage) ? (
               <Image
                 className="ald-chatbot__message-avatar"
                 src="/branding/logo.png"
@@ -52,19 +138,75 @@ const ChatbotMessageList = forwardRef<
                 width={28}
                 height={28}
               />
-            )}
-            <p
+            ) : null}
+            {message.sender === "customer" && replyAction}
+            <div
               className={
                 "ald-chatbot__message ald-chatbot__message--" + displaySender
               }
             >
-              {isSupportMessage && (
+              {isOrderUpdate ? (
+                <span className="ald-chatbot__message-label">
+                  Order Update
+                  {orderUpdateMetadata?.order_reference
+                    ? ` · ${orderUpdateMetadata.order_reference}`
+                    : ""}
+                </span>
+              ) : isSupportMessage ? (
                 <span className="ald-chatbot__message-label">
                   {isAdminMessage ? "ALD Administrator" : "ALD Staff"}
                 </span>
+              ) : null}
+              {isOrderUpdate && (
+                <span className="ald-chatbot__message-type">Automated update</span>
               )}
-              {message.text}
-            </p>
+              {message.messageType === "contact_inquiry" && (
+                <span className="ald-chatbot__message-type">Contact inquiry</span>
+              )}
+              {message.messageType === "product_inquiry" && (
+                <>
+                  <span className="ald-chatbot__message-type">Product inquiry</span>
+                  {productMetadata && (
+                    <ProductInquiryCard
+                      product={{
+                        name: productMetadata.product_name,
+                        partNumber: productMetadata.part_number,
+                        price: productMetadata.product_price,
+                        image: productMetadata.product_image_url,
+                        brand: productMetadata.brand,
+                      }}
+                    />
+                  )}
+                </>
+              )}
+              {message.replyTo && (
+                <ChatbotReplyPreview reference={message.replyTo} />
+              )}
+              <span className="ald-chatbot__message-text">
+                {renderMessageText(
+                  getDisplayConversationMessageBody(
+                    message.messageType ?? "text",
+                    message.text,
+                  ),
+                )}
+              </span>
+              {message.attachmentUrl && (
+                <a
+                  className="ald-chatbot__message-attachment"
+                  href={message.attachmentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={message.attachmentUrl}
+                    alt="Contact inquiry attachment"
+                  />
+                  <span>View attachment</span>
+                </a>
+              )}
+            </div>
+            {isBotMessage && replyAction}
           </div>
         );
       })}

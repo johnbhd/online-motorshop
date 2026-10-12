@@ -33,13 +33,21 @@ export default function NotificationDropdown({
   const openNotification = async (notification: CustomerNotification) => {
     await onMarkRead(notification.id);
     onClose();
-    if (
+    if (notification.reference.conversation_id) {
+      window.dispatchEvent(
+        new CustomEvent(OPEN_STAFF_CHAT_EVENT, {
+          detail: {
+            conversationId: notification.reference.conversation_id,
+          },
+        }),
+      );
+    } else if (
       notification.reference.type === "order" &&
       notification.reference.order_reference
     ) {
       router.push(`/account/orders/${encodeURIComponent(notification.reference.order_reference)}`);
     } else if (notification.reference.type === "conversation") {
-      window.dispatchEvent(new Event(OPEN_STAFF_CHAT_EVENT));
+      window.dispatchEvent(new CustomEvent(OPEN_STAFF_CHAT_EVENT));
     }
   };
 

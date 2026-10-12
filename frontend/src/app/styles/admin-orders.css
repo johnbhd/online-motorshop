@@ -1,3 +1,11 @@
+.staff-portal button:not(:disabled) {
+  cursor: pointer;
+}
+
+.staff-portal button:disabled {
+  cursor: not-allowed;
+}
+
 .admin-order-modal-overlay {
   position: fixed;
   inset: 0;

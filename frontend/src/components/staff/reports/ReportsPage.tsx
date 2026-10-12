@@ -1,3 +1,4 @@
+/*
 import StaffPageHeader from "@/components/staff/StaffPageHeader";
 import { DoughnutChart, LineChart } from "@/components/staff/reports/Charts";
 const stats = [
@@ -83,3 +84,6 @@ export default function Reports() {
     </div>
   );
 }
+*/
+
+export { default } from "./RealReportsPage";

@@ -1,7 +1,11 @@
+import { getImageUploadTransportError } from "@/lib/imageValidation";
+
 export type OrderApiBranch = {
   id: number;
   name: string;
   address: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   contact_number: string | null;
 };
 
@@ -9,6 +13,8 @@ export type OrderApiSummary = {
   id: number;
   reference: string;
   status: string;
+  display_status?: string;
+  fulfillment_status?: string | null;
   payment_status: string;
   payment: OrderApiPayment | null;
   fulfillment_method: string;
@@ -61,6 +67,26 @@ export type OrderApiDelivery = {
   rider_contact: string | null;
   remarks: string | null;
   delivered_at: string | null;
+  complete_address?: string | null;
+  city_municipality?: string | null;
+  city_municipality_code?: string | null;
+  barangay?: string | null;
+  barangay_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  contact_person?: string | null;
+  contact_number?: string | null;
+  notes?: string | null;
+  vehicle_plate?: string | null;
+  route_geometry?: OrderApiRouteGeometry | null;
+  route_distance_meters?: number | null;
+  route_provider?: string | null;
+  route_generated_at?: string | null;
+};
+
+export type OrderApiRouteGeometry = {
+  type: "LineString";
+  coordinates: [number, number][];
 };
 
 export type OrderApiPayment = {
@@ -280,6 +306,12 @@ export function getOrderApiErrorMessage(
 
     if (error.status === 403) {
       return "You are not authorized to view these orders.";
+    }
+
+    const transportError = getImageUploadTransportError(error.status);
+
+    if (transportError) {
+      return transportError;
     }
 
     if (error.status === 422 && isApiErrorPayload(error.payload)) {

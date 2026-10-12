@@ -1,16 +1,144 @@
 "use client";
 
-import type { FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudArrowUp } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "@/components/auth/AuthProvider";
+import {
+  OPEN_STAFF_CHAT_EVENT,
+  type OpenStaffChatDetail,
+} from "../chatbot/chatbotEvents";
+import type { ContactInquiryDraft } from "../chatbot/chatbotTypes";
+import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  IMAGE_UPLOAD_HELP_TEXT,
+  validateImageFile,
+} from "@/lib/imageValidation";
 import {
   contactArrowIcon,
   contactNeeds,
 } from "./contactData";
 
 export default function ContactForm() {
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState("");
+  const [status, setStatus] = useState(
+    "Your inquiry will be sent directly to ALD Support for review.",
+  );
+  const { user } = useAuth();
+  const fullNameInputRef = useRef<HTMLInputElement>(null);
+  const contactNumberInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    if (fullNameInputRef.current?.value.trim() === "") {
+      fullNameInputRef.current.value = user.customer?.full_name || user.name;
+    }
+
+    if (contactNumberInputRef.current?.value.trim() === "") {
+      contactNumberInputRef.current.value =
+        user.customer?.contact_number || "";
+    }
+
+    if (emailInputRef.current?.value.trim() === "") {
+      emailInputRef.current.value = user.customer?.email || user.email;
+    }
+  }, [user]);
+
+  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0] ?? null;
+    input.value = "";
+    setPhotoError("");
+
+    if (!file) {
+      setSelectedPhoto(null);
+      return;
+    }
+
+    const validationError = validateImageFile(file, "inquiry photo");
+
+    if (validationError) {
+      setSelectedPhoto(null);
+      setPhotoError(validationError);
+      return;
+    }
+
+    setSelectedPhoto(file);
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (photoError) {
+      return;
+    }
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const value = (name: string) => String(formData.get(name) ?? "").trim();
+    const inquiryTypeLabels: Record<string, string> = {
+      availability: "Product Availability",
+      price: "Product Price",
+      compatibility: "Motorcycle Part Compatibility",
+      order: "Existing Order",
+      payment: "Payment Concern",
+      delivery: "Lalamove Delivery",
+      promo: "Store Promo",
+      service: "Maintenance or Repair Service",
+    };
+    const branchLabels: Record<string, string> = {
+      manila: "Manila Branch",
+      makati: "Makati Branch",
+      imus: "Imus Branch",
+    };
+    const brandLabels: Record<string, string> = {
+      honda: "Honda",
+      yamaha: "Yamaha",
+      suzuki: "Suzuki",
+    };
+    const inquiryType = value("inquiryType");
+    const brand = value("brand");
+    const photo = formData.get("photo");
+    const inquiry: ContactInquiryDraft = {
+      fullName: value("fullName"),
+      contactNumber: value("contactNumber"),
+      email: value("email"),
+      inquiryType: inquiryTypeLabels[inquiryType] ?? inquiryType,
+      preferredBranch: branchLabels[value("branch")] ?? value("branch"),
+      motorcycle: [brandLabels[brand] ?? brand, value("modelYear")]
+        .filter(Boolean)
+        .join(" "),
+      productNeeded: value("partNeeded"),
+      orderReference: value("orderRef"),
+      message: value("message"),
+      photo:
+        photo instanceof File && photo.size > 0 ? photo : selectedPhoto,
+    };
+    const detail: OpenStaffChatDetail = {
+      inquiry,
+      onSent: () => {
+        form.reset();
+        setSelectedPhoto(null);
+        setPhotoError("");
+        setStatus("Your inquiry was sent to ALD Support.");
+      },
+    };
+
+    setStatus("Review your inquiry in ALD Support, then confirm to send it.");
+    window.dispatchEvent(
+      new CustomEvent<OpenStaffChatDetail>(OPEN_STAFF_CHAT_EVENT, { detail }),
+    );
   };
 
   return (
@@ -70,6 +198,7 @@ export default function ContactForm() {
                   autoComplete="name"
                   placeholder="Enter your complete name"
                   required
+                  ref={fullNameInputRef}
                 />
               </div>
 
@@ -82,6 +211,7 @@ export default function ContactForm() {
                   autoComplete="tel"
                   placeholder="Enter your mobile number"
                   required
+                  ref={contactNumberInputRef}
                 />
               </div>
 
@@ -95,6 +225,7 @@ export default function ContactForm() {
                   type="email"
                   autoComplete="email"
                   placeholder="Enter your email address"
+                  ref={emailInputRef}
                 />
               </div>
 
@@ -205,13 +336,21 @@ export default function ContactForm() {
                     id="photo"
                     name="photo"
                     type="file"
-                    accept="image/png, image/jpeg, image/webp"
+                    accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
                     hidden
+                    onChange={handlePhotoChange}
+                    aria-describedby="contact-photo-help contact-photo-error"
                   />
                 </label>
-                <span className="contact-upload-hint">
-                  Accepted formats: JPG, PNG, WEBP
+                <span id="contact-photo-help" className="contact-upload-hint">
+                  {IMAGE_UPLOAD_HELP_TEXT}
+                  {selectedPhoto ? ` · ${selectedPhoto.name}` : ""}
                 </span>
+                {photoError ? (
+                  <p id="contact-photo-error" className="contact-upload-hint" role="alert">
+                    {photoError}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -224,9 +363,8 @@ export default function ContactForm() {
               </span>
             </label>
 
-            <p className="contact-form-status" id="contact-form-status">
-              Online message submission is not connected yet. Please call +63
-              995 869 1174 for a response.
+            <p className="contact-form-status" id="contact-form-status" role="status" aria-live="polite">
+              {status}
             </p>
 
             <button className="contact-submit-button" type="submit">

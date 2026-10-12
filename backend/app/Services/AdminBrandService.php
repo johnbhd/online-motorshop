@@ -11,11 +11,12 @@ class AdminBrandService
 {
     public function __construct(
         private readonly AdminBrandPresenter $presenter,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     public function index(array $filters): array
     {
-        $query = Brand::query()->withCount('products');
+        $query = $this->archiveService->excludeArchived(Brand::query(), 'brand')->withCount('products');
         $this->applyFilters($query, $filters);
 
         $brands = $query
@@ -35,8 +36,18 @@ class AdminBrandService
         return Brand::query()->create($attributes)->loadCount('products');
     }
 
+    public function find(Brand $brand): Brand
+    {
+        return $this->archiveService
+            ->excludeArchived(Brand::query(), 'brand')
+            ->withCount('products')
+            ->findOrFail($brand->getKey());
+    }
+
     public function update(Brand $brand, array $attributes): Brand
     {
+        $brand = $this->find($brand);
+
         return DB::transaction(function () use ($brand, $attributes): Brand {
             $brand->fill($attributes);
             $brand->save();
@@ -56,6 +67,8 @@ class AdminBrandService
 
     public function delete(Brand $brand): bool
     {
+        $brand = $this->find($brand);
+
         if ($brand->products()->exists()) {
             return false;
         }

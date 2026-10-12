@@ -9,6 +9,7 @@ class AdminBranchService
 {
     public function __construct(
         private readonly AdminBranchPresenter $presenter,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     public function index(array $filters): array
@@ -20,7 +21,7 @@ class AdminBranchService
             ->orderBy('name')
             ->paginate((int) ($filters['per_page'] ?? 10));
 
-        $summaryQuery = Branch::query();
+        $summaryQuery = $this->archiveService->excludeArchived(Branch::query(), 'branch');
 
         return [
             'summary' => [
@@ -77,14 +78,21 @@ class AdminBranchService
 
     private function branchQuery(): Builder
     {
-        return Branch::query()->withCount($this->countRelations());
+        return $this->archiveService
+            ->excludeArchived(Branch::query(), 'branch')
+            ->withCount($this->countRelations());
     }
 
     private function countRelations(): array
     {
         return [
-            'users as staff_count' => fn ($query) => $query->where('role', 'staff'),
-            'users as active_staff_count' => fn ($query) => $query->where('role', 'staff')->where('status', 'active'),
+            'users as staff_count' => fn ($query) => $this->archiveService
+                ->excludeArchived($query, 'staff')
+                ->where('role', 'staff'),
+            'users as active_staff_count' => fn ($query) => $this->archiveService
+                ->excludeArchived($query, 'staff')
+                ->where('role', 'staff')
+                ->where('status', 'active'),
             'orderRequests as order_count',
             'pickupRequests as pickup_count',
             'deliveryRequests as delivery_count',
@@ -123,8 +131,16 @@ class AdminBranchService
 
     private function activeStaffCount(): int
     {
-        return (int) Branch::query()
+        $query = $this->archiveService->excludeArchived(Branch::query(), 'branch');
+
+        return (int) $query
             ->join('users', 'users.branch_id', '=', 'branches.id')
+            ->whereNotExists(function ($archiveQuery): void {
+                $archiveQuery
+                    ->from('admin_archives')
+                    ->where('archive_type', 'staff')
+                    ->whereColumn('admin_archives.archive_id', 'users.id');
+            })
             ->where('users.role', 'staff')
             ->where('users.status', 'active')
             ->count('users.id');

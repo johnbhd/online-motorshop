@@ -45,7 +45,12 @@ export type OrderDeliverySnapshot = {
   address: string;
   barangay: string;
   city: string;
+  cityMunicipalityCode: string;
+  barangayCode: string;
+  latitude: number | null;
+  longitude: number | null;
   contactPerson: string;
+  contactNumber: string;
   notes: string;
 };
 
@@ -93,6 +98,8 @@ export type CustomerOrderBranch = {
   id: number;
   name: string;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   contactNumber: string | null;
 };
 
@@ -100,6 +107,9 @@ export type CustomerOrderSummary = {
   id: number;
   reference: string;
   status: string;
+  orderStatus: string;
+  displayStatus: string;
+  fulfillmentStatus: string | null;
   paymentStatus: string;
   payment: OrderViewPayment | null;
   fulfillmentMethod: string;
@@ -147,14 +157,32 @@ export type OrderViewPickup = {
 export type OrderViewDelivery = {
   branchId: number | null;
   address: string | null;
+  completeAddress: string | null;
+  cityMunicipality: string | null;
+  cityMunicipalityCode: string | null;
+  barangay: string | null;
+  barangayCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  contactPerson: string | null;
+  contactNumber: string | null;
+  notes: string | null;
   fee: number | null;
   status: string;
   bookingReference: string | null;
   trackingUrl: string | null;
   riderName: string | null;
   riderContact: string | null;
+  vehiclePlate: string | null;
   remarks: string | null;
   deliveredAt: string | null;
+  routeGeometry: {
+    type: "LineString";
+    coordinates: [number, number][];
+  } | null;
+  routeDistanceMeters: number | null;
+  routeProvider: string | null;
+  routeGeneratedAt: string | null;
 };
 
 export type OrderViewFulfillment =
@@ -193,6 +221,9 @@ export type OrderViewModel = {
   finalAmount: number | null;
   totalQuantity: number;
   status: string;
+  orderStatus: string;
+  displayStatus: string;
+  fulfillmentStatus: string | null;
   paymentStatus: string;
   payment: OrderViewPayment | null;
   createdAt: string;

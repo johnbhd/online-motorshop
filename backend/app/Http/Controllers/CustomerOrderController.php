@@ -8,11 +8,14 @@ use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Services\CloudinaryService;
 use App\Services\CloudinaryServiceException;
+use App\Services\DeliveryRouteService;
+use App\Services\MediaAssetService;
 use App\Services\OrderRequestPresenter;
 use App\Services\StaffAdminNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -26,8 +29,10 @@ class CustomerOrderController extends Controller
 
     public function __construct(
         private readonly OrderRequestPresenter $orderRequestPresenter,
+        private readonly DeliveryRouteService $deliveryRouteService,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
         private readonly CloudinaryService $cloudinaryService,
+        private readonly MediaAssetService $mediaAssetService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -48,6 +53,8 @@ class CustomerOrderController extends Controller
             ->where('customer_id', $customer->id)
             ->with([
                 'branch',
+                'pickupRequest:id,order_id,branch_id,pickup_status,pickup_date,pickup_time,remarks,completed_at',
+                'deliveryRequest:id,order_id,branch_id,delivery_status,delivery_address,delivery_complete_address,delivery_city_municipality,delivery_city_municipality_code,delivery_barangay,delivery_barangay_code,delivery_latitude,delivery_longitude,route_geometry,route_distance_meters,route_provider,route_generated_at,delivery_contact_person,delivery_contact_number,delivery_notes,delivery_fee,booking_reference,tracking_url,rider_name,rider_contact,vehicle_plate,remarks,delivered_at',
                 'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
             ])
             ->withCount('items')
@@ -98,6 +105,8 @@ class CustomerOrderController extends Controller
                 'message' => 'Order not found.',
             ], 404);
         }
+
+        $this->ensureDeliveryRoute($order);
 
         return response()->json([
             'order' => $this->orderRequestPresenter->detail($order),
@@ -205,13 +214,23 @@ class CustomerOrderController extends Controller
         }
 
         try {
-            $payment->update([
-                'proof_image_url' => $asset['secure_url'],
-                'proof_image_public_id' => $asset['public_id'],
-                'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
-                'verified_by' => null,
-                'verified_at' => null,
-            ]);
+            DB::transaction(function () use ($payment, $asset, $request): void {
+                $payment->update([
+                    'proof_image_url' => $asset['secure_url'],
+                    'proof_image_public_id' => $asset['public_id'],
+                    'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
+                    'verified_by' => null,
+                    'verified_at' => null,
+                ]);
+
+                $this->mediaAssetService->registerUploadedAsset(
+                    $asset,
+                    'payment_proof',
+                    'payment',
+                    (int) $payment->id,
+                    $request->user(),
+                );
+            });
         } catch (\Throwable $exception) {
             $this->cloudinaryService->deleteImage($asset['public_id']);
             throw $exception;
@@ -227,6 +246,8 @@ class CustomerOrderController extends Controller
             'pickupRequest.branch',
             'deliveryRequest.branch',
         ]);
+
+        $this->ensureDeliveryRoute($order);
 
         return response()->json([
             'message' => 'Payment proof submitted for staff verification.',
@@ -244,15 +265,26 @@ class CustomerOrderController extends Controller
     private function applyScope(Builder $query, ?string $scope): void
     {
         if ($scope === 'history') {
-            $query->whereRaw(
-                'LOWER(order_status) IN (?, ?, ?)',
-                self::HISTORY_STATUSES,
-            );
+            $query->where(function (Builder $history): void {
+                $history
+                    ->whereRaw('LOWER(order_status) IN (?, ?, ?)', self::HISTORY_STATUSES)
+                    ->orWhereHas('pickupRequest', fn (Builder $pickup): Builder => $pickup->where('pickup_status', 'completed'))
+                    ->orWhereHas('deliveryRequest', fn (Builder $delivery): Builder => $delivery->where('delivery_status', 'delivered'));
+            });
         } elseif ($scope === 'active') {
-            $query->whereRaw(
-                'LOWER(order_status) NOT IN (?, ?, ?)',
-                self::HISTORY_STATUSES,
-            );
+            $query
+                ->whereRaw('LOWER(order_status) NOT IN (?, ?, ?)', self::HISTORY_STATUSES)
+                ->whereDoesntHave('pickupRequest', fn (Builder $pickup): Builder => $pickup->where('pickup_status', 'completed'))
+                ->whereDoesntHave('deliveryRequest', fn (Builder $delivery): Builder => $delivery->where('delivery_status', 'delivered'));
         }
+    }
+
+    private function ensureDeliveryRoute(OrderRequest $order): void
+    {
+        if ($order->fulfillment_type !== 'delivery' || ! $order->deliveryRequest) {
+            return;
+        }
+
+        $this->deliveryRouteService->generateFor($order->deliveryRequest);
     }
 }

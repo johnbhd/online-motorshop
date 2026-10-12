@@ -28,7 +28,7 @@ class AdminCategoryController extends Controller
 
     public function show(Category $category): JsonResponse
     {
-        $category->loadCount('products');
+        $category = $this->service->find($category);
 
         return response()->json([
             'category' => $this->presenter->category($category),
@@ -37,6 +37,7 @@ class AdminCategoryController extends Controller
 
     public function products(AdminProductIndexRequest $request, Category $category): JsonResponse
     {
+        $category = $this->service->find($category);
         $filters = $request->validated();
         $filters['category'] = $category->name;
 

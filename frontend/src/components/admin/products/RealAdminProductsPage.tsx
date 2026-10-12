@@ -17,7 +17,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import ArchiveRecordButton from "@/components/admin/archive/ArchiveRecordButton";
 import { getAuthToken } from "@/lib/auth/authStorage";
+import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  IMAGE_UPLOAD_HELP_TEXT,
+  validateImageFile,
+} from "@/lib/imageValidation";
 import {
   createAdminProduct,
   deleteAdminProduct,
@@ -153,6 +159,12 @@ function clientFormErrors(values: ProductFormValues, isEditing: boolean): Produc
 
   if (!isEditing && !values.image && !values.img_url.trim()) {
     errors.image = ["Choose a product image to upload."];
+  }
+
+  const imageError = validateImageFile(values.image, "product image");
+
+  if (imageError) {
+    errors.image = [imageError];
   }
 
   const price = Number(values.price);
@@ -477,7 +489,7 @@ export default function RealAdminProductsPage() {
         {error ? <ErrorState message={error} onRetry={() => setReloadNonce((nonce) => nonce + 1)} /> : null}
         {!error && isLoading ? <LoadingState /> : null}
         {!error && !isLoading && response?.products.length ? (
-          <ProductResults products={response.products} onEdit={(product) => void openEdit(product)} />
+          <ProductResults products={response.products} onEdit={(product) => void openEdit(product)} onArchived={() => setReloadNonce((nonce) => nonce + 1)} />
         ) : null}
         {!error && !isLoading && response && !response.products.length ? <EmptyState /> : null}
 
@@ -527,19 +539,19 @@ function FilterSelect({ label, value, options, onChange }: { label: string; valu
   return <label className="block text-sm font-medium text-slate-600"><span className="mb-1 block text-xs uppercase tracking-wide text-slate-400">{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"><option value="">All</option>{options.map((option) => <option key={option} value={option}>{formatLabel(option)}</option>)}</select></label>;
 }
 
-function ProductResults({ products, onEdit }: { products: AdminProduct[]; onEdit: (product: AdminProduct) => void }) {
+function ProductResults({ products, onEdit, onArchived }: { products: AdminProduct[]; onEdit: (product: AdminProduct) => void; onArchived: () => void }) {
   return <>
-    <div className="hidden overflow-x-auto md:block"><table className="w-full min-w-[1160px] table-fixed border-collapse text-left"><colgroup><col className="w-[78px]" /><col className="w-[220px]" /><col className="w-[145px]" /><col className="w-[130px]" /><col className="w-[160px]" /><col className="w-[120px]" /><col className="w-[145px]" /><col className="w-[145px]" /><col className="w-[150px]" /></colgroup><thead className="bg-slate-50"><tr>{["Image", "Product", "Part Number", "Brand", "Category", "Price", "Availability", "Status", "Actions"].map((column) => <th key={column} scope="col" className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{column}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{products.map((product) => <ProductRow key={product.part_number} product={product} onEdit={onEdit} />)}</tbody></table></div>
-    <div className="grid gap-3 p-4 md:hidden">{products.map((product) => <ProductCard key={product.part_number} product={product} onEdit={onEdit} />)}</div>
+    <div className="hidden overflow-x-auto md:block"><table className="w-full min-w-[1160px] table-fixed border-collapse text-left"><colgroup><col className="w-[78px]" /><col className="w-[220px]" /><col className="w-[145px]" /><col className="w-[130px]" /><col className="w-[160px]" /><col className="w-[120px]" /><col className="w-[145px]" /><col className="w-[145px]" /><col className="w-[180px]" /></colgroup><thead className="bg-slate-50"><tr>{["Image", "Product", "Part Number", "Brand", "Category", "Price", "Availability", "Status", "Actions"].map((column) => <th key={column} scope="col" className="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{column}</th>)}</tr></thead><tbody className="divide-y divide-slate-100">{products.map((product) => <ProductRow key={product.part_number} product={product} onEdit={onEdit} onArchived={onArchived} />)}</tbody></table></div>
+    <div className="grid gap-3 p-4 md:hidden">{products.map((product) => <ProductCard key={product.part_number} product={product} onEdit={onEdit} onArchived={onArchived} />)}</div>
   </>;
 }
 
-function ProductRow({ product, onEdit }: { product: AdminProduct; onEdit: (product: AdminProduct) => void }) {
-  return <tr className="align-middle transition hover:bg-slate-50/80"><td className="px-4 py-3"><ProductImage product={product} size="small" /></td><td className="px-4 py-3"><p className="font-semibold text-[#0B1930]">{product.name}</p><p className="mt-1 max-w-[190px] truncate text-xs text-slate-500">{product.description || "No description"}</p></td><td className="px-4 py-3 font-mono text-xs text-slate-600">{product.part_number}</td><td className="px-4 py-3 text-sm text-slate-600">{product.brand}</td><td className="px-4 py-3 text-sm text-slate-600">{product.category || "Uncategorized"}</td><td className="px-4 py-3 text-sm font-semibold text-[#0B1930]">{formatCurrency(product.price)}</td><td className="px-4 py-3"><AdminBadge>{formatLabel(product.availability_status)}</AdminBadge></td><td className="px-4 py-3"><AdminBadge>{formatLabel(product.status)}</AdminBadge></td><td className="px-4 py-3"><button type="button" onClick={() => onEdit(product)} className="rounded-lg border border-orange-300 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-50">Manage</button></td></tr>;
+function ProductRow({ product, onEdit, onArchived }: { product: AdminProduct; onEdit: (product: AdminProduct) => void; onArchived: () => void }) {
+  return <tr className="align-middle transition hover:bg-slate-50/80"><td className="px-4 py-3"><ProductImage product={product} size="small" /></td><td className="px-4 py-3"><p className="font-semibold text-[#0B1930]">{product.name}</p><p className="mt-1 max-w-[190px] truncate text-xs text-slate-500">{product.description || "No description"}</p></td><td className="px-4 py-3 font-mono text-xs text-slate-600">{product.part_number}</td><td className="px-4 py-3 text-sm text-slate-600">{product.brand}</td><td className="px-4 py-3 text-sm text-slate-600">{product.category || "Uncategorized"}</td><td className="px-4 py-3 text-sm font-semibold text-[#0B1930]">{formatCurrency(product.price)}</td><td className="px-4 py-3"><AdminBadge>{formatLabel(product.availability_status)}</AdminBadge></td><td className="px-4 py-3"><AdminBadge>{formatLabel(product.status)}</AdminBadge></td><td className="px-4 py-3"><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => onEdit(product)} className="rounded-lg border border-orange-300 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-50">Manage</button><ArchiveRecordButton type="product" id={product.id} label={product.name} onArchived={onArchived} /></div></td></tr>;
 }
 
-function ProductCard({ product, onEdit }: { product: AdminProduct; onEdit: (product: AdminProduct) => void }) {
-  return <article className="rounded-lg border border-slate-200 p-4"><div className="flex items-start gap-3"><ProductImage product={product} size="small" /><div className="min-w-0 flex-1"><h3 className="font-semibold text-[#0B1930]">{product.name}</h3><p className="mt-1 font-mono text-xs text-slate-500">{product.part_number}</p><p className="mt-2 text-sm font-semibold text-[#0B1930]">{formatCurrency(product.price)}</p></div></div><dl className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs uppercase tracking-wide text-slate-400">Brand</dt><dd className="mt-1 text-slate-700">{product.brand}</dd></div><div><dt className="text-xs uppercase tracking-wide text-slate-400">Category</dt><dd className="mt-1 text-slate-700">{product.category || "Uncategorized"}</dd></div></dl><div className="mt-4 flex items-center justify-between"><div className="flex gap-2"><AdminBadge>{formatLabel(product.status)}</AdminBadge><AdminBadge>{formatLabel(product.availability_status)}</AdminBadge></div><button type="button" onClick={() => onEdit(product)} className="rounded-lg border border-orange-300 px-3 py-1.5 text-xs font-semibold text-orange-700">Manage</button></div></article>;
+function ProductCard({ product, onEdit, onArchived }: { product: AdminProduct; onEdit: (product: AdminProduct) => void; onArchived: () => void }) {
+  return <article className="rounded-lg border border-slate-200 p-4"><div className="flex items-start gap-3"><ProductImage product={product} size="small" /><div className="min-w-0 flex-1"><h3 className="font-semibold text-[#0B1930]">{product.name}</h3><p className="mt-1 font-mono text-xs text-slate-500">{product.part_number}</p><p className="mt-2 text-sm font-semibold text-[#0B1930]">{formatCurrency(product.price)}</p></div></div><dl className="mt-4 grid grid-cols-2 gap-3 text-sm"><div><dt className="text-xs uppercase tracking-wide text-slate-400">Brand</dt><dd className="mt-1 text-slate-700">{product.brand}</dd></div><div><dt className="text-xs uppercase tracking-wide text-slate-400">Category</dt><dd className="mt-1 text-slate-700">{product.category || "Uncategorized"}</dd></div></dl><div className="mt-4 flex items-center justify-between"><div className="flex gap-2"><AdminBadge>{formatLabel(product.status)}</AdminBadge><AdminBadge>{formatLabel(product.availability_status)}</AdminBadge></div><div className="flex items-center gap-2"><button type="button" onClick={() => onEdit(product)} className="rounded-lg border border-orange-300 px-3 py-1.5 text-xs font-semibold text-orange-700">Manage</button><ArchiveRecordButton type="product" id={product.id} label={product.name} onArchived={onArchived} /></div></div></article>;
 }
 
 function ProductImage({ product, size }: { product: AdminProduct; size: "small" }) {
@@ -576,6 +588,7 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
   const categoryOptions = productCategory ? [...activeCategories, productCategory] : activeCategories;
   const brandOptions = productBrand ? [...activeBrands, productBrand] : activeBrands;
   const [values, setValues] = useState<ProductFormValues>(() => product ? formFromProduct(product) : emptyForm(activeCategories, activeBrands, initialCategoryId, initialBrandId));
+  const [localImageError, setLocalImageError] = useState<string | null>(null);
   const previewUrl = useMemo(
     () => (values.image ? URL.createObjectURL(values.image) : null),
     [values.image],
@@ -593,9 +606,18 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
 
   const update = (field: Exclude<keyof ProductFormValues, "image">, value: string) => setValues((current) => ({ ...current, [field]: value }));
   const updateImage = (image: File | null) => setValues((current) => ({ ...current, image }));
-  const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); onSubmit(values); };
+  const submit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (localImageError) {
+      return;
+    }
+
+    onSubmit(values);
+  };
   const allErrors = fieldErrors;
   const fieldError = (field: keyof ProductFormValues) => allErrors[field]?.[0];
+  const imageError = localImageError ?? fieldError("image");
 
   return <ModalShell title={isEditing ? "Manage Product" : "Add Product"} description="Persisted catalog fields used by the public product catalog." onClose={onClose} footer={<div className="flex w-full items-center justify-between gap-3"><div>{isEditing && product ? <button type="button" onClick={() => onDelete(product)} disabled={submitLoading || detailLoading} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"><FontAwesomeIcon icon={faTrash} aria-hidden="true" /> Delete product</button> : null}</div><div className="flex items-center gap-3"><button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button><button type="submit" form="admin-product-form" disabled={submitLoading || detailLoading} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><FontAwesomeIcon icon={faCheck} aria-hidden="true" />{submitLoading ? "Saving..." : isEditing ? "Save Changes" : "Create Product"}</button></div></div>}>
     {detailLoading ? <div className="rounded-lg bg-slate-50 px-4 py-5 text-sm text-slate-600" aria-live="polite">Loading the latest product details...</div> : null}
@@ -615,14 +637,28 @@ export function AdminProductFormModal({ isOpen, isEditing, product, categories, 
           </span>
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
             required={!isEditing && !values.img_url}
-            aria-invalid={Boolean(fieldError("image"))}
-            onChange={(event) => updateImage(event.target.files?.[0] ?? null)}
+            aria-invalid={Boolean(imageError)}
+            aria-describedby="admin-product-image-help admin-product-image-error"
+            onChange={(event) => {
+              const input = event.currentTarget;
+              const file = input.files?.[0] ?? null;
+              input.value = "";
+              const validationError = validateImageFile(file, "product image");
+
+              if (validationError) {
+                setLocalImageError(validationError);
+                return;
+              }
+
+              setLocalImageError(null);
+              updateImage(file);
+            }}
             className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-700 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
           />
-          {fieldError("image") ? <span className="mt-1 block text-xs font-medium text-red-600" role="alert">{fieldError("image")}</span> : null}
-          <span className="mt-1 block text-xs text-slate-500">JPG, PNG, or WEBP up to 5 MB. Leave this empty while editing to keep the current image.</span>
+          {imageError ? <span id="admin-product-image-error" className="mt-1 block text-xs font-medium text-red-600" role="alert">{imageError}</span> : null}
+          <span id="admin-product-image-help" className="mt-1 block text-xs text-slate-500">{IMAGE_UPLOAD_HELP_TEXT} Leave this empty while editing to keep the current image.</span>
         </label>
       </div>
       <label className="block"><span className="mb-1 block text-sm font-semibold text-slate-700">Description</span><textarea value={values.description} onChange={(event) => update("description", event.target.value)} rows={3} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" /></label>

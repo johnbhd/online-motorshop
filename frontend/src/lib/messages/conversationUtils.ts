@@ -1,6 +1,7 @@
 import type {
   Conversation,
   ConversationMessage,
+  ConversationMessageType,
   StaffConversationSummary,
 } from "./conversationTypes";
 
@@ -27,6 +28,17 @@ export function getLastConversationMessage(
   return ("messages" in conversation
     ? conversation.messages.at(-1)
     : conversation.last_message) ?? null;
+}
+
+export function getDisplayConversationMessageBody(
+  messageType: ConversationMessageType,
+  body: string,
+): string {
+  if (messageType !== "contact_inquiry") {
+    return body;
+  }
+
+  return body.replace(/^\s*CONTACT INQUIRY\s*(?:\r?\n)+/i, "").trim();
 }
 
 export function formatConversationTime(timestamp: string) {

@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminArchiveController;
 use App\Http\Controllers\Admin\AdminBranchesController;
 use App\Http\Controllers\Admin\AdminBrandController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminCustomersController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminDeliveryRequestsController;
+use App\Http\Controllers\Admin\AdminMediaController;
 use App\Http\Controllers\Admin\AdminMessagesController;
 use App\Http\Controllers\Admin\AdminOrdersController;
 use App\Http\Controllers\Admin\AdminPaymentsController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
 use App\Http\Controllers\Admin\AdminWebsiteContentController;
+use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
@@ -23,6 +26,7 @@ use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\CustomerNotificationController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\CustomerProfileController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrderRequestController;
 use App\Http\Controllers\PaymentInstructionsController;
 use App\Http\Controllers\PortalNotificationController;
@@ -49,6 +53,16 @@ Route::get('/health', function () {
     ]);
 });
 
+// Dedicated customer-facing AI assistant. It is intentionally separate from conversations/messages.
+Route::post('/assistant/chat', [AssistantController::class, 'chat'])
+    ->name('assistant.chat');
+
+Route::get('/locations/cities-municipalities', [LocationController::class, 'cities'])
+    ->name('locations.cities-municipalities');
+Route::get('/locations/cities-municipalities/{code}/barangays', [LocationController::class, 'barangays'])
+    ->where('code', '[A-Za-z0-9_-]+')
+    ->name('locations.barangays');
+
 // Public catalog
 Route::get('/products', [CatalogController::class, 'products'])
     ->name('catalog.products.index');
@@ -74,6 +88,8 @@ Route::post('/conversations', [ConversationController::class, 'store'])
     ->name('conversations.store');
 Route::post('/conversations/{conversation}/messages', [ConversationController::class, 'storeMessage'])
     ->name('conversations.messages.store');
+Route::post('/conversations/{conversation}/read', [ConversationController::class, 'markRead'])
+    ->name('conversations.read');
 
 Route::prefix('customer')
     ->name('customer.')
@@ -167,6 +183,33 @@ Route::prefix('admin')
             ->whereNumber('review')
             ->whereIn('action', ['publish', 'hide', 'restore', 'resolve-flag'])
             ->name('reviews.moderate');
+
+        Route::get('/archive', [AdminArchiveController::class, 'index'])
+            ->name('archive.index');
+
+        Route::post('/archive/{type}/{record}', [AdminArchiveController::class, 'store'])
+            ->name('archive.store');
+
+        Route::post('/archive/{type}/{record}/restore', [AdminArchiveController::class, 'restore'])
+            ->name('archive.restore');
+
+        Route::delete('/archive/{type}/{record}', [AdminArchiveController::class, 'destroy'])
+            ->name('archive.destroy');
+
+        Route::get('/media', [AdminMediaController::class, 'index'])
+            ->name('media.index');
+
+        Route::get('/media/{mediaAsset}', [AdminMediaController::class, 'show'])
+            ->whereNumber('mediaAsset')
+            ->name('media.show');
+
+        Route::delete('/media/{mediaAsset}', [AdminMediaController::class, 'destroy'])
+            ->whereNumber('mediaAsset')
+            ->name('media.destroy');
+
+        Route::post('/media/{mediaAsset}/retry-cleanup', [AdminMediaController::class, 'retryCleanup'])
+            ->whereNumber('mediaAsset')
+            ->name('media.retry-cleanup');
 
         Route::get('/products', [AdminProductController::class, 'index'])
             ->name('products.index');
@@ -310,6 +353,10 @@ Route::prefix('admin')
             ->whereNumber('delivery')
             ->name('deliveries.show');
 
+        Route::patch('/delivery-requests/{delivery}/status', [AdminDeliveryRequestsController::class, 'updateStatus'])
+            ->whereNumber('delivery')
+            ->name('deliveries.status');
+
         Route::get('/customers', [AdminCustomersController::class, 'index'])
             ->name('customers.index');
 
@@ -449,6 +496,8 @@ Route::prefix('staff')
                 ->name('notifications.read-all');
             Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
                 ->name('notifications.read');
+            Route::get('/reports/data', [StaffReportsController::class, 'data'])
+                ->name('reports.data');
             Route::get('/reviews', [ReviewController::class, 'staffIndex'])
                 ->name('reviews.index');
             Route::get('/reviews/{review}', [ReviewController::class, 'staffShow'])
@@ -465,9 +514,6 @@ Route::prefix('staff')
         Route::middleware('role:admin')->group(function () {
             Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
                 ->name('notifications.data');
-
-            Route::get('/reports/data', [StaffReportsController::class, 'data'])
-                ->name('reports.data');
 
         });
     });

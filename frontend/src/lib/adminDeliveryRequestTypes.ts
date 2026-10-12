@@ -30,6 +30,7 @@ export type AdminDeliveryRequest = {
   tracking_url: string | null;
   rider_name: string | null;
   rider_contact: string | null;
+  vehicle_plate: string | null;
   delivery_status: string;
   remarks: string | null;
   delivered_at: string | null;

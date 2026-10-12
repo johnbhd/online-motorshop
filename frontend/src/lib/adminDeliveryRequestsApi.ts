@@ -24,6 +24,16 @@ type Query = {
   signal?: AbortSignal;
 };
 
+export type AdminDeliveryStatusUpdate = {
+  status: string;
+  booking_reference?: string;
+  tracking_url?: string;
+  rider_name?: string;
+  rider_contact?: string;
+  vehicle_plate?: string;
+  remarks?: string;
+};
+
 export function getAdminDeliveryRequests(token: string, query: Query = {}) {
   const params = new URLSearchParams();
 
@@ -57,10 +67,35 @@ export function getAdminDeliveryRequest(
   );
 }
 
+export function updateAdminDeliveryStatus(
+  token: string,
+  id: number,
+  update: AdminDeliveryStatusUpdate,
+) {
+  return request<AdminDeliveryRequestDetailsResponse>(
+    `/api/admin/delivery-requests/${id}`,
+    token,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(update),
+    },
+  );
+}
+
 export function getAdminDeliveryRequestsErrorMessage(error: unknown) {
   if (error instanceof AdminDeliveryRequestsApiError) {
     if (error.status === 401) return "Your Admin session has expired. Please sign in again.";
     if (error.status === 403) return "You are not authorized to oversee delivery requests.";
+    if (error.status === 422 && typeof error.payload === "object" && error.payload !== null) {
+      const errors = (error.payload as { errors?: unknown }).errors;
+
+      if (typeof errors === "object" && errors !== null) {
+        const firstError = Object.values(errors).flat()[0];
+
+        if (typeof firstError === "string") return firstError;
+      }
+    }
     if (error.status >= 500) return "The Admin Delivery Requests service is unavailable. Please try again.";
     return error.message;
   }

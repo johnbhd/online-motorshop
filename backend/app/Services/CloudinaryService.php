@@ -13,7 +13,14 @@ class CloudinaryService
     private ?Cloudinary $client = null;
 
     /**
-     * @return array{secure_url: string, public_id: string}
+     * @return array{
+     *     secure_url: string,
+     *     public_id: string,
+     *     resource_type: string,
+     *     original_filename: string,
+     *     mime_type: string|null,
+     *     bytes: int|null
+     * }
      */
     public function uploadImage(UploadedFile $file, string $folder): array
     {
@@ -36,6 +43,10 @@ class CloudinaryService
             return [
                 'secure_url' => $secureUrl,
                 'public_id' => $publicId,
+                'resource_type' => (string) ($response['resource_type'] ?? 'image'),
+                'original_filename' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType() ?: $file->getMimeType(),
+                'bytes' => $file->getSize() ?: null,
             ];
         } catch (CloudinaryServiceException $exception) {
             throw $exception;

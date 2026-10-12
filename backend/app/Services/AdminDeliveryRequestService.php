@@ -57,11 +57,11 @@ class AdminDeliveryRequestService
             ->find($id);
     }
 
-    public function detail(DeliveryRequest $delivery): array
+    public function detail(DeliveryRequest $delivery, array $allowedStatuses = []): array
     {
         $delivery->loadMissing($this->deliveryRelations());
 
-        return $this->presenter->details($delivery, []);
+        return $this->presenter->details($delivery, $allowedStatuses);
     }
 
     private function deliveryQuery(): Builder
@@ -163,7 +163,7 @@ class AdminDeliveryRequestService
             'order.items:id,order_id,product_id,product_name,unit_price,quantity,subtotal',
             'order.items.product:id,part_number',
             'order.payments:id,order_id,payment_method,amount,payment_reference,payment_status,verified_at,created_at',
-            'branch:id,name,address,contact_number',
+            'branch:id,name,address,latitude,longitude,contact_number',
             'assignedStaff:id,name',
         ];
     }

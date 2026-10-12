@@ -11,6 +11,7 @@ import {
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import ArchiveRecordButton from "@/components/admin/archive/ArchiveRecordButton";
 import BranchModalShell from "@/components/admin/branches/BranchModalShell";
 import {
   createAdminStaff,
@@ -362,6 +363,7 @@ export default function RealAdminStaffManagementPage() {
                           >
                             Manage
                           </button>
+                          <ArchiveRecordButton type="staff" id={staffMember.id} label={staffMember.name} onArchived={loadStaff} />
                           <button
                             type="button"
                             onClick={(event) => {

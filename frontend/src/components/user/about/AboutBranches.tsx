@@ -100,18 +100,7 @@ export default function AboutBranchesNext({
                     <FontAwesomeIcon icon={branchInfoIcons.map} />
                     View on Map
                   </button>
-                  <button
-                    className="btn primary"
-                    type="button"
-                    onClick={() => {
-                      saveSelectedBranchId(getBranchId(branch.name));
-                    }}
-                  >
-                    <FontAwesomeIcon icon={branchInfoIcons.pickup} />
-                    {branch.pickupAvailable === false
-                      ? "Pickup unavailable"
-                      : "Select as Pickup Branch"}
-                  </button>
+                 
                 </div>
               </div>
             </article>

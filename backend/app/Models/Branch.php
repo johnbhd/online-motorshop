@@ -9,6 +9,8 @@ class Branch extends Model
     protected $fillable = [
         'name',
         'address',
+        'latitude',
+        'longitude',
         'contact_number',
         'pickup_available',
         'status',
@@ -18,6 +20,8 @@ class Branch extends Model
     {
         return [
             'pickup_available' => 'boolean',
+            'latitude' => 'float',
+            'longitude' => 'float',
         ];
     }
 

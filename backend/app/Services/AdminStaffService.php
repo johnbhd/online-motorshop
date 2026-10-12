@@ -10,6 +10,7 @@ class AdminStaffService
 {
     public function __construct(
         private readonly AdminStaffPresenter $presenter,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     public function index(array $filters): array
@@ -22,7 +23,7 @@ class AdminStaffService
             ->orderByDesc('id')
             ->paginate((int) ($filters['per_page'] ?? 10));
 
-        $summary = User::query()->where('role', 'staff');
+        $summary = $this->archiveService->excludeArchived(User::query(), 'staff')->where('role', 'staff');
 
         return [
             'summary' => [
@@ -103,7 +104,7 @@ class AdminStaffService
 
     private function staffQuery(): Builder
     {
-        return User::query()
+        return $this->archiveService->excludeArchived(User::query(), 'staff')
             ->where('role', 'staff')
             ->with('branch:id,name')
             ->withCount([

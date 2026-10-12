@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -14,7 +15,10 @@ import type {
   AdminConversationSummary,
   Conversation,
   ConversationMessage,
+  ProductInquiryMetadata,
 } from "@/lib/messages/conversationTypes";
+import ProductInquiryCard from "@/components/user/chatbot/ProductInquiryCard";
+import { getDisplayConversationMessageBody } from "@/lib/messages/conversationUtils";
 
 const PAGE_SIZE = 20;
 
@@ -56,6 +60,10 @@ function senderLabel(
   message: ConversationMessage,
   conversation: Conversation,
 ): string {
+  if (message.sender === "system" || message.message_type === "order_update") {
+    return "Order Update";
+  }
+
   if (message.sender === "admin") {
     return "ALD Administrator";
   }
@@ -458,6 +466,14 @@ export default function AdminMessages() {
                   {activeConversation.messages.length > 0 ? (
                     activeConversation.messages.map((message) => {
                       const isAdminMessage = message.sender === "admin";
+                      const isOrderUpdate =
+                        message.sender === "system" ||
+                        message.message_type === "order_update";
+                      const productMetadata =
+                        message.message_type === "product_inquiry" &&
+                        message.metadata
+                          ? (message.metadata as ProductInquiryMetadata)
+                          : null;
 
                       return (
                         <div
@@ -465,12 +481,60 @@ export default function AdminMessages() {
                           key={message.id}
                         >
                           <div
-                            className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm text-slate-800 sm:max-w-[72%] ${isAdminMessage ? "rounded-br-md border border-orange-200 bg-orange-50" : "rounded-bl-md bg-white shadow-sm ring-1 ring-slate-200"}`}
+                            className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm text-slate-800 sm:max-w-[72%] ${isOrderUpdate ? "rounded-bl-md border border-orange-200 bg-orange-50" : isAdminMessage ? "rounded-br-md border border-orange-200 bg-orange-50" : "rounded-bl-md bg-white shadow-sm ring-1 ring-slate-200"}`}
                           >
                             <p className="mb-1 text-[11px] font-semibold text-slate-500">
                               {senderLabel(message, activeConversation)}
                             </p>
-                            <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                            {isOrderUpdate && (
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                Automated update
+                              </p>
+                            )}
+                            {message.message_type === "contact_inquiry" && (
+                              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                Contact inquiry
+                              </p>
+                            )}
+                            {message.message_type === "product_inquiry" && (
+                              <>
+                                <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-700">
+                                  Product inquiry
+                                </p>
+                                {productMetadata && (
+                                  <ProductInquiryCard
+                                    product={{
+                                      name: productMetadata.product_name,
+                                      partNumber: productMetadata.part_number,
+                                      price: productMetadata.product_price,
+                                      image: productMetadata.product_image_url,
+                                      brand: productMetadata.brand,
+                                    }}
+                                  />
+                                )}
+                              </>
+                            )}
+                            <p className="whitespace-pre-wrap break-words">
+                              {getDisplayConversationMessageBody(
+                                message.message_type,
+                                message.body,
+                              )}
+                            </p>
+                            {message.attachment?.url && (
+                              <a
+                                className="mt-2 inline-flex items-center gap-2 text-xs font-semibold text-orange-700 underline underline-offset-2"
+                                href={message.attachment.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <img
+                                  className="size-12 rounded-md border border-orange-200 object-cover"
+                                  src={message.attachment.url}
+                                  alt="Contact inquiry attachment"
+                                />
+                                View attachment
+                              </a>
+                            )}
                             <p className="mt-1.5 text-right text-[11px] text-slate-500">
                               {formatTime(message.created_at)}
                             </p>

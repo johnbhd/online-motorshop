@@ -2,6 +2,8 @@ export type CheckoutBranch = {
   id: number;
   name: string;
   address: string;
+  latitude: number | null;
+  longitude: number | null;
   contactNumber: string;
   pickupAvailable: boolean;
   status: string;
@@ -47,6 +49,8 @@ function parseBranch(value: unknown): CheckoutBranch | null {
     id: value.id,
     name: value.name,
     address: value.address,
+    latitude: typeof value.latitude === "number" ? value.latitude : null,
+    longitude: typeof value.longitude === "number" ? value.longitude : null,
     contactNumber: value.contact_number,
     pickupAvailable: value.pickup_available,
     status: value.status,

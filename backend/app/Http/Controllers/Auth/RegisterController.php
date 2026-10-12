@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+
 class RegisterController extends Controller
 {
     public function store(Request $request): JsonResponse
@@ -37,14 +38,14 @@ class RegisterController extends Controller
             $user->customer()->create([
                 'full_name' => $validated['name'],
                 'contact_number' => $validated['phone'],
-                'email' => $validated['email']
+                'email' => $validated['email'],
             ]);
 
             $token = $user->createToken('auth-token')->plainTextToken;
 
             return [
                 'token' => $token,
-                'user' => $user->load('customer')
+                'user' => $user->load('customer'),
             ];
         });
 
@@ -64,6 +65,10 @@ class RegisterController extends Controller
                     'contact_number' => $result['user']->customer->contact_number,
                     'email' => $result['user']->customer->email,
                     'address' => $result['user']->customer->address,
+                    'city_municipality_code' => $result['user']->customer->city_municipality_code,
+                    'barangay_code' => $result['user']->customer->barangay_code,
+                    'city' => $result['user']->customer->city,
+                    'barangay' => $result['user']->customer->barangay,
                 ],
             ],
         ], 201);

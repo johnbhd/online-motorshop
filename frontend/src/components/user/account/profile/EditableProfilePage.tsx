@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faClipboardList,
+  faCircleUser,
   faEnvelope,
   faLocationDot,
   faLock,
@@ -25,6 +26,14 @@ import {
   updateCustomerPassword,
   updateCustomerProfile,
 } from "@/lib/customerProfileApi";
+import {
+  getBarangaysForCity,
+  getCitiesMunicipalities,
+  getLocationErrorMessage,
+} from "@/lib/locationApi";
+import type { LocationOption } from "@/lib/locationTypes";
+import ProfileAddressFields, { type ProfileLocationValues } from "./ProfileAddressFields";
+import CustomerLocationPicker from "./CustomerLocationPicker";
 
 type ProfileForm = {
   name: string;
@@ -47,6 +56,23 @@ const EMPTY_PASSWORD: PasswordForm = {
   password_confirmation: "",
 };
 
+const EMPTY_LOCATION: ProfileLocationValues = {
+  cityCode: "",
+  cityName: "",
+  barangayCode: "",
+  barangayName: "",
+};
+
+type ProfileCoordinates = {
+  latitude: number | null;
+  longitude: number | null;
+};
+
+const EMPTY_COORDINATES: ProfileCoordinates = {
+  latitude: null,
+  longitude: null,
+};
+
 function profileFormFromUser(user: AuthUser): ProfileForm {
   return {
     name: user.name,
@@ -56,13 +82,52 @@ function profileFormFromUser(user: AuthUser): ProfileForm {
   };
 }
 
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
+function profileLocationFromUser(user: AuthUser, fallback = EMPTY_LOCATION): ProfileLocationValues {
+  const cityCode = user.customer?.city_municipality_code === undefined
+    ? fallback.cityCode
+    : user.customer.city_municipality_code ?? "";
+  const cityName = user.customer?.city === undefined ? fallback.cityName : user.customer.city ?? "";
+  const barangayCode = user.customer?.barangay_code === undefined
+    ? fallback.barangayCode
+    : user.customer.barangay_code ?? "";
+  const barangayName = user.customer?.barangay === undefined
+    ? fallback.barangayName
+    : user.customer.barangay ?? "";
+
+  return {
+    cityCode,
+    cityName,
+    barangayCode: cityCode ? barangayCode : "",
+    barangayName: cityCode || cityName ? barangayName : "",
+  };
+}
+
+function coordinateFromValue(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function profileCoordinatesFromUser(user: AuthUser, fallback = EMPTY_COORDINATES): ProfileCoordinates {
+  const latitude = user.customer?.latitude === undefined
+    ? fallback.latitude
+    : coordinateFromValue(user.customer.latitude);
+  const longitude = user.customer?.longitude === undefined
+    ? fallback.longitude
+    : coordinateFromValue(user.customer.longitude);
+
+  return {
+    latitude: latitude !== null && longitude !== null ? latitude : null,
+    longitude: latitude !== null && longitude !== null ? longitude : null,
+  };
 }
 
 export default function EditableProfilePage() {
@@ -75,6 +140,8 @@ export default function EditableProfilePage() {
     contact_number: "",
     address: "",
   });
+  const [location, setLocation] = useState<ProfileLocationValues>(EMPTY_LOCATION);
+  const [coordinates, setCoordinates] = useState<ProfileCoordinates>(EMPTY_COORDINATES);
   const [password, setPassword] = useState<PasswordForm>(EMPTY_PASSWORD);
   const [profileErrors, setProfileErrors] = useState<FieldErrors>({});
   const [passwordErrors, setPasswordErrors] = useState<FieldErrors>({});
@@ -82,8 +149,15 @@ export default function EditableProfilePage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cityOptions, setCityOptions] = useState<readonly LocationOption[]>([]);
+  const [barangayOptions, setBarangayOptions] = useState<readonly LocationOption[]>([]);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [barangayLoading, setBarangayLoading] = useState(false);
+  const [cityLoadError, setCityLoadError] = useState<string | null>(null);
+  const [barangayLoadError, setBarangayLoadError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const barangayRequestId = useRef(0);
 
   const loadProfile = useCallback((signal?: AbortSignal) => {
     const token = getAuthToken();
@@ -101,6 +175,8 @@ export default function EditableProfilePage() {
         if (!signal?.aborted) {
           setProfile(response.user);
           setValues(profileFormFromUser(response.user));
+          setLocation(profileLocationFromUser(response.user));
+          setCoordinates(profileCoordinatesFromUser(response.user));
           setLoadError(null);
         }
       })
@@ -118,37 +194,82 @@ export default function EditableProfilePage() {
     if (!user) return;
     const controller = new AbortController();
 
-    const token = getAuthToken();
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) void loadProfile(controller.signal);
+    });
 
-    if (!token) {
-      void Promise.resolve().then(() => {
-        if (!controller.signal.aborted) {
-          setLoadError("Your customer session is unavailable. Please sign in again.");
-          setLoading(false);
-        }
+    return () => controller.abort();
+  }, [user, loadProfile]);
+
+  const loadCities = useCallback((signal?: AbortSignal) => {
+    setCityLoading(true);
+    setCityLoadError(null);
+
+    return getCitiesMunicipalities(signal)
+      .then((options) => {
+        if (!signal?.aborted) setCityOptions(options);
+      })
+      .catch((error: unknown) => {
+        if (!signal?.aborted) setCityLoadError(getLocationErrorMessage(error));
+      })
+      .finally(() => {
+        if (!signal?.aborted) setCityLoading(false);
       });
-      return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const controller = new AbortController();
+
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) void loadCities(controller.signal);
+    });
+
+    return () => controller.abort();
+  }, [user, loadCities]);
+
+  const loadBarangays = useCallback((cityCode: string, signal?: AbortSignal) => {
+    const requestId = barangayRequestId.current + 1;
+    barangayRequestId.current = requestId;
+
+    if (!cityCode) {
+      setBarangayOptions([]);
+      setBarangayLoadError(null);
+      setBarangayLoading(false);
+      return Promise.resolve();
     }
 
-    void getCustomerProfile(token, controller.signal)
-      .then((response) => {
-        if (!controller.signal.aborted) {
-          setProfile(response.user);
-          setValues(profileFormFromUser(response.user));
-          setLoadError(null);
+    setBarangayLoading(true);
+    setBarangayLoadError(null);
+    setBarangayOptions([]);
+
+    return getBarangaysForCity(cityCode, signal)
+      .then((options) => {
+        if (!signal?.aborted && requestId === barangayRequestId.current) {
+          setBarangayOptions(options);
         }
       })
       .catch((error: unknown) => {
-        if (!controller.signal.aborted) {
-          setLoadError(getCustomerProfileErrorMessage(error, "Unable to load your profile. Please try again."));
+        if (!signal?.aborted && requestId === barangayRequestId.current) {
+          setBarangayLoadError(getLocationErrorMessage(error));
         }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!signal?.aborted && requestId === barangayRequestId.current) {
+          setBarangayLoading(false);
+        }
       });
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) void loadBarangays(location.cityCode, controller.signal);
+    });
 
     return () => controller.abort();
-  }, [user]);
+  }, [location.cityCode, loadBarangays]);
 
   const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -167,6 +288,14 @@ export default function EditableProfilePage() {
     if (!nextValues.contact_number) errors.contact_number = ["Enter your contact number."];
     else if (nextValues.contact_number.length > 30) errors.contact_number = ["Use 30 characters or fewer."];
     if (nextValues.address.length > 255) errors.address = ["Use 255 characters or fewer."];
+    const hasCity = Boolean(location.cityName.trim());
+    const hasBarangay = Boolean(location.barangayName.trim());
+
+    if (hasCity && !hasBarangay) errors.barangay = ["Enter a barangay."];
+    if (!hasCity && hasBarangay) errors.city_municipality = ["Enter a city or municipality first."];
+    if (location.barangayCode && !location.cityCode) {
+      errors.city_municipality_code = ["Choose an official city or municipality before selecting a PSGC barangay."];
+    }
 
     if (Object.keys(errors).length > 0) {
       setProfileErrors(errors);
@@ -184,9 +313,19 @@ export default function EditableProfilePage() {
     setProfileErrors({});
 
     try {
-      const response = await updateCustomerProfile(token, nextValues);
+      const locationPayload = {
+        city_municipality: location.cityName.trim() || null,
+        barangay: location.barangayName.trim() || null,
+        city_municipality_code: location.cityCode || null,
+        barangay_code: location.barangayCode || null,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      };
+      const response = await updateCustomerProfile(token, { ...nextValues, ...locationPayload });
       setProfile(response.user);
       setValues(profileFormFromUser(response.user));
+      setLocation(profileLocationFromUser(response.user, location));
+      setCoordinates(profileCoordinatesFromUser(response.user, coordinates));
       updateUser({ name: response.user.name, email: response.user.email, customer: response.user.customer });
       showToast({ title: "Profile updated", message: "Your customer account details have been saved." });
     } catch (error) {
@@ -250,8 +389,18 @@ export default function EditableProfilePage() {
     );
   }
 
-  const initials = getInitials(profile.name) || "ALD";
-  const isProfileDirty = values.name !== profile.name || values.email !== profile.email || values.contact_number !== (profile.customer?.contact_number ?? "") || values.address !== (profile.customer?.address ?? "");
+  const savedLocation = profileLocationFromUser(profile);
+  const savedCoordinates = profileCoordinatesFromUser(profile);
+  const isProfileDirty = values.name !== profile.name
+    || values.email !== profile.email
+    || values.contact_number !== (profile.customer?.contact_number ?? "")
+    || values.address !== (profile.customer?.address ?? "")
+    || location.cityCode !== savedLocation.cityCode
+    || location.cityName !== savedLocation.cityName
+    || location.barangayCode !== savedLocation.barangayCode
+    || location.barangayName !== savedLocation.barangayName
+    || coordinates.latitude !== savedCoordinates.latitude
+    || coordinates.longitude !== savedCoordinates.longitude;
 
   return (
     <div className="customer-profile-page">
@@ -267,7 +416,7 @@ export default function EditableProfilePage() {
         <main className="customer-profile-main">
           <section className="customer-profile-card" aria-labelledby="profile-details-title">
             <div className="customer-profile-card-header">
-              <span className="customer-profile-avatar" aria-hidden="true">{initials}</span>
+              <span className="customer-profile-avatar" aria-hidden="true"><FontAwesomeIcon icon={faCircleUser} /></span>
               <div>
                 <p className="customer-orders-eyebrow">Signed-in customer</p>
                 <h2 id="profile-details-title">{profile.name}</h2>
@@ -281,8 +430,45 @@ export default function EditableProfilePage() {
                 <ProfileField id="customer-profile-name" label="Full name" icon={faUser} value={values.name} error={profileErrors.name?.[0]} autoComplete="name" onChange={(name) => setValues((current) => ({ ...current, name }))} />
                 <ProfileField id="customer-profile-email" label="Email address" icon={faEnvelope} type="email" value={values.email} error={profileErrors.email?.[0]} autoComplete="email" onChange={(email) => setValues((current) => ({ ...current, email }))} />
                 <ProfileField id="customer-profile-contact-number" label="Contact number" icon={faPhone} type="tel" value={values.contact_number} error={profileErrors.contact_number?.[0]} autoComplete="tel" onChange={(contact_number) => setValues((current) => ({ ...current, contact_number }))} />
-                <ProfileField id="customer-profile-address" label="Address" icon={faLocationDot} value={values.address} error={profileErrors.address?.[0]} autoComplete="street-address" multiline onChange={(address) => setValues((current) => ({ ...current, address }))} />
               </div>
+              <ProfileSectionHeader icon={faLocationDot} title="Address & location" description="Keep your complete address together with your PSGC city and barangay selection." />
+              <div className="customer-profile-form-grid customer-profile-address-grid">
+                <ProfileField id="customer-profile-address" label="Address" icon={faLocationDot} value={values.address} error={profileErrors.address?.[0]} autoComplete="street-address" multiline onChange={(address) => setValues((current) => ({ ...current, address }))} />
+                <ProfileAddressFields
+                  cityCode={location.cityCode}
+                  cityName={location.cityName}
+                  barangayCode={location.barangayCode}
+                  barangayName={location.barangayName}
+                  cityOptions={cityOptions}
+                  barangayOptions={barangayOptions}
+                  cityLoading={cityLoading}
+                  barangayLoading={barangayLoading}
+                  cityError={cityLoadError ?? profileErrors.city_municipality?.[0] ?? profileErrors.city_municipality_code?.[0]}
+                  barangayError={barangayLoadError ?? profileErrors.barangay?.[0] ?? profileErrors.barangay_code?.[0]}
+                  onCityRetry={cityLoadError ? () => void loadCities() : undefined}
+                  onBarangayRetry={barangayLoadError ? () => void loadBarangays(location.cityCode) : undefined}
+                  onCityChange={(selection) => {
+                    setLocation({
+                      cityCode: selection.code ?? "",
+                      cityName: selection.label,
+                      barangayCode: "",
+                      barangayName: "",
+                    });
+                  }}
+                  onBarangayChange={(selection) => {
+                    setLocation((current) => ({
+                      ...current,
+                      barangayCode: selection.code ?? "",
+                      barangayName: selection.label,
+                    }));
+                  }}
+                />
+              </div>
+              <CustomerLocationPicker
+                latitude={coordinates.latitude}
+                longitude={coordinates.longitude}
+                onChange={(latitude, longitude) => setCoordinates({ latitude, longitude })}
+              />
               {profileError ? <p className="customer-profile-form-error" role="alert">{profileError}</p> : null}
               <div className="customer-profile-form-footer"><button type="submit" className="customer-profile-action customer-profile-action--primary" disabled={savingProfile || !isProfileDirty}>{savingProfile ? "Saving…" : "Save changes"}</button></div>
             </form>

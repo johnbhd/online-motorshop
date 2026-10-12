@@ -12,6 +12,8 @@ class AdminBranchPresenter
             'id' => $branch->id,
             'name' => $branch->name,
             'address' => $branch->address,
+            'latitude' => $branch->latitude,
+            'longitude' => $branch->longitude,
             'contact_number' => $branch->contact_number,
             'pickup_available' => (bool) $branch->pickup_available,
             'status' => $branch->status,

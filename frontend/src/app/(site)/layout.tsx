@@ -14,7 +14,10 @@ import "../styles/home/home2.css";
 import "../styles/product-details/product-details.css";
 import "../styles/products/products.css";
 import "../styles/account/account.css";
+import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import "../styles/track-order/track-order.css";
+import "../styles/maps.css";
 
 import ChatbotWidget from "@/components/user/chatbot/ChatbotWidget";
 import { Footer } from "@/components/layout/Footer";

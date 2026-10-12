@@ -86,6 +86,12 @@ class ConversationPresenter
             'id' => $message->id,
             'sender' => $message->sender_type,
             'body' => $message->body,
+            'message_type' => $message->message_type ?? 'text',
+            'metadata' => $message->metadata,
+            'read_at' => $message->read_at?->toISOString(),
+            'attachment' => $message->attachment_url
+                ? ['url' => $message->attachment_url]
+                : null,
             'created_at' => $message->created_at?->toISOString(),
         ];
 

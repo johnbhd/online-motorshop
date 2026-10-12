@@ -7,6 +7,7 @@ export function buildOrderRequestPayload(
   formData: CheckoutFormData,
   cartItems: CartItemData[],
   branches: CheckoutBranch[],
+  guestToken?: string | null,
 ): OrderRequestPayload | null {
   const branch = branches.find(
     (candidate) => String(candidate.id) === formData.branchId,
@@ -46,6 +47,7 @@ export function buildOrderRequestPayload(
   }
 
   const basePayload = {
+    ...(guestToken ? { guest_token: guestToken } : {}),
     customer: {
       name: formData.fullName.trim(),
       email: formData.email.trim(),
@@ -78,7 +80,12 @@ export function buildOrderRequestPayload(
         address: formData.delivery.address.trim(),
         barangay: formData.delivery.barangay.trim(),
         city: formData.delivery.city.trim(),
+        city_municipality_code: formData.delivery.cityMunicipalityCode || undefined,
+        barangay_code: formData.delivery.barangayCode || undefined,
+        latitude: formData.delivery.latitude,
+        longitude: formData.delivery.longitude,
         contact_person: formData.delivery.contactPerson.trim(),
+        contact_number: formData.delivery.contactNumber.trim() || undefined,
         notes: formData.delivery.notes.trim() || undefined,
       },
     },

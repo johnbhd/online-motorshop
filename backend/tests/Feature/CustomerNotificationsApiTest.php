@@ -111,8 +111,9 @@ class CustomerNotificationsApiTest extends TestCase
 
         app(StaffPaymentStatusService::class)->transition($payment, Payment::STATUS_PAID, $reviewer);
 
-        $this->assertSame(2, $customer->notifications()->count());
+        $this->assertSame(3, $customer->notifications()->count());
         $this->assertDatabaseHas('notifications', ['notifiable_id' => $customer->id, 'type' => CustomerNotification::class]);
+        $this->assertSame(1, $customer->notifications()->where('data', 'like', '%order_under_review%')->count());
         $this->assertSame(1, $customer->notifications()->where('data', 'like', '%payment_verified%')->count());
     }
 

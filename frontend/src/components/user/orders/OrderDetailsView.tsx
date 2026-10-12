@@ -6,6 +6,8 @@ import OrderProgressTracker from "../track-order/OrderProgressTracker";
 import OrderRequestSummary from "../track-order/OrderRequestSummary";
 import OrderSummaryCards from "../track-order/OrderSummaryCards";
 import OrderSupportSection from "../track-order/OrderSupportSection";
+import LalamoveTrackingMap from "../track-order/LalamoveTrackingMap";
+import OrderDeliverySnapshot from "./OrderDeliverySnapshot";
 import {
   getOrderProgressCaption,
   getOrderProgressSteps,
@@ -42,6 +44,15 @@ export default function OrderDetailsView({
           description={statusPresentation.description}
         />
         <OrderSummaryCards order={order} />
+        {order.fulfillment.method === "delivery" ? (
+          <OrderDeliverySnapshot delivery={order.fulfillment.delivery} />
+        ) : null}
+        <LalamoveTrackingMap
+          branch={order.fulfillment.branch}
+          delivery={order.fulfillment.method === "delivery" ? order.fulfillment.delivery : null}
+          fulfillmentMethod={order.fulfillment.method}
+          orderStatus={order.orderStatus}
+        />
         <div className="track-order-detail-grid">
           <div className="track-order-primary-column">
             <OrderItems order={order} />

@@ -3,16 +3,20 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faBan,
   faChartLine,
   faClipboardList,
   faPen,
   faRefresh,
+  faRotateLeft,
   faTrash,
   faUser,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import ArchiveRecordButton from "@/components/admin/archive/ArchiveRecordButton";
 import BranchModalShell from "@/components/admin/branches/BranchModalShell";
+import CustomerAccountStatusModal from "./CustomerAccountStatusModal";
 import {
   deleteAdminCustomer,
   getAdminCustomer,
@@ -142,16 +146,6 @@ function CustomerFormModal({
               <input value={form.address} onChange={(event) => onChange("address", event.target.value)} />
               {fieldError("address") && <small className="text-red-600">{fieldError("address")}</small>}
             </label>
-            {customer.type === "registered" && (
-              <label className="admin-order-modal-field">
-                <span>Account status</span>
-                <select value={form.status ?? "active"} onChange={(event) => onChange("status", event.target.value)}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-                {fieldError("status") && <small className="text-red-600">{fieldError("status")}</small>}
-              </label>
-            )}
           </div>
         </section>
       </form>
@@ -166,6 +160,7 @@ function CustomerDetailsModal({
   onClose,
   onEdit,
   onDelete,
+  onAccountStatus,
 }: {
   customer: AdminCustomerDetail | null;
   loading: boolean;
@@ -173,6 +168,7 @@ function CustomerDetailsModal({
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onAccountStatus: () => void;
 }) {
   return (
     <BranchModalShell
@@ -187,6 +183,25 @@ function CustomerDetailsModal({
       footer={
         <div className="flex w-full justify-between gap-3">
           <div>
+            {customer?.type === "registered" && (
+                <button
+                  type="button"
+                  onClick={onAccountStatus}
+                  className={
+                    customer.account?.status === "active"
+                      ? "admin-order-modal-button admin-order-modal-button-danger"
+                      : "admin-order-modal-button admin-order-modal-button-primary"
+                  }
+                >
+                  <FontAwesomeIcon
+                    icon={customer.account?.status === "active" ? faBan : faRotateLeft}
+                    aria-hidden="true"
+                  />
+                  {customer.account?.status === "active"
+                    ? "Suspend account"
+                    : "Unsuspend account"}
+                </button>
+              )}
             {customer?.type === "guest" && (
               <button type="button" onClick={onDelete} className="admin-order-modal-button admin-order-modal-button-danger">
                 <FontAwesomeIcon icon={faTrash} aria-hidden="true" /> Delete guest
@@ -262,6 +277,8 @@ export default function RealAdminCustomersPage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCustomerDetail | null>(null);
+  const [accountStatusTarget, setAccountStatusTarget] = useState<AdminCustomerDetail | null>(null);
+  const [changingAccountStatus, setChangingAccountStatus] = useState(false);
 
   const loadCustomers = useCallback(async () => {
     if (!token) {
@@ -341,7 +358,12 @@ export default function RealAdminCustomersPage() {
 
   const openEditor = useCallback(() => {
     if (!selectedCustomer) return;
-    setForm({ name: selectedCustomer.name, email: selectedCustomer.email, contact_number: selectedCustomer.contact ?? "", address: selectedCustomer.address ?? "", ...(selectedCustomer.type === "registered" ? { status: selectedCustomer.account_status ?? "active" } : {}) });
+    setForm({
+      name: selectedCustomer.name,
+      email: selectedCustomer.email,
+      contact_number: selectedCustomer.contact ?? "",
+      address: selectedCustomer.address ?? "",
+    });
     setFormErrors({});
     setEditor(selectedCustomer);
   }, [selectedCustomer]);
@@ -377,6 +399,31 @@ export default function RealAdminCustomersPage() {
     }
   }, [deleteTarget, loadCustomers, token]);
 
+  const changeAccountStatus = useCallback(async () => {
+    if (!token || !accountStatusTarget || accountStatusTarget.type !== "registered") {
+      return;
+    }
+
+    const nextStatus = accountStatusTarget.account?.status === "active"
+      ? "inactive"
+      : "active";
+
+    setChangingAccountStatus(true);
+    setError(null);
+
+    try {
+      await updateAdminCustomer(token, accountStatusTarget.id, {
+        status: nextStatus,
+      });
+      setAccountStatusTarget(null);
+      await Promise.all([loadCustomers(), loadDetails()]);
+    } catch (requestError) {
+      setError(getAdminCustomerErrorMessage(requestError));
+    } finally {
+      setChangingAccountStatus(false);
+    }
+  }, [accountStatusTarget, loadCustomers, loadDetails, token]);
+
   const selectFilter = (setter: (value: string) => void, value: string) => { setter(value); setPage(1); };
 
   return (
@@ -396,7 +443,7 @@ export default function RealAdminCustomersPage() {
           <span className="text-sm text-slate-500">Page {page} of {lastPage}</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[940px] text-left text-sm">
+          <table className="w-full min-w-[1040px] text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th scope="col" className="w-14 px-5 py-3">#</th>
@@ -407,24 +454,17 @@ export default function RealAdminCustomersPage() {
                 <th scope="col" className="px-5 py-3">Orders</th>
                 <th scope="col" className="px-5 py-3">Last order</th>
                 <th scope="col" className="px-5 py-3">Status</th>
+                <th scope="col" className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan={8} className="px-5 py-14 text-center text-slate-500">Loading customer records...</td></tr>
+                <tr><td colSpan={9} className="px-5 py-14 text-center text-slate-500">Loading customer records...</td></tr>
               ) : customers.length === 0 ? (
-                <tr><td colSpan={8} className="px-5 py-14 text-center text-slate-500">No customer records match these filters.</td></tr>
+                <tr><td colSpan={9} className="px-5 py-14 text-center text-slate-500">No customer records match these filters.</td></tr>
               ) : (
                 customers.map((customer, index) => (
-                  <tr
-                    key={customer.id}
-                    tabIndex={0}
-                    onClick={() => openCustomer(customer)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") openCustomer(customer);
-                    }}
-                    className="cursor-pointer transition hover:bg-orange-50/40 focus:bg-orange-50/40 focus:outline-none"
-                  >
+                  <tr key={customer.id} className="transition hover:bg-slate-50/80">
                     <td className="px-5 py-4 font-semibold text-slate-400">{(page - 1) * perPage + index + 1}</td>
                     <td className="px-5 py-4"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">{customer.initials}</span><span><b className="block text-[#0B1930]">{customer.name}</b><small className="text-slate-500">{customer.email || "No email"}</small></span></div></td>
                     <td className="px-5 py-4"><AdminBadge>{label(customer.type)}</AdminBadge></td>
@@ -433,6 +473,18 @@ export default function RealAdminCustomersPage() {
                     <td className="px-5 py-4 font-semibold text-[#0B1930]">{customer.orders}</td>
                     <td className="px-5 py-4 text-slate-600">{formatDate(customer.last_order_at)}</td>
                     <td className="px-5 py-4"><AdminBadge>{label(customer.account_status ?? "guest")}</AdminBadge></td>
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openCustomer(customer)}
+                          className="min-h-9 rounded-lg border border-orange-400 px-3 py-1.5 text-xs font-semibold text-orange-700 hover:bg-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                        >
+                          View details
+                        </button>
+                        <ArchiveRecordButton type="customer" id={customer.id} label={customer.name} onArchived={loadCustomers} />
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -452,8 +504,9 @@ export default function RealAdminCustomersPage() {
           )}
         </div>
       </section>
-      {selectedId !== null && <CustomerDetailsModal customer={selectedCustomer} loading={detailLoading} error={detailError} onClose={() => { setSelectedId(null); setSelectedCustomer(null); }} onEdit={openEditor} onDelete={() => selectedCustomer && setDeleteTarget(selectedCustomer)} />}
-      {editor && <CustomerFormModal customer={editor} form={form} errors={formErrors} saving={saving} onChange={(field, value) => setForm((current) => field === "status" ? { ...current, status: value as "active" | "inactive" } : { ...current, [field]: value })} onSubmit={saveCustomer} onClose={() => setEditor(null)} />}
+      {selectedId !== null && <CustomerDetailsModal customer={selectedCustomer} loading={detailLoading} error={detailError} onClose={() => { setSelectedId(null); setSelectedCustomer(null); }} onEdit={openEditor} onDelete={() => selectedCustomer && setDeleteTarget(selectedCustomer)} onAccountStatus={() => selectedCustomer && setAccountStatusTarget(selectedCustomer)} />}
+      {editor && <CustomerFormModal customer={editor} form={form} errors={formErrors} saving={saving} onChange={(field, value) => setForm((current) => ({ ...current, [field]: value }))} onSubmit={saveCustomer} onClose={() => setEditor(null)} />}
+      {accountStatusTarget && <CustomerAccountStatusModal customer={accountStatusTarget} isSubmitting={changingAccountStatus} onClose={() => setAccountStatusTarget(null)} onConfirm={() => void changeAccountStatus()} />}
       {deleteTarget && <BranchModalShell isOpen eyebrow="Customer Management" title="Delete guest customer" description={`Delete ${deleteTarget.name} permanently?`} titleId="admin-customer-delete-title" descriptionId="admin-customer-delete-description" onClose={() => setDeleteTarget(null)} footer={<div className="flex w-full justify-end gap-3"><button type="button" onClick={() => setDeleteTarget(null)} className="admin-order-modal-button admin-order-modal-button-secondary">Cancel</button><button type="button" onClick={() => void removeCustomer()} className="admin-order-modal-button admin-order-modal-button-danger">Delete customer</button></div>}><div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Only an unused guest record can be hard-deleted. Registered accounts and customers referenced by orders or conversations must be retained.</div></BranchModalShell>}
     </div>
   );

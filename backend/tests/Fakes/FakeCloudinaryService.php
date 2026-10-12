@@ -37,6 +37,10 @@ class FakeCloudinaryService extends CloudinaryService
         return [
             'secure_url' => $asset['secure_url'],
             'public_id' => $asset['public_id'],
+            'resource_type' => 'image',
+            'original_filename' => $file->getClientOriginalName(),
+            'mime_type' => $file->getClientMimeType() ?: $file->getMimeType(),
+            'bytes' => $file->getSize() ?: null,
         ];
     }
 

@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   getCurrentConversation,
+  markCustomerConversationRead,
   sendCustomerConversationMessage,
   startConversation,
 } from "@/lib/messages/conversationApi";
@@ -14,14 +15,35 @@ import {
 } from "@/lib/messages/guestTokenStorage";
 import type { Conversation } from "@/lib/messages/conversationTypes";
 import ChatbotLauncher from "./ChatbotLauncher";
-import { OPEN_STAFF_CHAT_EVENT } from "./chatbotEvents";
-import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
 import {
-  chatbotQuickActions,
-  chatbotWelcomeMessage,
-} from "./chatbotData";
-import { resolveChatbotResponse } from "./chatbotUtils";
-import type { ChatMessage, ChatQuickAction, ChatSender } from "./chatbotTypes";
+  OPEN_STAFF_CHAT_EVENT,
+  type OpenStaffChatDetail,
+} from "./chatbotEvents";
+import ChatbotPanel, { type ChatbotMode } from "./ChatbotPanel";
+import { chatbotQuickActions, chatbotWelcomeMessage } from "./chatbotData";
+import type {
+  ChatMessage,
+  ChatQuickAction,
+  ChatSender,
+  ContactInquiryDraft,
+  ProductInquiryDraft,
+} from "./chatbotTypes";
+import type { ContactInquiryMetadata } from "@/lib/messages/conversationTypes";
+import {
+  AssistantRequestError,
+  sendAssistantMessage,
+} from "@/lib/assistant/assistantApi";
+import {
+  ASSISTANT_HISTORY_LIMIT,
+  ASSISTANT_MAX_MESSAGE_LENGTH,
+  type AssistantMessage,
+  type AssistantHistoryItem,
+  type AssistantReplyReference,
+} from "@/lib/assistant/assistantTypes";
+import {
+  loadAssistantHistory,
+  saveAssistantHistory,
+} from "@/lib/assistant/assistantHistoryStorage";
 
 const initialMessages: ChatMessage[] = [
   {
@@ -32,6 +54,12 @@ const initialMessages: ChatMessage[] = [
   },
 ];
 
+const ASSISTANT_DUPLICATE_WINDOW_MS = 8_000;
+
+function normalizeAssistantMessage(message: string) {
+  return message.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 function toChatMessages(conversation: Conversation): ChatMessage[] {
   return conversation.messages.map((message) => {
     return {
@@ -39,37 +67,194 @@ function toChatMessages(conversation: Conversation): ChatMessage[] {
       sender: message.sender,
       text: message.body,
       createdAt: message.created_at,
+      messageType: message.message_type,
+      metadata: message.metadata,
+      attachmentUrl: message.attachment?.url ?? null,
     };
   });
+}
+
+function toAssistantReplyReference(
+  message: ChatMessage | null | undefined,
+): AssistantReplyReference | null {
+  if (!message || !["bot", "customer"].includes(message.sender)) {
+    return null;
+  }
+
+  return {
+    id: message.id,
+    role: message.sender === "customer" ? "user" : "assistant",
+    content: message.text,
+  };
+}
+
+function hasSameReplyReference(
+  first: AssistantReplyReference | null | undefined,
+  second: AssistantReplyReference | null | undefined,
+) {
+  return (
+    (first?.role ?? null) === (second?.role ?? null) &&
+    (first?.content ?? null) === (second?.content ?? null)
+  );
+}
+
+function toAssistantHistory(
+  messages: ChatMessage[],
+  excludedMessageId?: string,
+): AssistantHistoryItem[] {
+  return messages
+    .filter(
+      (message) =>
+        message.id !== "welcome" &&
+        message.id !== excludedMessageId &&
+        ["bot", "customer"].includes(message.sender),
+    )
+    .slice(-ASSISTANT_HISTORY_LIMIT)
+    .map((message) => ({
+      role: message.sender === "customer" ? "user" : "assistant",
+      content: message.text,
+    }));
+}
+
+function toChatbotMessage(message: AssistantMessage): ChatMessage {
+  return {
+    id: message.id,
+    sender: message.role === "user" ? "customer" : "bot",
+    text: message.content,
+    createdAt: message.createdAt,
+    replyTo: message.replyTo ?? null,
+  };
+}
+
+function toStoredAssistantMessage(message: ChatMessage): AssistantMessage {
+  return {
+    id: message.id,
+    role: message.sender === "customer" ? "user" : "assistant",
+    content: message.text,
+    createdAt: message.createdAt,
+    replyTo: message.replyTo ?? null,
+  };
+}
+
+function toInquiryMetadata(
+  inquiry: ContactInquiryDraft,
+): ContactInquiryMetadata {
+  return {
+    full_name: inquiry.fullName,
+    contact_number: inquiry.contactNumber,
+    email: inquiry.email,
+    inquiry_type: inquiry.inquiryType,
+    preferred_branch: inquiry.preferredBranch,
+    motorcycle: inquiry.motorcycle,
+    product_needed: inquiry.productNeeded,
+    order_reference: inquiry.orderReference,
+    message: inquiry.message,
+  };
 }
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [assistantHistoryLoaded, setAssistantHistoryLoaded] = useState(false);
   const [isAssistantThinking, setIsAssistantThinking] = useState(false);
+  const [assistantError, setAssistantError] = useState<string | null>(null);
+  const [assistantCooldownUntil, setAssistantCooldownUntil] = useState<number | null>(null);
+  const [assistantCooldownSeconds, setAssistantCooldownSeconds] = useState(0);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [mode, setMode] = useState<ChatbotMode>("assistant");
   const [staffConversation, setStaffConversation] =
     useState<Conversation | null>(null);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
+  const [contactInquiry, setContactInquiry] =
+    useState<ContactInquiryDraft | null>(null);
+  const [productInquiry, setProductInquiry] =
+    useState<ProductInquiryDraft | null>(null);
+  const [inquirySending, setInquirySending] = useState(false);
   const { isLoading: isAuthLoading, user } = useAuth();
   const isAuthReady = !isAuthLoading;
   const launcherRef = useRef<HTMLButtonElement>(null);
   const messageListRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
-  const assistantResponseTimeoutRef = useRef<number | null>(null);
+  const inquirySentCallbackRef = useRef<(() => void) | null>(null);
+  const assistantRequestInFlightRef = useRef(false);
+  const lastAssistantMessageRef = useRef<{ message: string; sentAt: number } | null>(null);
+  const pendingAssistantRetryRef = useRef<{
+    messageId: string;
+    message: string;
+    replyTo: AssistantReplyReference | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const storedMessages = loadAssistantHistory();
+
+      if (storedMessages.length > 0) {
+        setMessages([initialMessages[0], ...storedMessages.map(toChatbotMessage)]);
+      }
+
+      setAssistantHistoryLoaded(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!assistantHistoryLoaded) {
+      return;
+    }
+
+    saveAssistantHistory(
+      messages
+        .filter(
+          (message) =>
+            message.id !== "welcome" &&
+            ["bot", "customer"].includes(message.sender),
+        )
+        .map(toStoredAssistantMessage),
+    );
+  }, [assistantHistoryLoaded, messages]);
+
+  useEffect(() => {
+    if (assistantCooldownUntil === null) {
+      return;
+    }
+
+    const updateCooldown = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((assistantCooldownUntil - Date.now()) / 1000),
+      );
+
+      setAssistantCooldownSeconds(remaining);
+
+      if (remaining === 0) {
+        setAssistantCooldownUntil(null);
+      }
+    };
+
+    updateCooldown();
+    const interval = window.setInterval(updateCooldown, 250);
+
+    return () => window.clearInterval(interval);
+  }, [assistantCooldownUntil]);
 
   const createMessage = useCallback(
-    (sender: ChatSender, text: string): ChatMessage => {
+    (
+      sender: ChatSender,
+      text: string,
+      replyTo: AssistantReplyReference | null = null,
+    ): ChatMessage => {
       messageIdRef.current += 1;
 
       return {
-        id: sender + "-" + messageIdRef.current,
+        id: `${sender}-${Date.now()}-${messageIdRef.current}`,
         sender,
         text,
         createdAt: new Date().toISOString(),
+        replyTo,
       };
     },
     [],
@@ -84,34 +269,149 @@ export default function ChatbotWidget() {
   }, []);
 
   const handleSendAssistant = useCallback(
-    (message: string) => {
-      if (isAssistantThinking) {
-        return;
+    async (message: string) => {
+      const now = Date.now();
+      const normalizedMessage = normalizeAssistantMessage(message);
+      const previousMessage = lastAssistantMessageRef.current;
+      const requestedReplyReference = toAssistantReplyReference(replyingTo);
+      const pendingRetry = pendingAssistantRetryRef.current;
+      const pendingRetryMessage = pendingRetry
+        ? messages.find((item) => item.id === pendingRetry.messageId) ?? null
+        : null;
+      const shouldReusePendingMessage = Boolean(
+        pendingRetry &&
+          pendingRetryMessage &&
+          pendingRetry.message === normalizedMessage &&
+          hasSameReplyReference(
+            pendingRetry.replyTo,
+            requestedReplyReference,
+          ),
+      );
+      const replyReference = shouldReusePendingMessage
+        ? pendingRetry?.replyTo ?? null
+        : requestedReplyReference;
+
+      if (message.length > ASSISTANT_MAX_MESSAGE_LENGTH) {
+        setAssistantError(
+          "Your message is too long. Please keep it under 1,000 characters.",
+        );
+
+        return false;
       }
 
-      const customerMessage = createMessage("customer", message);
+      if (
+        assistantRequestInFlightRef.current ||
+        isAssistantThinking ||
+        (assistantCooldownUntil !== null && now < assistantCooldownUntil)
+      ) {
+        return false;
+      }
 
-      setMessages((currentMessages) => [...currentMessages, customerMessage]);
+      if (
+        !shouldReusePendingMessage &&
+        previousMessage &&
+        previousMessage.message === normalizedMessage &&
+        now - previousMessage.sentAt < ASSISTANT_DUPLICATE_WINDOW_MS
+      ) {
+        setAssistantError(
+          "That message was already sent. Please wait a moment before sending it again.",
+        );
+
+        return false;
+      }
+
+      assistantRequestInFlightRef.current = true;
+      lastAssistantMessageRef.current = {
+        message: normalizedMessage,
+        sentAt: now,
+      };
+      setAssistantError(null);
+
+      const customerMessage = shouldReusePendingMessage
+        ? pendingRetryMessage!
+        : createMessage("customer", message, replyReference);
+
+      if (!shouldReusePendingMessage) {
+        pendingAssistantRetryRef.current = {
+          messageId: customerMessage.id,
+          message: normalizedMessage,
+          replyTo: replyReference,
+        };
+        setMessages((currentMessages) => [...currentMessages, customerMessage]);
+        setReplyingTo(null);
+      }
       setShowQuickActions(false);
 
       setIsAssistantThinking(true);
-      assistantResponseTimeoutRef.current = window.setTimeout(() => {
-        const botMessage = createMessage(
-          "bot",
-          resolveChatbotResponse(message).text,
-        );
 
-        setMessages((currentMessages) => [...currentMessages, botMessage]);
+      try {
+        const response = await sendAssistantMessage({
+          message,
+          history: toAssistantHistory(
+            messages,
+            shouldReusePendingMessage ? customerMessage.id : undefined,
+          ),
+          replyTo: replyReference
+            ? {
+                role: replyReference.role,
+                content: replyReference.content,
+              }
+            : null,
+        });
+
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          createMessage("bot", response),
+        ]);
+        pendingAssistantRetryRef.current = null;
+        setReplyingTo(null);
+        return true;
+      } catch (error) {
+        if (error instanceof AssistantRequestError) {
+          setAssistantError(error.message);
+
+          if (error.retryAfter) {
+            setAssistantCooldownUntil(
+              Date.now() + error.retryAfter * 1000,
+            );
+          }
+
+          setReplyingTo(
+            replyReference
+              ? messages.find((item) => item.id === replyReference.id) ?? null
+              : null,
+          );
+          return false;
+        }
+
+        setAssistantError(
+          error instanceof Error
+            ? error.message
+            : "I’m having trouble connecting right now. Please try again.",
+        );
+        setReplyingTo(
+          replyReference
+            ? messages.find((item) => item.id === replyReference.id) ?? null
+            : null,
+        );
+        return false;
+      } finally {
         setIsAssistantThinking(false);
-        assistantResponseTimeoutRef.current = null;
-      }, 1000);
+        assistantRequestInFlightRef.current = false;
+      }
     },
-    [createMessage, isAssistantThinking],
+    [
+      assistantCooldownUntil,
+      createMessage,
+      isAssistantThinking,
+      messages,
+      replyingTo,
+    ],
   );
 
   const handleQuickAction = useCallback(
     (action: ChatQuickAction) => {
-      handleSendAssistant(action.query);
+      void handleSendAssistant(action.query);
     },
     [handleSendAssistant],
   );
@@ -121,17 +421,21 @@ export default function ChatbotWidget() {
       return;
     }
 
+    setReplyingTo(null);
     setMode("staff");
     setShowQuickActions(false);
     setStaffLoading(true);
 
     try {
-      setStaffConversation(
-        await getCurrentConversation(
-          getAuthToken(),
-          getGuestConversationToken(),
-        ),
-      );
+      const token = getAuthToken();
+      const guestToken = getGuestConversationToken();
+      const conversation = await getCurrentConversation(token, guestToken);
+
+      setStaffConversation(conversation);
+
+      if (conversation) {
+        await markCustomerConversationRead(conversation.id, token, guestToken);
+      }
       setStaffError(null);
     } catch (error) {
       setStaffError(
@@ -144,14 +448,102 @@ export default function ChatbotWidget() {
     }
   }, [isAuthReady]);
 
-  const openStaffChat = useCallback(() => {
-    if (!isAuthReady) {
+  const openStaffChat = useCallback(
+    (event: Event) => {
+      const detail = (event as CustomEvent<OpenStaffChatDetail>).detail;
+
+      if (detail?.inquiry) {
+        setContactInquiry(detail.inquiry);
+        setProductInquiry(null);
+        inquirySentCallbackRef.current = detail.onSent ?? null;
+        setStaffError(null);
+      } else if (detail?.productInquiry) {
+        setProductInquiry(detail.productInquiry);
+        setContactInquiry(null);
+        inquirySentCallbackRef.current = null;
+        setStaffError(null);
+      }
+
+      setReplyingTo(null);
+      setMode("staff");
+      setShowQuickActions(false);
+      setIsOpen(true);
+
+      if (!isAuthReady) {
+        return;
+      }
+
+      void handleRequestStaff();
+    },
+    [handleRequestStaff, isAuthReady],
+  );
+
+  const handleCancelInquiry = useCallback(() => {
+    setContactInquiry(null);
+    inquirySentCallbackRef.current = null;
+    setStaffError(null);
+  }, []);
+
+  const handleCancelProductInquiry = useCallback(() => {
+    setProductInquiry(null);
+    setStaffError(null);
+  }, []);
+
+  const handleConfirmInquiry = useCallback(async () => {
+    if (!contactInquiry || inquirySending || !isAuthReady) {
       return;
     }
 
-    void handleRequestStaff();
-    setIsOpen(true);
-  }, [handleRequestStaff, isAuthReady]);
+    setInquirySending(true);
+    setStaffLoading(true);
+    setStaffError(null);
+
+    try {
+      const guestToken = getGuestConversationToken();
+      const options = {
+        messageType: "contact_inquiry" as const,
+        metadata: toInquiryMetadata(contactInquiry),
+        attachment: contactInquiry.photo,
+      };
+
+      if (staffConversation) {
+        setStaffConversation(
+          await sendCustomerConversationMessage(
+            staffConversation.id,
+            "Contact inquiry",
+            guestToken,
+            options,
+          ),
+        );
+      } else {
+        const response = await startConversation(
+          "Contact inquiry",
+          guestToken,
+          options,
+        );
+
+        if (response.guest_token) {
+          setGuestConversationToken(response.guest_token);
+        }
+
+        setStaffConversation(response.conversation);
+      }
+
+      setContactInquiry(null);
+      const onSent = inquirySentCallbackRef.current;
+      inquirySentCallbackRef.current = null;
+      onSent?.();
+    } catch (error) {
+      setStaffError(
+        error instanceof Error
+          ? error.message
+          : "Unable to send your contact inquiry.",
+      );
+    } finally {
+      setInquirySending(false);
+      setStaffLoading(false);
+    }
+  }, [contactInquiry, inquirySending, isAuthReady, staffConversation]);
 
   useEffect(() => {
     window.addEventListener(OPEN_STAFF_CHAT_EVENT, openStaffChat);
@@ -164,14 +556,38 @@ export default function ChatbotWidget() {
   const handleBackToHelp = useCallback(() => {
     setMode("assistant");
     setShowQuickActions(true);
+    setAssistantError(null);
+    setReplyingTo(null);
+  }, []);
+
+  const handleReplyToMessage = useCallback((message: ChatMessage) => {
+    if (message.sender !== "bot" && message.sender !== "customer") {
+      return;
+    }
+
+    setReplyingTo(message);
+    window.requestAnimationFrame(() => {
+      composerInputRef.current?.focus();
+    });
   }, []);
 
   const handleStaffSend = useCallback(
     async (message: string) => {
+      if (!isAuthReady) {
+        return false;
+      }
+
       setStaffLoading(true);
 
       try {
         const guestToken = getGuestConversationToken();
+        const pendingProduct = productInquiry;
+        const options = pendingProduct
+          ? {
+              messageType: "product_inquiry" as const,
+              productId: pendingProduct.productId,
+            }
+          : undefined;
 
         if (staffConversation) {
           setStaffConversation(
@@ -179,10 +595,11 @@ export default function ChatbotWidget() {
               staffConversation.id,
               message,
               guestToken,
+              options,
             ),
           );
         } else {
-          const response = await startConversation(message, guestToken);
+          const response = await startConversation(message, guestToken, options);
 
           if (response.guest_token) {
             setGuestConversationToken(response.guest_token);
@@ -192,24 +609,39 @@ export default function ChatbotWidget() {
         }
 
         setStaffError(null);
+        if (pendingProduct) {
+          setProductInquiry(null);
+        }
+        return true;
       } catch (error) {
         setStaffError(
           error instanceof Error ? error.message : "Unable to send your message.",
         );
+        return false;
       } finally {
         setStaffLoading(false);
       }
     },
-    [staffConversation],
+    [isAuthReady, productInquiry, staffConversation],
   );
 
   useEffect(() => {
-    return () => {
-      if (assistantResponseTimeoutRef.current !== null) {
-        window.clearTimeout(assistantResponseTimeoutRef.current);
-      }
-    };
-  }, []);
+    const resetTimeout = window.setTimeout(() => {
+      setStaffConversation(null);
+      setStaffError(null);
+      setContactInquiry(null);
+      setProductInquiry(null);
+      inquirySentCallbackRef.current = null;
+    }, 0);
+
+    return () => window.clearTimeout(resetTimeout);
+  }, [user?.id]);
+
+  /*
+   * The remaining effects and render stay below this point. Keeping the
+   * inquiry state in this widget means canceling never creates a message or
+   * uploads the selected file.
+   */
 
   useEffect(() => {
     if (!isOpen || mode !== "staff") {
@@ -217,13 +649,20 @@ export default function ChatbotWidget() {
     }
 
     const refreshStaffConversation = async () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
       try {
-        setStaffConversation(
-          await getCurrentConversation(
-            getAuthToken(),
-            getGuestConversationToken(),
-          ),
-        );
+        const token = getAuthToken();
+        const guestToken = getGuestConversationToken();
+        const conversation = await getCurrentConversation(token, guestToken);
+
+        setStaffConversation(conversation);
+
+        if (conversation) {
+          await markCustomerConversationRead(conversation.id, token, guestToken);
+        }
       } catch {
         // Keep the current thread visible if a background refresh fails.
       }
@@ -231,21 +670,14 @@ export default function ChatbotWidget() {
 
     const interval = window.setInterval(() => void refreshStaffConversation(), 10000);
     window.addEventListener("focus", refreshStaffConversation);
+    document.addEventListener("visibilitychange", refreshStaffConversation);
 
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", refreshStaffConversation);
+      document.removeEventListener("visibilitychange", refreshStaffConversation);
     };
   }, [isOpen, mode]);
-
-  useEffect(() => {
-    const resetTimeout = window.setTimeout(() => {
-      setStaffConversation(null);
-      setStaffError(null);
-    }, 0);
-
-    return () => window.clearTimeout(resetTimeout);
-  }, [user?.id]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -278,7 +710,7 @@ export default function ChatbotWidget() {
       window.cancelAnimationFrame(focusFrame);
       document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [closeChatbot, isOpen]);
+  }, [closeChatbot, isOpen, mode, staffLoading]);
 
   const visibleMessages =
     mode === "staff" && staffConversation
@@ -318,13 +750,24 @@ export default function ChatbotWidget() {
           onBackToHelp={handleBackToHelp}
           onQuickAction={handleQuickAction}
           onRequestStaff={handleRequestStaff}
+          onReply={handleReplyToMessage}
+          replyingTo={replyingTo}
+          onCancelReply={() => setReplyingTo(null)}
           onToggleQuickActions={() => {
             setShowQuickActions((currentValue) => !currentValue);
           }}
           onSend={handleSend}
           isAssistantThinking={isAssistantThinking}
+          assistantError={assistantError}
+          assistantCooldownSeconds={assistantCooldownSeconds}
           staffError={staffError}
           staffLoading={staffLoading}
+          contactInquiry={contactInquiry}
+          productInquiry={productInquiry}
+          inquirySending={inquirySending}
+          onCancelInquiry={handleCancelInquiry}
+          onConfirmInquiry={() => void handleConfirmInquiry()}
+          onCancelProductInquiry={handleCancelProductInquiry}
         />
       )}
       <ChatbotLauncher

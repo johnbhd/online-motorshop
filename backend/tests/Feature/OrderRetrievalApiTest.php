@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OrderRetrievalApiTest extends TestCase
@@ -170,6 +171,225 @@ class OrderRetrievalApiTest extends TestCase
         ])->assertUnprocessable();
     }
 
+    public function test_customer_status_uses_persisted_pickup_state_without_merging_order_or_payment_status(): void
+    {
+        $branch = $this->createBranch();
+        $product = $this->createProduct('RET-STATUS', 250.00);
+        [$user, $customer] = $this->createCustomer('pickup-status@example.com', '09175550000');
+
+        $payAtPickup = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000050',
+            status: 'confirmed',
+        );
+        $payAtPickupPayment = Payment::create([
+            'order_id' => $payAtPickup->id,
+            'payment_method' => Payment::METHOD_PAY_AT_PICKUP,
+            'amount' => $payAtPickup->total_amount,
+            'payment_status' => Payment::STATUS_UNPAID,
+        ]);
+
+        $onlinePayment = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000051',
+            status: 'confirmed',
+        );
+        Payment::create([
+            'order_id' => $onlinePayment->id,
+            'payment_method' => Payment::METHOD_ONLINE_PAYMENT,
+            'amount' => $onlinePayment->total_amount,
+            'payment_status' => Payment::STATUS_PAID,
+        ]);
+        $onlinePayment->pickupRequest()->update(['pickup_status' => 'preparing']);
+
+        $rejected = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000052',
+            status: 'rejected',
+        );
+        $rejected->pickupRequest()->update(['pickup_status' => 'ready_for_pickup']);
+
+        $this->withToken($user->createToken('pickup-status-test')->plainTextToken)
+            ->getJson('/api/customer/orders?scope=active')
+            ->assertOk()
+            ->assertJsonPath('orders.0.reference', $onlinePayment->order_reference)
+            ->assertJsonPath('orders.0.status', 'confirmed')
+            ->assertJsonPath('orders.0.display_status', 'preparing')
+            ->assertJsonPath('orders.0.fulfillment_status', 'preparing')
+            ->assertJsonPath('orders.0.payment.method', Payment::METHOD_ONLINE_PAYMENT)
+            ->assertJsonCount(2, 'orders');
+
+        $payAtPickup->pickupRequest()->update(['pickup_status' => 'preparing']);
+
+        $this->withToken($user->createToken('pickup-status-detail-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$payAtPickup->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'preparing')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_PAY_AT_PICKUP)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_UNPAID);
+
+        $payAtPickup->pickupRequest()->update(['pickup_status' => 'ready_for_pickup']);
+
+        $this->withToken($user->createToken('pickup-status-detail-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$payAtPickup->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.status', 'confirmed')
+            ->assertJsonPath('order.display_status', 'ready_for_pickup')
+            ->assertJsonPath('order.fulfillment_status', 'ready_for_pickup')
+            ->assertJsonPath('order.pickup.status', 'ready_for_pickup')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_PAY_AT_PICKUP)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_UNPAID);
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $payAtPickup->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'ready_for_pickup')
+            ->assertJsonPath('order.pickup.status', 'ready_for_pickup');
+
+        $payAtPickup->pickupRequest()->update(['pickup_status' => 'completed']);
+
+        $this->withToken($user->createToken('pickup-status-active-test')->plainTextToken)
+            ->getJson('/api/customer/orders?scope=active')
+            ->assertOk()
+            ->assertJsonPath('orders.0.reference', $onlinePayment->order_reference)
+            ->assertJsonCount(1, 'orders');
+
+        $onlinePayment->pickupRequest()->update(['pickup_status' => 'ready_for_pickup']);
+
+        $this->withToken($user->createToken('online-status-ready-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$onlinePayment->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'ready_for_pickup')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_ONLINE_PAYMENT)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_PAID);
+
+        $onlinePayment->pickupRequest()->update(['pickup_status' => 'completed']);
+
+        $this->withToken($user->createToken('online-status-completed-test')->plainTextToken)
+            ->getJson('/api/customer/orders/'.$onlinePayment->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'completed')
+            ->assertJsonPath('order.payment.method', Payment::METHOD_ONLINE_PAYMENT)
+            ->assertJsonPath('order.payment.status', Payment::STATUS_PAID);
+
+        $this->withToken($user->createToken('pickup-status-history-test')->plainTextToken)
+            ->getJson('/api/customer/orders?scope=history')
+            ->assertOk()
+            ->assertJsonPath('orders.1.reference', $onlinePayment->order_reference)
+            ->assertJsonPath('orders.1.display_status', 'completed')
+            ->assertJsonPath('orders.2.reference', $payAtPickup->order_reference)
+            ->assertJsonPath('orders.2.display_status', 'completed')
+            ->assertJsonCount(3, 'orders');
+
+        $this->assertDatabaseHas('payments', [
+            'id' => $payAtPickupPayment->id,
+            'payment_method' => Payment::METHOD_PAY_AT_PICKUP,
+            'payment_status' => Payment::STATUS_UNPAID,
+        ]);
+
+        $this->assertSame($branch->id, $payAtPickup->branch_id);
+    }
+
+    public function test_delivery_status_does_not_override_order_review_lifecycle(): void
+    {
+        $this->createBranch();
+        $product = $this->createProduct('RET-DELIVERY-STATUS', 350.00);
+        [, $customer] = $this->createCustomer(null, '09175551111', guestName: 'Delivery Status Guest');
+
+        $pending = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000060',
+            status: 'pending',
+            fulfillmentType: 'delivery',
+        );
+        $underReview = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000061',
+            status: 'under_review',
+            fulfillmentType: 'delivery',
+        );
+        $confirmed = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000062',
+            status: 'confirmed',
+            fulfillmentType: 'delivery',
+        );
+        $rejected = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000063',
+            status: 'rejected',
+            fulfillmentType: 'delivery',
+            delivery: ['delivery_status' => 'booked'],
+        );
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $pending->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'pending')
+            ->assertJsonPath('order.display_status', 'pending')
+            ->assertJsonPath('order.fulfillment_status', 'waiting_for_booking');
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $underReview->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'under_review')
+            ->assertJsonPath('order.display_status', 'under_review')
+            ->assertJsonPath('order.fulfillment_status', 'waiting_for_booking');
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $confirmed->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'confirmed')
+            ->assertJsonPath('order.display_status', 'waiting_for_booking')
+            ->assertJsonPath('order.fulfillment_status', 'waiting_for_booking');
+
+        $confirmed->deliveryRequest()->update(['delivery_status' => 'booked']);
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $confirmed->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.display_status', 'booked')
+            ->assertJsonPath('order.delivery.status', 'booked');
+
+        foreach (['picked_up', 'in_transit', 'delivered'] as $deliveryStatus) {
+            $confirmed->deliveryRequest()->update(['delivery_status' => $deliveryStatus]);
+
+            $this->postJson('/api/order-requests/track', [
+                'order_reference' => $confirmed->order_reference,
+                'contact_number' => $customer->contact_number,
+            ])
+                ->assertOk()
+                ->assertJsonPath('order.display_status', $deliveryStatus)
+                ->assertJsonPath('order.delivery.status', $deliveryStatus);
+        }
+
+        $this->postJson('/api/order-requests/track', [
+            'order_reference' => $rejected->order_reference,
+            'contact_number' => $customer->contact_number,
+        ])
+            ->assertOk()
+            ->assertJsonPath('order.status', 'rejected')
+            ->assertJsonPath('order.display_status', 'rejected')
+            ->assertJsonPath('order.fulfillment_status', 'booked');
+    }
+
     public function test_guest_tracking_uses_the_reference_and_does_not_list_orders_by_phone(): void
     {
         $this->createBranch();
@@ -232,6 +452,75 @@ class OrderRetrievalApiTest extends TestCase
             ->assertJsonPath('order.delivery.booking_reference', null)
             ->assertJsonPath('order.payment', null)
             ->assertJsonMissingPath('order.pickup');
+    }
+
+    public function test_pending_and_under_review_delivery_details_lazy_generate_and_reuse_a_road_route(): void
+    {
+        config()->set([
+            'services.openrouteservice.key' => 'test-route-key',
+            'services.openrouteservice.base_url' => 'https://router.test',
+        ]);
+        Http::fake([
+            'https://router.test/*' => Http::response([
+                'features' => [[
+                    'geometry' => [
+                        'type' => 'LineString',
+                        'coordinates' => [
+                            [121.0000, 14.0000],
+                            [121.0100, 14.0050],
+                            [121.0200, 14.0100],
+                        ],
+                    ],
+                    'properties' => [
+                        'summary' => ['distance' => 2345],
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        $branch = $this->createBranch();
+        $branch->update([
+            'latitude' => 14.0000,
+            'longitude' => 121.0000,
+        ]);
+        $product = $this->createProduct('RET-ROUTE-001', 480.00);
+        [$user, $customer] = $this->createCustomer('route-detail@example.com', '09176666666');
+        $order = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-000041',
+            fulfillmentType: 'delivery',
+        );
+        $order->deliveryRequest()->update([
+            'delivery_latitude' => 14.0100,
+            'delivery_longitude' => 121.0200,
+        ]);
+        $token = $user->createToken('route-retrieval-test')->plainTextToken;
+
+        $this->withToken($token)
+            ->getJson('/api/customer/orders/'.$order->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.status', 'pending')
+            ->assertJsonPath('order.delivery.route_geometry.type', 'LineString')
+            ->assertJsonPath('order.delivery.route_geometry.coordinates.1.0', 121.01)
+            ->assertJsonPath('order.delivery.route_geometry.coordinates.1.1', 14.005)
+            ->assertJsonPath('order.delivery.route_provider', 'openrouteservice');
+
+        Http::assertSentCount(1);
+        $order->update(['order_status' => 'under_review']);
+
+        $this->withToken($token)
+            ->getJson('/api/customer/orders/'.$order->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.status', 'under_review')
+            ->assertJsonPath('order.delivery.route_geometry.coordinates.1.0', 121.01);
+
+        Http::assertSentCount(1);
+        $this->assertDatabaseHas('delivery_requests', [
+            'order_id' => $order->id,
+            'route_provider' => 'openrouteservice',
+            'route_distance_meters' => 2345,
+        ]);
     }
 
     /**

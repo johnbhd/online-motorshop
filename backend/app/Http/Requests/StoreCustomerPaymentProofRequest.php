@@ -29,6 +29,7 @@ class StoreCustomerPaymentProofRequest extends FormRequest
     {
         return [
             'proof.required' => 'Choose a payment receipt image to upload.',
+            'proof.file' => 'Payment proof must be a valid uploaded image file.',
             'proof.image' => 'Payment proof must be an image.',
             'proof.mimes' => 'Payment proof must be a JPG, JPEG, PNG, or WEBP image.',
             'proof.max' => 'Payment proof must be 5 MB or smaller.',

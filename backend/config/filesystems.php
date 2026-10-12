@@ -38,6 +38,13 @@ return [
             'report' => false,
         ],
 
+        'psgc' => [
+            'driver' => 'local',
+            'root' => env('PSGC_STORAGE_PATH', storage_path('app/psgc')),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

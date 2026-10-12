@@ -9,11 +9,12 @@ class AdminCategoryService
 {
     public function __construct(
         private readonly AdminCategoryPresenter $presenter,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     public function index(array $filters): array
     {
-        $query = Category::query()->withCount('products');
+        $query = $this->archiveService->excludeArchived(Category::query(), 'category')->withCount('products');
         $this->applyFilters($query, $filters);
 
         $categories = $query
@@ -33,8 +34,17 @@ class AdminCategoryService
         return Category::query()->create($attributes)->loadCount('products');
     }
 
+    public function find(Category $category): Category
+    {
+        return $this->archiveService
+            ->excludeArchived(Category::query(), 'category')
+            ->withCount('products')
+            ->findOrFail($category->getKey());
+    }
+
     public function update(Category $category, array $attributes): Category
     {
+        $category = $this->find($category);
         $category->fill($attributes);
         $category->save();
 
@@ -43,6 +53,8 @@ class AdminCategoryService
 
     public function delete(Category $category): bool
     {
+        $category = $this->find($category);
+
         if ($category->products()->exists()) {
             return false;
         }

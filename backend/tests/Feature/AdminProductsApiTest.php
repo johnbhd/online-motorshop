@@ -263,6 +263,32 @@ class AdminProductsApiTest extends TestCase
         $this->assertContains($oldPublicId, app(CloudinaryService::class)->deletions);
     }
 
+    public function test_oversized_product_image_is_rejected_before_cloudinary(): void
+    {
+        $admin = $this->createUser('admin');
+        $category = $this->createCategory('Oversized Product Parts');
+        $brand = $this->createBrand('Oversized Product Brand');
+
+        $this->adminRequest($admin)
+            ->withHeader('Accept', 'application/json')
+            ->post('/api/admin/products', [
+                'category_id' => $category->id,
+                'name' => 'Oversized Product',
+                'part_number' => 'OVERSIZED-001',
+                'brand_id' => $brand->id,
+                'price' => 250,
+                'image' => UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+                'availability_status' => 'active',
+                'status' => 'active',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['image'])
+            ->assertJsonPath('errors.image.0', 'Product image must be 5 MB or smaller.');
+
+        $this->assertDatabaseMissing('products', ['part_number' => 'OVERSIZED-001']);
+        $this->assertEmpty(app(CloudinaryService::class)->uploads);
+    }
+
     public function test_inactive_taxonomy_is_preserved_for_existing_products_but_not_new_assignments(): void
     {
         $admin = $this->createUser('admin');

@@ -16,6 +16,10 @@ use RuntimeException;
 
 class OrderRequestCreator
 {
+    public function __construct(
+        private readonly DeliveryRouteService $deliveryRouteService,
+    ) {}
+
     /**
      * Create a pending order request and its fulfillment record atomically.
      *
@@ -34,6 +38,9 @@ class OrderRequestCreator
             : null;
         $deliveryAddress = $delivery ? $this->deliveryAddress($delivery) : null;
         $deliveryRemarks = $delivery ? $this->deliveryRemarks($delivery) : null;
+        $guestTokenHash = $user === null && filled($payload['guest_token'] ?? null)
+            ? hash('sha256', trim((string) $payload['guest_token']))
+            : null;
 
         $requestedItems = (array) ($payload['items'] ?? []);
         $partNumbers = array_map(
@@ -92,14 +99,16 @@ class OrderRequestCreator
             ]);
         }
 
-        return DB::transaction(function () use (
+        $order = DB::transaction(function () use (
             $payload,
             $user,
             $branch,
             $method,
             $paymentMethod,
+            $delivery,
             $deliveryAddress,
             $deliveryRemarks,
+            $guestTokenHash,
             $calculatedItems,
             $subtotalCents,
         ): OrderRequest {
@@ -114,6 +123,7 @@ class OrderRequestCreator
             $order = OrderRequest::create([
                 'order_reference' => $this->generateReference(),
                 'customer_id' => $customer->id,
+                'guest_token_hash' => $guestTokenHash,
                 'branch_id' => $branch->id,
                 'fulfillment_type' => $method,
                 'order_status' => 'pending',
@@ -150,6 +160,20 @@ class OrderRequestCreator
                     'order_id' => $order->id,
                     'branch_id' => $branch->id,
                     'delivery_address' => $deliveryAddress,
+                    'delivery_complete_address' => trim((string) ($delivery['address'] ?? '')),
+                    'delivery_city_municipality' => filled($delivery['city'] ?? null) ? trim((string) $delivery['city']) : null,
+                    'delivery_city_municipality_code' => $delivery['city_municipality_code'] ?? null,
+                    'delivery_barangay' => filled($delivery['barangay'] ?? null) ? trim((string) $delivery['barangay']) : null,
+                    'delivery_barangay_code' => $delivery['barangay_code'] ?? null,
+                    'delivery_latitude' => $delivery['latitude'] ?? null,
+                    'delivery_longitude' => $delivery['longitude'] ?? null,
+                    'delivery_contact_person' => filled($delivery['contact_person'] ?? null)
+                        ? trim((string) $delivery['contact_person'])
+                        : $customer->full_name,
+                    'delivery_contact_number' => filled($delivery['contact_number'] ?? null)
+                        ? trim((string) $delivery['contact_number'])
+                        : $customer->contact_number,
+                    'delivery_notes' => filled($delivery['notes'] ?? null) ? trim((string) $delivery['notes']) : null,
                     'delivery_fee' => '0.00',
                     'delivery_status' => 'waiting_for_booking',
                     'remarks' => $deliveryRemarks,
@@ -165,6 +189,12 @@ class OrderRequestCreator
                 'deliveryRequest',
             ]);
         });
+
+        if ($method === 'delivery' && $order->deliveryRequest) {
+            $this->deliveryRouteService->generateFor($order->deliveryRequest);
+        }
+
+        return $order;
     }
 
     private function resolveBranch(int $branchId, string $method): Branch

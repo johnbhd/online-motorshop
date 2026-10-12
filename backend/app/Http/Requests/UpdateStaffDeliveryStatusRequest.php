@@ -46,6 +46,12 @@ class UpdateStaffDeliveryStatusRequest extends FormRequest
                 'string',
                 'max:50',
             ],
+            'vehicle_plate' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:30',
+            ],
             'remarks' => [
                 'sometimes',
                 'nullable',

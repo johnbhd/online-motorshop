@@ -10,6 +10,7 @@ import {
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import ArchiveRecordButton from "@/components/admin/archive/ArchiveRecordButton";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   createAdminBranch,
@@ -336,6 +337,7 @@ export default function RealAdminBranchesPage() {
                           >
                             Manage
                           </button>
+                          <ArchiveRecordButton type="branch" id={branch.id} label={branch.name} onArchived={loadBranches} />
                           <button
                             type="button"
                             onClick={(event) => {

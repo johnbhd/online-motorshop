@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\OrderStatusChanged;
 use App\Models\DeliveryRequest;
 use App\Models\OrderRequest;
 use App\Models\Payment;
@@ -10,10 +11,6 @@ use Illuminate\Validation\ValidationException;
 
 class StaffDeliveryStatusService
 {
-    public function __construct(
-        private readonly CustomerNotificationService $customerNotificationService,
-    ) {}
-
     private const TRANSITIONS = [
         'waiting_for_booking' => [
             'booked',
@@ -45,6 +42,10 @@ class StaffDeliveryStatusService
             return array_values(array_intersect($statuses, ['cancelled']));
         }
 
+        if ($orderStatus !== 'confirmed') {
+            return array_values(array_intersect($statuses, ['cancelled']));
+        }
+
         if (
             $deliveryRequest->delivery_status === 'waiting_for_booking'
             && ! $this->hasPaidLatestPayment($deliveryRequest)
@@ -67,15 +68,16 @@ class StaffDeliveryStatusService
                 'tracking_url',
                 'rider_name',
                 'rider_contact',
+                'vehicle_plate',
                 'remarks',
             ]),
         );
 
-        $deliveryRequest = DB::transaction(function () use (
+        [$deliveryRequest, $previousStatus] = DB::transaction(function () use (
             $deliveryRequest,
             $status,
             $allowedAttributes,
-        ): DeliveryRequest {
+        ): array {
             $delivery = DeliveryRequest::query()
                 ->lockForUpdate()
                 ->findOrFail($deliveryRequest->id);
@@ -104,6 +106,14 @@ class StaffDeliveryStatusService
                 ]);
             }
 
+            if ($status !== 'cancelled' && $order->order_status !== 'confirmed') {
+                throw ValidationException::withMessages([
+                    'status' => [
+                        'The parent order must be confirmed before delivery can progress.',
+                    ],
+                ]);
+            }
+
             if (
                 $status === 'booked'
                 && blank($allowedAttributes['booking_reference'] ?? $delivery->booking_reference)
@@ -123,6 +133,8 @@ class StaffDeliveryStatusService
                 ]);
             }
 
+            $previousStatus = (string) $delivery->delivery_status;
+
             $delivery->update([
                 ...$allowedAttributes,
                 'delivery_status' => $status,
@@ -131,10 +143,18 @@ class StaffDeliveryStatusService
                     : $delivery->delivered_at,
             ]);
 
-            return $delivery->fresh();
+            return [$delivery->fresh(), $previousStatus];
         });
 
-        $this->customerNotificationService->deliveryStatusChanged($deliveryRequest, $status);
+        $deliveryRequest->loadMissing('order');
+
+        OrderStatusChanged::dispatch(
+            $deliveryRequest->order,
+            'delivery',
+            (int) $deliveryRequest->id,
+            $previousStatus,
+            $status,
+        );
 
         return $deliveryRequest;
     }

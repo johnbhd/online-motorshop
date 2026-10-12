@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\MediaAsset;
 use App\Models\OrderRequest;
 use App\Models\Payment;
 use App\Models\User;
@@ -50,6 +51,13 @@ class CustomerPaymentProofApiTest extends TestCase
             'ald-motorshop/payment-proofs/'.$order->order_reference.'/fake-1',
             $payment->proof_image_public_id,
         );
+        $this->assertDatabaseHas('media_assets', [
+            'purpose' => MediaAsset::PURPOSE_PAYMENT_PROOF,
+            'linked_type' => 'payment',
+            'linked_id' => $payment->id,
+            'cloudinary_public_id' => $payment->proof_image_public_id,
+            'status' => MediaAsset::STATUS_ACTIVE,
+        ]);
     }
 
     public function test_pending_online_order_cannot_accept_payment_proof(): void
@@ -156,6 +164,23 @@ class CustomerPaymentProofApiTest extends TestCase
         )
             ->assertUnprocessable()
             ->assertJsonValidationErrors('proof');
+    }
+
+    public function test_oversized_payment_proof_is_rejected_before_cloudinary(): void
+    {
+        [$user, $customer] = $this->createCustomer('oversized-payment@example.com');
+        $order = $this->createOrder($customer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT);
+
+        $this->postProof(
+            $user->createToken('oversized-payment-test')->plainTextToken,
+            $order->order_reference,
+            UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+        )
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('proof')
+            ->assertJsonPath('errors.proof.0', 'Payment proof must be 5 MB or smaller.');
+
+        $this->assertEmpty(app(CloudinaryService::class)->uploads);
     }
 
     public function test_cancelled_order_cannot_accept_payment_proof(): void

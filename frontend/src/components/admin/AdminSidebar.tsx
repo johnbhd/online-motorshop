@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxOpen,
   faBell,
+  faBoxArchive,
   faChartColumn,
   faClipboardList,
   faComments,
@@ -14,6 +15,7 @@ import {
   faGaugeHigh,
   faGear,
   faGlobe,
+  faImages,
   faLocationDot,
   faStar,
   faStore,
@@ -41,13 +43,14 @@ const adminIcons = {
   "Website Content": faGlobe,
   Reports: faChartColumn,
   "Activity Logs": faChartColumn,
+  Media: faImages,
   Settings: faGear,
   Profile: faUser,
   Notifications: faBell,
+  Archive: faBoxArchive,
 } as const;
 
 const links = [
-  ["Notifications", "/admin/notifications", "!"],
   ["Dashboard", "/admin", "▦"],
   ["Orders", "/admin/orders", "▤"],
   ["Payments", "/admin/payments", "▣"],
@@ -60,9 +63,9 @@ const links = [
   ["Reviews", "/admin/reviews", "☆"],
   ["Branches", "/admin/branches", "▧"],
   ["Staff Management", "/admin/staff-management", "♙"],
-  ["Website Content", "/admin/website-content", "▤"],
   ["Reports", "/admin/reports", "▥"],
-  ["Activity Logs", "#", "◷"],
+  ["Archive", "/admin/archive", "▰"],
+  ["Media", "/admin/media", "▰"],
   ["Settings", "/admin/settings", "⚙"],
   ["Profile", "/admin/profile", "◉"],
 ] as const;
@@ -127,9 +130,8 @@ export default function AdminSidebar({
           <ul className="space-y-1">
             {links.map(([name, href]) => {
               const active =
-                href !== "#" &&
-                (path === href ||
-                  (href !== "/admin" && path.startsWith(`${href}/`)));
+                path === href ||
+                (href !== "/admin" && path.startsWith(`${href}/`));
               return (
                 <li key={name}>
                   <Link

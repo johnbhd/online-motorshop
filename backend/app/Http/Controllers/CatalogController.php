@@ -133,6 +133,8 @@ class CatalogController extends Controller
                 'id',
                 'name',
                 'address',
+                'latitude',
+                'longitude',
                 'contact_number',
                 'pickup_available',
                 'status',

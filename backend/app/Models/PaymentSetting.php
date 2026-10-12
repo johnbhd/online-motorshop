@@ -11,5 +11,7 @@ class PaymentSetting extends Model
         'gcash_number',
         'payment_instructions',
         'qr_image_path',
+        'qr_image_url',
+        'qr_image_public_id',
     ];
 }

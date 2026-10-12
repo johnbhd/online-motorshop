@@ -15,6 +15,7 @@ class AdminOrderService
         private readonly OrderRequestPresenter $presenter,
         private readonly StaffOrderStatusService $statusService,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
+        private readonly AdminArchiveService $archiveService,
     ) {}
 
     public function index(array $filters): array
@@ -104,7 +105,7 @@ class AdminOrderService
 
     private function orderQuery(): Builder
     {
-        return OrderRequest::query();
+        return $this->archiveService->excludeArchived(OrderRequest::query(), 'order');
     }
 
     private function applyFilters(Builder $query, array $filters): Builder

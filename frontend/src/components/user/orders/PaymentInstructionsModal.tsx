@@ -11,9 +11,11 @@ import {
 import { formatPeso } from "../cart/cartData";
 import { getPublicPaymentInstructions } from "@/lib/paymentInstructionsApi";
 import type { PublicPaymentInstructions } from "@/lib/adminSettingsTypes";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  IMAGE_UPLOAD_HELP_TEXT,
+  validateImageFile,
+} from "@/lib/imageValidation";
 
 type PaymentInstructionsModalProps = {
   orderReference: string;
@@ -109,15 +111,11 @@ export default function PaymentInstructionsModal({
       return;
     }
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setSelectedFile(null);
-      setFileError("Choose a JPG, PNG, or WEBP image.");
-      return;
-    }
+    const validationError = validateImageFile(file, "payment proof");
 
-    if (file.size > MAX_FILE_SIZE) {
+    if (validationError) {
       setSelectedFile(null);
-      setFileError("Payment proof must be 5 MB or smaller.");
+      setFileError(validationError);
       return;
     }
 
@@ -272,11 +270,15 @@ export default function PaymentInstructionsModal({
                 <span>{selectedFile ? "Replace image" : "Select image"}</span>
                 <input
                   type="file"
-                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                  accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
                   onChange={handleFileChange}
                   disabled={isSubmitting}
+                  aria-describedby="payment-proof-help payment-proof-error"
                 />
               </label>
+              <p id="payment-proof-help" className="track-order-payment-help">
+                {IMAGE_UPLOAD_HELP_TEXT}
+              </p>
               {imageSource ? (
                 <div className="track-order-payment-proof-preview">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -300,7 +302,7 @@ export default function PaymentInstructionsModal({
                   </div>
                 </div>
               ) : null}
-              {fileError ? <p className="track-order-payment-error" role="alert">{fileError}</p> : null}
+              {fileError ? <p id="payment-proof-error" className="track-order-payment-error" role="alert">{fileError}</p> : null}
               {submitError ? <p className="track-order-payment-error" role="alert">{submitError}</p> : null}
             </section>
           ) : null}

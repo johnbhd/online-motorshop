@@ -17,6 +17,11 @@ import {
   getAdminSettingsValidationErrors,
   saveAdminPaymentSettings,
 } from "@/lib/adminSettingsApi";
+import {
+  IMAGE_UPLOAD_ACCEPT_ATTRIBUTE,
+  IMAGE_UPLOAD_HELP_TEXT,
+  validateImageFile,
+} from "@/lib/imageValidation";
 import type { AdminPaymentSettings } from "@/lib/adminSettingsTypes";
 
 type SettingsForm = {
@@ -26,9 +31,6 @@ type SettingsForm = {
 };
 
 type FieldErrors = Record<string, string[]>;
-
-const MAX_QR_SIZE = 5 * 1024 * 1024;
-const ACCEPTED_QR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function toForm(settings: AdminPaymentSettings): SettingsForm {
   return {
@@ -139,15 +141,11 @@ export default function RealAdminSettingsPage() {
       return;
     }
 
-    if (!ACCEPTED_QR_TYPES.includes(file.type)) {
-      setSelectedQr(null);
-      setFileError("Choose a JPG, PNG, or WEBP image.");
-      return;
-    }
+    const validationError = validateImageFile(file, "payment QR image");
 
-    if (file.size > MAX_QR_SIZE) {
+    if (validationError) {
       setSelectedQr(null);
-      setFileError("The QR image must be 5 MB or smaller.");
+      setFileError(validationError);
       return;
     }
 
@@ -321,7 +319,7 @@ export default function RealAdminSettingsPage() {
                   Payment QR image
                 </span>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Optional JPG, PNG, or WEBP image up to 5 MB.
+                  Optional {IMAGE_UPLOAD_HELP_TEXT}
                 </p>
                 <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
                   <div className="grid size-40 shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50">
@@ -346,7 +344,7 @@ export default function RealAdminSettingsPage() {
                       <input
                         className="sr-only"
                         type="file"
-                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        accept={IMAGE_UPLOAD_ACCEPT_ATTRIBUTE}
                         onChange={(event) => {
                           const input = event.currentTarget;
                           const file = input.files?.[0] ?? null;
@@ -375,7 +373,7 @@ export default function RealAdminSettingsPage() {
                   </div>
                 </div>
                 <span id="qr-image-help" className="sr-only">
-                  Select a JPG, PNG, or WEBP image up to 5 megabytes.
+                  Select a {IMAGE_UPLOAD_HELP_TEXT.toLowerCase()}.
                 </span>
                 {fileError || fieldErrors.qr_image?.[0] ? (
                   <p id="qr-image-error" className="mt-2 text-sm text-red-700" role="alert">

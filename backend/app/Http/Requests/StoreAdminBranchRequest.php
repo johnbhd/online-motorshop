@@ -35,6 +35,8 @@ class StoreAdminBranchRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:255'],
+            'latitude' => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'contact_number' => ['required', 'string', 'max:255'],
             'pickup_available' => ['sometimes', 'boolean'],
             'status' => ['sometimes', 'in:active,inactive'],

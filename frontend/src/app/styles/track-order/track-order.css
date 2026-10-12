@@ -1220,6 +1220,13 @@
   line-height: 1.5;
 }
 
+.track-order-payment-help {
+  margin: 0.65rem 0 0;
+  color: #667085;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
 .track-order-payment-modal-footer {
   justify-content: flex-end;
   border-top: 1px solid #e7e9f0;
@@ -1527,6 +1534,152 @@
   line-height: 1.3;
 }
 
+.track-order-map-card {
+  margin-top: 1.25rem;
+}
+
+.track-order-delivery-snapshot {
+  margin-top: 1.25rem;
+}
+
+.track-order-delivery-snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1.25rem 0 0;
+}
+
+.track-order-delivery-snapshot-grid > div {
+  min-width: 0;
+  border-radius: 0.55rem;
+  padding: 0.8rem;
+  background: var(--track-order-surface);
+}
+
+.track-order-delivery-snapshot-wide {
+  grid-column: 1 / -1;
+}
+
+.track-order-delivery-snapshot-grid dt {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--track-order-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.track-order-delivery-snapshot-grid dd {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+  color: var(--track-order-ink);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.track-order-map {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  min-height: 18rem;
+  margin-top: 1.25rem;
+  overflow: hidden;
+  border: 1px solid var(--track-order-border);
+  border-radius: 0.65rem;
+  background: var(--track-order-surface);
+}
+
+.track-order-map .leaflet-container {
+  position: relative;
+  min-height: 18rem;
+  width: 100%;
+  font: inherit;
+}
+
+.track-order-map .leaflet-gl-layer {
+  z-index: 0;
+}
+
+.track-order-map .leaflet-gl-layer .maplibregl-map {
+  position: absolute;
+  inset: 0;
+}
+
+.track-order-map-note,
+.track-order-map-fallback,
+.track-order-map-error {
+  margin: 0.85rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.track-order-map-branch {
+  margin: 1.1rem 0 0;
+  color: var(--track-order-muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.track-order-map-branch strong {
+  color: var(--track-order-ink);
+}
+
+.track-order-map-error {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.45rem;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.lalamove-tracking-marker {
+  display: grid;
+  place-items: center;
+  color: var(--track-order-ink);
+  font-size: 0.5rem;
+  font-weight: 800;
+}
+
+.lalamove-tracking-marker span {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  background: var(--tracking-marker-color);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.28);
+}
+
+.lalamove-tracking-marker b {
+  position: absolute;
+  top: 1.45rem;
+  white-space: nowrap;
+  color: var(--track-order-ink);
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+}
+
+.lalamove-tracking-marker--motorcycle span {
+  display: grid;
+  width: 1.85rem;
+  height: 1.85rem;
+  place-items: center;
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.lalamove-tracking-marker--motorcycle svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.lalamove-tracking-marker--motorcycle b {
+  display: none;
+}
+
 .track-order-field-error {
   display: block;
   margin-top: 0.35rem;
@@ -1544,4 +1697,12 @@
 
 .track-order-progress-list[data-count="7"] {
   grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.track-order-progress-list[data-count="8"] {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.track-order-progress-list[data-count="9"] {
+  grid-template-columns: repeat(9, minmax(0, 1fr));
 }
