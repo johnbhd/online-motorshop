@@ -55,6 +55,7 @@ class AldCatalogKnowledgeService
 
             Log::info('ALD Assistant live catalog context retrieved.', [
                 'intent' => $intent['intent'] ?? 'unknown',
+                'meaningful_terms' => $intent['search_terms'] ?? [],
                 'match_count' => $context['match_count'] ?? null,
                 'card_count' => count($products),
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),

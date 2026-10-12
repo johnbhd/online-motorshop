@@ -29,13 +29,21 @@ class AldCatalogIntentResolver
         $countQuestion = $this->matchesPattern($normalized, [
             '/\bhow\s+many\s+(?:products?|items?|parts?)\b/u',
             '/\b(?:product|item|part|catalog)\s+count\b/u',
-            '/\bwhat\s+is\s+the\s+(?:current\s+)?(?:product|item|part|catalog)\s+count\b/u',
+            '/\bwhat\s+(?:is|s)\s+(?:the\s+)?(?:current\s+)?(?:product|item|part|catalog)\s+count\b/u',
         ]);
         $listQuestion = $this->matchesPattern($normalized, [
             '/\bwhat\s+(?:products?|items?|parts?)\s+(?:do\s+you\s+)?(?:have|sell|carry)\b/u',
             '/\bwhat\s+do\s+you\s+sell\b/u',
+            '/\bwhat\s+do\s+you\s+(?:have|carry)\b/u',
             '/\bdo\s+you\s+know\s+(?:any\s+)?(?:products?|items?|parts?)\b/u',
             '/\bshow\s+(?:me\s+)?(?:your\s+)?(?:products?|items?|parts?)\b/u',
+            '/\bshow\s+me\s+what\s+you\s+have\b/u',
+            '/\btell\s+me\s+about\s+(?:your\s+)?(?:products?|items?|parts?|catalog|selection|inventory)\b/u',
+            '/\bcan\s+i\s+see\s+(?:your\s+)?(?:catalog|products?|items?|parts?)\b/u',
+            '/\bwhat\s+(?:products?|items?|parts?)\s+do\s+you\s+offer\b/u',
+            '/\bwhat\s+kind\s+of\s+(?:products?|items?|parts?)\b/u',
+            '/\bgive\s+me\s+(?:some\s+)?(?:products?|items?|parts?)\b/u',
+            '/\bwhat\s+can\s+i\s+buy\s+(?:here|from\s+you)\b/u',
             '/\b(?:browse|list)\s+(?:your\s+)?(?:products?|items?|parts?)\b/u',
             '/\b(?:products?|items?)\s+(?:are\s+)?available\b/u',
         ]);
@@ -75,14 +83,24 @@ class AldCatalogIntentResolver
             'branch', 'branches', 'location', 'locations', 'address', 'addresses',
             'phone', 'contact number', 'hours', 'open', 'where are you',
         ]);
-        $productSignal = $this->containsAny($normalized, [
-            'product', 'products', 'part', 'parts', 'catalog', 'sell', 'carry',
+        $genericCatalogSignal = $this->containsAny($normalized, [
+            'product', 'products', 'item', 'items', 'part', 'parts', 'catalog',
+            'selection', 'inventory', 'thing', 'things',
+        ]);
+        $specificProductSignal = $this->containsAny($normalized, [
             'battery', 'batteries', 'brake', 'filter', 'oil', 'spark plug',
             'gasket', 'bearing', 'chain', 'sprocket', 'clutch', 'belt', 'tire',
             'tyre', 'wheel', 'shock', 'fork', 'bulb', 'switch', 'accessory',
             'accessories', 'maintenance', 'engine', 'suspension', 'transmission',
             'body', 'panel', 'fairing', 'price', 'code', 'sku',
         ]);
+        $productRequestSignal = $this->matchesPattern($normalized, [
+            '/\bdo\s+you\s+(?:have|sell|carry)\b/u',
+            '/\b(?:show|find)\b/u',
+            '/\blooking\s+for\b/u',
+            '/\bcan\s+you\s+(?:show|find)\b/u',
+        ]);
+        $hasMeaningfulTerms = $searchTerms !== [];
 
         if ($branchSignal && ! $brandList && ! $categoryList) {
             return [
@@ -134,7 +152,7 @@ class AldCatalogIntentResolver
             ];
         }
 
-        if ($listQuestion) {
+        if ($listQuestion && ! ($hasMeaningfulTerms && $productRequestSignal)) {
             return [
                 'intent' => 'catalog_list',
                 'is_catalog' => true,
@@ -146,7 +164,36 @@ class AldCatalogIntentResolver
             ];
         }
 
-        if ($followUp || $productSignal || $stockQuestion || $compatibilityQuestion || $specificationQuestion) {
+        if (
+            ($genericCatalogSignal && ! $hasMeaningfulTerms && ! $stockQuestion && ! $compatibilityQuestion && ! $specificationQuestion)
+            || (
+                $productRequestSignal
+                && ! $hasMeaningfulTerms
+                && ! $specificProductSignal
+                && ! $stockQuestion
+                && ! $compatibilityQuestion
+                && ! $specificationQuestion
+            )
+        ) {
+            return [
+                'intent' => 'catalog_list',
+                'is_catalog' => true,
+                'search_terms' => [],
+                'follow_up' => $followUp,
+                'stock_question' => false,
+                'compatibility_question' => false,
+                'specification_question' => false,
+            ];
+        }
+
+        if (
+            $followUp
+            || $specificProductSignal
+            || ($productRequestSignal && $hasMeaningfulTerms)
+            || $stockQuestion
+            || $compatibilityQuestion
+            || $specificationQuestion
+        ) {
             return [
                 'intent' => $followUp ? 'specific_product' : 'product_search',
                 'is_catalog' => true,
@@ -189,6 +236,8 @@ class AldCatalogIntentResolver
             'do', 'there', 'in', 'at', 'from', 'sell', 'carry', 'available', 'many',
             'item', 'items', 'now', 'current', 'currently', 'today', 'know',
             'product', 'products', 'part', 'parts', 'catalog', 'code', 'sku',
+            'an', 'tell', 'give', 'see', 'find', 'looking', 'offer', 'kind',
+            'here', 'buy', 'selection', 'inventory', 'thing', 'things', 'more',
         ];
         $tokens = preg_split('/\s+/u', $normalized, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $terms = [];

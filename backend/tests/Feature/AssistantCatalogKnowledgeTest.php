@@ -216,6 +216,34 @@ class AssistantCatalogKnowledgeTest extends TestCase
             ->assertJsonMissingPath('products.0.img_public_id');
     }
 
+    public function test_generic_catalog_phrases_return_current_public_products(): void
+    {
+        [$brand, $category] = $this->catalogTaxonomy();
+        $this->product($brand, $category, 'ALD Battery Alpha', 'BAT-001', 950.00);
+        $this->product($brand, $category, 'ALD Brake Pad', 'BRK-001', 480.00);
+
+        $messages = [
+            'What products do you have?',
+            'Tell me about your products.',
+            'Show me your products.',
+            'Show me what you have.',
+            'What do you sell?',
+            'What items do you carry?',
+            'Can I see your catalog?',
+            'Do you know any products?',
+            'Give me some products.',
+            'What can I buy here?',
+        ];
+
+        foreach ($messages as $message) {
+            $response = $this->askResponse($message);
+
+            $response->assertOk()
+                ->assertJsonPath('total_matches', 2)
+                ->assertJsonCount(2, 'products');
+        }
+    }
+
     public function test_brand_and_category_product_queries_use_live_relations(): void
     {
         [$brand, $category] = $this->catalogTaxonomy();
