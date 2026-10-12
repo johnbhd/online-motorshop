@@ -22,14 +22,17 @@ const labels: Record<string, string> = {
   "/admin/pickup-requests": "Pickup Requests",
   "/admin/delivery-requests": "Delivery Requests",
   "/admin/products": "Products",
+  "/admin/categories-brands": "Categories & Brands",
   "/admin/customers": "Customers",
   "/admin/messages": "Messages",
+  "/admin/reviews": "Reviews",
   "/admin/notifications": "Notifications",
   "/admin/branches": "Branches",
   "/admin/staff-management": "Staff Management",
   "/admin/reports": "Reports",
   "/admin/archive": "Archive",
   "/admin/settings": "Settings",
+  "/admin/media": "Media",
   "/admin/profile": "My Profile",
 };
 
