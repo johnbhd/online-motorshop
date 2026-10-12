@@ -56,7 +56,7 @@ return [
     ],
 
     'frontend' => [
-        'url' => rtrim((string) env('FRONTEND_URL', 'http://localhost:3000'), '/'),
+        'url' => rtrim((string) env('FRONTEND_URL', ''), '/'),
     ],
 
     'groq' => [
