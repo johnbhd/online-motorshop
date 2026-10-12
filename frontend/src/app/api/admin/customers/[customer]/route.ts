@@ -39,5 +39,6 @@ export async function DELETE(request: NextRequest, context: Context) {
   return proxyAdminCustomersRequest(await path(context), {
     method: "DELETE",
     headers: headers(request),
+    body: await request.text(),
   });
 }
