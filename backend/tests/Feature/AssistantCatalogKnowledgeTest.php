@@ -244,6 +244,106 @@ class AssistantCatalogKnowledgeTest extends TestCase
         }
     }
 
+    public function test_tagalog_aliases_retrieve_matching_live_products_without_inventing_fitment(): void
+    {
+        $honda = Brand::create(['name' => 'Honda', 'status' => 'active']);
+        $yamaha = Brand::create(['name' => 'Yamaha', 'status' => 'active']);
+        $suzuki = Brand::create(['name' => 'Suzuki', 'status' => 'active']);
+        $tires = Category::create([
+            'name' => 'Tires & Wheels',
+            'description' => 'Tires and wheels',
+            'status' => 'active',
+        ]);
+        $electrical = Category::create([
+            'name' => 'Electrical Parts',
+            'description' => 'Electrical parts',
+            'status' => 'active',
+        ]);
+        $brakes = Category::create([
+            'name' => 'Brake Parts',
+            'description' => 'Brake parts',
+            'status' => 'active',
+        ]);
+        $maintenance = Category::create([
+            'name' => 'Accessories & Maintenance',
+            'description' => 'Maintenance products',
+            'status' => 'active',
+        ]);
+
+        $hondaTire = $this->product($honda, $tires, 'Honda Front Tire', 'HON-TIRE', 1750.00);
+        $yamahaTire = $this->product($yamaha, $tires, 'Yamaha Tire', 'YAM-TIRE', 1800.00);
+        $hondaBattery = $this->product($honda, $electrical, 'Honda Motorcycle Battery', 'HON-BAT', 1550.00);
+        $hondaBrake = $this->product($honda, $brakes, 'Honda Brake Pad', 'HON-BRAKE', 480.00);
+        $engineOil = $this->product($suzuki, $maintenance, 'ECSTAR Genuine Engine Oil', 'SUZ-OIL', 320.00);
+
+        $tireResponse = $this->askResponse('meron bang gulong diyan?');
+        $tireResponse->assertOk()
+            ->assertJsonPath('total_matches', 2)
+            ->assertJsonCount(2, 'products')
+            ->assertJsonPath('products.0.product_code', $hondaTire->part_number)
+            ->assertJsonPath('products.1.product_code', $yamahaTire->part_number);
+        $tireContext = $this->latestLiveContext('CURRENT_CATALOG_DATA');
+        $this->assertStringContainsString('"match_count":2', $tireContext);
+        $this->assertStringContainsString('Honda Front Tire', $tireContext);
+        $this->assertStringContainsString('Yamaha Tire', $tireContext);
+
+        $hondaTireResponse = $this->askResponse('may Honda na gulong ba?');
+        $hondaTireResponse->assertOk()
+            ->assertJsonPath('total_matches', 1)
+            ->assertJsonPath('products.0.product_code', $hondaTire->part_number);
+        $hondaTireContext = $this->latestLiveContext('CURRENT_CATALOG_DATA');
+        $this->assertStringContainsString('"match_count":1', $hondaTireContext);
+        $this->assertStringContainsString('Honda Front Tire', $hondaTireContext);
+        $this->assertStringNotContainsString('Yamaha Tire', $hondaTireContext);
+
+        $compatibilityResponse = $this->askResponse('may gulong para sa Mio?');
+        $compatibilityResponse->assertOk()
+            ->assertJsonPath('total_matches', 2)
+            ->assertJsonCount(2, 'products');
+        $compatibilityContext = $this->latestLiveContext('CURRENT_CATALOG_DATA');
+        $this->assertStringContainsString('Compatibility is not verified', $compatibilityContext);
+
+        $zeroResponse = $this->askResponse('may tambutso ba?');
+        $zeroResponse->assertOk()
+            ->assertJsonPath('total_matches', 0)
+            ->assertJsonCount(0, 'products');
+        $zeroContext = $this->latestLiveContext('CURRENT_CATALOG_DATA');
+        $this->assertStringContainsString('"match_count":0', $zeroContext);
+        $this->assertStringNotContainsString('Honda Front Tire', $zeroContext);
+
+        $this->askResponse('may baterya ba kayo?')
+            ->assertOk()
+            ->assertJsonPath('total_matches', 1)
+            ->assertJsonPath('products.0.product_code', $hondaBattery->part_number);
+
+        $this->askResponse('may preno ba?')
+            ->assertOk()
+            ->assertJsonPath('total_matches', 1)
+            ->assertJsonPath('products.0.product_code', $hondaBrake->part_number);
+
+        $this->askResponse('may langis ba kayo?')
+            ->assertOk()
+            ->assertJsonPath('total_matches', 1)
+            ->assertJsonPath('products.0.product_code', $engineOil->part_number);
+    }
+
+    public function test_tagalog_generic_and_count_questions_use_live_catalog_totals(): void
+    {
+        [$brand, $category] = $this->catalogTaxonomy();
+        $this->product($brand, $category, 'ALD Battery Alpha', 'BAT-001', 950.00);
+        $this->product($brand, $category, 'ALD Brake Pad', 'BRK-001', 480.00);
+
+        $this->askResponse('ano mga products niyo?')
+            ->assertOk()
+            ->assertJsonPath('total_matches', 2)
+            ->assertJsonCount(2, 'products');
+
+        $this->askResponse('ilan products niyo?')
+            ->assertOk()
+            ->assertJsonPath('total_matches', 2)
+            ->assertJsonMissingPath('products');
+    }
+
     public function test_brand_and_category_product_queries_use_live_relations(): void
     {
         [$brand, $category] = $this->catalogTaxonomy();

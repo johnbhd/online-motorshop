@@ -4,6 +4,10 @@ namespace App\Services\Assistant;
 
 class AldCatalogIntentResolver
 {
+    public function __construct(
+        private readonly ?AldCatalogSearchNormalizer $searchNormalizer = null,
+    ) {}
+
     /**
      * @return array{
      *     intent: string,
@@ -17,8 +21,9 @@ class AldCatalogIntentResolver
      */
     public function resolve(string $message): array
     {
-        $normalized = $this->normalize($message);
-        $searchTerms = $this->searchTerms($normalized);
+        $searchNormalizer = $this->searchNormalizer ?? new AldCatalogSearchNormalizer;
+        $normalized = $searchNormalizer->normalize($message);
+        $searchTerms = $searchNormalizer->searchTerms($message);
         $followUp = $this->matchesPattern($normalized, [
             '/\bhow\s+about\s+(?:now|that|this)\b/u',
             '/\bwhat\s+about\s+(?:now|that|this)\b/u',
@@ -30,6 +35,9 @@ class AldCatalogIntentResolver
             '/\bhow\s+many\s+(?:products?|items?|parts?)\b/u',
             '/\b(?:product|item|part|catalog)\s+count\b/u',
             '/\bwhat\s+(?:is|s)\s+(?:the\s+)?(?:current\s+)?(?:product|item|part|catalog)\s+count\b/u',
+            '/\b(?:ilan|ilang)\s+(?:lahat\s+ng\s+|ang\s+)?(?:products?|items?|parts?)\b/u',
+            '/\bgaano\s+karami\s+(?:ang\s+)?(?:products?|items?|parts?)\b/u',
+            '/\bilan\s+(?:ang\s+)?(?:products?|items?|parts?)\s+(?:sa\s+)?(?:catalog|niyo|nyo|ninyo)\b/u',
         ]);
         $listQuestion = $this->matchesPattern($normalized, [
             '/\bwhat\s+(?:products?|items?|parts?)\s+(?:do\s+you\s+)?(?:have|sell|carry)\b/u',
@@ -46,6 +54,9 @@ class AldCatalogIntentResolver
             '/\bwhat\s+can\s+i\s+buy\s+(?:here|from\s+you)\b/u',
             '/\b(?:browse|list)\s+(?:your\s+)?(?:products?|items?|parts?)\b/u',
             '/\b(?:products?|items?)\s+(?:are\s+)?available\b/u',
+            '/\b(?:ano|anong)\s+(?:mga\s+)?(?:products?|items?|parts?)\s+(?:niyo|nyo|ninyo|kayo)\b/u',
+            '/\b(?:ano|anong)\s+(?:ang\s+)?(?:binebenta|benta|tinda(?:ng)?)\b/u',
+            '/\b(?:ano|anong)\s+meron\s+(?:kayo|sa\s+inyo)\b/u',
         ]);
         $stockQuestion = $this->containsAny($normalized, [
             'stock', 'in stock', 'available today', 'available now', 'how many left',
@@ -53,7 +64,7 @@ class AldCatalogIntentResolver
         ]);
         $compatibilityQuestion = $this->containsAny($normalized, [
             'compatible', 'compatibility', 'fit', 'fitment', 'will this fit',
-            'does this fit',
+            'does this fit', 'para sa', 'para dito', 'kasya', 'pwede sa',
         ]);
         $specificationQuestion = $this->containsAny($normalized, [
             'spec', 'specification', 'specifications', 'voltage', 'capacity',
@@ -85,7 +96,8 @@ class AldCatalogIntentResolver
         ]);
         $genericCatalogSignal = $this->containsAny($normalized, [
             'product', 'products', 'item', 'items', 'part', 'parts', 'catalog',
-            'selection', 'inventory', 'thing', 'things',
+            'selection', 'inventory', 'thing', 'things', 'meron', 'benta',
+            'binebenta', 'nagbebenta', 'tinda',
         ]);
         $specificProductSignal = $this->containsAny($normalized, [
             'battery', 'batteries', 'brake', 'filter', 'oil', 'spark plug',
@@ -93,12 +105,15 @@ class AldCatalogIntentResolver
             'tyre', 'wheel', 'shock', 'fork', 'bulb', 'switch', 'accessory',
             'accessories', 'maintenance', 'engine', 'suspension', 'transmission',
             'body', 'panel', 'fairing', 'price', 'code', 'sku',
-        ]);
+        ]) || $searchNormalizer->hasKnownProductConcept($normalized);
         $productRequestSignal = $this->matchesPattern($normalized, [
             '/\bdo\s+you\s+(?:have|sell|carry)\b/u',
             '/\b(?:show|find)\b/u',
             '/\blooking\s+for\b/u',
             '/\bcan\s+you\s+(?:show|find)\b/u',
+            '/\b(?:may|meron)\b/u',
+            '/\b(?:pakita|ipakita)\b/u',
+            '/\b(?:ano|anong)\s+\S+\s+(?:products?|items?|parts?)\b/u',
         ]);
         $hasMeaningfulTerms = $searchTerms !== [];
 
@@ -197,7 +212,7 @@ class AldCatalogIntentResolver
             return [
                 'intent' => $followUp ? 'specific_product' : 'product_search',
                 'is_catalog' => true,
-                'search_terms' => $followUp ? [] : $this->searchTerms($normalized),
+                'search_terms' => $followUp ? [] : $searchTerms,
                 'follow_up' => $followUp,
                 'stock_question' => $stockQuestion,
                 'compatibility_question' => $compatibilityQuestion,
@@ -214,51 +229,6 @@ class AldCatalogIntentResolver
             'compatibility_question' => false,
             'specification_question' => false,
         ];
-    }
-
-    private function normalize(string $message): string
-    {
-        $normalized = mb_strtolower(trim($message), 'UTF-8');
-        $normalized = preg_replace('/[^\p{L}\p{N}&]+/u', ' ', $normalized) ?? $normalized;
-
-        return trim(preg_replace('/\s+/u', ' ', $normalized) ?? $normalized);
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function searchTerms(string $normalized): array
-    {
-        $stopWords = [
-            'a', 'about', 'and', 'are', 'do', 'does', 'for', 'have', 'how', 'i',
-            'is', 'me', 'my', 'of', 'on', 'please', 'show', 'the', 'this', 'to',
-            'what', 'which', 'with', 'you', 'your', 'can', 'could', 'any', 'some',
-            'do', 'there', 'in', 'at', 'from', 'sell', 'carry', 'available', 'many',
-            'item', 'items', 'now', 'current', 'currently', 'today', 'know',
-            'product', 'products', 'part', 'parts', 'catalog', 'code', 'sku',
-            'an', 'tell', 'give', 'see', 'find', 'looking', 'offer', 'kind',
-            'here', 'buy', 'selection', 'inventory', 'thing', 'things', 'more',
-        ];
-        $tokens = preg_split('/\s+/u', $normalized, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $terms = [];
-
-        foreach ($tokens as $token) {
-            if (mb_strlen($token, 'UTF-8') < 3 || in_array($token, $stopWords, true)) {
-                continue;
-            }
-
-            $token = match (true) {
-                str_ends_with($token, 'ies') && mb_strlen($token, 'UTF-8') > 4 => mb_substr($token, 0, -3, 'UTF-8').'y',
-                str_ends_with($token, 's') && mb_strlen($token, 'UTF-8') > 4 => mb_substr($token, 0, -1, 'UTF-8'),
-                default => $token,
-            };
-
-            if (! in_array($token, $terms, true)) {
-                $terms[] = $token;
-            }
-        }
-
-        return array_slice($terms, 0, 6);
     }
 
     /**

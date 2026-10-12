@@ -95,6 +95,86 @@ class AssistantCatalogIntentResolverTest extends TestCase
         }
     }
 
+    public function test_tagalog_product_terms_expand_to_catalog_vocabulary(): void
+    {
+        $expectedTerms = [
+            'meron bang gulong diyan?' => ['tire', 'tires', 'wheel', 'wheels'],
+            'may baterya ba kayo?' => ['battery', 'batteries'],
+            'may preno ba?' => ['brake', 'brakes'],
+            'may langis ba kayo?' => ['oil', 'engine oil'],
+            'may Honda na gulong ba?' => [
+                'honda',
+                'tire',
+                'tires',
+                'wheel',
+                'wheels',
+            ],
+            'langis ng makina' => ['engine oil', 'oil'],
+            'kadena ng motor' => ['drive chain', 'chain'],
+        ];
+
+        foreach ($expectedTerms as $message => $terms) {
+            $result = $this->resolver->resolve($message);
+
+            $this->assertSame('product_search', $result['intent'], $message);
+            $this->assertSame($terms, $result['search_terms'], $message);
+        }
+    }
+
+    public function test_taglish_product_requests_keep_meaningful_concepts(): void
+    {
+        $messages = [
+            'show mo yung gulong',
+            'may available battery ba kayo?',
+            'ano Yamaha parts niyo?',
+            'pakita brake products',
+        ];
+
+        foreach ($messages as $message) {
+            $result = $this->resolver->resolve($message);
+
+            $this->assertSame('product_search', $result['intent'], $message);
+            $this->assertNotSame([], $result['search_terms'], $message);
+            $this->assertNotContains('may', $result['search_terms'], $message);
+            $this->assertNotContains('mga', $result['search_terms'], $message);
+            $this->assertNotContains('yung', $result['search_terms'], $message);
+        }
+    }
+
+    public function test_tagalog_generic_catalog_questions_resolve_to_catalog_list(): void
+    {
+        $messages = [
+            'ano mga products niyo?',
+            'anong binebenta niyo?',
+            'ano meron kayo?',
+            'pakita products',
+        ];
+
+        foreach ($messages as $message) {
+            $result = $this->resolver->resolve($message);
+
+            $this->assertSame('catalog_list', $result['intent'], $message);
+            $this->assertSame([], $result['search_terms'], $message);
+        }
+    }
+
+    public function test_tagalog_catalog_count_questions_resolve_to_catalog_count(): void
+    {
+        $messages = [
+            'ilan products niyo?',
+            'ilan lahat ng products?',
+            'ilan ang products sa catalog?',
+            'gaano karami products niyo?',
+        ];
+
+        foreach ($messages as $message) {
+            $result = $this->resolver->resolve($message);
+
+            $this->assertSame('catalog_count', $result['intent'], $message);
+            $this->assertSame([], $result['search_terms'], $message);
+        }
+    }
+
     public function test_unrecognized_product_request_with_meaningful_terms_does_not_become_a_catalog_list(): void
     {
         $result = $this->resolver->resolve('Do you have a quantum sprocket?');
