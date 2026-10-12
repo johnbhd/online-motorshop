@@ -496,6 +496,8 @@ Route::prefix('staff')
                 ->name('notifications.read-all');
             Route::patch('/notifications/{notification}/read', [PortalNotificationController::class, 'markRead'])
                 ->name('notifications.read');
+            Route::get('/reports/data', [StaffReportsController::class, 'data'])
+                ->name('reports.data');
             Route::get('/reviews', [ReviewController::class, 'staffIndex'])
                 ->name('reviews.index');
             Route::get('/reviews/{review}', [ReviewController::class, 'staffShow'])
@@ -512,9 +514,6 @@ Route::prefix('staff')
         Route::middleware('role:admin')->group(function () {
             Route::get('/notifications/data', [StaffNotificationsController::class, 'data'])
                 ->name('notifications.data');
-
-            Route::get('/reports/data', [StaffReportsController::class, 'data'])
-                ->name('reports.data');
 
         });
     });
