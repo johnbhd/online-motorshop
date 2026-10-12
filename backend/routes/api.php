@@ -17,7 +17,6 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
-use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Api\AssistantController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -394,9 +393,6 @@ Route::prefix('admin')
 
         Route::get('/staff-management/data', [AdminStaffController::class, 'data'])
             ->name('staff-management.data');
-
-        Route::get('/website-content/data', [AdminWebsiteContentController::class, 'data'])
-            ->name('website-content.data');
     });
 
 // Staff
