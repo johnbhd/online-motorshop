@@ -169,7 +169,7 @@ export default function RealAdminDeliveryRequestsPage() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[.18em] text-orange-600">Fulfillment</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0B1930] sm:text-3xl">Lalamove Delivery Requests</h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">Read-only oversight of persisted delivery requests across all branches. Branch Staff record manual booking details and manage delivery progress.</p>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">Review persisted delivery requests across all branches. Admins can record confirmed manual Lalamove bookings, while Branch Staff manage delivery progress.</p>
         </div>
         <button type="button" onClick={() => setReloadNonce((nonce) => nonce + 1)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
           <FontAwesomeIcon icon={faRefresh} aria-hidden="true" /> Refresh
@@ -222,7 +222,7 @@ export default function RealAdminDeliveryRequestsPage() {
         {response?.branch_summary.length ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{response.branch_summary.map((branch) => <article key={branch.id} className="rounded-lg border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold text-[#0B1930]">{branch.name}</h3><span className="text-sm font-bold text-slate-700">{branch.total} total</span></div><p className="mt-2 text-sm text-slate-600">{branch.active} active · {branch.delivered} delivered</p></article>)}</div> : <p className="text-sm text-slate-500">No branch delivery records found.</p>}
       </section>
 
-      <RealAdminDeliveryRequestDetailsModal key={selectedDeliveryId ?? "closed"} deliveryId={selectedDeliveryId} onClose={closeDetails} />
+      <RealAdminDeliveryRequestDetailsModal key={selectedDeliveryId ?? "closed"} deliveryId={selectedDeliveryId} onClose={closeDetails} onUpdated={() => setReloadNonce((nonce) => nonce + 1)} />
     </div>
   );
 }

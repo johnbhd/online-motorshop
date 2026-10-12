@@ -57,11 +57,11 @@ class AdminDeliveryRequestService
             ->find($id);
     }
 
-    public function detail(DeliveryRequest $delivery): array
+    public function detail(DeliveryRequest $delivery, array $allowedStatuses = []): array
     {
         $delivery->loadMissing($this->deliveryRelations());
 
-        return $this->presenter->details($delivery, []);
+        return $this->presenter->details($delivery, $allowedStatuses);
     }
 
     private function deliveryQuery(): Builder

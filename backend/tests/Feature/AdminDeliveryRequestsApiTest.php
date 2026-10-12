@@ -126,7 +126,7 @@ class AdminDeliveryRequestsApiTest extends TestCase
             ->assertJsonPath('delivery_request.order.fulfillment_method', 'delivery')
             ->assertJsonPath('delivery_request.order.items.0.name', 'Test Delivery Product 001')
             ->assertJsonPath('delivery_request.order.items.0.unit_price', 250)
-            ->assertJsonPath('delivery_request.allowed_statuses', []);
+            ->assertJsonPath('delivery_request.allowed_statuses', ['picked_up', 'failed', 'cancelled']);
 
         $this->requestAs($admin)
             ->getJson('/api/admin/delivery-requests/999999')
@@ -136,7 +136,7 @@ class AdminDeliveryRequestsApiTest extends TestCase
             ->patchJson('/api/admin/delivery-requests/'.$delivery->id.'/status', [
                 'status' => 'delivered',
             ])
-            ->assertNotFound();
+            ->assertUnprocessable();
 
         $this->assertDatabaseHas('delivery_requests', [
             'id' => $delivery->id,
@@ -145,17 +145,67 @@ class AdminDeliveryRequestsApiTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_record_manual_lalamove_booking_after_payment_confirmation(): void
+    {
+        $admin = $this->createUser('admin');
+        $branch = $this->createBranch('Admin Booking Branch');
+        $order = $this->createDelivery(
+            'Admin Booking Customer',
+            $branch,
+            'ALD-2026-DEL-BOOKING',
+        );
+        $delivery = $order->deliveryRequest;
+        $order->payments()->create([
+            'payment_method' => 'Online Payment',
+            'amount' => 250,
+            'payment_reference' => 'PAY-DEL-BOOKING',
+            'payment_status' => 'paid',
+            'verified_at' => now(),
+        ]);
+
+        $this->requestAs($admin)
+            ->getJson('/api/admin/delivery-requests/'.$delivery->id)
+            ->assertOk()
+            ->assertJsonPath('delivery_request.allowed_statuses.0', 'booked');
+
+        $this->requestAs($admin)
+            ->patchJson('/api/admin/delivery-requests/'.$delivery->id.'/status', [
+                'status' => 'booked',
+                'booking_reference' => 'LAL-ADMIN-BOOKING',
+                'tracking_url' => 'https://tracking.example.test/LAL-ADMIN-BOOKING',
+            ])
+            ->assertOk()
+            ->assertJsonPath('delivery_request.delivery_status', 'booked')
+            ->assertJsonPath('delivery_request.booking_reference', 'LAL-ADMIN-BOOKING')
+            ->assertJsonPath('delivery_request.tracking_url', 'https://tracking.example.test/LAL-ADMIN-BOOKING');
+
+        $this->assertDatabaseHas('delivery_requests', [
+            'id' => $delivery->id,
+            'delivery_status' => 'booked',
+            'booking_reference' => 'LAL-ADMIN-BOOKING',
+        ]);
+    }
+
     public function test_delivery_overview_requires_admin_role_and_validates_filters(): void
     {
         $this->getJson('/api/admin/delivery-requests')->assertUnauthorized();
         $this->getJson('/api/admin/delivery-requests/data')->assertUnauthorized();
         $this->getJson('/api/admin/delivery-requests/1')->assertUnauthorized();
+        $this->patchJson('/api/admin/delivery-requests/1/status', [
+            'status' => 'booked',
+        ])->assertUnauthorized();
 
         $branch = $this->createBranch('Delivery Access Branch');
         $staff = $this->createUser('staff', $branch);
         $customer = $this->createUser('customer');
         $this->requestAs($staff)->getJson('/api/admin/delivery-requests')->assertForbidden();
         $this->requestAs($customer)->getJson('/api/admin/delivery-requests')->assertForbidden();
+        $this->requestAs($staff)
+            ->patchJson('/api/admin/delivery-requests/1/status', ['status' => 'booked'])
+            ->assertForbidden();
+        $this->requestAs($customer)
+            ->patchJson('/api/admin/delivery-requests/1/status', ['status' => 'booked'])
+            ->assertForbidden();
 
     }
 

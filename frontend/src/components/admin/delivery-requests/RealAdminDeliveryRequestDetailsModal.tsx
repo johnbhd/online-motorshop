@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
+  faCheck,
   faCreditCard,
   faFileLines,
   faLocationDot,
@@ -16,6 +17,8 @@ import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   getAdminDeliveryRequest,
   getAdminDeliveryRequestsErrorMessage,
+  updateAdminDeliveryStatus,
+  type AdminDeliveryStatusUpdate,
 } from "@/lib/adminDeliveryRequestsApi";
 import type { AdminDeliveryRequestDetails } from "@/lib/adminDeliveryRequestTypes";
 
@@ -59,14 +62,20 @@ function safeHttpUrl(value: string | null): string | null {
 export default function RealAdminDeliveryRequestDetailsModal({
   deliveryId,
   onClose,
+  onUpdated,
 }: {
   deliveryId: number | null;
   onClose: () => void;
+  onUpdated?: (delivery: AdminDeliveryRequestDetails) => void;
 }) {
   const token = getAuthToken();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [delivery, setDelivery] = useState<AdminDeliveryRequestDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [bookingReference, setBookingReference] = useState("");
+  const [trackingUrlInput, setTrackingUrlInput] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
 
   useEffect(() => {
@@ -75,7 +84,12 @@ export default function RealAdminDeliveryRequestDetailsModal({
     const controller = new AbortController();
 
     void getAdminDeliveryRequest(token, deliveryId, controller.signal)
-      .then((result) => setDelivery(result.delivery_request))
+      .then((result) => {
+        setDelivery(result.delivery_request);
+        setBookingReference(result.delivery_request.booking_reference ?? "");
+        setTrackingUrlInput(result.delivery_request.tracking_url ?? "");
+        setUpdateError(null);
+      })
       .catch((requestError) => {
         if (requestError instanceof Error && requestError.name === "AbortError") return;
         setError(getAdminDeliveryRequestsErrorMessage(requestError));
@@ -83,6 +97,51 @@ export default function RealAdminDeliveryRequestDetailsModal({
 
     return () => controller.abort();
   }, [deliveryId, retryNonce, token]);
+
+  async function handleBookDelivery() {
+    if (!delivery || isUpdating) return;
+
+    if (!bookingReference.trim()) {
+      setUpdateError("Enter the Lalamove booking reference before recording the booking.");
+      return;
+    }
+
+    if (!delivery.allowed_statuses.includes("booked")) {
+      setUpdateError("This delivery is not currently eligible to be marked booked.");
+      return;
+    }
+
+    const authToken = getAuthToken();
+
+    if (!authToken) {
+      setUpdateError("Your Admin session has expired. Please sign in again.");
+      return;
+    }
+
+    const update: AdminDeliveryStatusUpdate = {
+      status: "booked",
+      booking_reference: bookingReference.trim(),
+    };
+
+    if (trackingUrlInput.trim()) {
+      update.tracking_url = trackingUrlInput.trim();
+    }
+
+    setIsUpdating(true);
+    setUpdateError(null);
+
+    try {
+      const result = await updateAdminDeliveryStatus(authToken, delivery.id, update);
+      setDelivery(result.delivery_request);
+      setBookingReference(result.delivery_request.booking_reference ?? "");
+      setTrackingUrlInput(result.delivery_request.tracking_url ?? "");
+      onUpdated?.(result.delivery_request);
+    } catch (requestError) {
+      setUpdateError(getAdminDeliveryRequestsErrorMessage(requestError));
+    } finally {
+      setIsUpdating(false);
+    }
+  }
 
   useEffect(() => {
     if (deliveryId === null) return;
@@ -118,7 +177,7 @@ export default function RealAdminDeliveryRequestDetailsModal({
           <div className="admin-order-modal-heading">
             <p>Delivery Request Details</p>
             <h2 id="admin-delivery-details-title">{delivery?.order_reference ?? "Delivery request"}</h2>
-            <span id="admin-delivery-details-description">Read-only details from the persisted order, payment, and delivery record.</span>
+            <span id="admin-delivery-details-description">Persisted order, payment, and delivery details with manual booking controls.</span>
           </div>
           <div className="admin-order-modal-header-meta">
             {delivery ? <AdminBadge>{label(delivery.delivery_status)}</AdminBadge> : null}
@@ -155,6 +214,26 @@ export default function RealAdminDeliveryRequestDetailsModal({
               <dl className="admin-order-modal-detail-grid admin-order-modal-order-grid"><div><dt>Booking Reference</dt><dd>{delivery.booking_reference || "Not recorded"}</dd></div><div><dt>Tracking URL</dt><dd>{trackingUrl ? <a className="break-all text-orange-700 underline" href={trackingUrl} target="_blank" rel="noreferrer">{trackingUrl}</a> : delivery.tracking_url || "Not recorded"}</dd></div><div><dt>Rider</dt><dd>{delivery.rider_name || "Not recorded"}</dd></div><div><dt>Rider Contact</dt><dd>{delivery.rider_contact || "Not recorded"}</dd></div></dl>
               <p className="mt-3 text-sm text-slate-500">Booking and delivery updates are entered manually by branch Staff. This page does not book or track with Lalamove.</p>
               {delivery.delivery_status === "waiting_for_booking" ? <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="status">{delivery.payment?.status === "paid" ? "Payment has been confirmed. This delivery is waiting for manual Lalamove booking." : "Payment is not confirmed. Staff booking remains unavailable until the latest payment is verified."}</p> : null}
+              {delivery.delivery_status === "waiting_for_booking" && delivery.allowed_statuses.includes("booked") ? <div className="mt-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                <p className="font-semibold text-[#0B1930]">Record Lalamove Booking</p>
+                <p className="mt-1 text-sm leading-5 text-slate-600">Book Lalamove manually outside ALD, then save the booking reference here.</p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="text-sm font-medium text-slate-700">
+                    Booking Reference <span className="text-red-600">*</span>
+                    <input value={bookingReference} onChange={(event) => setBookingReference(event.target.value)} placeholder="Manual Lalamove reference" className="mt-1 min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
+                  </label>
+                  <label className="text-sm font-medium text-slate-700">
+                    Tracking URL <span className="font-normal text-slate-500">(optional)</span>
+                    <input type="url" value={trackingUrlInput} onChange={(event) => setTrackingUrlInput(event.target.value)} placeholder="https://..." className="mt-1 min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
+                  </label>
+                </div>
+                <button type="button" onClick={() => void handleBookDelivery()} disabled={isUpdating || !bookingReference.trim()} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60">
+                  <FontAwesomeIcon icon={faCheck} aria-hidden="true" />
+                  {isUpdating ? "Saving booking…" : "Record Lalamove Booking"}
+                </button>
+                {updateError ? <p className="mt-3 text-sm text-red-700" role="alert">{updateError}</p> : null}
+              </div> : null}
+              {updateError && !(delivery.delivery_status === "waiting_for_booking" && delivery.allowed_statuses.includes("booked")) ? <p className="mt-3 text-sm text-red-700" role="alert">{updateError}</p> : null}
             </section>
 
             <section className="admin-order-modal-section">

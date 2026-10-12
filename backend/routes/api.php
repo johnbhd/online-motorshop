@@ -353,6 +353,10 @@ Route::prefix('admin')
             ->whereNumber('delivery')
             ->name('deliveries.show');
 
+        Route::patch('/delivery-requests/{delivery}/status', [AdminDeliveryRequestsController::class, 'updateStatus'])
+            ->whereNumber('delivery')
+            ->name('deliveries.status');
+
         Route::get('/customers', [AdminCustomersController::class, 'index'])
             ->name('customers.index');
 
