@@ -6,6 +6,7 @@ use App\Http\Requests\StoreOrderRequestRequest;
 use App\Http\Requests\TrackOrderRequest;
 use App\Models\OrderRequest;
 use App\Services\DeliveryRouteService;
+use App\Services\LocationMismatchException;
 use App\Services\OrderRequestCreator;
 use App\Services\OrderRequestPresenter;
 use App\Services\StaffAdminNotificationService;
@@ -38,7 +39,20 @@ class OrderRequestController extends Controller
             ], 403);
         }
 
-        $order = $this->orderRequestCreator->create($request->validated(), $user);
+        try {
+            $order = $this->orderRequestCreator->create($request->validated(), $user);
+        } catch (LocationMismatchException $exception) {
+            $errors = [];
+
+            foreach ($exception->errors() as $key => $messages) {
+                $errors[str_starts_with($key, 'fulfillment.') ? $key : 'fulfillment.delivery.'.$key] = $messages;
+            }
+
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'errors' => $errors,
+            ], 422);
+        }
         $this->staffAdminNotificationService->orderCreated($order);
 
         return response()->json([

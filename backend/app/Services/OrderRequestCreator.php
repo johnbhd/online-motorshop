@@ -18,6 +18,7 @@ class OrderRequestCreator
 {
     public function __construct(
         private readonly DeliveryRouteService $deliveryRouteService,
+        private readonly LocationConsistencyService $locationConsistencyService,
     ) {}
 
     /**
@@ -38,6 +39,17 @@ class OrderRequestCreator
             : null;
         $deliveryAddress = $delivery ? $this->deliveryAddress($delivery) : null;
         $deliveryRemarks = $delivery ? $this->deliveryRemarks($delivery) : null;
+
+        if ($delivery !== null) {
+            $this->locationConsistencyService->validate([
+                'latitude' => $delivery['latitude'] ?? null,
+                'longitude' => $delivery['longitude'] ?? null,
+                'city_municipality_code' => $delivery['city_municipality_code'] ?? null,
+                'city_municipality' => $delivery['city'] ?? null,
+                'barangay_code' => $delivery['barangay_code'] ?? null,
+                'barangay' => $delivery['barangay'] ?? null,
+            ]);
+        }
         $guestTokenHash = $user === null && filled($payload['guest_token'] ?? null)
             ? hash('sha256', trim((string) $payload['guest_token']))
             : null;

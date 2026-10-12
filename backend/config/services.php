@@ -53,4 +53,11 @@ return [
         'timeout' => (int) env('OPENROUTESERVICE_TIMEOUT', 8),
     ],
 
+    'reverse_geocoder' => [
+        'provider' => env('REVERSE_GEOCODER_PROVIDER', 'nominatim'),
+        'url' => env('REVERSE_GEOCODER_URL', 'https://nominatim.openstreetmap.org/reverse'),
+        'user_agent' => env('REVERSE_GEOCODER_USER_AGENT', env('APP_NAME', 'ALD Motorshop').' (+'.env('APP_URL', 'http://localhost').')'),
+        'timeout' => (int) env('REVERSE_GEOCODER_TIMEOUT', 8),
+    ],
+
 ];

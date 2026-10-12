@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\OrderRequest;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OrderRequestApiTest extends TestCase
@@ -20,6 +22,7 @@ class OrderRequestApiTest extends TestCase
         $app = parent::createApplication();
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app['config']->set('cache.default', 'array');
 
         return $app;
     }
@@ -133,8 +136,66 @@ class OrderRequestApiTest extends TestCase
         $this->assertDatabaseCount('pickup_requests', 0);
     }
 
+    public function test_delivery_order_rejects_a_confident_pinned_location_mismatch(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Manila',
+                    'suburb' => 'Barangay One',
+                ],
+            ], 200),
+        ]);
+
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-PIN-001', 350.00);
+
+        $this->postJson('/api/order-requests', [
+            'customer' => [
+                'name' => 'Mismatch Guest',
+                'email' => 'mismatch@example.com',
+                'contact_number' => '09179876543',
+            ],
+            'items' => [[
+                'part_number' => $product->part_number,
+                'quantity' => 1,
+            ]],
+            'payment_method' => 'online_payment',
+            'fulfillment' => [
+                'method' => 'delivery',
+                'branch_id' => $branch->id,
+                'delivery' => [
+                    'address' => '12 Main Street',
+                    'barangay' => 'Barangay Adams',
+                    'barangay_code' => '0102801001',
+                    'city' => 'Adams',
+                    'city_municipality_code' => '0102801000',
+                    'latitude' => 14.5995,
+                    'longitude' => 120.9842,
+                    'contact_person' => 'Mismatch Guest',
+                    'contact_number' => '09179876543',
+                ],
+            ],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'fulfillment.delivery.city',
+                'fulfillment.delivery.city_municipality_code',
+            ]);
+
+        $this->assertDatabaseCount('order_requests', 0);
+    }
+
     public function test_registered_delivery_persists_an_order_snapshot_separate_from_the_profile(): void
     {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Imus',
+                ],
+            ], 200),
+        ]);
+
         $branch = $this->createBranch();
         $product = $this->createProduct('HON-SNAPSHOT-001', 350.00);
         $user = User::create([
@@ -186,7 +247,7 @@ class OrderRequestApiTest extends TestCase
             ->assertJsonPath('order.delivery.longitude', 120.9406)
             ->assertJsonPath('order.delivery.notes', 'Call before arrival');
 
-        $order = \App\Models\OrderRequest::query()->where('customer_id', $customer->id)->firstOrFail();
+        $order = OrderRequest::query()->where('customer_id', $customer->id)->firstOrFail();
         $this->assertDatabaseHas('delivery_requests', [
             'order_id' => $order->id,
             'delivery_complete_address' => 'Edited Order Address',

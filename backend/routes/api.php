@@ -62,6 +62,9 @@ Route::get('/locations/cities-municipalities', [LocationController::class, 'citi
 Route::get('/locations/cities-municipalities/{code}/barangays', [LocationController::class, 'barangays'])
     ->where('code', '[A-Za-z0-9_-]+')
     ->name('locations.barangays');
+Route::post('/locations/reverse-geocode', [LocationController::class, 'reverseGeocode'])
+    ->middleware('throttle:10,1')
+    ->name('locations.reverse-geocode');
 
 // Public catalog
 Route::get('/products', [CatalogController::class, 'products'])

@@ -2,6 +2,7 @@ import type {
   LocationBarangaysResponse,
   LocationCitiesResponse,
   LocationOption,
+  ReverseGeocodeResponse,
 } from "./locationTypes";
 
 export class LocationApiError extends Error {
@@ -43,6 +44,46 @@ async function requestJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   }
 
   return payload as T;
+}
+
+export async function reverseGeocodeLocation(
+  latitude: number,
+  longitude: number,
+  signal?: AbortSignal,
+): Promise<ReverseGeocodeResponse> {
+  let response: Response;
+
+  try {
+    response = await fetch("/api/locations/reverse-geocode", {
+      method: "POST",
+      signal,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ latitude, longitude }),
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw error;
+    }
+
+    throw new LocationApiError("The location service could not be reached.", 502);
+  }
+
+  const payload = (await response.json().catch(() => null)) as unknown;
+
+  if (!response.ok) {
+    const message =
+      payload && typeof payload === "object" && "message" in payload
+        ? String(payload.message)
+        : `Location request failed with status ${response.status}.`;
+
+    throw new LocationApiError(message, response.status);
+  }
+
+  return payload as ReverseGeocodeResponse;
 }
 
 export async function getCitiesMunicipalities(

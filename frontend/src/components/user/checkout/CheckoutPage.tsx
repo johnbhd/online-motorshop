@@ -25,7 +25,11 @@ import {
   getCitiesMunicipalities,
   getLocationErrorMessage,
 } from "@/lib/locationApi";
-import type { LocationOption } from "@/lib/locationTypes";
+import type {
+  LocationDetectionState,
+  LocationOption,
+  ReverseGeocodeResponse,
+} from "@/lib/locationTypes";
 import type { LocationSelection } from "../account/profile/LocationSelect";
 import {
   getCheckoutBranches,
@@ -102,6 +106,7 @@ export default function CheckoutPage() {
   const [barangayError, setBarangayError] = useState<string | null>(null);
   const [locationReloadNonce, setLocationReloadNonce] = useState(0);
   const [formData, setFormData] = useState<CheckoutFormData>(initialFormData);
+  const [locationDetectionState, setLocationDetectionState] = useState<LocationDetectionState>("idle");
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
   const [submitError, setSubmitError] = useState("");
   const [isReady, setIsReady] = useState(false);
@@ -298,6 +303,7 @@ export default function CheckoutPage() {
   };
 
   const handleFulfillmentChange = (method: CartFulfillmentMethod) => {
+    setLocationDetectionState("idle");
     setFormData((currentFormData) => ({
       ...currentFormData,
       fulfillmentMethod: method,
@@ -362,6 +368,15 @@ export default function CheckoutPage() {
 
     const validationErrors = validateCheckoutForm(formData);
     const selectedBranch = getCheckoutBranchById(branches, formData.branchId);
+
+    if (
+      formData.fulfillmentMethod === "delivery"
+      && formData.delivery.latitude !== null
+      && formData.delivery.longitude !== null
+      && locationDetectionState === "mismatch"
+    ) {
+      validationErrors.deliveryLocation = "Use the map again or update the city and barangay so they match the pinned location.";
+    }
 
     if (!selectedBranch) {
       validationErrors.branchId = "Choose an ALD branch for this request.";
@@ -444,6 +459,8 @@ export default function CheckoutPage() {
             "fulfillment.delivery.address": "deliveryAddress",
             "fulfillment.delivery.barangay": "barangay",
             "fulfillment.delivery.city": "city",
+            "fulfillment.delivery.city_municipality_code": "city",
+            "fulfillment.delivery.barangay_code": "barangay",
             "fulfillment.delivery.contact_person": "contactPerson",
             "fulfillment.delivery.contact_number": "deliveryContactNumber",
             payment_method: "paymentMethod",
@@ -590,6 +607,7 @@ export default function CheckoutPage() {
                 barangayLoading={barangayLoading}
                 cityError={cityError}
                 barangayError={barangayError}
+                locationDetectionState={locationDetectionState}
                 onCityRetry={() => {
                   setCityError(null);
                   setLocationReloadNonce((value) => value + 1);
@@ -599,6 +617,9 @@ export default function CheckoutPage() {
                   setLocationReloadNonce((value) => value + 1);
                 }}
                 onLocationChange={(field: "city" | "barangay", selection: LocationSelection) => {
+                  if (formData.delivery.latitude !== null && formData.delivery.longitude !== null) {
+                    setLocationDetectionState("mismatch");
+                  }
                   setFormData((current) => ({
                     ...current,
                     delivery: field === "city"
@@ -607,10 +628,31 @@ export default function CheckoutPage() {
                   }));
                   setSubmitError("");
                 }}
-                onCoordinatesChange={(latitude, longitude) => setFormData((current) => ({
-                  ...current,
-                  delivery: { ...current.delivery, latitude, longitude },
-                }))}
+                onCoordinatesChange={(latitude, longitude) => {
+                  setFormData((current) => ({
+                    ...current,
+                    delivery: { ...current.delivery, latitude, longitude },
+                  }));
+                  if (latitude === null || longitude === null) {
+                    setLocationDetectionState("idle");
+                  }
+                }}
+                onDetected={(result: ReverseGeocodeResponse) => {
+                  const city = result.psgc.city_municipality ?? result.detected.city_municipality ?? "";
+                  const barangay = result.psgc.barangay ?? result.detected.barangay ?? "";
+
+                  setFormData((current) => ({
+                    ...current,
+                    delivery: {
+                      ...current.delivery,
+                      city,
+                      cityMunicipalityCode: result.psgc.city_municipality_code ?? "",
+                      barangay,
+                      barangayCode: result.psgc.barangay_code ?? "",
+                    },
+                  }));
+                }}
+                onDetectionStateChange={setLocationDetectionState}
               />
             ) : null}
 
