@@ -88,7 +88,7 @@
 .auth-icon-left,
 .auth-icon-right {
   position: absolute;
-  top: 50%;
+  top: 1.5rem;
   color: #94a3b8;
   transform: translateY(-50%);
 }
