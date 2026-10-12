@@ -114,6 +114,14 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitLockRef = useRef(false);
 
+  const showCheckoutErrorToast = (message: string) => {
+    showToast({
+      title: "Checkout needs attention",
+      message,
+      variant: "error",
+    });
+  };
+
   const loadBranches = useCallback(async () => {
     setIsLoadingBranches(true);
     setBranchLoadError("");
@@ -363,7 +371,9 @@ export default function CheckoutPage() {
     }
 
     if (cartItems.length === 0) {
-      setSubmitError("Your cart is empty. Add a product before submitting a request.");
+      const message = "Your cart is empty. Add a product before submitting a request.";
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
       return;
     }
 
@@ -391,7 +401,9 @@ export default function CheckoutPage() {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setSubmitError("Review the highlighted details before submitting your request.");
+      const message = "Review the highlighted details before submitting your request.";
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
       return;
     }
 
@@ -410,9 +422,10 @@ export default function CheckoutPage() {
     if (!payload) {
       setIsSubmitting(false);
       submitLockRef.current = false;
-      setSubmitError(
-        "This request contains an invalid branch or cart item. Review your details and try again.",
-      );
+      const message =
+        "This request contains an invalid branch or cart item. Review your details and try again.";
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
       return;
     }
 
@@ -435,16 +448,15 @@ export default function CheckoutPage() {
         `/order-confirmation/${encodeURIComponent(response.order.reference)}`,
       );
     } catch (error) {
-      if (error instanceof OrderRequestApiError && error.status === 0) {
-        setSubmitError(error.message);
-      } else {
-        setSubmitError(
-          getOrderRequestErrorMessage(
-            error,
-            "This request could not be submitted. Your cart is still saved. Please try again.",
-          ),
-        );
-      }
+      const message =
+        error instanceof OrderRequestApiError && error.status === 0
+          ? error.message
+          : getOrderRequestErrorMessage(
+              error,
+              "This request could not be submitted. Your cart is still saved. Please try again.",
+            );
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
 
       if (error instanceof OrderRequestApiError) {
         const firstValidationError = Object.entries(error.errors)[0];
