@@ -33,6 +33,104 @@ function isAssistantRole(value: unknown): value is "user" | "assistant" {
   return value === "user" || value === "assistant";
 }
 
+function readOptionalText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const text = value.trim();
+
+  return text && text.length <= maxLength ? text : null;
+}
+
+function normalizeProductContext(value: unknown) {
+  if (!Array.isArray(value) || value.length > 5) {
+    return null;
+  }
+
+  const products = [];
+
+  for (const product of value) {
+    if (!isRecord(product)) {
+      return null;
+    }
+
+    const name = readOptionalText(product.name, 200);
+
+    if (!name) {
+      return null;
+    }
+
+    const priceValue =
+      typeof product.price === "number" ||
+      (typeof product.price === "string" && product.price.trim() !== "")
+        ? Number(product.price)
+        : NaN;
+    const price = Number.isFinite(priceValue) && priceValue >= 0
+      ? priceValue
+      : null;
+
+    products.push({
+      name,
+      product_code: readOptionalText(product.productCode, 100),
+      price,
+      brand: readOptionalText(product.brand, 100),
+      category: readOptionalText(product.category, 100),
+    });
+  }
+
+  return products;
+}
+
+function normalizeProductCards(value: unknown) {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  return value
+    .map((product) => {
+      if (!isRecord(product)) {
+        return null;
+      }
+
+      const name = readOptionalText(product.name, 200);
+      const productUrl = readOptionalText(product.product_url, 300);
+
+      if (
+        !name ||
+        !productUrl ||
+        !productUrl.startsWith("/products/") ||
+        productUrl.includes("//")
+      ) {
+        return null;
+      }
+
+      const priceValue =
+        typeof product.price === "number" ||
+        (typeof product.price === "string" && product.price.trim() !== "")
+          ? Number(product.price)
+          : NaN;
+      const price = Number.isFinite(priceValue) && priceValue >= 0
+        ? priceValue
+        : null;
+      const imageUrl = readOptionalText(product.image_url, 1000);
+
+      return {
+        name,
+        product_code: readOptionalText(product.product_code, 100),
+        product_url: productUrl,
+        image_url:
+          imageUrl && /^https?:\/\//i.test(imageUrl) ? imageUrl : null,
+        price,
+        brand: readOptionalText(product.brand, 100),
+        category: readOptionalText(product.category, 100),
+        description: readOptionalText(product.description, 500),
+      };
+    })
+    .filter((product): product is NonNullable<typeof product> => product !== null)
+    .slice(0, 5);
+}
+
 function jsonError(
   message: string,
   status: number,
@@ -130,7 +228,22 @@ function parseRequestBody(body: unknown) {
       return { error: "Please send a valid assistant history." } as const;
     }
 
-    normalizedHistory.push({ role: item.role, content });
+    const productContext =
+      item.productContext === undefined
+        ? undefined
+        : normalizeProductContext(item.productContext);
+
+    if (item.productContext !== undefined && productContext === null) {
+      return { error: "Please send a valid assistant history." } as const;
+    }
+
+    normalizedHistory.push({
+      role: item.role,
+      content,
+      ...(productContext && productContext.length > 0
+        ? { product_context: productContext }
+        : {}),
+    });
   }
 
   let replyTo: { role: "user" | "assistant"; content: string } | null = null;
@@ -338,8 +451,25 @@ export async function POST(request: NextRequest) {
       return jsonError(unavailableMessage, 503, "assistant_unavailable");
     }
 
+    const products = normalizeProductCards(responseBody.products);
+    const totalValue =
+      typeof responseBody.total_matches === "number" ||
+      (typeof responseBody.total_matches === "string" &&
+        responseBody.total_matches.trim() !== "")
+        ? Number(responseBody.total_matches)
+        : NaN;
+    const totalMatches =
+      Number.isInteger(totalValue) && totalValue >= 0 ? totalValue : null;
+
     return NextResponse.json(
-      { message },
+      {
+        message,
+        ...(products !== undefined ? { products } : {}),
+        ...(totalMatches !== null ? { total_matches: totalMatches } : {}),
+        ...(typeof responseBody.has_more === "boolean"
+          ? { has_more: responseBody.has_more }
+          : {}),
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch {

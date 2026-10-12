@@ -27,7 +27,7 @@ class AssistantController extends Controller
             $this->abuseGuard->assertAllowed($request, $validated['message']);
             $this->dailyQuotaGuard->assertAllowed($request);
 
-            $message = $this->assistantService->chat(
+            $result = $this->assistantService->chat(
                 $validated['message'],
                 $validated['history'] ?? [],
                 $validated['replyTo'] ?? null,
@@ -58,8 +58,19 @@ class AssistantController extends Controller
             ]);
         }
 
-        return response()->json([
-            'message' => $message,
-        ]);
+        $response = [
+            'message' => $result['message'],
+        ];
+
+        if (($result['is_catalog'] ?? false) && ($result['total_matches'] ?? null) !== null) {
+            $response['total_matches'] = $result['total_matches'];
+        }
+
+        if (($result['product_result'] ?? false) === true) {
+            $response['products'] = $result['products'] ?? [];
+            $response['has_more'] = (bool) ($result['has_more'] ?? false);
+        }
+
+        return response()->json($response);
     }
 }

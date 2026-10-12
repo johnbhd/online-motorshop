@@ -451,6 +451,15 @@ class AssistantChatApiTest extends TestCase
                     'source' => 'CURRENT_BRANCH_DATA',
                     'data' => ['branches' => []],
                 ]));
+            $mock->shouldReceive('metadata')
+                ->once()
+                ->andReturn([
+                    'is_catalog' => true,
+                    'product_result' => false,
+                    'products' => [],
+                    'total_matches' => null,
+                    'has_more' => false,
+                ]);
         });
 
         Http::fake([

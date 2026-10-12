@@ -1,5 +1,6 @@
 import type {
   AssistantMessage,
+  AssistantProductCard,
   AssistantReplyReference,
   AssistantRole,
 } from "./assistantTypes";
@@ -30,6 +31,48 @@ function normalizeReplyReference(value: unknown): AssistantReplyReference | null
   return { id: value.id, role: value.role, content };
 }
 
+function normalizeProductCard(value: unknown): AssistantProductCard | null {
+  if (!isRecord(value) || typeof value.name !== "string" || typeof value.href !== "string") {
+    return null;
+  }
+
+  const name = value.name.trim();
+  const href = value.href.trim();
+
+  if (!name || name.length > 200 || !href.startsWith("/products/") || href.includes("//")) {
+    return null;
+  }
+
+  const imageUrl = typeof value.imageUrl === "string" ? value.imageUrl.trim() : "";
+  const priceValue = typeof value.price === "number" ||
+    (typeof value.price === "string" && value.price.trim() !== "")
+    ? Number(value.price)
+    : NaN;
+
+  return {
+    name,
+    productCode:
+      typeof value.productCode === "string" && value.productCode.trim().length <= 100
+        ? value.productCode.trim() || null
+        : null,
+    href,
+    imageUrl: imageUrl && /^https?:\/\//i.test(imageUrl) ? imageUrl : null,
+    price: Number.isFinite(priceValue) && priceValue >= 0 ? priceValue : null,
+    brand:
+      typeof value.brand === "string" && value.brand.trim().length <= 100
+        ? value.brand.trim() || null
+        : null,
+    category:
+      typeof value.category === "string" && value.category.trim().length <= 100
+        ? value.category.trim() || null
+        : null,
+    description:
+      typeof value.description === "string" && value.description.trim().length <= 500
+        ? value.description.trim() || null
+        : null,
+  };
+}
+
 function normalizeAssistantMessage(value: unknown): AssistantMessage | null {
   if (
     !isRecord(value) ||
@@ -47,12 +90,28 @@ function normalizeAssistantMessage(value: unknown): AssistantMessage | null {
     return null;
   }
 
+  const products = Array.isArray(value.products)
+    ? value.products
+        .map(normalizeProductCard)
+        .filter((product): product is AssistantProductCard => product !== null)
+        .slice(0, 5)
+    : undefined;
+  const totalValue = typeof value.totalMatches === "number" ||
+    (typeof value.totalMatches === "string" && value.totalMatches.trim() !== "")
+    ? Number(value.totalMatches)
+    : NaN;
+
   return {
     id: value.id,
     role: value.role,
     content,
     createdAt: value.createdAt,
     replyTo: value.replyTo === undefined ? null : normalizeReplyReference(value.replyTo),
+    ...(products !== undefined ? { products } : {}),
+    ...(Number.isInteger(totalValue) && totalValue >= 0
+      ? { totalMatches: totalValue }
+      : {}),
+    ...(typeof value.hasMore === "boolean" ? { hasMore: value.hasMore } : {}),
   };
 }
 

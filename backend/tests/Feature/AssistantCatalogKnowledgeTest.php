@@ -172,6 +172,117 @@ class AssistantCatalogKnowledgeTest extends TestCase
         $this->assertStringContainsString('must not infer fitment', $systemPrompt);
     }
 
+    public function test_catalog_count_uses_the_visible_product_count_without_cards(): void
+    {
+        [$brand, $category] = $this->catalogTaxonomy();
+        $this->product($brand, $category, 'ALD Battery Alpha', 'BAT-001', 950.00);
+        $this->product($brand, $category, 'ALD Brake Pad', 'BRK-001', 480.00);
+
+        $response = $this->askResponse('How many products do you have?');
+
+        $response->assertOk()
+            ->assertJsonPath('total_matches', 2)
+            ->assertJsonMissingPath('products');
+
+        $context = $this->latestLiveContext('CURRENT_CATALOG_DATA');
+
+        $this->assertStringContainsString('"intent":"catalog_count"', $context);
+        $this->assertStringContainsString('"match_count":2', $context);
+    }
+
+    public function test_catalog_list_returns_limited_safe_clickable_product_cards(): void
+    {
+        [$brand, $category] = $this->catalogTaxonomy();
+
+        for ($index = 1; $index <= 7; $index++) {
+            $this->product(
+                $brand,
+                $category,
+                'ALD Product '.$index,
+                'PRD-00'.$index,
+                100.00 + $index,
+            );
+        }
+
+        $response = $this->askResponse('What products do you have?');
+
+        $response->assertOk()
+            ->assertJsonCount(5, 'products')
+            ->assertJsonPath('total_matches', 7)
+            ->assertJsonPath('has_more', true)
+            ->assertJsonPath('products.0.product_url', '/products/PRD-001')
+            ->assertJsonPath('products.0.image_url', 'https://example.test/PRD-001.png')
+            ->assertJsonMissingPath('products.0.id')
+            ->assertJsonMissingPath('products.0.img_public_id');
+    }
+
+    public function test_brand_and_category_product_queries_use_live_relations(): void
+    {
+        [$brand, $category] = $this->catalogTaxonomy();
+        $otherBrand = Brand::create(['name' => 'Other Brand', 'status' => 'active']);
+        $otherCategory = Category::create([
+            'name' => 'Other Category',
+            'description' => null,
+            'status' => 'active',
+        ]);
+        $matching = $this->product($brand, $category, 'ALD Battery Alpha', 'BAT-001', 950.00);
+        $this->product($otherBrand, $category, 'Other Battery', 'BAT-002', 850.00);
+        $this->product($brand, $otherCategory, 'Other Part', 'PRT-003', 400.00);
+
+        $brandResponse = $this->askResponse('Show ALD Brand products.');
+        $brandResponse->assertOk()
+            ->assertJsonCount(2, 'products')
+            ->assertJsonPath('products.0.product_code', $matching->part_number);
+
+        $categoryResponse = $this->askResponse('Show ALD Electrical products.');
+        $categoryResponse->assertOk()
+            ->assertJsonCount(2, 'products');
+    }
+
+    public function test_product_follow_up_uses_the_selected_previous_result_against_live_data(): void
+    {
+        [$brand, $category] = $this->catalogTaxonomy();
+        $this->product($brand, $category, 'ALD Battery Alpha', 'BAT-001', 950.00);
+        $second = $this->product($brand, $category, 'ALD Battery Beta', 'BAT-002', 1050.00);
+
+        $response = $this->postJson('/api/assistant/chat', [
+            'message' => 'How much is the second one?',
+            'history' => [
+                [
+                    'role' => 'assistant',
+                    'content' => 'I found two matching products.',
+                    'product_context' => [
+                        [
+                            'name' => 'ALD Battery Alpha',
+                            'product_code' => 'BAT-001',
+                            'price' => 950,
+                            'brand' => 'ALD Brand',
+                            'category' => 'ALD Electrical',
+                        ],
+                        [
+                            'name' => 'ALD Battery Beta',
+                            'product_code' => 'BAT-002',
+                            'price' => 1050,
+                            'brand' => 'ALD Brand',
+                            'category' => 'ALD Electrical',
+                        ],
+                    ],
+                ],
+            ],
+        ], [
+            'X-Assistant-Session' => (string) Str::uuid(),
+        ]);
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'products')
+            ->assertJsonPath('products.0.product_code', $second->part_number)
+            ->assertJsonPath('products.0.price', 1050);
+
+        $context = $this->latestLiveContext('CURRENT_CATALOG_DATA');
+        $this->assertStringContainsString($second->name, $context);
+        $this->assertStringContainsString('"match_count":1', $context);
+    }
+
     /**
      * @return array{0: Brand, 1: Category}
      */
@@ -211,11 +322,16 @@ class AssistantCatalogKnowledgeTest extends TestCase
 
     private function ask(string $message): void
     {
-        $this->postJson('/api/assistant/chat', [
+        $this->askResponse($message)->assertOk();
+    }
+
+    private function askResponse(string $message)
+    {
+        return $this->postJson('/api/assistant/chat', [
             'message' => $message,
         ], [
             'X-Assistant-Session' => (string) Str::uuid(),
-        ])->assertOk();
+        ]);
     }
 
     private function latestLiveContext(string $source): string

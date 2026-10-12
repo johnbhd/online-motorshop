@@ -4,7 +4,10 @@ import type {
   OrderUpdateMetadata,
   ProductInquiryMetadata,
 } from "@/lib/messages/conversationTypes";
-import type { AssistantReplyReference } from "@/lib/assistant/assistantTypes";
+import type {
+  AssistantProductCard,
+  AssistantReplyReference,
+} from "@/lib/assistant/assistantTypes";
 
 export type ChatSender = "bot" | "customer" | "staff" | "admin" | "system";
 
@@ -21,6 +24,9 @@ export type ChatMessage = {
     | null;
   attachmentUrl?: string | null;
   replyTo?: AssistantReplyReference | null;
+  products?: AssistantProductCard[];
+  totalMatches?: number | null;
+  hasMore?: boolean;
 };
 
 export type ContactInquiryDraft = {
