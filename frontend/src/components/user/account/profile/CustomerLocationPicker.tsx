@@ -55,6 +55,7 @@ export default function CustomerLocationPicker({
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detectedArea, setDetectedArea] = useState<string | null>(null);
+  const [detectedCity, setDetectedCity] = useState<string | null>(null);
   const [internalDetectionState, setInternalDetectionState] = useState<LocationDetectionState>("idle");
   const currentDetectionState = detectionState ?? internalDetectionState;
   const hasCoordinates = latitude !== null && longitude !== null;
@@ -81,6 +82,7 @@ export default function CustomerLocationPicker({
     setDetectionState("detecting");
     setError(null);
     setDetectedArea(null);
+    setDetectedCity(null);
 
     void reverseGeocodeLocation(nextLatitude, nextLongitude, controller.signal)
       .then((result) => {
@@ -90,6 +92,9 @@ export default function CustomerLocationPicker({
 
         onDetectedRef.current?.(result);
         setDetectedArea(result.detected.area);
+        setDetectedCity(
+          result.psgc.city_municipality ?? result.detected.city_municipality,
+        );
         setDetectionState(
           result.match.city === "matched" && result.match.barangay === "matched"
             ? "matched"
@@ -275,6 +280,7 @@ export default function CustomerLocationPicker({
     reverseRequestIdRef.current += 1;
     setError(null);
     setDetectedArea(null);
+    setDetectedCity(null);
     setDetectionState("idle");
     onChangeRef.current(null, null);
   };
@@ -350,7 +356,7 @@ export default function CustomerLocationPicker({
             : currentDetectionState === "matched"
               ? "Pin matches the selected PSGC city and barangay."
               : currentDetectionState === "partial"
-                ? `Pin detected.${detectedArea ? ` Detected area: ${detectedArea}.` : ""} Barangay could not be matched to PSGC. Please verify your barangay before saving.`
+                ? `Location detected${detectedArea ? ` in ${detectedArea}` : ""}${detectedCity ? `, ${detectedCity}` : ""}. We could not determine the exact barangay automatically. Please select or enter your barangay before saving.`
                 : currentDetectionState === "mismatch"
                   ? "The location fields changed after this pin. Use the map again to verify the new address."
                   : "Pin saved, but its address could not be verified. You can continue with manual fields."}
