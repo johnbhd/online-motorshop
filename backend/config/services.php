@@ -59,6 +59,10 @@ return [
         'url' => rtrim((string) env('FRONTEND_URL', ''), '/'),
     ],
 
+    'order_tracking' => [
+        'ttl' => (int) env('ORDER_TRACKING_TTL', 900),
+    ],
+
     'groq' => [
         'key' => env('GROQ_API_KEY'),
         'model' => env('GROQ_MODEL', 'openai/gpt-oss-120b'),

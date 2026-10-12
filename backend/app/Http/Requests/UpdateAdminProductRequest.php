@@ -66,7 +66,7 @@ class UpdateAdminProductRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
             'price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
             'img_url' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'image' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
             'availability_status' => ['sometimes', 'required', 'string', 'max:100'],
             'status' => ['sometimes', 'required', 'string', 'max:100'],
         ];
@@ -77,7 +77,7 @@ class UpdateAdminProductRequest extends FormRequest
         return [
             'image.image' => 'Product image must be a valid image.',
             'image.mimes' => 'Product image must be a JPG, JPEG, PNG, or WEBP image.',
-            'image.max' => 'Product image must be 5 MB or smaller.',
+            'image.max' => 'Product image must be 15 MB or smaller.',
         ];
     }
 }

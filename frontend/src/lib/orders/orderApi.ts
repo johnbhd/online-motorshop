@@ -98,6 +98,10 @@ export type OrderApiPayment = {
   proof_image_url: string | null;
   status: string;
   verified_at: string | null;
+  can_view_instructions?: boolean;
+  can_upload_proof?: boolean;
+  can_reupload_proof?: boolean;
+  can_view_submitted_proof?: boolean;
 };
 
 export type OrderApiDetails = OrderApiSummary & {
@@ -131,6 +135,8 @@ export type CustomerPaymentProofApiResponse = OrderDetailsApiResponse & {
 
 export type TrackOrderApiResponse = {
   order: OrderApiDetails;
+  tracking_token?: string;
+  tracking_token_expires_at?: string;
 };
 
 type ApiErrorPayload = {
@@ -259,20 +265,26 @@ export async function submitPaymentProof(
   token: string,
   reference: string,
   file: File,
+  authorizationType: "bearer" | "tracking" = "bearer",
   signal?: AbortSignal,
 ): Promise<CustomerPaymentProofApiResponse> {
   const formData = new FormData();
   formData.append("proof", file);
 
+  const path = authorizationType === "tracking"
+    ? `/api/order-requests/track/${encodeURIComponent(reference)}/payment-proof`
+    : `/api/customer/orders/${encodeURIComponent(reference)}/payment-proof`;
+  const authorizationHeaders: Record<string, string> = authorizationType === "tracking"
+    ? { "X-Order-Tracking-Token": token }
+    : { Authorization: `Bearer ${token}` };
+
   return requestOrderApi<CustomerPaymentProofApiResponse>(
-    `/api/customer/orders/${encodeURIComponent(reference)}/payment-proof`,
+    path,
     {
       method: "POST",
       signal,
       body: formData,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: authorizationHeaders,
     },
   );
 }
@@ -290,6 +302,23 @@ export async function trackOrder(
       contact_number: contactNumber,
     }),
   });
+}
+
+export async function getTrackedOrder(
+  reference: string,
+  trackingToken: string,
+  signal?: AbortSignal,
+): Promise<TrackOrderApiResponse> {
+  return requestOrderApi<TrackOrderApiResponse>(
+    `/api/order-requests/track/${encodeURIComponent(reference)}`,
+    {
+      method: "GET",
+      signal,
+      headers: {
+        "X-Order-Tracking-Token": trackingToken,
+      },
+    },
+  );
 }
 
 function isApiErrorPayload(value: unknown): value is ApiErrorPayload {

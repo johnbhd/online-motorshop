@@ -1,4 +1,4 @@
-export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+export const MAX_IMAGE_SIZE_BYTES = 15 * 1024 * 1024;
 
 export const IMAGE_UPLOAD_ACCEPTED_TYPES = [
   "image/jpeg",
@@ -9,7 +9,7 @@ export const IMAGE_UPLOAD_ACCEPTED_TYPES = [
 export const IMAGE_UPLOAD_ACCEPT_ATTRIBUTE =
   ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
 
-export const IMAGE_UPLOAD_HELP_TEXT = "JPG, PNG, or WEBP up to 5 MB.";
+export const IMAGE_UPLOAD_HELP_TEXT = "JPG, PNG, or WEBP up to 15 MB.";
 
 export function validateImageFile(
   file: File | null | undefined,
@@ -28,7 +28,7 @@ export function validateImageFile(
   }
 
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return `The selected ${label} is too large. Maximum file size is 5 MB.`;
+    return `The selected ${label} is too large. Maximum file size is 15 MB.`;
   }
 
   return null;
@@ -36,7 +36,7 @@ export function validateImageFile(
 
 export function getImageUploadTransportError(status: number): string | null {
   if (status === 413) {
-    return "The image is too large to upload. Maximum file size is 5 MB.";
+    return "The image is too large to upload. Maximum file size is 15 MB.";
   }
 
   return null;

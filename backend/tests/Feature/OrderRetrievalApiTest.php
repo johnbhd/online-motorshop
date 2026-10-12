@@ -149,13 +149,21 @@ class OrderRetrievalApiTest extends TestCase
         [, $customer] = $this->createCustomer(null, '0917-333-3333', guestName: 'Guest Buyer');
         $order = $this->createOrder($customer, $product, 'ALD-2026-000020');
 
-        $this->postJson('/api/order-requests/track', [
+        $trackingResponse = $this->postJson('/api/order-requests/track', [
             'order_reference' => strtolower($order->order_reference),
             'contact_number' => '09173333333',
         ])
             ->assertOk()
             ->assertJsonPath('order.reference', $order->order_reference)
             ->assertJsonPath('order.pickup.branch_id', $branch->id)
+            ->assertJsonMissingPath('order.customer')
+            ->assertJsonPath('tracking_token', fn (mixed $value): bool => is_string($value) && $value !== '')
+            ->assertJsonPath('tracking_token_expires_at', fn (mixed $value): bool => is_string($value) && $value !== '');
+
+        $this->withHeader('X-Order-Tracking-Token', (string) $trackingResponse->json('tracking_token'))
+            ->getJson('/api/order-requests/track/'.$order->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.reference', $order->order_reference)
             ->assertJsonMissingPath('order.customer');
 
         $this->postJson('/api/order-requests/track', [

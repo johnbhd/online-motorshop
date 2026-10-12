@@ -161,6 +161,7 @@ export default function CustomerOrderDetailsPage({
       <OrderDetailsView
         order={order}
         paymentToken={getAuthToken()}
+        paymentTokenType="bearer"
         onOrderUpdated={(updatedOrder) => setOrder(updatedOrder)}
       />
     </div>

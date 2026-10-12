@@ -11,6 +11,7 @@ use App\Services\CloudinaryServiceException;
 use App\Services\DeliveryRouteService;
 use App\Services\MediaAssetService;
 use App\Services\OrderRequestPresenter;
+use App\Services\OrderTrackingAuthorizationService;
 use App\Services\StaffAdminNotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +34,7 @@ class CustomerOrderController extends Controller
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
         private readonly CloudinaryService $cloudinaryService,
         private readonly MediaAssetService $mediaAssetService,
+        private readonly OrderTrackingAuthorizationService $orderTrackingAuthorizationService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -82,14 +84,18 @@ class CustomerOrderController extends Controller
     public function show(Request $request, string $reference): JsonResponse
     {
         $customer = $request->user()?->customer;
+        $trackingToken = $request->header('X-Order-Tracking-Token');
 
-        if (! $customer) {
+        if (! $customer && ! filled($trackingToken)) {
             return response()->json([
-                'message' => 'Customer profile not found.',
-            ], 404);
+                'message' => 'Unauthenticated.',
+            ], 401);
         }
 
-        $order = $this->ownedOrderQuery($customer, $reference)
+        $orderQuery = $customer
+            ? $this->ownedOrderQuery($customer, $reference)
+            : $this->trackedOrderQuery($reference);
+        $order = $orderQuery
             ->with([
                 'branch',
                 'customer',
@@ -100,7 +106,7 @@ class CustomerOrderController extends Controller
             ])
             ->first();
 
-        if (! $order) {
+        if (! $order || (! $customer && ! $this->orderTrackingAuthorizationService->allows($trackingToken, $order))) {
             return response()->json([
                 'message' => 'Order not found.',
             ], 404);
@@ -118,14 +124,18 @@ class CustomerOrderController extends Controller
         string $reference,
     ): JsonResponse {
         $customer = $request->user()?->customer;
+        $trackingToken = $request->header('X-Order-Tracking-Token');
 
-        if (! $customer) {
+        if (! $customer && ! filled($trackingToken)) {
             return response()->json([
-                'message' => 'Customer profile not found.',
-            ], 404);
+                'message' => 'Unauthenticated.',
+            ], 401);
         }
 
-        $order = $this->ownedOrderQuery($customer, $reference)
+        $orderQuery = $customer
+            ? $this->ownedOrderQuery($customer, $reference)
+            : $this->trackedOrderQuery($reference);
+        $order = $orderQuery
             ->with([
                 'branch',
                 'customer',
@@ -136,7 +146,7 @@ class CustomerOrderController extends Controller
             ])
             ->first();
 
-        if (! $order) {
+        if (! $order || (! $customer && ! $this->orderTrackingAuthorizationService->allows($trackingToken, $order))) {
             return response()->json([
                 'message' => 'Order not found.',
             ], 404);
@@ -251,7 +261,7 @@ class CustomerOrderController extends Controller
 
         return response()->json([
             'message' => 'Payment proof submitted for staff verification.',
-            'order' => $this->orderRequestPresenter->detail($order),
+            'order' => $this->orderRequestPresenter->detail($order, includeCustomer: $customer !== null),
         ], 201);
     }
 
@@ -259,6 +269,12 @@ class CustomerOrderController extends Controller
     {
         return OrderRequest::query()
             ->where('customer_id', $customer->id)
+            ->whereRaw('LOWER(order_reference) = ?', [strtolower(trim($reference))]);
+    }
+
+    private function trackedOrderQuery(string $reference): Builder
+    {
+        return OrderRequest::query()
             ->whereRaw('LOWER(order_reference) = ?', [strtolower(trim($reference))]);
     }
 

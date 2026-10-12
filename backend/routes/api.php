@@ -83,6 +83,10 @@ Route::post('/order-requests', [OrderRequestController::class, 'store'])
     ->name('order-requests.store');
 Route::post('/order-requests/track', [OrderRequestController::class, 'track'])
     ->name('order-requests.track');
+Route::get('/order-requests/track/{reference}', [OrderRequestController::class, 'trackWithToken'])
+    ->name('order-requests.track.show');
+Route::post('/order-requests/track/{reference}/payment-proof', [CustomerOrderController::class, 'storePaymentProof'])
+    ->name('order-requests.track.payment-proof.store');
 
 // Customer and guest conversations
 Route::get('/conversations/current', [ConversationController::class, 'current'])

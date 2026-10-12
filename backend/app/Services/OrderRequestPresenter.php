@@ -9,6 +9,7 @@ class OrderRequestPresenter
 {
     public function __construct(
         private readonly CustomerOrderStatusResolver $customerOrderStatusResolver,
+        private readonly CustomerPaymentActionResolver $customerPaymentActionResolver,
     ) {}
 
     public function confirmation(OrderRequest $order): array
@@ -269,6 +270,7 @@ class OrderRequestPresenter
             'proof_image_url' => $payment->proof_image_url,
             'status' => $payment->payment_status,
             'verified_at' => $payment->verified_at?->toISOString(),
+            ...$this->customerPaymentActionResolver->resolve($order, $payment),
         ];
     }
 

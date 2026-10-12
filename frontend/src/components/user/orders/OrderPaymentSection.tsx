@@ -19,6 +19,7 @@ import PaymentInstructionsModal from "./PaymentInstructionsModal";
 type OrderPaymentSectionProps = {
   order: OrderViewModel;
   paymentToken?: string | null;
+  paymentTokenType?: "bearer" | "tracking";
   onOrderUpdated?: (order: OrderViewModel) => void;
 };
 
@@ -40,6 +41,7 @@ function isEligibleOrderStatus(status: string): boolean {
 export default function OrderPaymentSection({
   order,
   paymentToken,
+  paymentTokenType = "bearer",
   onOrderUpdated,
 }: OrderPaymentSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -59,23 +61,25 @@ export default function OrderPaymentSection({
   const isInteractive = Boolean(paymentToken && onOrderUpdated);
   const isTerminalOrder = ["completed", "cancelled", "rejected"].includes(orderStatus);
   const amount = payment?.amount ?? order.totalAmount ?? order.estimatedTotal;
+  const fallbackCanSubmitOnlineProof =
+    isOnline &&
+    !isTerminalOrder &&
+    !isPaid &&
+    !isWaitingForVerification &&
+    (isRejectedProof || (paymentStatus === "unpaid" && isEligibleOrderStatus(order.orderStatus)));
+  const fallbackCanViewInstructions = fallbackCanSubmitOnlineProof;
   const canSubmitOnlineProof =
-    Boolean(paymentToken && onOrderUpdated) &&
-    isOnline &&
-    !isTerminalOrder &&
-    !isPaid &&
-    !isWaitingForVerification &&
-    (isRejectedProof || (paymentStatus === "unpaid" && isEligibleOrderStatus(order.orderStatus)));
+    isInteractive && (payment?.canUploadProof ?? fallbackCanSubmitOnlineProof);
   const canViewInstructions =
-    isOnline &&
-    !isTerminalOrder &&
-    !isPaid &&
-    !isWaitingForVerification &&
-    (isRejectedProof || (paymentStatus === "unpaid" && isEligibleOrderStatus(order.orderStatus)));
+    payment?.canViewInstructions ?? fallbackCanViewInstructions;
 
   const handleSubmit = async (file: File) => {
     if (!paymentToken || !onOrderUpdated) {
-      setSubmitError("Your session has expired. Please sign in again.");
+      setSubmitError(
+        paymentTokenType === "tracking"
+          ? "This tracking session has expired. Search for the order again."
+          : "Your session has expired. Please sign in again.",
+      );
       return;
     }
 
@@ -84,7 +88,12 @@ export default function OrderPaymentSection({
     setSuccessMessage("");
 
     try {
-      const response = await submitPaymentProof(paymentToken, order.reference, file);
+      const response = await submitPaymentProof(
+        paymentToken,
+        order.reference,
+        file,
+        paymentTokenType,
+      );
       const updatedOrder = response.order;
 
       onOrderUpdated(toOrderViewModel(updatedOrder));
@@ -139,7 +148,9 @@ export default function OrderPaymentSection({
   const actionLabel = isWaitingForVerification ? "View Submitted Proof" : isRejectedProof ? "Upload New Proof" : "View Payment Instructions";
   const canOpenModal =
     isInteractive &&
-    (canViewInstructions || (isWaitingForVerification && Boolean(payment?.proofImageUrl)));
+    (canViewInstructions ||
+      (isWaitingForVerification &&
+        (payment?.canViewSubmittedProof ?? Boolean(payment?.proofImageUrl))));
 
   return (
     <>

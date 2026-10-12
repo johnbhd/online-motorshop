@@ -18,12 +18,14 @@ import {
 type OrderDetailsViewProps = {
   order: OrderViewModel;
   paymentToken?: string | null;
+  paymentTokenType?: "bearer" | "tracking";
   onOrderUpdated?: (order: OrderViewModel) => void;
 };
 
 export default function OrderDetailsView({
   order,
   paymentToken,
+  paymentTokenType,
   onOrderUpdated,
 }: OrderDetailsViewProps) {
   const statusPresentation = getOrderStatusPresentation(order.status);
@@ -69,6 +71,7 @@ export default function OrderDetailsView({
           <OrderSupportSection
             order={order}
             paymentToken={paymentToken}
+            paymentTokenType={paymentTokenType}
             onOrderUpdated={onOrderUpdated}
           />
         </div>

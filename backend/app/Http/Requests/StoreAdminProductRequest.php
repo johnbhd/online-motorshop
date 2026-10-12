@@ -30,7 +30,7 @@ class StoreAdminProductRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'img_url' => ['required_without:image', 'nullable', 'string', 'max:255'],
-            'image' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => ['sometimes', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
             'availability_status' => ['required', 'string', 'max:100'],
             'status' => ['required', 'string', 'max:100'],
         ];
@@ -41,7 +41,7 @@ class StoreAdminProductRequest extends FormRequest
         return [
             'image.image' => 'Product image must be a valid image.',
             'image.mimes' => 'Product image must be a JPG, JPEG, PNG, or WEBP image.',
-            'image.max' => 'Product image must be 5 MB or smaller.',
+            'image.max' => 'Product image must be 15 MB or smaller.',
         ];
     }
 

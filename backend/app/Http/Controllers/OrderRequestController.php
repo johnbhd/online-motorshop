@@ -9,10 +9,12 @@ use App\Services\DeliveryRouteService;
 use App\Services\LocationMismatchException;
 use App\Services\OrderRequestCreator;
 use App\Services\OrderRequestPresenter;
+use App\Services\OrderTrackingAuthorizationService;
 use App\Services\PsgcLocationDataUnavailable;
 use App\Services\PsgcLocationSelectionException;
 use App\Services\StaffAdminNotificationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class OrderRequestController extends Controller
@@ -21,6 +23,7 @@ class OrderRequestController extends Controller
         private readonly OrderRequestCreator $orderRequestCreator,
         private readonly DeliveryRouteService $deliveryRouteService,
         private readonly OrderRequestPresenter $orderRequestPresenter,
+        private readonly OrderTrackingAuthorizationService $orderTrackingAuthorizationService,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
     ) {}
 
@@ -81,17 +84,7 @@ class OrderRequestController extends Controller
     public function track(TrackOrderRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $order = OrderRequest::query()
-            ->whereRaw('LOWER(order_reference) = ?', [strtolower($data['order_reference'])])
-            ->with([
-                'branch',
-                'items.product:id,part_number,img_url',
-                'customer',
-                'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
-                'pickupRequest.branch',
-                'deliveryRequest.branch',
-            ])
-            ->first();
+        $order = $this->trackedOrderQuery($data['order_reference'])->first();
 
         if (! $order || ! $this->contactsMatch($order->customer?->contact_number, $data['contact_number'])) {
             return response()->json([
@@ -103,9 +96,49 @@ class OrderRequestController extends Controller
             $this->deliveryRouteService->generateFor($order->deliveryRequest);
         }
 
+        $trackingAuthorization = $this->orderTrackingAuthorizationService->issue($order);
+
+        return response()->json([
+            'order' => $this->orderRequestPresenter->detail($order, includeCustomer: false),
+            'tracking_token' => $trackingAuthorization['token'],
+            'tracking_token_expires_at' => $trackingAuthorization['expires_at'],
+        ]);
+    }
+
+    public function trackWithToken(Request $request, string $reference): JsonResponse
+    {
+        $order = $this->trackedOrderQuery($reference)->first();
+
+        if (! $order || ! $this->orderTrackingAuthorizationService->allows(
+            $request->header('X-Order-Tracking-Token'),
+            $order,
+        )) {
+            return response()->json([
+                'message' => 'Order not found or tracking authorization has expired.',
+            ], 404);
+        }
+
+        if ($order->fulfillment_type === 'delivery' && $order->deliveryRequest) {
+            $this->deliveryRouteService->generateFor($order->deliveryRequest);
+        }
+
         return response()->json([
             'order' => $this->orderRequestPresenter->detail($order, includeCustomer: false),
         ]);
+    }
+
+    private function trackedOrderQuery(string $reference)
+    {
+        return OrderRequest::query()
+            ->whereRaw('LOWER(order_reference) = ?', [strtolower(trim($reference))])
+            ->with([
+                'branch',
+                'items.product:id,part_number,img_url',
+                'customer',
+                'payments:id,order_id,payment_method,amount,payment_reference,proof_image_url,payment_status,created_at,verified_at',
+                'pickupRequest.branch',
+                'deliveryRequest.branch',
+            ]);
     }
 
     private function contactsMatch(?string $storedContact, string $providedContact): bool

@@ -32,7 +32,7 @@ class StartConversationRequest extends FormRequest
                 'file',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
-                'max:5120',
+                'max:15360',
             ],
         ];
     }
@@ -42,7 +42,7 @@ class StartConversationRequest extends FormRequest
         return [
             'attachment.image' => 'Inquiry attachment must be a valid image.',
             'attachment.mimes' => 'Inquiry attachment must be a JPG, JPEG, PNG, or WEBP image.',
-            'attachment.max' => 'Inquiry attachment must be 5 MB or smaller.',
+            'attachment.max' => 'Inquiry attachment must be 15 MB or smaller.',
         ];
     }
 }

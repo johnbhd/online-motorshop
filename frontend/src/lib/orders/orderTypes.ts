@@ -206,6 +206,10 @@ export type OrderViewPayment = {
   proofImageUrl: string | null;
   status: string;
   verifiedAt: string | null;
+  canViewInstructions?: boolean;
+  canUploadProof?: boolean;
+  canReuploadProof?: boolean;
+  canViewSubmittedProof?: boolean;
 };
 
 export type OrderViewModel = {

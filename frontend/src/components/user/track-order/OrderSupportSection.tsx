@@ -14,12 +14,14 @@ import OrderPaymentSection from "../orders/OrderPaymentSection";
 type OrderSupportSectionProps = {
   order: OrderViewModel;
   paymentToken?: string | null;
+  paymentTokenType?: "bearer" | "tracking";
   onOrderUpdated?: (order: OrderViewModel) => void;
 };
 
 export default function OrderSupportSection({
   order,
   paymentToken,
+  paymentTokenType,
   onOrderUpdated,
 }: OrderSupportSectionProps) {
   const isPickup = order.fulfillment.method === "pickup";
@@ -58,6 +60,7 @@ export default function OrderSupportSection({
       <OrderPaymentSection
         order={order}
         paymentToken={paymentToken}
+        paymentTokenType={paymentTokenType}
         onOrderUpdated={onOrderUpdated}
       />
       <section

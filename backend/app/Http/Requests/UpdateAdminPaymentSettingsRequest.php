@@ -31,7 +31,7 @@ class UpdateAdminPaymentSettingsRequest extends FormRequest
             'gcash_account_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'gcash_number' => ['sometimes', 'nullable', 'string', 'max:30'],
             'payment_instructions' => ['sometimes', 'nullable', 'string', 'max:2000'],
-            'qr_image' => ['sometimes', 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'qr_image' => ['sometimes', 'nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
             'remove_qr_image' => ['sometimes', 'boolean'],
         ];
     }
@@ -41,7 +41,7 @@ class UpdateAdminPaymentSettingsRequest extends FormRequest
         return [
             'qr_image.image' => 'Payment QR image must be a valid image.',
             'qr_image.mimes' => 'Payment QR image must be a JPG, JPEG, PNG, or WEBP image.',
-            'qr_image.max' => 'Payment QR image must be 5 MB or smaller.',
+            'qr_image.max' => 'Payment QR image must be 15 MB or smaller.',
         ];
     }
 }

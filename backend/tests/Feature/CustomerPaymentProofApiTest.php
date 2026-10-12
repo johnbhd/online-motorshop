@@ -60,6 +60,73 @@ class CustomerPaymentProofApiTest extends TestCase
         ]);
     }
 
+    public function test_verified_guest_can_submit_online_payment_proof_with_an_order_scoped_tracking_token(): void
+    {
+        $customer = Customer::create([
+            'user_id' => null,
+            'full_name' => 'Guest Payment Customer',
+            'contact_number' => '0917-123-4567',
+            'email' => 'guest-payment@example.com',
+        ]);
+        $order = $this->createOrder($customer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT);
+
+        $trackingResponse = $this->postJson('/api/order-requests/track', [
+            'order_reference' => $order->order_reference,
+            'contact_number' => '09171234567',
+        ])->assertOk();
+        $trackingToken = $trackingResponse->json('tracking_token');
+
+        $this->withHeader('X-Order-Tracking-Token', $trackingToken)
+            ->withHeader('Accept', 'application/json')
+            ->post('/api/order-requests/track/'.$order->order_reference.'/payment-proof', [
+                'proof' => $this->validProof(),
+            ])
+            ->assertCreated()
+            ->assertJsonPath('order.payment.status', Payment::STATUS_WAITING_FOR_VERIFICATION)
+            ->assertJsonMissingPath('order.customer');
+
+        $this->withHeader('X-Order-Tracking-Token', $trackingToken)
+            ->getJson('/api/order-requests/track/'.$order->order_reference)
+            ->assertOk()
+            ->assertJsonPath('order.payment.status', Payment::STATUS_WAITING_FOR_VERIFICATION)
+            ->assertJsonPath('order.payment.can_view_submitted_proof', true);
+    }
+
+    public function test_tracking_payment_proof_cannot_be_used_for_another_order(): void
+    {
+        $firstCustomer = Customer::create([
+            'user_id' => null,
+            'full_name' => 'First Guest Payment Customer',
+            'contact_number' => '09171111111',
+            'email' => 'first-guest-payment@example.com',
+        ]);
+        $secondCustomer = Customer::create([
+            'user_id' => null,
+            'full_name' => 'Second Guest Payment Customer',
+            'contact_number' => '09172222222',
+            'email' => 'second-guest-payment@example.com',
+        ]);
+        $firstOrder = $this->createOrder($firstCustomer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT);
+        $secondOrder = $this->createOrder($secondCustomer, 'confirmed', Payment::METHOD_ONLINE_PAYMENT);
+
+        $trackingToken = $this->postJson('/api/order-requests/track', [
+            'order_reference' => $firstOrder->order_reference,
+            'contact_number' => '09171111111',
+        ])->json('tracking_token');
+
+        $this->withHeader('X-Order-Tracking-Token', $trackingToken)
+            ->withHeader('Accept', 'application/json')
+            ->post('/api/order-requests/track/'.$secondOrder->order_reference.'/payment-proof', [
+                'proof' => $this->validProof(),
+            ])
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('payments', [
+            'order_id' => $secondOrder->id,
+            'payment_status' => Payment::STATUS_UNPAID,
+        ]);
+    }
+
     public function test_pending_online_order_cannot_accept_payment_proof(): void
     {
         [$user, $customer] = $this->createCustomer('pending-payment@example.com');
@@ -174,11 +241,11 @@ class CustomerPaymentProofApiTest extends TestCase
         $this->postProof(
             $user->createToken('oversized-payment-test')->plainTextToken,
             $order->order_reference,
-            UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+            UploadedFile::fake()->create('large.png', 15361, 'image/png'),
         )
             ->assertUnprocessable()
             ->assertJsonValidationErrors('proof')
-            ->assertJsonPath('errors.proof.0', 'Payment proof must be 5 MB or smaller.');
+            ->assertJsonPath('errors.proof.0', 'Payment proof must be 15 MB or smaller.');
 
         $this->assertEmpty(app(CloudinaryService::class)->uploads);
     }

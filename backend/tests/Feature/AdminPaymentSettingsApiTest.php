@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\PaymentSetting;
 use App\Models\MediaAsset;
+use App\Models\PaymentSetting;
 use App\Models\User;
 use App\Services\CloudinaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -142,11 +142,11 @@ class AdminPaymentSettingsApiTest extends TestCase
             ->withHeader('Accept', 'application/json')
             ->post('/api/admin/settings', [
                 '_method' => 'PATCH',
-                'qr_image' => UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+                'qr_image' => UploadedFile::fake()->create('large.png', 15361, 'image/png'),
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['qr_image'])
-            ->assertJsonPath('errors.qr_image.0', 'Payment QR image must be 5 MB or smaller.');
+            ->assertJsonPath('errors.qr_image.0', 'Payment QR image must be 15 MB or smaller.');
 
         $this->assertDatabaseCount('payment_settings', 0);
         $this->assertDatabaseCount('media_assets', 0);

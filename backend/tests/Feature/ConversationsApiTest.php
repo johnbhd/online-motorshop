@@ -157,14 +157,14 @@ class ConversationsApiTest extends TestCase
 
         $this->withHeader('Accept', 'application/json')
             ->post('/api/conversations', [
-            'body' => 'Contact inquiry',
-            'message_type' => 'contact_inquiry',
-            'metadata' => $metadata,
-            'attachment' => UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+                'body' => 'Contact inquiry',
+                'message_type' => 'contact_inquiry',
+                'metadata' => $metadata,
+                'attachment' => UploadedFile::fake()->create('large.png', 15361, 'image/png'),
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['attachment'])
-            ->assertJsonPath('errors.attachment.0', 'Inquiry attachment must be 5 MB or smaller.');
+            ->assertJsonPath('errors.attachment.0', 'Inquiry attachment must be 15 MB or smaller.');
 
         $this->assertEmpty(app(CloudinaryService::class)->uploads);
     }

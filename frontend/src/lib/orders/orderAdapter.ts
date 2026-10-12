@@ -228,5 +228,9 @@ function toPayment(payment: OrderApiPayment | null): OrderViewPayment | null {
     proofImageUrl: payment.proof_image_url,
     status: toStatusLabel(payment.status),
     verifiedAt: payment.verified_at,
+    canViewInstructions: payment.can_view_instructions,
+    canUploadProof: payment.can_upload_proof,
+    canReuploadProof: payment.can_reupload_proof,
+    canViewSubmittedProof: payment.can_view_submitted_proof,
   };
 }

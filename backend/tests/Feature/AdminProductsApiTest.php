@@ -277,13 +277,13 @@ class AdminProductsApiTest extends TestCase
                 'part_number' => 'OVERSIZED-001',
                 'brand_id' => $brand->id,
                 'price' => 250,
-                'image' => UploadedFile::fake()->create('large.png', 5121, 'image/png'),
+                'image' => UploadedFile::fake()->create('large.png', 15361, 'image/png'),
                 'availability_status' => 'active',
                 'status' => 'active',
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['image'])
-            ->assertJsonPath('errors.image.0', 'Product image must be 5 MB or smaller.');
+            ->assertJsonPath('errors.image.0', 'Product image must be 15 MB or smaller.');
 
         $this->assertDatabaseMissing('products', ['part_number' => 'OVERSIZED-001']);
         $this->assertEmpty(app(CloudinaryService::class)->uploads);
