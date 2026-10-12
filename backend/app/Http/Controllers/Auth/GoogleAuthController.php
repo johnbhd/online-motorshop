@@ -62,7 +62,7 @@ class GoogleAuthController extends Controller
         );
 
         if (! is_array($statePayload)) {
-            return $this->errorRedirect('/account', 'google_state_invalid');
+            return $this->errorRedirect('/', 'google_state_invalid');
         }
 
         $returnTo = $this->validatedReturnTo($statePayload['return_to'] ?? null);
@@ -430,13 +430,12 @@ class GoogleAuthController extends Controller
         $allowed = [
             '/',
             '/checkout',
-            '/account',
             '/account/orders',
         ];
 
         return is_string($returnTo) && in_array($returnTo, $allowed, true)
             ? $returnTo
-            : '/account';
+            : '/';
     }
 
     private function frontendRedirect(string $path, array $query): RedirectResponse

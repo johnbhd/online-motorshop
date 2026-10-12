@@ -23,7 +23,7 @@ export function GoogleLinkAccountPage() {
   const { establishSession } = useAuth();
   const token = searchParams.get("token")?.trim() ?? "";
   const [email, setEmail] = useState("");
-  const [returnTo, setReturnTo] = useState("/account");
+  const [returnTo, setReturnTo] = useState("/");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(Boolean(token));

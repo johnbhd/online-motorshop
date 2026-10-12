@@ -36,7 +36,7 @@ export function GoogleCompleteAccountPage() {
   const initializedToken = useRef<string | null>(null);
   const [profileName, setProfileName] = useState("");
   const [email, setEmail] = useState("");
-  const [returnTo, setReturnTo] = useState("/account");
+  const [returnTo, setReturnTo] = useState("/");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");

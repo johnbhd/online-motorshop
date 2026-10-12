@@ -36,7 +36,6 @@ const GOOGLE_AUTH_ERROR_MESSAGES: Record<string, string> = {
 const GOOGLE_RETURN_PATHS = new Set([
   "/",
   "/checkout",
-  "/account",
   "/account/orders",
 ]);
 
@@ -208,7 +207,7 @@ export function logout(token: string) {
 export function getSafeGoogleReturnTo(
   value: string | null | undefined,
 ): string {
-  return value && GOOGLE_RETURN_PATHS.has(value) ? value : "/account";
+  return value && GOOGLE_RETURN_PATHS.has(value) ? value : "/";
 }
 
 export function getGoogleAuthErrorMessage(

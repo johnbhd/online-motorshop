@@ -128,7 +128,8 @@ class GoogleAuthApiTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('user.role', 'customer')
             ->assertJsonPath('user.email', 'newcustomer@example.com')
-            ->assertJsonPath('user.customer.full_name', 'Edited Google Customer');
+            ->assertJsonPath('user.customer.full_name', 'Edited Google Customer')
+            ->assertJsonPath('return_to', '/');
 
         $user = User::query()->where('email', 'newcustomer@example.com')->firstOrFail();
 
@@ -435,7 +436,7 @@ class GoogleAuthApiTest extends TestCase
             ->assertUnauthorized();
     }
 
-    private function startGoogle(string $returnTo = '/account'): array
+    private function startGoogle(string $returnTo = '/'): array
     {
         $response = $this->get('/api/auth/google/redirect?'.http_build_query([
             'return_to' => $returnTo,
@@ -444,7 +445,7 @@ class GoogleAuthApiTest extends TestCase
         return $this->redirectQuery($response)['query'];
     }
 
-    private function completeGoogleCallback(string $returnTo = '/account')
+    private function completeGoogleCallback(string $returnTo = '/')
     {
         $state = $this->startGoogle($returnTo);
 
