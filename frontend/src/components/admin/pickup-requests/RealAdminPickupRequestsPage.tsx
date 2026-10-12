@@ -141,7 +141,7 @@ export default function RealAdminPickupRequestsPage() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[.18em] text-orange-600">Fulfillment</p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#0B1930] sm:text-3xl">Store Pickup Requests</h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">Read-only oversight of real pickup requests across all branches. Branch staff manage pickup progress.</p>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600 sm:text-base">Oversee real pickup requests across all branches and use Admin correction controls when a workflow status needs recovery.</p>
         </div>
         <button type="button" onClick={() => setReloadNonce((nonce) => nonce + 1)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
           <FontAwesomeIcon icon={faRefresh} aria-hidden="true" /> Refresh
@@ -191,7 +191,7 @@ export default function RealAdminPickupRequestsPage() {
         {response?.branch_summary.length ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{response.branch_summary.map((branch) => <article key={branch.id} className="rounded-lg border border-slate-200 p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold text-[#0B1930]">{branch.name}</h3><span className="text-sm font-bold text-slate-700">{branch.total} total</span></div><p className="mt-2 text-sm text-slate-600">{branch.active} active · {branch.completed} completed</p></article>)}</div> : <p className="text-sm text-slate-500">No branch pickup records found.</p>}
       </section>
 
-      <RealAdminPickupRequestDetailsModal key={selectedPickupId ?? "closed"} pickupId={selectedPickupId} onClose={closeDetails} />
+      <RealAdminPickupRequestDetailsModal key={selectedPickupId ?? "closed"} pickupId={selectedPickupId} onClose={closeDetails} onUpdated={() => setReloadNonce((nonce) => nonce + 1)} />
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import type { AdminAuditLog } from "./adminAuditTypes";
+
 export type AdminOrderPerson = {
   id: number;
   full_name?: string;
@@ -81,6 +83,8 @@ export type AdminOrderDetail = AdminOrder & {
     delivered_at: string | null;
   } | null;
   allowed_statuses: string[];
+  override_statuses: string[];
+  status_overrides: AdminAuditLog[];
 };
 
 export type AdminOrderStaffOption = {

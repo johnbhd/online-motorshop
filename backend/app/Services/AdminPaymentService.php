@@ -12,6 +12,8 @@ class AdminPaymentService
     public function __construct(
         private readonly StaffPaymentPresenter $presenter,
         private readonly StaffPaymentStatusService $statusService,
+        private readonly AdminStatusOverrideService $overrideService,
+        private readonly AdminAuditLogService $auditLogs,
         private readonly AdminArchiveService $archiveService,
     ) {}
 
@@ -51,12 +53,18 @@ class AdminPaymentService
         return $this->presenter->details(
             $payment,
             $this->statusService->allowedStatuses($payment),
+            $this->overrideService->paymentAllowedStatuses($payment),
+            $this->auditLogs->history('payment', (int) $payment->id),
         );
     }
 
-    public function transition(Payment $payment, string $status, User $admin): Payment
-    {
-        $payment = $this->statusService->transition($payment, $status, $admin);
+    public function transition(
+        Payment $payment,
+        string $status,
+        ?string $reason,
+        User $admin,
+    ): Payment {
+        $payment = $this->overrideService->payment($payment, $status, $reason, $admin);
 
         return $this->find($payment->id) ?? $payment;
     }

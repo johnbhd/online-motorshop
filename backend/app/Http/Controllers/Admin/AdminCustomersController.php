@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminCustomerIndexRequest;
+use App\Http\Requests\DeleteAdminCustomerRequest;
 use App\Http\Requests\UpdateAdminCustomerRequest;
 use App\Models\Customer;
 use App\Services\AdminCustomerPresenter;
@@ -45,12 +46,16 @@ class AdminCustomersController extends Controller
         ]);
     }
 
-    public function destroy(Customer $customer): JsonResponse
+    public function destroy(DeleteAdminCustomerRequest $request, Customer $customer): JsonResponse
     {
-        $this->service->delete($customer);
+        $result = $this->service->delete(
+            $customer,
+            $request->user(),
+            $request->validated('reason'),
+        );
 
         return response()->json([
-            'message' => 'Guest customer deleted successfully.',
+            'message' => $result['message'],
         ]);
     }
 }

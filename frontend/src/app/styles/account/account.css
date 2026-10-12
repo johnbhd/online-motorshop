@@ -726,7 +726,7 @@
 }
 
 .customer-profile-action--primary {
-  background: var(--customer-orders-orange);
+  background: var(--customer-orders-orange, #e07a08);
   color: #ffffff;
 }
 
@@ -735,7 +735,7 @@
 }
 
 .customer-profile-action--secondary {
-  background: var(--customer-orders-ink);
+  background: var(--customer-orders-ink, #16234a);
   color: #ffffff;
 }
 

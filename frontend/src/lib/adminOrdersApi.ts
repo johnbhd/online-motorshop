@@ -46,8 +46,11 @@ export function getAdminOrder(token: string, reference: string) {
   return request<AdminOrderDetailResponse>(`/api/admin/orders/${encodeURIComponent(reference)}`, token);
 }
 
-export function updateAdminOrderStatus(token: string, reference: string, status: string) {
-  return mutate<AdminOrderDetailResponse>(token, `/api/admin/orders/${encodeURIComponent(reference)}/status`, { status });
+export function updateAdminOrderStatus(token: string, reference: string, status: string, reason?: string) {
+  return mutate<AdminOrderDetailResponse>(token, `/api/admin/orders/${encodeURIComponent(reference)}/status`, {
+    status,
+    ...(reason?.trim() ? { reason: reason.trim() } : {}),
+  });
 }
 
 export function updateAdminOrderAssignment(token: string, reference: string, staffId: number | null) {

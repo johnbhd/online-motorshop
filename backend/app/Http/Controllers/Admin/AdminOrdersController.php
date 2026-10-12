@@ -45,7 +45,12 @@ class AdminOrdersController extends Controller
             return response()->json(['message' => 'Order not found.'], 404);
         }
 
-        $order = $this->service->transition($order, $request->validated('status'));
+        $order = $this->service->transition(
+            $order,
+            $request->validated('status'),
+            $request->validated('reason'),
+            $request->user(),
+        );
 
         return response()->json([
             'message' => 'Order status updated.',

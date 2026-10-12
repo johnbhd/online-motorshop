@@ -26,6 +26,7 @@ type Query = {
 
 export type AdminDeliveryStatusUpdate = {
   status: string;
+  reason?: string;
   booking_reference?: string;
   tracking_url?: string;
   rider_name?: string;

@@ -17,6 +17,7 @@ class AdminPaymentStatusUpdateRequest extends FormRequest
     {
         return [
             'status' => ['required', 'string', Rule::in(Payment::STATUS_VALUES)],
+            'reason' => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
     }
 }

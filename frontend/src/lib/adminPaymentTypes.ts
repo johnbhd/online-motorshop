@@ -1,3 +1,5 @@
+import type { AdminAuditLog } from "./adminAuditTypes";
+
 export type AdminPaymentCustomer = {
   id: number;
   full_name: string;
@@ -31,6 +33,8 @@ export type AdminPayment = {
 
 export type AdminPaymentDetails = AdminPayment & {
   allowed_statuses: string[];
+  override_statuses: string[];
+  status_overrides: AdminAuditLog[];
   order: {
     id: number;
     reference: string;

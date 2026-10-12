@@ -53,10 +53,14 @@ class StaffDeliveryRequestPresenter
     public function details(
         DeliveryRequest $deliveryRequest,
         array $allowedStatuses,
+        array $overrideStatuses = [],
+        array $statusOverrides = [],
     ): array {
         return [
             ...$this->summary($deliveryRequest),
             'allowed_statuses' => $allowedStatuses,
+            'override_statuses' => $overrideStatuses,
+            'status_overrides' => $statusOverrides,
             'order' => $this->orderPayload($deliveryRequest->order),
         ];
     }

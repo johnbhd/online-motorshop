@@ -17,6 +17,7 @@ class AdminOrderStatusUpdateRequest extends FormRequest
     {
         return [
             'status' => ['required', 'string', Rule::in(OrderRequest::STAFF_STATUS_VALUES)],
+            'reason' => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
     }
 }

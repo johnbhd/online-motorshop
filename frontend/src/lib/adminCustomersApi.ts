@@ -74,11 +74,12 @@ export function updateAdminCustomer(
   );
 }
 
-export function deleteAdminCustomer(token: string, id: number) {
+export function deleteAdminCustomer(token: string, id: number, reason: string) {
   return mutate<{ message: string }>(
     token,
     `/api/admin/customers/${id}`,
     "DELETE",
+    { reason: reason.trim() },
   );
 }
 

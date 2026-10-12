@@ -368,6 +368,10 @@ Route::prefix('admin')
             ->whereNumber('pickup')
             ->name('pickups.show');
 
+        Route::patch('/pickup-requests/{pickup}/status', [AdminPickupRequestsController::class, 'updateStatus'])
+            ->whereNumber('pickup')
+            ->name('pickups.status');
+
         Route::get('/delivery-requests', [AdminDeliveryRequestsController::class, 'index'])
             ->name('deliveries.index');
 

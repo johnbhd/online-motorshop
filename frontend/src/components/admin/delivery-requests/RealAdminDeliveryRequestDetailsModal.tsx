@@ -14,6 +14,8 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import AdminStatusOverrideDialog from "@/components/admin/AdminStatusOverrideDialog";
+import AdminAuditHistory from "@/components/admin/AdminAuditHistory";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   getAdminDeliveryRequest,
@@ -115,6 +117,7 @@ export default function RealAdminDeliveryRequestDetailsModal({
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [confirmationStatus, setConfirmationStatus] = useState<string | null>(null);
+  const [overrideStatus, setOverrideStatus] = useState<string | null>(null);
   const [bookingReference, setBookingReference] = useState("");
   const [trackingUrl, setTrackingUrl] = useState("");
   const [riderName, setRiderName] = useState("");
@@ -150,10 +153,16 @@ export default function RealAdminDeliveryRequestDetailsModal({
     return () => controller.abort();
   }, [deliveryId, retryNonce, token]);
 
-  async function handleStatusUpdate(status: string) {
+  async function handleStatusUpdate(status: string, reason?: string) {
     if (!delivery || isUpdating) return;
 
-    if (!delivery.allowed_statuses.includes(status)) {
+    if (!delivery.allowed_statuses.includes(status) && !reason) {
+      setOverrideStatus(status);
+      setConfirmationStatus(null);
+      return;
+    }
+
+    if (!delivery.allowed_statuses.includes(status) && !reason?.trim()) {
       setConfirmationStatus(null);
       setUpdateError("This delivery status has already changed. Refresh to view the latest status.");
       return;
@@ -172,7 +181,7 @@ export default function RealAdminDeliveryRequestDetailsModal({
       return;
     }
 
-    const update: AdminDeliveryStatusUpdate = { status };
+    const update: AdminDeliveryStatusUpdate = { status, ...(reason?.trim() ? { reason: reason.trim() } : {}) };
 
     if (bookingReference.trim()) update.booking_reference = bookingReference.trim();
     if (trackingUrl.trim()) update.tracking_url = trackingUrl.trim();
@@ -310,13 +319,15 @@ export default function RealAdminDeliveryRequestDetailsModal({
                 <label className="mt-4 block text-sm font-medium text-slate-700">Remarks<textarea value={remarks} onChange={(event) => setRemarks(event.target.value)} rows={3} placeholder="Optional operational note" className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100" /></label>
                 <button type="button" onClick={() => setConfirmationStatus(nextStatus)} disabled={isUpdating || (needsBookingFields && !bookingReference.trim())} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"><FontAwesomeIcon icon={nextStatus === "delivered" ? faCheck : faTruck} aria-hidden="true" />{isUpdating ? "Updating…" : actionLabel(nextStatus)}</button>
                 {updateError && !confirmationStatus ? <p className="mt-3 text-sm text-red-700" role="alert">{updateError}</p> : null}
-              </div> : <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500"><FontAwesomeIcon icon={faCircleInfo} className="mt-0.5 shrink-0 text-orange-500" aria-hidden="true" />This delivery request has no further Admin status action.</p>}
+              </div> : <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500"><FontAwesomeIcon icon={faCircleInfo} className="mt-0.5 shrink-0 text-orange-500" aria-hidden="true" />This delivery request has no further forward status action.</p>}
+              {delivery.override_statuses.length ? <label className="admin-order-modal-field mt-4 block"><span>Admin correction / rollback</span><select value="" disabled={isUpdating} onChange={(event) => { if (event.target.value) setOverrideStatus(event.target.value); }}><option value="">Choose a correction</option>{delivery.override_statuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select><small>A reason is required and existing booking and rider evidence is preserved.</small></label> : null}
             </section>
 
             <section className="admin-order-modal-section">
               <div className="admin-order-modal-section-title"><FontAwesomeIcon icon={faCreditCard} aria-hidden="true" /><h3>Payment Information</h3></div>
               {delivery.payment ? <dl className="admin-order-modal-detail-grid admin-order-modal-order-grid"><div><dt>Method</dt><dd>{label(delivery.payment.method)}</dd></div><div><dt>Payment Status</dt><dd><AdminBadge>{label(delivery.payment.status)}</AdminBadge></dd></div><div><dt>Amount</dt><dd>{money(delivery.payment.amount)}</dd></div><div><dt>Reference</dt><dd>{delivery.payment.reference || "Not available"}</dd></div><div><dt>Verified At</dt><dd>{date(delivery.payment.verified_at)}</dd></div></dl> : <p className="text-sm text-slate-500">No payment record is associated with this order.</p>}
             </section>
+            <AdminAuditHistory entries={delivery.status_overrides} />
           </> : null}
         </div>
 
@@ -340,6 +351,7 @@ export default function RealAdminDeliveryRequestDetailsModal({
           </div>
         </div>
       </div> : null}
+      {delivery && overrideStatus ? <AdminStatusOverrideDialog open title="Correct delivery status" currentStatus={delivery.delivery_status} targetStatus={overrideStatus} onClose={() => setOverrideStatus(null)} onConfirm={(reason) => { void handleStatusUpdate(overrideStatus, reason); setOverrideStatus(null); }} isSubmitting={isUpdating} description="Use this to correct a delivery workflow mistake. Booking, rider, and payment evidence are preserved while the operational status changes." /> : null}
     </div>
   );
 }

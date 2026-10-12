@@ -8,4 +8,12 @@ class UpdateAdminDeliveryStatusRequest extends UpdateStaffDeliveryStatusRequest
     {
         return $this->user()?->role === 'admin';
     }
+
+    public function rules(): array
+    {
+        return [
+            ...parent::rules(),
+            'reason' => ['sometimes', 'nullable', 'string', 'max:1000'],
+        ];
+    }
 }

@@ -61,6 +61,9 @@ class OrderCommunicationService
 
         return match ($source) {
             'order' => match ($status) {
+                'pending' => [
+                    'message' => "Your order request {$reference} is pending review by ALD Motorshop.",
+                ],
                 'under_review' => [
                     'message' => "Your order request {$reference} is now under review by ALD Motorshop.",
                 ],
@@ -79,6 +82,9 @@ class OrderCommunicationService
                 default => null,
             },
             'pickup' => match ($status) {
+                'pending' => [
+                    'message' => "Pickup for order {$reference} is pending processing.",
+                ],
                 'preparing' => [
                     'message' => "Your order {$reference} is now being prepared.",
                 ],
@@ -88,9 +94,15 @@ class OrderCommunicationService
                 'completed' => [
                     'message' => "Your order {$reference} has been completed.",
                 ],
+                'cancelled' => [
+                    'message' => "Pickup for order {$reference} has been cancelled.",
+                ],
                 default => null,
             },
             'delivery' => match ($status) {
+                'waiting_for_booking' => [
+                    'message' => "Delivery for order {$reference} is waiting for manual booking.",
+                ],
                 'booked' => [
                     'message' => "Delivery for order {$reference} has been booked.",
                 ],
@@ -125,6 +137,7 @@ class OrderCommunicationService
                 $order,
                 $event->status,
                 $conversationId,
+                $event->eventKeySuffix,
             );
 
             return;
@@ -138,6 +151,7 @@ class OrderCommunicationService
                     $pickupRequest,
                     $event->status,
                     $conversationId,
+                    $event->eventKeySuffix,
                 );
             }
 
@@ -152,6 +166,7 @@ class OrderCommunicationService
                     $deliveryRequest,
                     $event->status,
                     $conversationId,
+                    $event->eventKeySuffix,
                 );
             }
         }

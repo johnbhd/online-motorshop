@@ -30,11 +30,17 @@ class StaffPaymentPresenter
         ];
     }
 
-    public function details(Payment $payment, array $allowedStatuses): array
-    {
+    public function details(
+        Payment $payment,
+        array $allowedStatuses,
+        array $overrideStatuses = [],
+        array $statusOverrides = [],
+    ): array {
         return [
             ...$this->summary($payment),
             'allowed_statuses' => $allowedStatuses,
+            'override_statuses' => $overrideStatuses,
+            'status_overrides' => $statusOverrides,
             'order' => $this->orderPayload($payment->order),
         ];
     }

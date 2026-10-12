@@ -54,8 +54,10 @@ class CustomerNotificationService
         OrderRequest $order,
         string $status,
         ?int $conversationId = null,
+        ?string $eventKeySuffix = null,
     ): void {
         $copy = match ($status) {
+            'pending' => ['type' => 'order_pending', 'title' => 'Order Request Pending', 'message' => "Your order request {$order->order_reference} is pending review by ALD Motorshop."],
             'under_review' => ['type' => 'order_under_review', 'title' => 'Order Request Under Review', 'message' => "Your order request {$order->order_reference} is now under review by ALD Motorshop."],
             'confirmed' => ['type' => 'order_confirmed', 'title' => 'Order Request Confirmed', 'message' => "Your order request {$order->order_reference} has been confirmed by ALD Motorshop."],
             'rejected' => ['type' => 'order_rejected', 'title' => 'Order Request Rejected', 'message' => "Your order request {$order->order_reference} was not approved by ALD Motorshop."],
@@ -72,15 +74,23 @@ class CustomerNotificationService
                 $status,
                 null,
                 $conversationId,
+                $eventKeySuffix,
             );
         }
     }
 
-    public function paymentStatusChanged(Payment $payment, string $status): void
-    {
+    public function paymentStatusChanged(
+        Payment $payment,
+        string $status,
+        ?string $eventKeySuffix = null,
+    ): void {
         $copy = match ($status) {
             Payment::STATUS_PAID => ['type' => 'payment_verified', 'title' => 'Payment Verified', 'message' => 'Your payment for order :reference has been verified.'],
             Payment::STATUS_FAILED => ['type' => 'payment_rejected', 'title' => 'Payment Proof Needs Attention', 'message' => 'We could not verify your payment proof for order :reference. Please review your order details.'],
+            Payment::STATUS_WAITING_FOR_VERIFICATION => ['type' => 'payment_review_reopened', 'title' => 'Payment Review Reopened', 'message' => 'Payment for order :reference needs another verification review.'],
+            Payment::STATUS_UNPAID, Payment::STATUS_WAITING_FOR_PAYMENT => ['type' => 'payment_unpaid', 'title' => 'Payment Status Updated', 'message' => 'Payment for order :reference is not currently marked as paid.'],
+            'refunded' => ['type' => 'payment_refunded', 'title' => 'Payment Refunded', 'message' => 'Payment for order :reference has been marked as refunded.'],
+            'cancelled' => ['type' => 'payment_cancelled', 'title' => 'Payment Cancelled', 'message' => 'Payment for order :reference has been marked as cancelled.'],
             default => null,
         };
 
@@ -97,6 +107,8 @@ class CustomerNotificationService
             str_replace(':reference', $order->order_reference, $copy['message']),
             $status,
             "payment:{$payment->id}",
+            null,
+            $eventKeySuffix,
         );
     }
 
@@ -104,11 +116,14 @@ class CustomerNotificationService
         PickupRequest $pickupRequest,
         string $status,
         ?int $conversationId = null,
+        ?string $eventKeySuffix = null,
     ): void {
         $copy = match ($status) {
+            'pending' => ['type' => 'order_pending', 'title' => 'Pickup Status Updated', 'message' => 'Your order :reference is pending pickup processing.'],
             'preparing' => ['type' => 'order_preparing', 'title' => 'Order Preparing', 'message' => 'Your order :reference is now being prepared.'],
             'ready_for_pickup' => ['type' => 'ready_for_pickup', 'title' => 'Ready for Pickup', 'message' => 'Your order :reference is ready for pickup at :branch.'],
             'completed' => ['type' => 'pickup_completed', 'title' => 'Pickup Completed', 'message' => 'Your order :reference has been completed.'],
+            'cancelled' => ['type' => 'pickup_cancelled', 'title' => 'Pickup Cancelled', 'message' => 'Pickup for order :reference has been cancelled.'],
             default => null,
         };
 
@@ -132,6 +147,7 @@ class CustomerNotificationService
             $status,
             "pickup:{$pickupRequest->id}",
             $conversationId,
+            $eventKeySuffix,
         );
     }
 
@@ -139,8 +155,10 @@ class CustomerNotificationService
         DeliveryRequest $deliveryRequest,
         string $status,
         ?int $conversationId = null,
+        ?string $eventKeySuffix = null,
     ): void {
         $copy = match ($status) {
+            'waiting_for_booking' => ['type' => 'delivery_waiting_for_booking', 'title' => 'Delivery Awaiting Booking', 'message' => 'Delivery for order :reference is waiting for manual booking.'],
             'booked' => ['type' => 'delivery_booked', 'title' => 'Delivery Booking Confirmed', 'message' => 'Delivery for order :reference has been booked.'],
             'picked_up', 'in_transit' => ['type' => 'delivery_in_transit', 'title' => 'Delivery In Transit', 'message' => 'Your order :reference is on the way.'],
             'delivered' => ['type' => 'delivery_delivered', 'title' => 'Order Delivered', 'message' => 'Your order :reference has been delivered.'],
@@ -163,6 +181,7 @@ class CustomerNotificationService
             $status,
             "delivery:{$deliveryRequest->id}",
             $conversationId,
+            $eventKeySuffix,
         );
     }
 
@@ -193,6 +212,7 @@ class CustomerNotificationService
         string $status,
         ?string $scope = null,
         ?int $conversationId = null,
+        ?string $eventKeySuffix = null,
     ): void {
         $order->loadMissing('customer.user');
         $user = $order->customer?->user;
@@ -211,13 +231,19 @@ class CustomerNotificationService
             $reference['conversation_id'] = $conversationId;
         }
 
+        $eventKey = $scope === null ? "order:{$order->id}:{$status}" : "{$scope}:{$status}";
+
+        if ($eventKeySuffix !== null) {
+            $eventKey .= ':'.$eventKeySuffix;
+        }
+
         $this->send($user, [
             'notification_type' => $type,
             'category' => str_starts_with($type, 'payment_') ? 'payments' : 'orders',
             'title' => $title,
             'message' => $message,
             'reference' => $reference,
-            'event_key' => $scope === null ? "order:{$order->id}:{$status}" : "{$scope}:{$status}",
+            'event_key' => $eventKey,
         ]);
     }
 
