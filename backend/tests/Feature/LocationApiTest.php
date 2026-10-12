@@ -106,7 +106,7 @@ class LocationApiTest extends TestCase
             'https://nominatim.openstreetmap.org/reverse*' => Http::response([
                 'address' => [
                     'city' => 'Manila',
-                    'suburb' => 'Barangay One',
+                    'barangay' => 'Barangay One',
                 ],
             ], 200),
         ]);
@@ -118,6 +118,7 @@ class LocationApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('detected.city_municipality', 'Manila')
             ->assertJsonPath('detected.barangay', 'Barangay One')
+            ->assertJsonPath('detected.area', null)
             ->assertJsonPath('psgc.city_municipality', 'Manila')
             ->assertJsonPath('psgc.city_municipality_code', '1300000000')
             ->assertJsonPath('psgc.barangay', 'Barangay One')
@@ -146,11 +147,39 @@ class LocationApiTest extends TestCase
             'longitude' => 120.9842,
         ])
             ->assertOk()
+            ->assertJsonPath('detected.barangay', null)
+            ->assertJsonPath('detected.area', 'Unknown Neighborhood')
             ->assertJsonPath('psgc.city_municipality_code', '1300000000')
             ->assertJsonPath('psgc.barangay', null)
             ->assertJsonPath('psgc.barangay_code', null)
             ->assertJsonPath('match.city', 'matched')
-            ->assertJsonPath('match.barangay', 'unmatched');
+            ->assertJsonPath('match.barangay', 'unresolved');
+    }
+
+    public function test_reverse_geocode_keeps_a_district_out_of_the_canonical_barangay_field(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Manila',
+                    'suburb' => 'Santa Mesa',
+                ],
+            ], 200),
+        ]);
+
+        $this->postJson('/api/locations/reverse-geocode', [
+            'latitude' => 14.5995,
+            'longitude' => 120.9842,
+        ])
+            ->assertOk()
+            ->assertJsonPath('detected.city_municipality', 'Manila')
+            ->assertJsonPath('detected.barangay', null)
+            ->assertJsonPath('detected.area', 'Santa Mesa')
+            ->assertJsonPath('psgc.city_municipality', 'Manila')
+            ->assertJsonPath('psgc.barangay', null)
+            ->assertJsonPath('psgc.barangay_code', null)
+            ->assertJsonPath('match.city', 'matched')
+            ->assertJsonPath('match.barangay', 'unresolved');
     }
 
     public function test_reverse_geocode_provider_failure_is_safe_and_coordinates_are_validated(): void

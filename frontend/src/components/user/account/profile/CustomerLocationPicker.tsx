@@ -54,6 +54,7 @@ export default function CustomerLocationPicker({
   const [mapLoading, setMapLoading] = useState(false);
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detectedArea, setDetectedArea] = useState<string | null>(null);
   const [internalDetectionState, setInternalDetectionState] = useState<LocationDetectionState>("idle");
   const currentDetectionState = detectionState ?? internalDetectionState;
   const hasCoordinates = latitude !== null && longitude !== null;
@@ -79,6 +80,7 @@ export default function CustomerLocationPicker({
     reverseControllerRef.current = controller;
     setDetectionState("detecting");
     setError(null);
+    setDetectedArea(null);
 
     void reverseGeocodeLocation(nextLatitude, nextLongitude, controller.signal)
       .then((result) => {
@@ -87,6 +89,7 @@ export default function CustomerLocationPicker({
         }
 
         onDetectedRef.current?.(result);
+        setDetectedArea(result.detected.area);
         setDetectionState(
           result.match.city === "matched" && result.match.barangay === "matched"
             ? "matched"
@@ -271,6 +274,7 @@ export default function CustomerLocationPicker({
     reverseControllerRef.current?.abort();
     reverseRequestIdRef.current += 1;
     setError(null);
+    setDetectedArea(null);
     setDetectionState("idle");
     onChangeRef.current(null, null);
   };
@@ -346,10 +350,15 @@ export default function CustomerLocationPicker({
             : currentDetectionState === "matched"
               ? "Pin matches the selected PSGC city and barangay."
               : currentDetectionState === "partial"
-                ? "Pin detected. Review any location field that could not be matched to PSGC."
+                ? `Pin detected.${detectedArea ? ` Detected area: ${detectedArea}.` : ""} Barangay could not be matched to PSGC. Please verify your barangay before saving.`
                 : currentDetectionState === "mismatch"
                   ? "The location fields changed after this pin. Use the map again to verify the new address."
                   : "Pin saved, but its address could not be verified. You can continue with manual fields."}
+        </p>
+      ) : null}
+      {hasCoordinates && detectedArea ? (
+        <p className="customer-location-detected-area" role="status">
+          Detected area: {detectedArea}
         </p>
       ) : null}
       {error ? <p className="customer-location-error-message" role="alert">{error}</p> : null}

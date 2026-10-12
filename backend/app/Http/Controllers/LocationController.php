@@ -101,7 +101,7 @@ class LocationController extends Controller
                 ],
                 'match' => [
                     'city' => 'unmatched',
-                    'barangay' => 'unmatched',
+                    'barangay' => 'unresolved',
                 ],
             ]);
         }
@@ -118,7 +118,7 @@ class LocationController extends Controller
             ],
             'match' => [
                 'city' => $city === null ? 'unmatched' : 'matched',
-                'barangay' => $barangay === null ? 'unmatched' : 'matched',
+                'barangay' => $barangay === null ? 'unresolved' : 'matched',
             ],
         ]);
     }

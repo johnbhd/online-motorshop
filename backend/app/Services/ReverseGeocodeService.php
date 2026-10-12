@@ -10,7 +10,7 @@ use Throwable;
 class ReverseGeocodeService
 {
     /**
-     * @return array{city_municipality: string|null, barangay: string|null}
+     * @return array{city_municipality: string|null, barangay: string|null, area: string|null}
      */
     public function reverse(float $latitude, float $longitude): array
     {
@@ -26,7 +26,7 @@ class ReverseGeocodeService
     }
 
     /**
-     * @return array{city_municipality: string|null, barangay: string|null}
+     * @return array{city_municipality: string|null, barangay: string|null, area: string|null}
      */
     private function request(float $latitude, float $longitude): array
     {
@@ -73,12 +73,19 @@ class ReverseGeocodeService
                     'town',
                     'county',
                 ]),
-                'barangay' => $this->firstValue($address, [
-                    'village',
+                // Only an explicit provider Barangay field is a Barangay
+                // candidate. Lower-level locality fields are area context
+                // until the PSGC service confirms a canonical match.
+                'barangay' => $this->firstValue($address, ['barangay']),
+                'area' => $this->firstValue($address, [
                     'suburb',
-                    'neighbourhood',
-                    'quarter',
+                    'district',
                     'city_district',
+                    'quarter',
+                    'neighbourhood',
+                    'neighborhood',
+                    'borough',
+                    'village',
                 ]),
             ];
         } catch (ReverseGeocodeUnavailable $exception) {

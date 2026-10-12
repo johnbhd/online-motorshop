@@ -41,6 +41,7 @@ export type ReverseGeocodeResponse = {
   detected: {
     city_municipality: string | null;
     barangay: string | null;
+    area: string | null;
   };
   psgc: {
     city_municipality: string | null;
@@ -50,6 +51,16 @@ export type ReverseGeocodeResponse = {
   };
   match: {
     city: "matched" | "unmatched";
-    barangay: "matched" | "unmatched";
+    barangay: "matched" | "unresolved";
   };
 };
+
+export function locationNamesMatch(left: string, right: string): boolean {
+  const normalize = (value: string) => value
+    .trim()
+    .toLowerCase()
+    .replace(/^city\s+of\s+/, "")
+    .replace(/\s+(city|municipality)$/, "");
+
+  return normalize(left) !== "" && normalize(left) === normalize(right);
+}

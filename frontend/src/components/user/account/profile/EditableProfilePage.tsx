@@ -36,6 +36,7 @@ import type {
   LocationOption,
   ReverseGeocodeResponse,
 } from "@/lib/locationTypes";
+import { locationNamesMatch } from "@/lib/locationTypes";
 import ProfileAddressFields, { type ProfileLocationValues } from "./ProfileAddressFields";
 import CustomerLocationPicker from "./CustomerLocationPicker";
 
@@ -495,14 +496,36 @@ export default function EditableProfilePage() {
                   }
                 }}
                 onDetected={(result: ReverseGeocodeResponse) => {
-                  const cityName = result.psgc.city_municipality ?? result.detected.city_municipality ?? "";
-                  const barangayName = result.psgc.barangay ?? result.detected.barangay ?? "";
+                  setLocation((current) => {
+                    const cityName = result.psgc.city_municipality
+                      ?? result.detected.city_municipality
+                      ?? current.cityName;
+                    const cityCode = result.psgc.city_municipality_code ?? "";
+                    const cityChanged = (
+                      (current.cityName.trim() !== ""
+                        && cityName.trim() !== ""
+                        && !locationNamesMatch(current.cityName, cityName))
+                      || (current.cityCode !== ""
+                        && current.cityCode !== cityCode)
+                    );
+                    const barangayMatched = result.psgc.barangay !== null;
 
-                  setLocation({
-                    cityCode: result.psgc.city_municipality_code ?? "",
-                    cityName,
-                    barangayCode: result.psgc.barangay_code ?? "",
-                    barangayName,
+                    return {
+                      cityCode,
+                      cityName,
+                      barangayCode: barangayMatched
+                        ? result.psgc.barangay_code ?? ""
+                        : cityChanged
+                          ? ""
+                          : current.barangayCode,
+                      barangayName: barangayMatched
+                        ? result.psgc.barangay
+                          ?? result.detected.barangay
+                          ?? ""
+                        : cityChanged
+                          ? ""
+                          : current.barangayName,
+                    };
                   });
                 }}
                 onDetectionStateChange={setLocationDetectionState}

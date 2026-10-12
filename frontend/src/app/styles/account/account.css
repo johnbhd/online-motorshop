@@ -661,6 +661,16 @@
   color: #b91c1c;
 }
 
+.customer-location-detected-area {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
 .customer-location-error-message {
   padding: 0.65rem 0.75rem;
   border: 1px solid #fecaca;

@@ -30,6 +30,7 @@ import type {
   LocationOption,
   ReverseGeocodeResponse,
 } from "@/lib/locationTypes";
+import { locationNamesMatch } from "@/lib/locationTypes";
 import type { LocationSelection } from "../account/profile/LocationSelect";
 import {
   getCheckoutBranches,
@@ -638,19 +639,41 @@ export default function CheckoutPage() {
                   }
                 }}
                 onDetected={(result: ReverseGeocodeResponse) => {
-                  const city = result.psgc.city_municipality ?? result.detected.city_municipality ?? "";
-                  const barangay = result.psgc.barangay ?? result.detected.barangay ?? "";
+                  setFormData((current) => {
+                    const city = result.psgc.city_municipality
+                      ?? result.detected.city_municipality
+                      ?? current.delivery.city;
+                    const cityCode = result.psgc.city_municipality_code ?? "";
+                    const cityChanged = (
+                      (current.delivery.city.trim() !== ""
+                        && city.trim() !== ""
+                        && !locationNamesMatch(current.delivery.city, city))
+                      || (current.delivery.cityMunicipalityCode !== ""
+                        && current.delivery.cityMunicipalityCode !== cityCode)
+                    );
+                    const barangayMatched = result.psgc.barangay !== null;
 
-                  setFormData((current) => ({
-                    ...current,
-                    delivery: {
-                      ...current.delivery,
-                      city,
-                      cityMunicipalityCode: result.psgc.city_municipality_code ?? "",
-                      barangay,
-                      barangayCode: result.psgc.barangay_code ?? "",
-                    },
-                  }));
+                    return {
+                      ...current,
+                      delivery: {
+                        ...current.delivery,
+                        city,
+                        cityMunicipalityCode: cityCode,
+                        barangay: barangayMatched
+                          ? result.psgc.barangay
+                            ?? result.detected.barangay
+                            ?? ""
+                          : cityChanged
+                            ? ""
+                            : current.delivery.barangay,
+                        barangayCode: barangayMatched
+                          ? result.psgc.barangay_code ?? ""
+                          : cityChanged
+                            ? ""
+                            : current.delivery.barangayCode,
+                      },
+                    };
+                  });
                 }}
                 onDetectionStateChange={setLocationDetectionState}
               />
