@@ -313,6 +313,48 @@ class LocationApiTest extends TestCase
             ->assertJsonValidationErrors(['city_municipality_code']);
     }
 
+    public function test_customer_profile_keeps_a_manual_barangay_when_the_pin_only_resolves_an_area(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Manila',
+                    'suburb' => 'Santa Mesa',
+                ],
+            ], 200),
+        ]);
+
+        $customer = User::create([
+            'name' => 'Manual Barangay Customer',
+            'email' => 'manual-barangay@example.com',
+            'password' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'customer',
+        ]);
+        $customer->customer()->create([
+            'full_name' => 'Manual Barangay Customer',
+            'contact_number' => '09170000000',
+            'email' => 'manual-barangay@example.com',
+        ]);
+        $token = $customer->createToken('manual-barangay-test')->plainTextToken;
+
+        $this->withToken($token)
+            ->patchJson('/api/customer/profile', [
+                'name' => 'Manual Barangay Customer',
+                'email' => 'manual-barangay@example.com',
+                'contact_number' => '09170000000',
+                'city_municipality_code' => '1300000000',
+                'barangay' => 'Manual Barangay Name',
+                'barangay_code' => null,
+                'latitude' => 14.5995,
+                'longitude' => 120.9842,
+            ])
+            ->assertOk()
+            ->assertJsonPath('user.customer.city', 'Manila')
+            ->assertJsonPath('user.customer.barangay', 'Manual Barangay Name')
+            ->assertJsonPath('user.customer.barangay_code', null);
+    }
+
     public function test_customer_profile_rejects_a_confident_pin_city_mismatch(): void
     {
         Http::fake([
