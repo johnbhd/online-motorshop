@@ -3,6 +3,10 @@ import type { LocationOption, LocationSelection } from "../account/profile/Locat
 import CustomerLocationPicker from "../account/profile/CustomerLocationPicker";
 import LocationSelect from "../account/profile/LocationSelect";
 import type { CheckoutDeliveryData, CheckoutFieldErrors } from "./checkoutTypes";
+import type {
+  LocationDetectionState,
+  ReverseGeocodeResponse,
+} from "@/lib/locationTypes";
 
 type DeliveryFieldsProps = {
   values: CheckoutDeliveryData;
@@ -18,6 +22,9 @@ type DeliveryFieldsProps = {
   onChange: (field: keyof CheckoutDeliveryData, value: string) => void;
   onLocationChange?: (field: "city" | "barangay", selection: LocationSelection) => void;
   onCoordinatesChange?: (latitude: number | null, longitude: number | null) => void;
+  locationDetectionState?: LocationDetectionState;
+  onDetected?: (result: ReverseGeocodeResponse) => void;
+  onDetectionStateChange?: (state: LocationDetectionState) => void;
 };
 
 export default function DeliveryFields({
@@ -34,6 +41,9 @@ export default function DeliveryFields({
   onChange,
   onLocationChange,
   onCoordinatesChange,
+  locationDetectionState = "idle",
+  onDetected,
+  onDetectionStateChange,
 }: DeliveryFieldsProps) {
   return (
     <section className="checkout-sub-panel checkout-sub-panel--delivery">
@@ -188,8 +198,14 @@ export default function DeliveryFields({
           latitude={values.latitude}
           longitude={values.longitude}
           mode="checkout"
+          detectionState={locationDetectionState}
+          onDetected={onDetected}
+          onDetectionStateChange={onDetectionStateChange}
           onChange={onCoordinatesChange}
         />
+      ) : null}
+      {errors.deliveryLocation ? (
+        <p className="checkout-field-error" role="alert">{errors.deliveryLocation}</p>
       ) : null}
     </section>
   );

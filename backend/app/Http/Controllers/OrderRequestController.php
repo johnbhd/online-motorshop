@@ -6,8 +6,11 @@ use App\Http\Requests\StoreOrderRequestRequest;
 use App\Http\Requests\TrackOrderRequest;
 use App\Models\OrderRequest;
 use App\Services\DeliveryRouteService;
+use App\Services\LocationMismatchException;
 use App\Services\OrderRequestCreator;
 use App\Services\OrderRequestPresenter;
+use App\Services\PsgcLocationDataUnavailable;
+use App\Services\PsgcLocationSelectionException;
 use App\Services\StaffAdminNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +41,35 @@ class OrderRequestController extends Controller
             ], 403);
         }
 
-        $order = $this->orderRequestCreator->create($request->validated(), $user);
+        try {
+            $order = $this->orderRequestCreator->create($request->validated(), $user);
+        } catch (LocationMismatchException $exception) {
+            $errors = [];
+
+            foreach ($exception->errors() as $key => $messages) {
+                $errors[str_starts_with($key, 'fulfillment.') ? $key : 'fulfillment.delivery.'.$key] = $messages;
+            }
+
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'errors' => $errors,
+            ], 422);
+        } catch (PsgcLocationSelectionException $exception) {
+            $errors = [];
+
+            foreach ($exception->errors() as $key => $messages) {
+                $errors['fulfillment.delivery.'.$key] = $messages;
+            }
+
+            return response()->json([
+                'message' => 'The delivery location could not be verified.',
+                'errors' => $errors,
+            ], 422);
+        } catch (PsgcLocationDataUnavailable $exception) {
+            return response()->json([
+                'message' => 'Location data is currently unavailable.',
+            ], 503);
+        }
         $this->staffAdminNotificationService->orderCreated($order);
 
         return response()->json([

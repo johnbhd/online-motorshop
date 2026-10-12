@@ -187,7 +187,9 @@ class AdminCustomersApiTest extends TestCase
 
         $unusedGuest = $this->createGuest('Unused Guest');
         $this->requestAs($admin)
-            ->deleteJson('/api/admin/customers/'.$unusedGuest->id)
+            ->deleteJson('/api/admin/customers/'.$unusedGuest->id, [
+                'reason' => 'Duplicate guest record.',
+            ])
             ->assertOk();
         $this->assertDatabaseMissing('customers', ['id' => $unusedGuest->id]);
 
@@ -196,14 +198,19 @@ class AdminCustomersApiTest extends TestCase
         $this->createOrder($referencedGuest, $branch, 'pending', 90);
 
         $this->requestAs($admin)
-            ->deleteJson('/api/admin/customers/'.$referencedGuest->id)
+            ->deleteJson('/api/admin/customers/'.$referencedGuest->id, [
+                'reason' => 'Historical guest record must be retained.',
+            ])
             ->assertStatus(409);
         $this->assertDatabaseHas('customers', ['id' => $referencedGuest->id]);
 
         $this->requestAs($admin)
-            ->deleteJson('/api/admin/customers/'.$registered->id)
-            ->assertStatus(409);
-        $this->assertDatabaseHas('users', ['id' => $registeredUser->id]);
+            ->deleteJson('/api/admin/customers/'.$registered->id, [
+                'reason' => 'Customer requested account deletion.',
+            ])
+            ->assertOk();
+        $this->assertDatabaseMissing('users', ['id' => $registeredUser->id]);
+        $this->assertDatabaseMissing('customers', ['id' => $registered->id]);
     }
 
     public function test_admin_can_suspend_and_restore_only_a_registered_customer_without_changing_history(): void
@@ -267,6 +274,46 @@ class AdminCustomersApiTest extends TestCase
             'id' => $staff->id,
             'status' => 'active',
             'role' => 'staff',
+        ]);
+    }
+
+    public function test_registered_customer_deletion_unlinks_the_account_and_preserves_order_history(): void
+    {
+        $admin = $this->createUser('admin');
+        [$customerUser, $customer] = $this->createRegistered(
+            'Historical Registered Customer',
+            'historical-registered@example.com',
+        );
+        $branch = $this->createBranch('Historical Customer Branch');
+        $order = $this->createOrder($customer, $branch, 'confirmed', 420);
+        $customerUser->createToken('customer-history-session');
+
+        $this->requestAs($admin)
+            ->deleteJson('/api/admin/customers/'.$customer->id, [
+                'reason' => 'Customer requested account deletion after completing an order.',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseMissing('users', ['id' => $customerUser->id]);
+        $this->assertDatabaseHas('customers', [
+            'id' => $customer->id,
+            'user_id' => null,
+        ]);
+        $this->assertDatabaseHas('order_requests', [
+            'id' => $order->id,
+            'customer_id' => $customer->id,
+            'order_status' => 'confirmed',
+        ]);
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'tokenable_id' => $customerUser->id,
+        ]);
+        $this->assertDatabaseHas('admin_audit_logs', [
+            'actor_user_id' => $admin->id,
+            'action' => 'account_deleted',
+            'record_type' => 'customer',
+            'record_id' => $customer->id,
+            'new_status' => 'unlinked',
+            'reason' => 'Customer requested account deletion after completing an order.',
         ]);
     }
 

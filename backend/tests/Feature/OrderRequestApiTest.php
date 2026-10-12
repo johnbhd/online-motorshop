@@ -5,10 +5,13 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\OrderRequest;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class OrderRequestApiTest extends TestCase
@@ -20,8 +23,44 @@ class OrderRequestApiTest extends TestCase
         $app = parent::createApplication();
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app['config']->set('cache.default', 'array');
 
         return $app;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('psgc');
+        Storage::disk('psgc')->put('cities-municipalities.json', json_encode([
+            [
+                'code' => '1300000000',
+                'name' => 'Manila',
+                'region_code' => '1300000000',
+                'province_code' => null,
+                'geographic_level' => 'city',
+            ],
+            [
+                'code' => '0102801000',
+                'name' => 'Adams',
+                'region_code' => '0100000000',
+                'province_code' => '0102800000',
+                'geographic_level' => 'municipality',
+            ],
+        ], JSON_THROW_ON_ERROR));
+        Storage::disk('psgc')->put('barangays.json', json_encode([
+            [
+                'code' => '1300000001',
+                'name' => 'Barangay One',
+                'city_municipality_code' => '1300000000',
+            ],
+            [
+                'code' => '0102801001',
+                'name' => 'Barangay Adams',
+                'city_municipality_code' => '0102801000',
+            ],
+        ], JSON_THROW_ON_ERROR));
     }
 
     public function test_guest_pickup_creates_a_pending_order_using_database_prices(): void
@@ -133,8 +172,149 @@ class OrderRequestApiTest extends TestCase
         $this->assertDatabaseCount('pickup_requests', 0);
     }
 
+    public function test_delivery_order_accepts_a_canonical_manual_barangay_when_the_pin_resolves_only_an_area(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Manila',
+                    'suburb' => 'Santa Mesa',
+                ],
+            ], 200),
+        ]);
+
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-MANUAL-BARANGAY-001', 350.00);
+
+        $this->postJson('/api/order-requests', [
+            'customer' => [
+                'name' => 'Manual Delivery Guest',
+                'email' => 'manual-delivery@example.com',
+                'contact_number' => '09179876543',
+            ],
+            'items' => [[
+                'part_number' => $product->part_number,
+                'quantity' => 1,
+            ]],
+            'payment_method' => 'online_payment',
+            'fulfillment' => [
+                'method' => 'delivery',
+                'branch_id' => $branch->id,
+                'delivery' => [
+                    'address' => '12 Main Street',
+                    'barangay' => 'Barangay One',
+                    'barangay_code' => '1300000001',
+                    'city' => 'Manila',
+                    'city_municipality_code' => '1300000000',
+                    'latitude' => 14.5995,
+                    'longitude' => 120.9842,
+                    'contact_person' => 'Manual Delivery Guest',
+                ],
+            ],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('order.delivery.city_municipality', 'Manila')
+            ->assertJsonPath('order.delivery.city_municipality_code', '1300000000')
+            ->assertJsonPath('order.delivery.barangay', 'Barangay One')
+            ->assertJsonPath('order.delivery.barangay_code', '1300000001');
+    }
+
+    public function test_delivery_order_rejects_a_confident_pinned_location_mismatch(): void
+    {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Manila',
+                    'suburb' => 'Barangay One',
+                ],
+            ], 200),
+        ]);
+
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-PIN-001', 350.00);
+
+        $this->postJson('/api/order-requests', [
+            'customer' => [
+                'name' => 'Mismatch Guest',
+                'email' => 'mismatch@example.com',
+                'contact_number' => '09179876543',
+            ],
+            'items' => [[
+                'part_number' => $product->part_number,
+                'quantity' => 1,
+            ]],
+            'payment_method' => 'online_payment',
+            'fulfillment' => [
+                'method' => 'delivery',
+                'branch_id' => $branch->id,
+                'delivery' => [
+                    'address' => '12 Main Street',
+                    'barangay' => 'Barangay Adams',
+                    'barangay_code' => '0102801001',
+                    'city' => 'Adams',
+                    'city_municipality_code' => '0102801000',
+                    'latitude' => 14.5995,
+                    'longitude' => 120.9842,
+                    'contact_person' => 'Mismatch Guest',
+                    'contact_number' => '09179876543',
+                ],
+            ],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'fulfillment.delivery.city',
+                'fulfillment.delivery.city_municipality_code',
+            ]);
+
+        $this->assertDatabaseCount('order_requests', 0);
+    }
+
+    public function test_delivery_order_rejects_a_barangay_code_from_another_city(): void
+    {
+        $branch = $this->createBranch();
+        $product = $this->createProduct('HON-CITY-BARANGAY-001', 350.00);
+
+        $this->postJson('/api/order-requests', [
+            'customer' => [
+                'name' => 'Wrong Barangay Guest',
+                'email' => 'wrong-barangay@example.com',
+                'contact_number' => '09179876543',
+            ],
+            'items' => [[
+                'part_number' => $product->part_number,
+                'quantity' => 1,
+            ]],
+            'payment_method' => 'online_payment',
+            'fulfillment' => [
+                'method' => 'delivery',
+                'branch_id' => $branch->id,
+                'delivery' => [
+                    'address' => '12 Main Street',
+                    'barangay' => 'Barangay Adams',
+                    'barangay_code' => '0102801001',
+                    'city' => 'Manila',
+                    'city_municipality_code' => '1300000000',
+                    'contact_person' => 'Wrong Barangay Guest',
+                    'contact_number' => '09179876543',
+                ],
+            ],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['fulfillment.delivery.barangay_code']);
+
+        $this->assertDatabaseCount('order_requests', 0);
+    }
+
     public function test_registered_delivery_persists_an_order_snapshot_separate_from_the_profile(): void
     {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/reverse*' => Http::response([
+                'address' => [
+                    'city' => 'Imus',
+                ],
+            ], 200),
+        ]);
+
         $branch = $this->createBranch();
         $product = $this->createProduct('HON-SNAPSHOT-001', 350.00);
         $user = User::create([
@@ -186,7 +366,7 @@ class OrderRequestApiTest extends TestCase
             ->assertJsonPath('order.delivery.longitude', 120.9406)
             ->assertJsonPath('order.delivery.notes', 'Call before arrival');
 
-        $order = \App\Models\OrderRequest::query()->where('customer_id', $customer->id)->firstOrFail();
+        $order = OrderRequest::query()->where('customer_id', $customer->id)->firstOrFail();
         $this->assertDatabaseHas('delivery_requests', [
             'order_id' => $order->id,
             'delivery_complete_address' => 'Edited Order Address',

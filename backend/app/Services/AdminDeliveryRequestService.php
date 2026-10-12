@@ -18,6 +18,8 @@ class AdminDeliveryRequestService
 
     public function __construct(
         private readonly StaffDeliveryRequestPresenter $presenter,
+        private readonly AdminStatusOverrideService $overrideService,
+        private readonly AdminAuditLogService $auditLogs,
     ) {}
 
     public function index(array $filters): array
@@ -61,7 +63,12 @@ class AdminDeliveryRequestService
     {
         $delivery->loadMissing($this->deliveryRelations());
 
-        return $this->presenter->details($delivery, $allowedStatuses);
+        return $this->presenter->details(
+            $delivery,
+            $allowedStatuses,
+            $this->overrideService->deliveryAllowedStatuses($delivery),
+            $this->auditLogs->history('delivery', (int) $delivery->id),
+        );
     }
 
     private function deliveryQuery(): Builder

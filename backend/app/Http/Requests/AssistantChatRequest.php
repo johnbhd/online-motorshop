@@ -33,6 +33,41 @@ class AssistantChatRequest extends FormRequest
                 'string',
                 'max:'.config('assistant.max_message_length', 1000),
             ],
+            'history.*.product_context' => [
+                'sometimes',
+                'array',
+                'max:5',
+            ],
+            'history.*.product_context.*' => ['array'],
+            'history.*.product_context.*.name' => [
+                'required',
+                'string',
+                'max:200',
+            ],
+            'history.*.product_context.*.product_code' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:100',
+            ],
+            'history.*.product_context.*.brand' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:100',
+            ],
+            'history.*.product_context.*.category' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:100',
+            ],
+            'history.*.product_context.*.price' => [
+                'sometimes',
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
             'replyTo' => [
                 'sometimes',
                 'nullable',

@@ -18,6 +18,8 @@ class OrderRequestCreator
 {
     public function __construct(
         private readonly DeliveryRouteService $deliveryRouteService,
+        private readonly LocationConsistencyService $locationConsistencyService,
+        private readonly PsgcLocationService $psgcLocationService,
     ) {}
 
     /**
@@ -36,8 +38,24 @@ class OrderRequestCreator
         $delivery = $method === 'delivery'
             ? (array) data_get($payload, 'fulfillment.delivery', [])
             : null;
+
+        if ($delivery !== null) {
+            $this->canonicalizeDeliveryLocation($delivery);
+        }
+
         $deliveryAddress = $delivery ? $this->deliveryAddress($delivery) : null;
         $deliveryRemarks = $delivery ? $this->deliveryRemarks($delivery) : null;
+
+        if ($delivery !== null) {
+            $this->locationConsistencyService->validate([
+                'latitude' => $delivery['latitude'] ?? null,
+                'longitude' => $delivery['longitude'] ?? null,
+                'city_municipality_code' => $delivery['city_municipality_code'] ?? null,
+                'city_municipality' => $delivery['city'] ?? null,
+                'barangay_code' => $delivery['barangay_code'] ?? null,
+                'barangay' => $delivery['barangay'] ?? null,
+            ]);
+        }
         $guestTokenHash = $user === null && filled($payload['guest_token'] ?? null)
             ? hash('sha256', trim((string) $payload['guest_token']))
             : null;
@@ -195,6 +213,28 @@ class OrderRequestCreator
         }
 
         return $order;
+    }
+
+    /**
+     * Validate city/barangay code relationships and use canonical PSGC names
+     * for the immutable order snapshot. Custom text remains supported when no
+     * PSGC code is submitted.
+     *
+     * @param  array<string, mixed>  $delivery
+     */
+    private function canonicalizeDeliveryLocation(array &$delivery): void
+    {
+        $location = $this->psgcLocationService->resolveLocation(
+            $delivery['city_municipality_code'] ?? null,
+            $delivery['barangay_code'] ?? null,
+            $delivery['city'] ?? null,
+            $delivery['barangay'] ?? null,
+        );
+
+        $delivery['city'] = $location['city'];
+        $delivery['barangay'] = $location['barangay'];
+        $delivery['city_municipality_code'] = $location['city_municipality_code'];
+        $delivery['barangay_code'] = $location['barangay_code'];
     }
 
     private function resolveBranch(int $branchId, string $method): Branch

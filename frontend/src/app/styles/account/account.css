@@ -625,6 +625,52 @@
   margin-top: 0.12rem;
 }
 
+.customer-location-verification {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 0.45rem;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.customer-location-verification--detecting {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.customer-location-verification--matched {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.customer-location-verification--partial,
+.customer-location-verification--mismatch {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.customer-location-verification--failed {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.customer-location-detected-area {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
 .customer-location-error-message {
   padding: 0.65rem 0.75rem;
   border: 1px solid #fecaca;
@@ -680,7 +726,7 @@
 }
 
 .customer-profile-action--primary {
-  background: var(--customer-orders-orange);
+  background: var(--customer-orders-orange, #e07a08);
   color: #ffffff;
 }
 
@@ -689,7 +735,7 @@
 }
 
 .customer-profile-action--secondary {
-  background: var(--customer-orders-ink);
+  background: var(--customer-orders-ink, #16234a);
   color: #ffffff;
 }
 

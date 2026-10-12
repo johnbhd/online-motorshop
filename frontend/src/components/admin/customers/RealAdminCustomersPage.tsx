@@ -202,9 +202,9 @@ function CustomerDetailsModal({
                     : "Unsuspend account"}
                 </button>
               )}
-            {customer?.type === "guest" && (
+            {customer && (
               <button type="button" onClick={onDelete} className="admin-order-modal-button admin-order-modal-button-danger">
-                <FontAwesomeIcon icon={faTrash} aria-hidden="true" /> Delete guest
+                <FontAwesomeIcon icon={faTrash} aria-hidden="true" /> Delete account / record
               </button>
             )}
           </div>
@@ -277,6 +277,9 @@ export default function RealAdminCustomersPage() {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCustomerDetail | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [accountStatusTarget, setAccountStatusTarget] = useState<AdminCustomerDetail | null>(null);
   const [changingAccountStatus, setChangingAccountStatus] = useState(false);
 
@@ -387,17 +390,27 @@ export default function RealAdminCustomersPage() {
 
   const removeCustomer = useCallback(async () => {
     if (!token || !deleteTarget) return;
+    if (deleteReason.trim().length < 3) {
+      setDeleteError("Enter a deletion reason of at least 3 characters.");
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteError(null);
     try {
-      await deleteAdminCustomer(token, deleteTarget.id);
+      await deleteAdminCustomer(token, deleteTarget.id, deleteReason);
       setDeleteTarget(null);
+      setDeleteReason("");
       setSelectedId(null);
       setSelectedCustomer(null);
       await loadCustomers();
     } catch (requestError) {
       setError(getAdminCustomerErrorMessage(requestError));
-      setDeleteTarget(null);
+      setDeleteError(getAdminCustomerErrorMessage(requestError));
+    } finally {
+      setDeleting(false);
     }
-  }, [deleteTarget, loadCustomers, token]);
+  }, [deleteReason, deleteTarget, loadCustomers, token]);
 
   const changeAccountStatus = useCallback(async () => {
     if (!token || !accountStatusTarget || accountStatusTarget.type !== "registered") {
@@ -504,10 +517,10 @@ export default function RealAdminCustomersPage() {
           )}
         </div>
       </section>
-      {selectedId !== null && <CustomerDetailsModal customer={selectedCustomer} loading={detailLoading} error={detailError} onClose={() => { setSelectedId(null); setSelectedCustomer(null); }} onEdit={openEditor} onDelete={() => selectedCustomer && setDeleteTarget(selectedCustomer)} onAccountStatus={() => selectedCustomer && setAccountStatusTarget(selectedCustomer)} />}
+      {selectedId !== null && <CustomerDetailsModal customer={selectedCustomer} loading={detailLoading} error={detailError} onClose={() => { setSelectedId(null); setSelectedCustomer(null); }} onEdit={openEditor} onDelete={() => { if (selectedCustomer) { setDeleteReason(""); setDeleteError(null); setDeleteTarget(selectedCustomer); } }} onAccountStatus={() => selectedCustomer && setAccountStatusTarget(selectedCustomer)} />}
       {editor && <CustomerFormModal customer={editor} form={form} errors={formErrors} saving={saving} onChange={(field, value) => setForm((current) => ({ ...current, [field]: value }))} onSubmit={saveCustomer} onClose={() => setEditor(null)} />}
       {accountStatusTarget && <CustomerAccountStatusModal customer={accountStatusTarget} isSubmitting={changingAccountStatus} onClose={() => setAccountStatusTarget(null)} onConfirm={() => void changeAccountStatus()} />}
-      {deleteTarget && <BranchModalShell isOpen eyebrow="Customer Management" title="Delete guest customer" description={`Delete ${deleteTarget.name} permanently?`} titleId="admin-customer-delete-title" descriptionId="admin-customer-delete-description" onClose={() => setDeleteTarget(null)} footer={<div className="flex w-full justify-end gap-3"><button type="button" onClick={() => setDeleteTarget(null)} className="admin-order-modal-button admin-order-modal-button-secondary">Cancel</button><button type="button" onClick={() => void removeCustomer()} className="admin-order-modal-button admin-order-modal-button-danger">Delete customer</button></div>}><div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Only an unused guest record can be hard-deleted. Registered accounts and customers referenced by orders or conversations must be retained.</div></BranchModalShell>}
+      {deleteTarget && <BranchModalShell isOpen eyebrow="Customer Management" title="Delete customer account / record" description={`Confirm the administrative deletion for ${deleteTarget.name}.`} titleId="admin-customer-delete-title" descriptionId="admin-customer-delete-description" onClose={() => { if (!deleting) setDeleteTarget(null); }} footer={<div className="flex w-full justify-end gap-3"><button type="button" disabled={deleting} onClick={() => setDeleteTarget(null)} className="admin-order-modal-button admin-order-modal-button-secondary">Cancel</button><button type="button" disabled={deleting || deleteReason.trim().length < 3} onClick={() => void removeCustomer()} className="admin-order-modal-button admin-order-modal-button-danger disabled:opacity-50">{deleting ? "Deleting..." : "Delete customer"}</button></div>}><div className="space-y-4"><div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Registered customer accounts are unlinked when they have historical orders, payments, fulfillment, or conversations so those records remain intact. Unused records may be permanently deleted. Guest records with history cannot be deleted.</div><label className="block text-sm font-semibold text-slate-700">Reason <span className="text-red-600">*</span><textarea value={deleteReason} onChange={(event) => setDeleteReason(event.target.value)} rows={4} disabled={deleting} placeholder="Example: Customer requested account deletion." className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-normal outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:opacity-60" /></label>{deleteError ? <p className="text-sm text-red-700" role="alert">{deleteError}</p> : null}</div></BranchModalShell>}
     </div>
   );
 }

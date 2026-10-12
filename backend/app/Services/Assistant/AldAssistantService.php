@@ -5,18 +5,28 @@ namespace App\Services\Assistant;
 class AldAssistantService
 {
     public function __construct(
-        private readonly AldKnowledgeService $knowledgeService,
+        private readonly AldAssistantContextService $contextService,
         private readonly AldSystemPrompt $systemPrompt,
         private readonly GroqService $groqService,
     ) {}
 
     /**
-     * @param  array<int, array{role: string, content: string}>  $history
+     * @param  array<int, array<string, mixed>>  $history
      * @param  array{role?: string, content?: string}|null  $replyTo
+     * @return array{
+     *     message: string,
+     *     is_catalog: bool,
+     *     product_result: bool,
+     *     products: array<int, array<string, mixed>>,
+     *     total_matches: int|null,
+     *     has_more: bool
+     * }
      */
-    public function chat(string $message, array $history = [], ?array $replyTo = null): string
+    public function chat(string $message, array $history = [], ?array $replyTo = null): array
     {
-        $knowledgeContext = $this->knowledgeService->contextFor($message);
+        $knowledgeContext = $history === []
+            ? $this->contextService->contextFor($message)
+            : $this->contextService->contextForWithHistory($message, $history);
         $messages = [
             [
                 'role' => 'system',
@@ -38,7 +48,16 @@ class AldAssistantService
             ]]);
         }
 
-        return $this->groqService->complete($messages);
+        $contextMetadata = $this->contextService->metadata();
+
+        return [
+            'message' => $this->groqService->complete($messages),
+            'is_catalog' => (bool) ($contextMetadata['is_catalog'] ?? false),
+            'product_result' => (bool) ($contextMetadata['product_result'] ?? false),
+            'products' => $contextMetadata['products'] ?? [],
+            'total_matches' => $contextMetadata['total_matches'] ?? null,
+            'has_more' => (bool) ($contextMetadata['has_more'] ?? false),
+        ];
     }
 
     /**
@@ -73,7 +92,7 @@ class AldAssistantService
     }
 
     /**
-     * @param  array<int, array{role: string, content: string}>  $history
+     * @param  array<int, array<string, mixed>>  $history
      * @return array<int, array{role: string, content: string}>
      */
     private function historyMessages(array $history): array
@@ -94,6 +113,8 @@ class AldAssistantService
                 continue;
             }
 
+            $content = $this->appendProductContext($content, $turn);
+
             $messages[] = [
                 'role' => $role,
                 'content' => $content,
@@ -101,5 +122,51 @@ class AldAssistantService
         }
 
         return $messages;
+    }
+
+    /**
+     * Product card metadata is reduced to a small, quoted conversational
+     * context. URLs and image data are never sent to Groq.
+     *
+     * @param  array<string, mixed>  $turn
+     */
+    private function appendProductContext(string $content, array $turn): string
+    {
+        $products = $turn['product_context'] ?? [];
+
+        if (! is_array($products) || $products === []) {
+            return $content;
+        }
+
+        $lines = [];
+
+        foreach (array_slice($products, 0, 5) as $index => $product) {
+            if (! is_array($product) || ! is_string($product['name'] ?? null)) {
+                continue;
+            }
+
+            $parts = [$product['name']];
+
+            foreach (['brand', 'category'] as $field) {
+                if (is_string($product[$field] ?? null) && trim($product[$field]) !== '') {
+                    $parts[] = trim($product[$field]);
+                }
+            }
+
+            if (is_numeric($product['price'] ?? null)) {
+                $parts[] = 'PHP '.number_format((float) $product['price'], 2);
+            }
+
+            $lines[] = ($index + 1).'. '.implode(' — ', $parts);
+        }
+
+        if ($lines === []) {
+            return $content;
+        }
+
+        return $content
+            ."\n\nPrevious product results (quoted conversational context):\n"
+            .implode("\n", $lines)
+            ."\nUse the current approved catalog context as authoritative if it differs.";
     }
 }

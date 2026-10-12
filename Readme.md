@@ -91,7 +91,7 @@ website-media
 | **Guest Customer** | No — has a `customers` record with `user_id = NULL` | Browse, search, filter, checkout, order, track via order reference + contact/email verification, use website chat |
 | **Registered Customer** | Yes — `users` record with email/password, linked via `customers.user_id` | Everything a guest can, plus login, saved profile, full order history, multiple order tracking, product reviews, saved checkout info. Optional Google OAuth later |
 | **Staff** | Yes | Branch-level order/payment/pickup/delivery/customer/review/message handling. **Cannot** change customer passwords, roles, or delete accounts; **cannot** do refunds, overrides, or disputes (admin-only) |
-| **Administrator** | Yes | Full access: staff management, branch management, website content, AI chatbot config, reports, activity logs, settings |
+| **Administrator** | Yes | Full access: staff management, branch management, AI chatbot config, reports, activity logs, settings |
 
 **Key rule:** a `customers` record does not automatically mean a user account. Guest orders always create or reuse a customer record — never silently create a password-based account. After an order, the customer is offered (not forced) the option to create an account to link past orders.
 
@@ -351,7 +351,7 @@ Uses local typed mock data (e.g. `lib/mock/staff.ts`) — keep as-is. No `setTim
 Migration split into two parts — **only migrate pages that actually exist in the current project**, don't invent missing ones.
 
 **Admin Part 1:** `/admin`, `/orders`, `/payments`, `/pickup-requests`, `/delivery-requests`, `/products`
-**Admin Part 2:** `/customers`, `/messages`, `/reviews`, `/branches`, `/staff-management`, `/website-content`, `/reports`, `/activity-logs`, `/settings`, `/profile`, `/notifications`
+**Admin Part 2:** `/customers`, `/messages`, `/reviews`, `/branches`, `/staff-management`, `/reports`, `/activity-logs`, `/settings`, `/profile`, `/notifications`
 
 ### Component structure
 ```text
@@ -365,14 +365,11 @@ components/admin/
 ├── messages/MessagesPage.tsx
 ├── branches/BranchesPage.tsx
 ├── staff-management/StaffManagementPage.tsx
-└── website-content/WebsiteContentPage.tsx
 ```
 
 ### Details panel rule
-Do **not** reintroduce permanent right-side details panels that were removed from the final UI — especially on Admin Orders, Payments, Pickup Requests, Delivery Requests, Customers, Branches, Staff Management, Website Content. Use full-width table/card/editor layouts. `View`/`Manage`/`Edit` buttons can remain placeholder-only — don't auto-build modals for them.
+Do **not** reintroduce permanent right-side details panels that were removed from the final UI — especially on Admin Orders, Payments, Pickup Requests, Delivery Requests, Customers, Branches, and Staff Management. Use full-width table/card/editor layouts. `View`/`Manage`/`Edit` buttons can remain placeholder-only — don't auto-build modals for them.
 
-### Website Content
-No permanent "Homepage Preview" side panel — use a full-width editor. Hero Image stays an empty placeholder (don't generate/download images).
 
 ---
 

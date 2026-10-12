@@ -48,6 +48,8 @@ export default function NotificationDropdown({
       router.push(`/account/orders/${encodeURIComponent(notification.reference.order_reference)}`);
     } else if (notification.reference.type === "conversation") {
       window.dispatchEvent(new CustomEvent(OPEN_STAFF_CHAT_EVENT));
+    } else if (notification.reference.type === "profile") {
+      router.push("/account/profile");
     }
   };
 

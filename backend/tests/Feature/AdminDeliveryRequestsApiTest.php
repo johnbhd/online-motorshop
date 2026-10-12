@@ -279,9 +279,10 @@ class AdminDeliveryRequestsApiTest extends TestCase
             ->patchJson('/api/admin/delivery-requests/'.$delivery->id.'/status', [
                 'status' => 'booked',
                 'booking_reference' => 'LAL-ORDER-GATE',
+                'reason' => 'Attempted booking before order confirmation.',
             ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('status');
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'The parent order must be confirmed before delivery can progress. Correct the order status first.');
 
         $this->assertDatabaseHas('delivery_requests', [
             'id' => $delivery->id,
@@ -297,9 +298,10 @@ class AdminDeliveryRequestsApiTest extends TestCase
         $this->requestAs($admin)
             ->patchJson('/api/admin/delivery-requests/'.$delivery->id.'/status', [
                 'status' => 'picked_up',
+                'reason' => 'The parent order was rejected before this delivery update.',
             ])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('status');
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'The parent order must be confirmed before delivery can progress. Correct the order status first.');
 
         $this->assertDatabaseHas('delivery_requests', [
             'id' => $delivery->id,

@@ -31,6 +31,11 @@ export default function BranchModalShell({
   footer,
 }: BranchModalShellProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -44,7 +49,7 @@ export default function BranchModalShell({
     });
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -57,7 +62,7 @@ export default function BranchModalShell({
       document.removeEventListener("keydown", closeOnEscape);
       previousActiveElement?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;

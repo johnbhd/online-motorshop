@@ -11,27 +11,27 @@ Requests, and arrange Store Pickup or staff-arranged Lalamove Delivery.
 
 ## What motorcycle brands does ALD support?
 
-The current system represents Honda, Yamaha, and Suzuki products. The catalog
-may also contain Universal items. Current catalog records are authoritative.
+Ask the live catalog for the current active Brand list. Do not rely on a
+remembered Brand name or claim that a particular Brand or Product is listed
+without a matching live record.
 
-## Do you sell Honda, Yamaha, and Suzuki parts?
+## Do you sell a particular Brand or part?
 
-Those three brands are represented in the current catalog. The assistant must
-check live product data before claiming that a particular item is listed,
-available, or in stock.
+The assistant must check live Product and Brand data before claiming that a
+particular item is listed. A listing does not prove stock, compatibility, or
+branch availability.
 
 ## Are the parts genuine?
 
-Public messaging has promoted genuine Yamaha and Honda parts, but that does not
-make every catalog item automatically genuine or OEM. Ask the assistant to check
-trusted product data or confirm with ALD staff for a specific item.
+A current Product record or ALD Staff must confirm a genuine or OEM claim. A
+Brand name, Product name, or Category does not make every catalog item genuine
+or manufacturer-authorized.
 
 ## Do you sell motorcycle oil, offer retail, or offer wholesale?
 
-Public messaging has advertised maintenance products such as Motul motor oil
-and retail or wholesale availability for some eligible products. Current stock,
-wholesale eligibility, minimum quantities, pricing, and discounts must be
-confirmed by ALD data or staff.
+The live catalog and ALD Staff must confirm current maintenance products,
+retail or wholesale eligibility, minimum quantities, pricing, and discounts.
+The assistant must not invent an offer or a specific Product.
 
 ## Does ALD provide motorcycle service?
 
@@ -40,10 +40,9 @@ Specific services vary and must be confirmed with the relevant branch or staff.
 
 ## Where are the branches and what are the hours?
 
-The known branches are Manila, Makati, and Imus, Cavite. See
-`ald-branches-contact.md` for the known addresses and main contact. Recent
-public messaging advertised everyday hours of 9:00 AM to 7:00 PM, but live
-branch data and current staff confirmation take priority.
+The assistant retrieves current active Branch records from Laravel. The current
+Branch schema does not store business hours, so customers should confirm hours
+and contact details with the relevant Branch or ALD Staff.
 
 ## How do I place an order?
 

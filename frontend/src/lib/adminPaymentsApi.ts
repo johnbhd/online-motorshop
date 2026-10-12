@@ -55,11 +55,11 @@ export function getAdminPayment(token: string, id: number) {
   return request<AdminPaymentDetailsResponse>(`/api/admin/payments/${id}`, token);
 }
 
-export function updateAdminPaymentStatus(token: string, id: number, status: string) {
+export function updateAdminPaymentStatus(token: string, id: number, status: string, reason?: string) {
   return request<AdminPaymentStatusResponse>(`/api/admin/payments/${id}/status`, token, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, ...(reason?.trim() ? { reason: reason.trim() } : {}) }),
   });
 }
 

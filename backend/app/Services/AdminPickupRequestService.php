@@ -11,6 +11,9 @@ class AdminPickupRequestService
 {
     public function __construct(
         private readonly StaffPickupRequestPresenter $presenter,
+        private readonly StaffPickupStatusService $statusService,
+        private readonly AdminStatusOverrideService $overrideService,
+        private readonly AdminAuditLogService $auditLogs,
     ) {}
 
     public function index(array $filters): array
@@ -49,7 +52,23 @@ class AdminPickupRequestService
     {
         $pickupRequest->loadMissing($this->pickupRelations());
 
-        return $this->presenter->details($pickupRequest, []);
+        return $this->presenter->details(
+            $pickupRequest,
+            $this->statusService->allowedStatuses($pickupRequest),
+            $this->overrideService->pickupAllowedStatuses($pickupRequest),
+            $this->auditLogs->history('pickup', (int) $pickupRequest->id),
+        );
+    }
+
+    public function transition(
+        PickupRequest $pickupRequest,
+        string $status,
+        ?string $reason,
+        User $admin,
+    ): PickupRequest {
+        $pickupRequest = $this->overrideService->pickup($pickupRequest, $status, $reason, $admin);
+
+        return $this->find($pickupRequest->id) ?? $pickupRequest;
     }
 
     private function pickupQuery(): Builder

@@ -25,7 +25,17 @@ import {
   getCitiesMunicipalities,
   getLocationErrorMessage,
 } from "@/lib/locationApi";
-import type { LocationOption } from "@/lib/locationTypes";
+import type {
+  LocationDetectionBaseline,
+  LocationDetectionState,
+  LocationOption,
+  ReverseGeocodeResponse,
+} from "@/lib/locationTypes";
+import {
+  locationDetectionBaselineFromResult,
+  locationNamesMatch,
+  resolveLocationDetectionState,
+} from "@/lib/locationTypes";
 import type { LocationSelection } from "../account/profile/LocationSelect";
 import {
   getCheckoutBranches,
@@ -102,11 +112,21 @@ export default function CheckoutPage() {
   const [barangayError, setBarangayError] = useState<string | null>(null);
   const [locationReloadNonce, setLocationReloadNonce] = useState(0);
   const [formData, setFormData] = useState<CheckoutFormData>(initialFormData);
+  const [locationDetectionState, setLocationDetectionState] = useState<LocationDetectionState>("idle");
+  const [locationDetectionBaseline, setLocationDetectionBaseline] = useState<LocationDetectionBaseline | null>(null);
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
   const [submitError, setSubmitError] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitLockRef = useRef(false);
+
+  const showCheckoutErrorToast = (message: string) => {
+    showToast({
+      title: "Checkout needs attention",
+      message,
+      variant: "error",
+    });
+  };
 
   const loadBranches = useCallback(async () => {
     setIsLoadingBranches(true);
@@ -298,6 +318,8 @@ export default function CheckoutPage() {
   };
 
   const handleFulfillmentChange = (method: CartFulfillmentMethod) => {
+    setLocationDetectionBaseline(null);
+    setLocationDetectionState("idle");
     setFormData((currentFormData) => ({
       ...currentFormData,
       fulfillmentMethod: method,
@@ -356,12 +378,23 @@ export default function CheckoutPage() {
     }
 
     if (cartItems.length === 0) {
-      setSubmitError("Your cart is empty. Add a product before submitting a request.");
+      const message = "Your cart is empty. Add a product before submitting a request.";
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
       return;
     }
 
     const validationErrors = validateCheckoutForm(formData);
     const selectedBranch = getCheckoutBranchById(branches, formData.branchId);
+
+    if (
+      formData.fulfillmentMethod === "delivery"
+      && formData.delivery.latitude !== null
+      && formData.delivery.longitude !== null
+      && locationDetectionState === "mismatch"
+    ) {
+      validationErrors.deliveryLocation = "Use the map again or update the city and barangay so they match the pinned location.";
+    }
 
     if (!selectedBranch) {
       validationErrors.branchId = "Choose an ALD branch for this request.";
@@ -375,7 +408,9 @@ export default function CheckoutPage() {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setSubmitError("Review the highlighted details before submitting your request.");
+      const message = "Review the highlighted details before submitting your request.";
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
       return;
     }
 
@@ -394,9 +429,10 @@ export default function CheckoutPage() {
     if (!payload) {
       setIsSubmitting(false);
       submitLockRef.current = false;
-      setSubmitError(
-        "This request contains an invalid branch or cart item. Review your details and try again.",
-      );
+      const message =
+        "This request contains an invalid branch or cart item. Review your details and try again.";
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
       return;
     }
 
@@ -419,16 +455,15 @@ export default function CheckoutPage() {
         `/order-confirmation/${encodeURIComponent(response.order.reference)}`,
       );
     } catch (error) {
-      if (error instanceof OrderRequestApiError && error.status === 0) {
-        setSubmitError(error.message);
-      } else {
-        setSubmitError(
-          getOrderRequestErrorMessage(
-            error,
-            "This request could not be submitted. Your cart is still saved. Please try again.",
-          ),
-        );
-      }
+      const message =
+        error instanceof OrderRequestApiError && error.status === 0
+          ? error.message
+          : getOrderRequestErrorMessage(
+              error,
+              "This request could not be submitted. Your cart is still saved. Please try again.",
+            );
+      setSubmitError(message);
+      showCheckoutErrorToast(message);
 
       if (error instanceof OrderRequestApiError) {
         const firstValidationError = Object.entries(error.errors)[0];
@@ -444,6 +479,8 @@ export default function CheckoutPage() {
             "fulfillment.delivery.address": "deliveryAddress",
             "fulfillment.delivery.barangay": "barangay",
             "fulfillment.delivery.city": "city",
+            "fulfillment.delivery.city_municipality_code": "city",
+            "fulfillment.delivery.barangay_code": "barangay",
             "fulfillment.delivery.contact_person": "contactPerson",
             "fulfillment.delivery.contact_number": "deliveryContactNumber",
             payment_method: "paymentMethod",
@@ -590,6 +627,7 @@ export default function CheckoutPage() {
                 barangayLoading={barangayLoading}
                 cityError={cityError}
                 barangayError={barangayError}
+                locationDetectionState={locationDetectionState}
                 onCityRetry={() => {
                   setCityError(null);
                   setLocationReloadNonce((value) => value + 1);
@@ -599,18 +637,73 @@ export default function CheckoutPage() {
                   setLocationReloadNonce((value) => value + 1);
                 }}
                 onLocationChange={(field: "city" | "barangay", selection: LocationSelection) => {
+                  const nextDelivery = field === "city"
+                    ? { ...formData.delivery, city: selection.label, cityMunicipalityCode: selection.code ?? "", barangay: "", barangayCode: "" }
+                    : { ...formData.delivery, barangay: selection.label, barangayCode: selection.code ?? "" };
                   setFormData((current) => ({
                     ...current,
-                    delivery: field === "city"
-                      ? { ...current.delivery, city: selection.label, cityMunicipalityCode: selection.code ?? "", barangay: "", barangayCode: "" }
-                      : { ...current.delivery, barangay: selection.label, barangayCode: selection.code ?? "" },
+                    delivery: nextDelivery,
                   }));
+                  setLocationDetectionState(resolveLocationDetectionState(
+                    locationDetectionBaseline,
+                    { label: nextDelivery.city, code: nextDelivery.cityMunicipalityCode },
+                    { label: nextDelivery.barangay, code: nextDelivery.barangayCode },
+                  ));
                   setSubmitError("");
                 }}
-                onCoordinatesChange={(latitude, longitude) => setFormData((current) => ({
-                  ...current,
-                  delivery: { ...current.delivery, latitude, longitude },
-                }))}
+                onCoordinatesChange={(latitude, longitude) => {
+                  setLocationDetectionBaseline(null);
+                  setFormData((current) => ({
+                    ...current,
+                    delivery: { ...current.delivery, latitude, longitude },
+                  }));
+                  if (latitude === null || longitude === null) {
+                    setLocationDetectionState("idle");
+                  }
+                }}
+                onDetected={(result: ReverseGeocodeResponse) => {
+                  const baseline = locationDetectionBaselineFromResult(result);
+                  const city = result.psgc.city_municipality
+                    ?? result.detected.city_municipality
+                    ?? formData.delivery.city;
+                  const cityCode = result.psgc.city_municipality_code ?? "";
+                  const cityChanged = (
+                    (formData.delivery.city.trim() !== ""
+                      && city.trim() !== ""
+                      && !locationNamesMatch(formData.delivery.city, city))
+                    || (formData.delivery.cityMunicipalityCode !== ""
+                      && cityCode !== ""
+                      && formData.delivery.cityMunicipalityCode !== cityCode)
+                  );
+                  const barangayMatched = result.psgc.barangay !== null;
+                  const nextDelivery = {
+                    ...formData.delivery,
+                    city,
+                    cityMunicipalityCode: cityCode,
+                    barangay: barangayMatched
+                      ? result.psgc.barangay
+                        ?? result.detected.barangay
+                        ?? ""
+                      : cityChanged
+                        ? ""
+                        : formData.delivery.barangay,
+                    barangayCode: barangayMatched
+                      ? result.psgc.barangay_code ?? ""
+                      : cityChanged
+                        ? ""
+                        : formData.delivery.barangayCode,
+                  };
+
+                  setLocationDetectionBaseline(baseline);
+                  setFormData((current) => ({
+                    ...current,
+                    delivery: nextDelivery,
+                  }));
+                  if (baseline.cityMatched && !baseline.barangayMatched && nextDelivery.barangay.trim() !== "") {
+                    setLocationDetectionState("manual");
+                  }
+                }}
+                onDetectionStateChange={setLocationDetectionState}
               />
             ) : null}
 

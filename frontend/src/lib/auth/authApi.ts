@@ -1,16 +1,50 @@
 import type {
+  AuthValidationErrors,
   AuthLogoutResponse,
   AuthMeResponse,
   AuthTokenResponse,
   AuthUserRole,
-  AuthValidationErrors,
+  GoogleAuthResponse,
+  GoogleLinkProfile,
+  GoogleSetupProfile,
 } from "./authTypes";
+
+const GOOGLE_AUTH_ERROR_MESSAGES: Record<string, string> = {
+  google_cancelled: "Google sign-in was cancelled.",
+  google_auth_failed:
+    "Unable to sign in with Google right now. Please try again.",
+  google_auth_unavailable:
+    "Google sign-in is temporarily unavailable. Please try again.",
+  google_state_invalid:
+    "Your Google sign-in session is no longer valid. Please try again.",
+  google_setup_expired:
+    "Your Google sign-up session has expired. Please start again.",
+  google_link_expired:
+    "Your Google account-link session has expired. Please start again.",
+  google_handoff_invalid:
+    "Unable to complete Google sign-in. Please start again.",
+  google_customer_only:
+    "Google sign-in is available only for customer accounts. Please use the appropriate Admin or Staff sign-in.",
+  google_account_inactive:
+    "This customer account is not active. Please contact ALD support.",
+  google_email_unverified: "A verified Google email is required to continue.",
+  google_identity_conflict:
+    "This Google account could not be connected to the requested ALD account. Please sign in normally or contact ALD support.",
+  google_link_invalid: "The password is incorrect.",
+};
+
+const GOOGLE_RETURN_PATHS = new Set([
+  "/",
+  "/checkout",
+  "/account/orders",
+]);
 
 type AuthRequestOptions = RequestInit & {
   token?: string;
 };
 
 type AuthErrorPayload = {
+  code?: unknown;
   message?: unknown;
   errors?: unknown;
 };
@@ -18,16 +52,19 @@ type AuthErrorPayload = {
 export class AuthApiError extends Error {
   readonly status: number;
   readonly errors: AuthValidationErrors;
+  readonly code: string | null;
 
   constructor(
     status: number,
     message: string,
     errors: AuthValidationErrors = {},
+    code: string | null = null,
   ) {
     super(message);
     this.name = "AuthApiError";
     this.status = status;
     this.errors = errors;
+    this.code = code;
   }
 }
 
@@ -114,6 +151,7 @@ async function authRequest<T>(
       response.status,
       message,
       getValidationErrors(payload.errors),
+      typeof payload.code === "string" ? payload.code : null,
     );
   }
 
@@ -162,6 +200,95 @@ export function logout(token: string) {
     {
       method: "POST",
       token,
+    },
+  );
+}
+
+export function getSafeGoogleReturnTo(
+  value: string | null | undefined,
+): string {
+  return value && GOOGLE_RETURN_PATHS.has(value) ? value : "/";
+}
+
+export function getGoogleAuthErrorMessage(
+  error: unknown,
+  fallback = "Unable to complete Google authentication. Please try again.",
+): string {
+  if (error instanceof AuthApiError) {
+    const validationMessage = Object.values(error.errors)[0]?.[0];
+
+    if (validationMessage) {
+      return validationMessage;
+    }
+
+    if (error.code && GOOGLE_AUTH_ERROR_MESSAGES[error.code]) {
+      return GOOGLE_AUTH_ERROR_MESSAGES[error.code];
+    }
+
+    if (error.status === 0 || error.status >= 500) {
+      return "The authentication service is unavailable. Please try again.";
+    }
+  }
+
+  return fallback;
+}
+
+export function getGoogleAuthErrorMessageForCode(
+  code: string | null,
+): string {
+  return (
+    (code && GOOGLE_AUTH_ERROR_MESSAGES[code]) ||
+    "Unable to complete Google authentication. Please try again."
+  );
+}
+
+export function getGoogleSetupProfile(token: string) {
+  return authRequest<GoogleSetupProfile>(
+    `/api/auth/google/setup?token=${encodeURIComponent(token)}`,
+  );
+}
+
+export function completeGoogleRegistration(input: {
+  setup_token: string;
+  full_name: string;
+  phone: string;
+  password: string;
+  password_confirmation: string;
+}) {
+  return authRequest<GoogleAuthResponse>(
+    "/api/auth/google/complete",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
+export function getGoogleLinkProfile(token: string) {
+  return authRequest<GoogleLinkProfile>(
+    `/api/auth/google/link?token=${encodeURIComponent(token)}`,
+  );
+}
+
+export function linkGoogleAccount(input: {
+  link_token: string;
+  password: string;
+}) {
+  return authRequest<GoogleAuthResponse>(
+    "/api/auth/google/link",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
+export function exchangeGoogleAuthCode(code: string) {
+  return authRequest<GoogleAuthResponse>(
+    "/api/auth/google/exchange",
+    {
+      method: "POST",
+      body: JSON.stringify({ code }),
     },
   );
 }

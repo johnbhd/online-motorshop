@@ -1,3 +1,5 @@
+import type { AdminAuditLog } from "./adminAuditTypes";
+
 export type AdminDeliveryRequest = {
   id: number;
   order_reference: string | null;
@@ -42,6 +44,8 @@ export type AdminDeliveryRequest = {
 
 export type AdminDeliveryRequestDetails = AdminDeliveryRequest & {
   allowed_statuses: string[];
+  override_statuses: string[];
+  status_overrides: AdminAuditLog[];
   order: {
     id: number;
     reference: string;

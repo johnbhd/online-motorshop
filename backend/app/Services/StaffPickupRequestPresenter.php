@@ -38,10 +38,14 @@ class StaffPickupRequestPresenter
     public function details(
         PickupRequest $pickupRequest,
         array $allowedStatuses,
+        array $overrideStatuses = [],
+        array $statusOverrides = [],
     ): array {
         return [
             ...$this->summary($pickupRequest),
             'allowed_statuses' => $allowedStatuses,
+            'override_statuses' => $overrideStatuses,
+            'status_overrides' => $statusOverrides,
             'order' => $this->orderPayload($pickupRequest->order),
         ];
     }

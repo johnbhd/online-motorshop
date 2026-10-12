@@ -17,8 +17,8 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminStaffController;
-use App\Http\Controllers\Admin\AdminWebsiteContentController;
 use App\Http\Controllers\Api\AssistantController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
@@ -62,6 +62,9 @@ Route::get('/locations/cities-municipalities', [LocationController::class, 'citi
 Route::get('/locations/cities-municipalities/{code}/barangays', [LocationController::class, 'barangays'])
     ->where('code', '[A-Za-z0-9_-]+')
     ->name('locations.barangays');
+Route::post('/locations/reverse-geocode', [LocationController::class, 'reverseGeocode'])
+    ->middleware('throttle:10,1')
+    ->name('locations.reverse-geocode');
 
 // Public catalog
 Route::get('/products', [CatalogController::class, 'products'])
@@ -124,6 +127,28 @@ Route::prefix('customer')
 
 // Auth
 Route::prefix('auth')->group(function () {
+    Route::get('/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->middleware('throttle:10,1')
+        ->name('auth.google.redirect');
+    Route::get('/google/callback', [GoogleAuthController::class, 'callback'])
+        ->middleware('throttle:20,1')
+        ->name('auth.google.callback');
+    Route::get('/google/setup/{token}', [GoogleAuthController::class, 'setup'])
+        ->middleware('throttle:20,1')
+        ->name('auth.google.setup');
+    Route::post('/google/complete', [GoogleAuthController::class, 'complete'])
+        ->middleware('throttle:10,1')
+        ->name('auth.google.complete');
+    Route::get('/google/link/{token}', [GoogleAuthController::class, 'linkProfile'])
+        ->middleware('throttle:20,1')
+        ->name('auth.google.link.profile');
+    Route::post('/google/link', [GoogleAuthController::class, 'link'])
+        ->middleware('throttle:5,1')
+        ->name('auth.google.link');
+    Route::post('/google/exchange', [GoogleAuthController::class, 'exchange'])
+        ->middleware('throttle:10,1')
+        ->name('auth.google.exchange');
+
     Route::post('/login', [LoginController::class, 'store'])
         ->name('auth.login');
     Route::post('/register', [RegisterController::class, 'store'])
@@ -343,6 +368,10 @@ Route::prefix('admin')
             ->whereNumber('pickup')
             ->name('pickups.show');
 
+        Route::patch('/pickup-requests/{pickup}/status', [AdminPickupRequestsController::class, 'updateStatus'])
+            ->whereNumber('pickup')
+            ->name('pickups.status');
+
         Route::get('/delivery-requests', [AdminDeliveryRequestsController::class, 'index'])
             ->name('deliveries.index');
 
@@ -391,9 +420,6 @@ Route::prefix('admin')
 
         Route::get('/staff-management/data', [AdminStaffController::class, 'data'])
             ->name('staff-management.data');
-
-        Route::get('/website-content/data', [AdminWebsiteContentController::class, 'data'])
-            ->name('website-content.data');
     });
 
 // Staff

@@ -38,6 +38,7 @@ import {
   ASSISTANT_MAX_MESSAGE_LENGTH,
   type AssistantMessage,
   type AssistantHistoryItem,
+  type AssistantProductContext,
   type AssistantReplyReference,
 } from "@/lib/assistant/assistantTypes";
 import {
@@ -110,10 +111,24 @@ function toAssistantHistory(
         ["bot", "customer"].includes(message.sender),
     )
     .slice(-ASSISTANT_HISTORY_LIMIT)
-    .map((message) => ({
-      role: message.sender === "customer" ? "user" : "assistant",
-      content: message.text,
-    }));
+    .map((message) => {
+      const productContext: AssistantProductContext[] | undefined =
+        message.sender === "bot" && message.products?.length
+          ? message.products.slice(0, 5).map((product) => ({
+              name: product.name,
+              productCode: product.productCode,
+              price: product.price,
+              brand: product.brand,
+              category: product.category,
+            }))
+          : undefined;
+
+      return {
+        role: message.sender === "customer" ? "user" : "assistant",
+        content: message.text,
+        ...(productContext ? { productContext } : {}),
+      };
+    });
 }
 
 function toChatbotMessage(message: AssistantMessage): ChatMessage {
@@ -123,6 +138,9 @@ function toChatbotMessage(message: AssistantMessage): ChatMessage {
     text: message.content,
     createdAt: message.createdAt,
     replyTo: message.replyTo ?? null,
+    products: message.products,
+    totalMatches: message.totalMatches,
+    hasMore: message.hasMore,
   };
 }
 
@@ -133,6 +151,9 @@ function toStoredAssistantMessage(message: ChatMessage): AssistantMessage {
     content: message.text,
     createdAt: message.createdAt,
     replyTo: message.replyTo ?? null,
+    products: message.products,
+    totalMatches: message.totalMatches,
+    hasMore: message.hasMore,
   };
 }
 
@@ -359,9 +380,16 @@ export default function ChatbotWidget() {
             : null,
         });
 
+        const assistantMessage = createMessage("bot", response.message);
+
         setMessages((currentMessages) => [
           ...currentMessages,
-          createMessage("bot", response),
+          {
+            ...assistantMessage,
+            products: response.products,
+            totalMatches: response.totalMatches,
+            hasMore: response.hasMore,
+          },
         ]);
         pendingAssistantRetryRef.current = null;
         setReplyingTo(null);

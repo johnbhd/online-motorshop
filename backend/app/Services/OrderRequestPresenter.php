@@ -102,10 +102,16 @@ class OrderRequestPresenter
         ];
     }
 
-    public function adminDetail(OrderRequest $order, array $allowedStatuses): array
-    {
+    public function adminDetail(
+        OrderRequest $order,
+        array $allowedStatuses,
+        array $overrideStatuses = [],
+        array $statusOverrides = [],
+    ): array {
         $payload = $this->staffDetail($order);
         $payload['allowed_statuses'] = $allowedStatuses;
+        $payload['override_statuses'] = $overrideStatuses;
+        $payload['status_overrides'] = $statusOverrides;
         $payload['payment_method'] = $this->latestPayment($order)?->payment_method;
 
         return $payload;

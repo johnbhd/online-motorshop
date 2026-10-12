@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AdminDeliveryRequestIndexRequest;
 use App\Http\Requests\UpdateAdminDeliveryStatusRequest;
 use App\Services\AdminDeliveryRequestService;
+use App\Services\AdminStatusOverrideService;
 use App\Services\StaffDeliveryStatusService;
 use Illuminate\Http\JsonResponse;
 
@@ -14,6 +15,7 @@ class AdminDeliveryRequestsController extends Controller
     public function __construct(
         private readonly AdminDeliveryRequestService $service,
         private readonly StaffDeliveryStatusService $statusService,
+        private readonly AdminStatusOverrideService $overrideService,
     ) {}
 
     public function index(AdminDeliveryRequestIndexRequest $request): JsonResponse
@@ -52,7 +54,7 @@ class AdminDeliveryRequestsController extends Controller
             return response()->json(['message' => 'Delivery request not found.'], 404);
         }
 
-        $record = $this->statusService->transition(
+        $record = $this->overrideService->delivery(
             $record,
             $request->validated('status'),
             $request->safe()->only([
@@ -63,6 +65,8 @@ class AdminDeliveryRequestsController extends Controller
                 'vehicle_plate',
                 'remarks',
             ]),
+            $request->validated('reason'),
+            $request->user(),
         );
 
         return response()->json([

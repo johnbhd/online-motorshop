@@ -12,9 +12,8 @@ description:
 - ALD Motorshop sells motorcycle parts and related maintenance products.
 - ALD also provides motorcycle-related service, but the exact service menu is
   not fixed in this knowledge pack.
-- The system currently represents Honda, Yamaha, and Suzuki products.
-- Public messaging has emphasized genuine Yamaha and Honda parts.
-- Public context refers to Manila, Makati, and Imus, Cavite branches.
+- The system stores its current Brand, Category, Product, and Branch records in
+  Laravel. Those live records determine what is publicly listed now.
 
 This is deliberately cautious business language. The available information does
 not verify a founding year, owner, founder, company registration, supplier
@@ -29,8 +28,8 @@ receive support without treating an unverified catalog answer as a promise.
 ## Business Type and Primary Products
 
 ALD is a motorcycle parts and service business. Its primary catalog scope is
-motorcycle parts, maintenance products, lubricants, and related accessories for
-the supported brands and compatible applications represented in current data.
+motorcycle parts, maintenance products, lubricants, and related accessories
+represented in current data.
 
 ## General Services
 
@@ -57,18 +56,12 @@ Submitting an Order Request does not by itself reserve stock, guarantee
 compatibility, charge a payment, book a rider, or complete a sale. ALD staff
 reviews the request and confirms the operational details.
 
-## Supported Brands and Genuine-Part Language
+## Brand and Genuine-Part Language
 
-Honda, Yamaha, and Suzuki are the supported motorcycle brands represented in
-the current system. The catalog also contains a `Universal` brand taxonomy
-value for products that are not tied to one of those manufacturer names.
-
-Public messaging has promoted genuine Yamaha and Honda parts. That does not
-prove that every product is genuine or OEM. A specific genuine/OEM claim must
-come from trusted current product data or ALD staff.
-
+Current Brand values and Products must be retrieved from Laravel. A specific
+genuine or OEM claim must come from trusted current Product data or ALD Staff.
 The system is not authorized by this document to claim that ALD is an official
-Honda, Yamaha, or Suzuki dealership.
+manufacturer dealership.
 
 ## Live-Data Boundary
 

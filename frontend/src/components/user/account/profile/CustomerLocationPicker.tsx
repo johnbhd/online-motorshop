@@ -10,12 +10,20 @@ import {
 import { addAldMapBasemap } from "@/lib/mapLibreBasemap";
 import { ALD_MAP_MAX_ZOOM, ALD_MAP_MIN_ZOOM } from "@/lib/mapConfig";
 import MapFullscreenFrame from "@/components/ui/MapFullscreenFrame";
+import { reverseGeocodeLocation } from "@/lib/locationApi";
+import type {
+  LocationDetectionState,
+  ReverseGeocodeResponse,
+} from "@/lib/locationTypes";
 import type { LatLngExpression, Map as LeafletMap, Marker as LeafletMarker } from "leaflet";
 
 type CustomerLocationPickerProps = {
   latitude: number | null;
   longitude: number | null;
   onChange: (latitude: number | null, longitude: number | null) => void;
+  detectionState?: LocationDetectionState;
+  onDetected?: (result: ReverseGeocodeResponse) => void;
+  onDetectionStateChange?: (state: LocationDetectionState) => void;
   mode?: "profile" | "checkout";
 };
 
@@ -29,21 +37,89 @@ export default function CustomerLocationPicker({
   latitude,
   longitude,
   onChange,
+  detectionState,
+  onDetected,
+  onDetectionStateChange,
   mode = "profile",
 }: CustomerLocationPickerProps) {
   const mapElementRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<LeafletMarker | null>(null);
   const onChangeRef = useRef(onChange);
+  const onDetectedRef = useRef(onDetected);
+  const onDetectionStateChangeRef = useRef(onDetectionStateChange);
+  const reverseControllerRef = useRef<AbortController | null>(null);
+  const reverseRequestIdRef = useRef(0);
   const [detecting, setDetecting] = useState(false);
   const [mapLoading, setMapLoading] = useState(false);
   const [isMapFullscreen, setIsMapFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detectedArea, setDetectedArea] = useState<string | null>(null);
+  const [detectedCity, setDetectedCity] = useState<string | null>(null);
+  const [internalDetectionState, setInternalDetectionState] = useState<LocationDetectionState>("idle");
+  const currentDetectionState = detectionState ?? internalDetectionState;
   const hasCoordinates = latitude !== null && longitude !== null;
 
   useEffect(() => {
     onChangeRef.current = onChange;
-  }, [onChange]);
+    onDetectedRef.current = onDetected;
+    onDetectionStateChangeRef.current = onDetectionStateChange;
+  }, [onChange, onDetected, onDetectionStateChange]);
+
+  const setDetectionState = (state: LocationDetectionState) => {
+    setInternalDetectionState(state);
+    onDetectionStateChangeRef.current?.(state);
+  };
+
+  const syncLocation = (nextLatitude: number, nextLongitude: number) => {
+    onChangeRef.current(nextLatitude, nextLongitude);
+    reverseControllerRef.current?.abort();
+
+    const requestId = reverseRequestIdRef.current + 1;
+    reverseRequestIdRef.current = requestId;
+    const controller = new AbortController();
+    reverseControllerRef.current = controller;
+    setDetectionState("detecting");
+    setError(null);
+    setDetectedArea(null);
+    setDetectedCity(null);
+
+    void reverseGeocodeLocation(nextLatitude, nextLongitude, controller.signal)
+      .then((result) => {
+        if (controller.signal.aborted || requestId !== reverseRequestIdRef.current) {
+          return;
+        }
+
+        setDetectedArea(result.detected.area);
+        setDetectedCity(
+          result.psgc.city_municipality ?? result.detected.city_municipality,
+        );
+        setDetectionState(
+          result.match.city === "matched" && result.match.barangay === "matched"
+            ? "matched"
+            : "partial",
+        );
+        onDetectedRef.current?.(result);
+      })
+      .catch((reverseError: unknown) => {
+        if (controller.signal.aborted || requestId !== reverseRequestIdRef.current) {
+          return;
+        }
+
+        setDetectionState("failed");
+        setError(
+          reverseError instanceof Error && reverseError.message
+            ? reverseError.message
+            : "The pin was saved, but its address could not be verified. Review the fields manually.",
+        );
+      });
+  };
+
+  const syncLocationRef = useRef(syncLocation);
+
+  useEffect(() => {
+    syncLocationRef.current = syncLocation;
+  });
 
   useEffect(() => {
     if (!hasCoordinates || latitude === null || longitude === null) {
@@ -104,11 +180,11 @@ export default function CustomerLocationPicker({
           .addTo(map);
 
         map.on("click", (event) => {
-          onChangeRef.current(event.latlng.lat, event.latlng.lng);
+          syncLocationRef.current(event.latlng.lat, event.latlng.lng);
         });
         marker.on("dragend", () => {
           const position = marker.getLatLng();
-          onChangeRef.current(position.lat, position.lng);
+          syncLocationRef.current(position.lat, position.lng);
         });
 
         mapRef.current = map;
@@ -162,6 +238,7 @@ export default function CustomerLocationPicker({
 
   useEffect(() => {
     return () => {
+      reverseControllerRef.current?.abort();
       mapRef.current?.remove();
       mapRef.current = null;
       markerRef.current = null;
@@ -179,7 +256,7 @@ export default function CustomerLocationPicker({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        onChange(position.coords.latitude, position.coords.longitude);
+        syncLocation(position.coords.latitude, position.coords.longitude);
         setDetecting(false);
       },
       (geolocationError) => {
@@ -199,8 +276,13 @@ export default function CustomerLocationPicker({
   };
 
   const removeSavedLocation = () => {
+    reverseControllerRef.current?.abort();
+    reverseRequestIdRef.current += 1;
     setError(null);
-    onChange(null, null);
+    setDetectedArea(null);
+    setDetectedCity(null);
+    setDetectionState("idle");
+    onChangeRef.current(null, null);
   };
 
   return (
@@ -265,6 +347,26 @@ export default function CustomerLocationPicker({
         <p className="customer-location-status" role="status">
           <FontAwesomeIcon icon={faLocationDot} aria-hidden="true" />
           Location pinned · {formatCoordinate(latitude)}°, {formatCoordinate(longitude)}°
+        </p>
+      ) : null}
+      {hasCoordinates && currentDetectionState !== "idle" ? (
+        <p className={`customer-location-verification customer-location-verification--${currentDetectionState}`} role="status">
+          {currentDetectionState === "detecting"
+            ? "Checking the pinned city and barangay…"
+            : currentDetectionState === "matched"
+              ? "Pin matches the selected PSGC city and barangay."
+              : currentDetectionState === "partial"
+                ? `Location detected${detectedArea ? ` in ${detectedArea}` : ""}${detectedCity ? `, ${detectedCity}` : ""}. We could not determine the exact barangay automatically. Please select or enter your barangay before saving.`
+                : currentDetectionState === "manual"
+                  ? `Location detected${detectedArea ? ` in ${detectedArea}` : ""}${detectedCity ? `, ${detectedCity}` : ""}. The barangay was completed manually and will be checked when you save.`
+                : currentDetectionState === "mismatch"
+                  ? "The location fields changed after this pin. Use the map again to verify the new address."
+                  : "Pin saved, but its address could not be verified. You can continue with manual fields."}
+        </p>
+      ) : null}
+      {hasCoordinates && detectedArea ? (
+        <p className="customer-location-detected-area" role="status">
+          Detected area: {detectedArea}
         </p>
       ) : null}
       {error ? <p className="customer-location-error-message" role="alert">{error}</p> : null}

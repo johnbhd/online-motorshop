@@ -14,6 +14,8 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import AdminStatusOverrideDialog from "@/components/admin/AdminStatusOverrideDialog";
+import AdminAuditHistory from "@/components/admin/AdminAuditHistory";
 import BranchModalShell from "@/components/admin/branches/BranchModalShell";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
@@ -55,6 +57,7 @@ export default function RealAdminPaymentDetailsModal({
   const [payment, setPayment] = useState<AdminPaymentDetails | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [overrideStatus, setOverrideStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (paymentId === null) {
@@ -78,7 +81,7 @@ export default function RealAdminPaymentDetailsModal({
     return () => controller.abort();
   }, [paymentId, token]);
 
-  const changeStatus = async (status: string) => {
+  const changeStatus = async (status: string, reason?: string) => {
     const token = getAuthToken();
     if (!token || !payment) return;
 
@@ -86,7 +89,7 @@ export default function RealAdminPaymentDetailsModal({
     setError(null);
 
     try {
-      const response = await updateAdminPaymentStatus(token, payment.id, status);
+      const response = await updateAdminPaymentStatus(token, payment.id, status, reason);
       setPayment(response.payment);
       onUpdated(response.payment);
     } catch (requestError) {
@@ -100,6 +103,7 @@ export default function RealAdminPaymentDetailsModal({
   const loading = paymentId !== null && Boolean(token) && !payment && !error;
 
   return (
+    <>
     <BranchModalShell
       isOpen={paymentId !== null}
       eyebrow="Payment Oversight"
@@ -198,8 +202,17 @@ export default function RealAdminPaymentDetailsModal({
               <p className="text-sm leading-6 text-slate-600">Only the server can authorize this transition and set the reviewer identity and timestamp. Order status remains separate from payment status.</p>
             </section>
           ) : null}
+          {payment.override_statuses.length ? (
+            <section className="admin-order-modal-section">
+              <div className="admin-order-modal-section-title"><FontAwesomeIcon icon={faCircleInfo} aria-hidden="true" /><h3>Admin Correction</h3></div>
+              <label className="admin-order-modal-field"><span>Correct payment status</span><select value="" disabled={saving} onChange={(event) => { if (event.target.value) setOverrideStatus(event.target.value); }}><option value="">Choose a correction</option>{payment.override_statuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select><small>Corrections to payment records require a reason and preserve the uploaded proof.</small></label>
+            </section>
+          ) : null}
+          <AdminAuditHistory entries={payment.status_overrides} />
         </div>
       ) : null}
     </BranchModalShell>
+    {payment && overrideStatus ? <AdminStatusOverrideDialog open title="Correct payment status" currentStatus={payment.status} targetStatus={overrideStatus} onClose={() => setOverrideStatus(null)} onConfirm={(reason) => { void changeStatus(overrideStatus, reason); setOverrideStatus(null); }} isSubmitting={saving} description="Changing a paid payment affects financial records. Enter the reason for this correction; the payment proof is kept." /> : null}
+    </>
   );
 }

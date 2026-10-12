@@ -1,8 +1,9 @@
 # ALD Motorshop Business Knowledge
 
-This directory contains the first curated business-knowledge pack for the
-future **ALD Motorshop Assistant**. The files are written as stable, topic-
-focused context that Laravel can retrieve or import in a later AI/RAG task.
+This directory contains curated ALD business-rule and vocabulary context for
+the **ALD Motorshop Assistant**. Laravel retrieves these files only for stable
+process guidance; live catalog and Branch facts come from controlled database
+queries.
 
 This is knowledge content, not a second application database. It does not
 implement Groq, retrieval, embeddings, a chatbot endpoint, or conversation
@@ -17,12 +18,12 @@ Customer
   -> Next.js chat UI
   -> Next.js assistant proxy/BFF
   -> Laravel assistant API
-  -> curated ALD knowledge + live Laravel/PostgreSQL data
+  -> curated ALD business rules + live Laravel/PostgreSQL catalog data
   -> Groq language generation
 ```
 
-The assistant must not answer live operational questions from these Markdown
-files alone. Laravel and PostgreSQL remain authoritative for current products,
+The assistant must not answer live catalog or operational questions from these
+Markdown files alone. Laravel and PostgreSQL remain authoritative for current products,
 prices, stock, branches, orders, payments, fulfillment, tracking, and customer
 data.
 
@@ -62,8 +63,8 @@ Live data must come from Laravel/PostgreSQL:
 
 - `ald-overview.md` - business identity and system purpose.
 - `ald-team.md` - the system development team and the owner/founder boundary.
-- `ald-branches-contact.md` - known branches, contact information, and hours caveat.
-- `ald-products.md` - product scope, brands, categories, vocabulary, and genuine-part boundaries.
+- `ald-branches-contact.md` - live-branch retrieval boundary and hours caveat.
+- `ald-products.md` - product vocabulary and genuine-part boundaries.
 - `ald-product-compatibility.md` - compatibility questions and safe-answer rules.
 - `ald-order-process.md` - the Order Request lifecycle.
 - `ald-payment.md` - payment methods and verification boundaries.
@@ -87,11 +88,10 @@ Do not add:
 
 ## Future Storage and Retrieval
 
-For the initial MVP, Markdown is the curated source. A later task may move
-approved entries into a database table such as `ai_knowledge` with conceptual
-fields like `id`, `title`, `category`, `content`, `keywords`, `is_active`,
-`created_at`, and `updated_at`. That migration, retrieval layer, and embedding
-strategy are intentionally not part of this task.
+Markdown remains appropriate for stable business rules. Current Products,
+Brands, Categories, and Branches are retrieved by the Assistant catalog service
+from Laravel models; no vector database or `ai_knowledge` migration is needed
+for this task.
 
 ## Maintenance
 

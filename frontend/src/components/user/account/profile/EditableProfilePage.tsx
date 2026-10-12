@@ -31,7 +31,17 @@ import {
   getCitiesMunicipalities,
   getLocationErrorMessage,
 } from "@/lib/locationApi";
-import type { LocationOption } from "@/lib/locationTypes";
+import type {
+  LocationDetectionBaseline,
+  LocationDetectionState,
+  LocationOption,
+  ReverseGeocodeResponse,
+} from "@/lib/locationTypes";
+import {
+  locationDetectionBaselineFromResult,
+  locationNamesMatch,
+  resolveLocationDetectionState,
+} from "@/lib/locationTypes";
 import ProfileAddressFields, { type ProfileLocationValues } from "./ProfileAddressFields";
 import CustomerLocationPicker from "./CustomerLocationPicker";
 
@@ -142,6 +152,8 @@ export default function EditableProfilePage() {
   });
   const [location, setLocation] = useState<ProfileLocationValues>(EMPTY_LOCATION);
   const [coordinates, setCoordinates] = useState<ProfileCoordinates>(EMPTY_COORDINATES);
+  const [locationDetectionState, setLocationDetectionState] = useState<LocationDetectionState>("idle");
+  const [locationDetectionBaseline, setLocationDetectionBaseline] = useState<LocationDetectionBaseline | null>(null);
   const [password, setPassword] = useState<PasswordForm>(EMPTY_PASSWORD);
   const [profileErrors, setProfileErrors] = useState<FieldErrors>({});
   const [passwordErrors, setPasswordErrors] = useState<FieldErrors>({});
@@ -177,6 +189,8 @@ export default function EditableProfilePage() {
           setValues(profileFormFromUser(response.user));
           setLocation(profileLocationFromUser(response.user));
           setCoordinates(profileCoordinatesFromUser(response.user));
+          setLocationDetectionState("idle");
+          setLocationDetectionBaseline(null);
           setLoadError(null);
         }
       })
@@ -296,6 +310,13 @@ export default function EditableProfilePage() {
     if (location.barangayCode && !location.cityCode) {
       errors.city_municipality_code = ["Choose an official city or municipality before selecting a PSGC barangay."];
     }
+    if (
+      coordinates.latitude !== null
+      && coordinates.longitude !== null
+      && locationDetectionState === "mismatch"
+    ) {
+      errors.location = ["Use the map again or update the city and barangay so they match the pinned location."];
+    }
 
     if (Object.keys(errors).length > 0) {
       setProfileErrors(errors);
@@ -326,6 +347,8 @@ export default function EditableProfilePage() {
       setValues(profileFormFromUser(response.user));
       setLocation(profileLocationFromUser(response.user, location));
       setCoordinates(profileCoordinatesFromUser(response.user, coordinates));
+      setLocationDetectionState("idle");
+      setLocationDetectionBaseline(null);
       updateUser({ name: response.user.name, email: response.user.email, customer: response.user.customer });
       showToast({ title: "Profile updated", message: "Your customer account details have been saved." });
     } catch (error) {
@@ -448,27 +471,86 @@ export default function EditableProfilePage() {
                   onCityRetry={cityLoadError ? () => void loadCities() : undefined}
                   onBarangayRetry={barangayLoadError ? () => void loadBarangays(location.cityCode) : undefined}
                   onCityChange={(selection) => {
-                    setLocation({
+                    const nextLocation = {
                       cityCode: selection.code ?? "",
                       cityName: selection.label,
                       barangayCode: "",
                       barangayName: "",
-                    });
+                    };
+                    setLocation(nextLocation);
+                    setLocationDetectionState(resolveLocationDetectionState(
+                      locationDetectionBaseline,
+                      { label: nextLocation.cityName, code: nextLocation.cityCode },
+                      { label: nextLocation.barangayName, code: nextLocation.barangayCode },
+                    ));
                   }}
                   onBarangayChange={(selection) => {
-                    setLocation((current) => ({
-                      ...current,
+                    const nextLocation = {
+                      ...location,
                       barangayCode: selection.code ?? "",
                       barangayName: selection.label,
-                    }));
+                    };
+                    setLocation(nextLocation);
+                    setLocationDetectionState(resolveLocationDetectionState(
+                      locationDetectionBaseline,
+                      { label: nextLocation.cityName, code: nextLocation.cityCode },
+                      { label: nextLocation.barangayName, code: nextLocation.barangayCode },
+                    ));
                   }}
                 />
               </div>
               <CustomerLocationPicker
                 latitude={coordinates.latitude}
                 longitude={coordinates.longitude}
-                onChange={(latitude, longitude) => setCoordinates({ latitude, longitude })}
+                detectionState={locationDetectionState}
+                onChange={(latitude, longitude) => {
+                  setCoordinates({ latitude, longitude });
+                  setLocationDetectionBaseline(null);
+                  if (latitude === null || longitude === null) {
+                    setLocationDetectionState("idle");
+                  }
+                }}
+                onDetected={(result: ReverseGeocodeResponse) => {
+                  const baseline = locationDetectionBaselineFromResult(result);
+                  const cityName = result.psgc.city_municipality
+                    ?? result.detected.city_municipality
+                    ?? location.cityName;
+                  const cityCode = result.psgc.city_municipality_code ?? "";
+                  const cityChanged = (
+                    (location.cityName.trim() !== ""
+                      && cityName.trim() !== ""
+                      && !locationNamesMatch(location.cityName, cityName))
+                    || (location.cityCode !== ""
+                      && cityCode !== ""
+                      && location.cityCode !== cityCode)
+                  );
+                  const barangayMatched = result.psgc.barangay !== null;
+                  const nextLocation = {
+                    cityCode,
+                    cityName,
+                    barangayCode: barangayMatched
+                      ? result.psgc.barangay_code ?? ""
+                      : cityChanged
+                        ? ""
+                        : location.barangayCode,
+                    barangayName: barangayMatched
+                      ? result.psgc.barangay
+                        ?? result.detected.barangay
+                        ?? ""
+                      : cityChanged
+                        ? ""
+                        : location.barangayName,
+                  };
+
+                  setLocationDetectionBaseline(baseline);
+                  setLocation(nextLocation);
+                  if (baseline.cityMatched && !baseline.barangayMatched && nextLocation.barangayName.trim() !== "") {
+                    setLocationDetectionState("manual");
+                  }
+                }}
+                onDetectionStateChange={setLocationDetectionState}
               />
+              {profileErrors.location?.[0] ? <p className="customer-profile-form-error" role="alert">{profileErrors.location[0]}</p> : null}
               {profileError ? <p className="customer-profile-form-error" role="alert">{profileError}</p> : null}
               <div className="customer-profile-form-footer"><button type="submit" className="customer-profile-action customer-profile-action--primary" disabled={savingProfile || !isProfileDirty}>{savingProfile ? "Saving…" : "Save changes"}</button></div>
             </form>

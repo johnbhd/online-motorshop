@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use JsonException;
 
 class PsgcLocationService
@@ -56,6 +57,67 @@ class PsgcLocationService
         }
 
         return $this->barangaysByCity()[$cityCode] ?? [];
+    }
+
+    /**
+     * Match a provider city label to one canonical PSGC city.
+     *
+     * @return array{code: string, name: string}|null
+     */
+    public function matchCity(?string $name): ?array
+    {
+        $normalized = $this->normalizeComparableName($name);
+
+        if ($normalized === null) {
+            return null;
+        }
+
+        $matches = array_values(array_filter(
+            $this->citiesDataset(),
+            fn (array $city): bool => in_array(
+                $normalized,
+                $this->comparableNameVariants((string) $city['name']),
+                true,
+            ),
+        ));
+
+        if (count($matches) !== 1) {
+            return null;
+        }
+
+        return [
+            'code' => (string) $matches[0]['code'],
+            'name' => (string) $matches[0]['name'],
+        ];
+    }
+
+    /**
+     * Match a provider barangay label only inside the detected city.
+     *
+     * @return array{code: string, name: string}|null
+     */
+    public function matchBarangay(?string $name, string $cityCode): ?array
+    {
+        $normalized = $this->normalizeComparableName($name);
+
+        if ($normalized === null) {
+            return null;
+        }
+
+        $matches = array_values(array_filter(
+            $this->barangaysForCity($cityCode),
+            fn (array $barangay): bool => in_array(
+                $normalized,
+                $this->comparableNameVariants($barangay['name'], barangay: true),
+                true,
+            ),
+        ));
+
+        if (count($matches) !== 1) {
+            return null;
+        }
+
+        return $matches[0];
     }
 
     /**
@@ -297,5 +359,55 @@ class PsgcLocationService
         $name = trim((string) $name);
 
         return $name === '' ? null : $name;
+    }
+
+    private function normalizeComparableName(?string $name): ?string
+    {
+        $name = trim((string) $name);
+
+        if ($name === '') {
+            return null;
+        }
+
+        $name = Str::ascii($name);
+        $name = mb_strtolower($name);
+        $name = preg_replace('/[^a-z0-9]+/', ' ', $name) ?? '';
+
+        return trim($name) === '' ? null : trim($name);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function comparableNameVariants(string $name, bool $barangay = false): array
+    {
+        $normalized = $this->normalizeComparableName($name);
+
+        if ($normalized === null) {
+            return [];
+        }
+
+        $variants = [$normalized];
+
+        if ($barangay) {
+            $withoutPrefix = preg_replace('/^(barangay|brgy)\s+/', '', $normalized) ?? $normalized;
+
+            if ($withoutPrefix !== $normalized) {
+                $variants[] = trim($withoutPrefix);
+            }
+
+            return array_values(array_unique($variants));
+        }
+
+        $withoutPrefix = preg_replace('/^(city|municipality)\s+of\s+/', '', $normalized) ?? $normalized;
+        $withoutSuffix = preg_replace('/\s+(city|municipality)$/', '', $normalized) ?? $normalized;
+
+        foreach ([$withoutPrefix, $withoutSuffix] as $variant) {
+            if (trim($variant) !== '') {
+                $variants[] = trim($variant);
+            }
+        }
+
+        return array_values(array_unique($variants));
     }
 }

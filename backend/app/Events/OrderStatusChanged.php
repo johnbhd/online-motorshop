@@ -22,12 +22,16 @@ class OrderStatusChanged implements ShouldDispatchAfterCommit
         public readonly int $subjectId,
         public readonly string $previousStatus,
         public readonly string $status,
+        public readonly ?string $eventKeySuffix = null,
     ) {
-        $this->eventKey = sprintf(
+        $baseEventKey = sprintf(
             'order-update:%s:%d:%s',
             $this->source,
             $this->subjectId,
             $this->status,
         );
+        $this->eventKey = $this->eventKeySuffix === null
+            ? $baseEventKey
+            : $baseEventKey.':'.$this->eventKeySuffix;
     }
 }

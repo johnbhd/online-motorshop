@@ -11,10 +11,13 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { AdminBadge } from "@/components/admin/AdminDataTable";
+import AdminStatusOverrideDialog from "@/components/admin/AdminStatusOverrideDialog";
+import AdminAuditHistory from "@/components/admin/AdminAuditHistory";
 import { getAuthToken } from "@/lib/auth/authStorage";
 import {
   getAdminPickupRequest,
   getAdminPickupRequestsErrorMessage,
+  updateAdminPickupStatus,
 } from "@/lib/adminPickupRequestsApi";
 import type { AdminPickupDetails } from "@/lib/adminPickupRequestTypes";
 
@@ -51,15 +54,20 @@ function schedule(day: string | null, time: string | null) {
 export default function RealAdminPickupRequestDetailsModal({
   pickupId,
   onClose,
+  onUpdated,
 }: {
   pickupId: number | null;
   onClose: () => void;
+  onUpdated?: (pickup: AdminPickupDetails) => void;
 }) {
   const token = getAuthToken();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [pickup, setPickup] = useState<AdminPickupDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [overrideStatus, setOverrideStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (pickupId === null) return;
@@ -68,7 +76,10 @@ export default function RealAdminPickupRequestDetailsModal({
     const controller = new AbortController();
 
     void getAdminPickupRequest(token, pickupId, controller.signal)
-      .then((result) => setPickup(result.pickup_request))
+      .then((result) => {
+        setPickup(result.pickup_request);
+        setUpdateError(null);
+      })
       .catch((requestError) => {
         if (requestError instanceof Error && requestError.name === "AbortError") return;
         setError(getAdminPickupRequestsErrorMessage(requestError));
@@ -76,6 +87,32 @@ export default function RealAdminPickupRequestDetailsModal({
 
     return () => controller.abort();
   }, [pickupId, retryNonce, token]);
+
+  async function handleStatusUpdate(status: string, reason?: string) {
+    if (!pickup || isUpdating) return;
+    if (!pickup.allowed_statuses.includes(status) && !reason) {
+      setOverrideStatus(status);
+      return;
+    }
+
+    const authToken = getAuthToken();
+    if (!authToken) {
+      setUpdateError("Your Admin session has expired. Please sign in again.");
+      return;
+    }
+
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      const result = await updateAdminPickupStatus(authToken, pickup.id, status, reason);
+      setPickup(result.pickup_request);
+      onUpdated?.(result.pickup_request);
+    } catch (requestError) {
+      setUpdateError(getAdminPickupRequestsErrorMessage(requestError));
+    } finally {
+      setIsUpdating(false);
+    }
+  }
 
   useEffect(() => {
     if (pickupId === null) return;
@@ -101,6 +138,7 @@ export default function RealAdminPickupRequestDetailsModal({
   if (pickupId === null) return null;
   const visibleError = error ?? (!token ? "Your Admin session is unavailable. Please sign in again." : null);
   const loading = Boolean(token) && pickup === null && error === null;
+  const nextStatus = pickup?.allowed_statuses[0] ?? null;
 
   return (
     <div className="admin-order-modal-overlay">
@@ -110,7 +148,7 @@ export default function RealAdminPickupRequestDetailsModal({
           <div className="admin-order-modal-heading">
             <p>Pickup Request Details</p>
             <h2 id="admin-pickup-details-title">{pickup?.order_reference ?? "Pickup request"}</h2>
-            <span id="admin-pickup-details-description">Read-only details from the persisted order and pickup record.</span>
+            <span id="admin-pickup-details-description">Persisted order and pickup details with Admin status controls.</span>
           </div>
           <div className="admin-order-modal-header-meta">
             {pickup ? <AdminBadge>{label(pickup.pickup_status)}</AdminBadge> : null}
@@ -160,14 +198,23 @@ export default function RealAdminPickupRequestDetailsModal({
             </section>
 
             <section className="admin-order-modal-section">
+              <div className="admin-order-modal-section-title"><FontAwesomeIcon icon={faStore} aria-hidden="true" /><h3>Admin Status Controls</h3></div>
+              {nextStatus ? <button type="button" disabled={isUpdating} onClick={() => void handleStatusUpdate(nextStatus)} className="admin-order-modal-button admin-order-modal-button-primary disabled:opacity-50">{isUpdating ? "Updating..." : `Mark ${label(nextStatus)}`}</button> : <p className="text-sm text-slate-500">No forward pickup action is available.</p>}
+              {updateError ? <p className="mt-3 text-sm text-red-700" role="alert">{updateError}</p> : null}
+              {pickup.override_statuses.length ? <label className="admin-order-modal-field mt-4 block"><span>Admin correction / rollback</span><select value="" disabled={isUpdating} onChange={(event) => { if (event.target.value) setOverrideStatus(event.target.value); }}><option value="">Choose a correction</option>{pickup.override_statuses.map((status) => <option key={status} value={status}>{label(status)}</option>)}</select><small>A reason is required and the correction is recorded in audit history.</small></label> : null}
+            </section>
+
+            <section className="admin-order-modal-section">
               <div className="admin-order-modal-section-title"><FontAwesomeIcon icon={faCreditCard} aria-hidden="true" /><h3>Payment Information</h3></div>
               {pickup.payment ? <dl className="admin-order-modal-detail-grid admin-order-modal-order-grid"><div><dt>Method</dt><dd>{label(pickup.payment.method)}</dd></div><div><dt>Payment Status</dt><dd><AdminBadge>{label(pickup.payment.status)}</AdminBadge></dd></div><div><dt>Amount</dt><dd>{money(pickup.payment.amount)}</dd></div><div><dt>Reference</dt><dd>{pickup.payment.reference || "Not available"}</dd></div><div><dt>Verified At</dt><dd>{date(pickup.payment.verified_at)}</dd></div></dl> : <p className="text-sm text-slate-500">No payment record is associated with this order.</p>}
             </section>
+            <AdminAuditHistory entries={pickup.status_overrides} />
           </> : null}
         </div>
 
         <footer className="admin-order-modal-footer"><span /><div className="admin-order-modal-footer-actions"><button className="admin-order-modal-button admin-order-modal-button-secondary" type="button" onClick={onClose}>Close</button></div></footer>
       </section>
+      {pickup && overrideStatus ? <AdminStatusOverrideDialog open title="Correct pickup status" currentStatus={pickup.pickup_status} targetStatus={overrideStatus} onClose={() => setOverrideStatus(null)} onConfirm={(reason) => { void handleStatusUpdate(overrideStatus, reason); setOverrideStatus(null); }} isSubmitting={isUpdating} description="Use this only to correct a pickup workflow mistake. The completion timestamp and Admin audit history are updated safely." /> : null}
     </div>
   );
 }

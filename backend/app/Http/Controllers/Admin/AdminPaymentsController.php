@@ -44,6 +44,7 @@ class AdminPaymentsController extends Controller
         $record = $this->service->transition(
             $record,
             $request->validated('status'),
+            $request->validated('reason'),
             $request->user(),
         );
 

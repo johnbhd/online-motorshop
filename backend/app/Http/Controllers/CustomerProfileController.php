@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateCustomerPasswordRequest;
 use App\Http\Requests\UpdateCustomerProfileRequest;
 use App\Models\User;
+use App\Services\LocationConsistencyService;
+use App\Services\LocationMismatchException;
 use App\Services\PsgcLocationDataUnavailable;
 use App\Services\PsgcLocationSelectionException;
 use App\Services\PsgcLocationService;
@@ -14,7 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerProfileController extends Controller
 {
-    public function __construct(private readonly PsgcLocationService $locationService) {}
+    public function __construct(
+        private readonly PsgcLocationService $locationService,
+        private readonly LocationConsistencyService $locationConsistencyService,
+    ) {}
 
     public function show(Request $request): JsonResponse
     {
@@ -76,6 +81,27 @@ class CustomerProfileController extends Controller
                     ], 503);
                 }
             }
+        }
+
+        try {
+            $this->locationConsistencyService->validate([
+                'latitude' => array_key_exists('latitude', $validated)
+                    ? ($validated['latitude'] ?? null)
+                    : $customer->latitude,
+                'longitude' => array_key_exists('longitude', $validated)
+                    ? ($validated['longitude'] ?? null)
+                    : $customer->longitude,
+                'city_municipality_code' => $location['city_municipality_code']
+                    ?? $customer->city_municipality_code,
+                'city_municipality' => $location['city'] ?? $customer->city,
+                'barangay_code' => $location['barangay_code'] ?? $customer->barangay_code,
+                'barangay' => $location['barangay'] ?? $customer->barangay,
+            ]);
+        } catch (LocationMismatchException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'errors' => $exception->errors(),
+            ], 422);
         }
 
         DB::transaction(function () use ($user, $customer, $validated, $locationFieldsProvided, $location, $coordinatesProvided): void {

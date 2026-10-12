@@ -101,14 +101,14 @@ class AdminPickupRequestsApiTest extends TestCase
             ->assertJsonPath('pickup_request.order.fulfillment_method', 'pickup')
             ->assertJsonPath('pickup_request.order.items.0.name', 'Test Pickup Product 003')
             ->assertJsonPath('pickup_request.order.items.0.unit_price', 250)
-            ->assertJsonPath('pickup_request.allowed_statuses', []);
+            ->assertJsonPath('pickup_request.allowed_statuses', ['completed']);
 
         $this->requestAs($admin)
             ->getJson('/api/admin/pickup-requests/999999')
             ->assertNotFound();
     }
 
-    public function test_admin_pickup_endpoints_require_admin_access_and_status_is_not_admin_mutable(): void
+    public function test_admin_pickup_endpoints_require_admin_access_and_support_admin_status_updates(): void
     {
         $this->getJson('/api/admin/pickup-requests')->assertUnauthorized();
         $this->getJson('/api/admin/pickup-requests/data')->assertUnauthorized();
@@ -123,11 +123,13 @@ class AdminPickupRequestsApiTest extends TestCase
 
         $admin = $this->createUser('admin');
         $pickup = $this->createPickup('Read Only Pickup Customer', $branch, 'ALD-2026-PICK-004');
-        $this->requestAs($admin)
+        $this->actingAs($admin, 'sanctum')
             ->patchJson('/api/admin/pickup-requests/'.$pickup->pickupRequest->id.'/status', [
                 'status' => 'completed',
+                'reason' => 'The pickup was completed by mistake.',
             ])
-            ->assertNotFound();
+            ->assertOk()
+            ->assertJsonPath('pickup_request.pickup_status', 'completed');
 
     }
 

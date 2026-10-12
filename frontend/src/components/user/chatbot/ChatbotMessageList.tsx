@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { forwardRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBoxOpen, faReply } from "@fortawesome/free-solid-svg-icons";
 import type { ChatMessage } from "./chatbotTypes";
 import ChatbotReplyPreview from "./ChatbotReplyPreview";
 import ProductInquiryCard from "./ProductInquiryCard";
+import AssistantProductCard from "./AssistantProductCard";
 import type {
   OrderUpdateMetadata,
   ProductInquiryMetadata,
@@ -190,6 +192,25 @@ const ChatbotMessageList = forwardRef<
                   ),
                 )}
               </span>
+              {isBotMessage && message.products && message.products.length > 0 && (
+                <div className="ald-chatbot__assistant-product-results">
+                  {message.products.map((product) => (
+                    <AssistantProductCard
+                      key={product.href}
+                      product={product}
+                    />
+                  ))}
+                  {message.hasMore && (
+                    <Link
+                      className="ald-chatbot__assistant-product-more"
+                      href="/products"
+                    >
+                      View more products
+                      <span aria-hidden="true"> →</span>
+                    </Link>
+                  )}
+                </div>
+              )}
               {message.attachmentUrl && (
                 <a
                   className="ald-chatbot__message-attachment"

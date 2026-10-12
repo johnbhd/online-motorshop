@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\OrderRequest;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -12,6 +13,7 @@ class AdminCustomerService
     public function __construct(
         private readonly AdminCustomerPresenter $presenter,
         private readonly AdminArchiveService $archiveService,
+        private readonly AdminAuditLogService $auditLogs,
     ) {}
 
     public function index(array $filters): array
@@ -140,23 +142,53 @@ class AdminCustomerService
         });
     }
 
-    public function delete(Customer $customer): bool
+    /** @return array{message: string} */
+    public function delete(Customer $customer, User $actor, string $reason): array
     {
         $customer = $this->find($customer);
+        $user = $customer->user;
+        $hasHistory = $customer->orderRequests()->exists()
+            || $customer->conversations()->exists()
+            || $customer->reviews()->exists();
 
-        if ($customer->user_id !== null) {
-            abort(response()->json([
-                'message' => 'Registered customer accounts cannot be hard-deleted; deactivate the account instead.',
-            ], 409));
-        }
-
-        if ($customer->orderRequests()->exists() || $customer->conversations()->exists()) {
+        if ($user === null && $hasHistory) {
             abort(response()->json([
                 'message' => 'This guest customer cannot be deleted because operational or historical records reference it.',
             ], 409));
         }
 
-        return (bool) $customer->delete();
+        DB::transaction(function () use ($actor, $customer, $hasHistory, $reason, $user): void {
+            if ($user !== null) {
+                $customer->update(['user_id' => null]);
+                $user->tokens()->delete();
+                $user->delete();
+            }
+
+            if ($user === null || ! $hasHistory) {
+                $customer->delete();
+            }
+
+            $this->auditLogs->record(
+                $actor,
+                'account_deleted',
+                'customer',
+                (int) $customer->id,
+                'Customer #'.$customer->id,
+                $user === null ? 'guest' : 'registered',
+                $user !== null && $hasHistory ? 'unlinked' : 'deleted',
+                $reason,
+                [
+                    'user_id' => $user?->id,
+                    'historical_records_preserved' => $user !== null && $hasHistory,
+                ],
+            );
+        });
+
+        return [
+            'message' => $user !== null && $hasHistory
+                ? 'Customer account deleted. Historical customer and business records were preserved.'
+                : ($user !== null ? 'Customer account and unused customer record deleted successfully.' : 'Guest customer deleted successfully.'),
+        ];
     }
 
     private function customerQuery(): Builder

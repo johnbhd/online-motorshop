@@ -14,6 +14,8 @@ class AdminOrderService
     public function __construct(
         private readonly OrderRequestPresenter $presenter,
         private readonly StaffOrderStatusService $statusService,
+        private readonly AdminStatusOverrideService $overrideService,
+        private readonly AdminAuditLogService $auditLogs,
         private readonly StaffAdminNotificationService $staffAdminNotificationService,
         private readonly AdminArchiveService $archiveService,
     ) {}
@@ -60,12 +62,18 @@ class AdminOrderService
         return $this->presenter->adminDetail(
             $order,
             $this->statusService->allowedStatuses($order),
+            $this->overrideService->orderAllowedStatuses($order),
+            $this->auditLogs->history('order', (int) $order->id),
         );
     }
 
-    public function transition(OrderRequest $order, string $status): OrderRequest
-    {
-        $order = $this->statusService->transition($order, $status);
+    public function transition(
+        OrderRequest $order,
+        string $status,
+        ?string $reason,
+        User $admin,
+    ): OrderRequest {
+        $order = $this->overrideService->order($order, $status, $reason, $admin);
 
         return $this->find($order->order_reference) ?? $order;
     }

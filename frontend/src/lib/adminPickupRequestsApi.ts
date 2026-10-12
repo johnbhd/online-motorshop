@@ -53,6 +53,14 @@ export function getAdminPickupRequest(token: string, id: number, signal?: AbortS
   );
 }
 
+export function updateAdminPickupStatus(token: string, id: number, status: string, reason?: string) {
+  return request<AdminPickupDetailsResponse>(`/api/admin/pickup-requests/${id}/status`, token, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status, ...(reason?.trim() ? { reason: reason.trim() } : {}) }),
+  });
+}
+
 export function getAdminPickupRequestsErrorMessage(error: unknown) {
   if (error instanceof AdminPickupRequestsApiError) {
     if (error.status === 401) return "Your Admin session has expired. Please sign in again.";

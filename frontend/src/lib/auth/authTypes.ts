@@ -39,3 +39,34 @@ export type AuthLogoutResponse = {
 };
 
 export type AuthValidationErrors = Record<string, string[]>;
+
+export type GoogleAuthErrorCode =
+  | "google_cancelled"
+  | "google_auth_failed"
+  | "google_auth_unavailable"
+  | "google_state_invalid"
+  | "google_setup_expired"
+  | "google_link_expired"
+  | "google_handoff_invalid"
+  | "google_customer_only"
+  | "google_account_inactive"
+  | "google_email_unverified"
+  | "google_identity_conflict"
+  | "google_link_invalid";
+
+export type GoogleAuthResponse = AuthTokenResponse & {
+  return_to?: string;
+};
+
+export type GoogleSetupProfile = {
+  name: string;
+  email: string;
+  expiresAt: string;
+  return_to: string;
+};
+
+export type GoogleLinkProfile = {
+  email: string;
+  expiresAt: string;
+  return_to: string;
+};

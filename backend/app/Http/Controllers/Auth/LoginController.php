@@ -4,13 +4,21 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Auth\AuthResponseService;
+use App\Services\CustomerNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class LoginController extends Controller
 {
+    public function __construct(
+        private readonly CustomerNotificationService $customerNotificationService,
+        private readonly AuthResponseService $authResponseService,
+    ) {}
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -35,14 +43,9 @@ class LoginController extends Controller
             ]);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $this->customerNotificationService->customerSignedIn($user);
 
-        return response()->json([
-            'message' => 'Login successful',
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $this->userData($user),
-        ]);
+        return response()->json($this->authResponseService->issueToken($user, 'Login successful'));
     }
 
     public function show(Request $request): JsonResponse
@@ -56,47 +59,20 @@ class LoginController extends Controller
         }
 
         return response()->json([
-            'user' => $this->userData($user),
+            'user' => $this->authResponseService->userData($user),
         ]);
     }
 
     public function destroy(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $token = $user->currentAccessToken();
+        $plainTextToken = $request->bearerToken();
 
-        if ($token) {
-            $token->delete();
+        if (is_string($plainTextToken) && $plainTextToken !== '') {
+            PersonalAccessToken::findToken($plainTextToken)?->delete();
         }
 
         return response()->json([
             'message' => 'Logout successful.',
         ]);
-    }
-
-    public function userData(User $user): array
-    {
-        $user->loadMissing('customer');
-
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role,
-            'status' => $user->status,
-            'customer' => $user->customer?->only([
-                'id',
-                'full_name',
-                'contact_number',
-                'email',
-                'address',
-                'city_municipality_code',
-                'barangay_code',
-                'city',
-                'barangay',
-                'latitude',
-                'longitude',
-            ]),
-        ];
     }
 }
