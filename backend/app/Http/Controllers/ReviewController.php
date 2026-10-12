@@ -256,8 +256,34 @@ class ReviewController extends Controller
 
     private function completedItem(Customer $customer, int $productId): mixed
     {
-        return $customer->orderRequests()->where('order_status', 'completed')
+        return $customer->orderRequests()
+            ->whereIn('order_status', ['confirmed', 'completed'])
             ->whereHas('items', fn (Builder $item) => $item->where('product_id', $productId))
+            ->where(function (Builder $order): void {
+                $order
+                    ->where(function (Builder $pickup): void {
+                        $pickup
+                            ->where('fulfillment_type', 'pickup')
+                            ->whereHas(
+                                'pickupRequest',
+                                fn (Builder $request): Builder => $request->where(
+                                    'pickup_status',
+                                    'completed',
+                                ),
+                            );
+                    })
+                    ->orWhere(function (Builder $delivery): void {
+                        $delivery
+                            ->where('fulfillment_type', 'delivery')
+                            ->whereHas(
+                                'deliveryRequest',
+                                fn (Builder $request): Builder => $request->where(
+                                    'delivery_status',
+                                    'delivered',
+                                ),
+                            );
+                    });
+            })
             ->with(['items' => fn ($items) => $items->where('product_id', $productId)])
             ->latest('id')->get()->flatMap(fn (OrderRequest $order) => $order->items)->first();
     }

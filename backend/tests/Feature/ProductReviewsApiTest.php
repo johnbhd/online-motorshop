@@ -57,6 +57,29 @@ class ProductReviewsApiTest extends TestCase
             ->assertStatus(409);
     }
 
+    public function test_customer_is_eligible_after_pickup_or_delivery_fulfillment_completes(): void
+    {
+        $branch = $this->branch('Fulfillment Review Branch');
+        $pickupProduct = $this->product('REV-FULFILLMENT-PICKUP');
+        $deliveryProduct = $this->product('REV-FULFILLMENT-DELIVERY');
+        $customerUser = $this->customerUser('Fulfillment Review Customer');
+        $customer = $customerUser->customer;
+        $token = $customerUser->createToken('fulfillment-reviews-test')->plainTextToken;
+
+        $this->fulfilledOrder($customer, $pickupProduct, $branch, 'pickup');
+        $this->fulfilledOrder($customer, $deliveryProduct, $branch, 'delivery');
+
+        $this->withToken($token)
+            ->getJson('/api/customer/products/'.$pickupProduct->part_number.'/reviews/eligibility')
+            ->assertOk()
+            ->assertJsonPath('eligible', true);
+
+        $this->withToken($token)
+            ->getJson('/api/customer/products/'.$deliveryProduct->part_number.'/reviews/eligibility')
+            ->assertOk()
+            ->assertJsonPath('eligible', true);
+    }
+
     public function test_public_reviews_only_include_published_records_and_admin_can_moderate(): void
     {
         $product = $this->product('REV-002');
@@ -138,8 +161,30 @@ class ProductReviewsApiTest extends TestCase
 
     private function completedOrder(Customer $customer, Product $product, Branch $branch): OrderRequest
     {
-        $order = OrderRequest::create(['order_reference' => 'REV-ORDER-'.uniqid(), 'customer_id' => $customer->id, 'branch_id' => $branch->id, 'fulfillment_type' => 'pickup', 'order_status' => 'completed', 'subtotal' => 100, 'delivery_fee' => 0, 'total_amount' => 100]);
+        return $this->fulfilledOrder($customer, $product, $branch, 'pickup');
+    }
+
+    private function fulfilledOrder(
+        Customer $customer,
+        Product $product,
+        Branch $branch,
+        string $fulfillmentType,
+    ): OrderRequest {
+        $order = OrderRequest::create(['order_reference' => 'REV-ORDER-'.uniqid(), 'customer_id' => $customer->id, 'branch_id' => $branch->id, 'fulfillment_type' => $fulfillmentType, 'order_status' => 'confirmed', 'subtotal' => 100, 'delivery_fee' => 0, 'total_amount' => 100]);
         $order->items()->create(['product_id' => $product->id, 'product_name' => $product->name, 'unit_price' => 100, 'quantity' => 1, 'subtotal' => 100]);
+
+        if ($fulfillmentType === 'pickup') {
+            $order->pickupRequest()->create([
+                'branch_id' => $branch->id,
+                'pickup_status' => 'completed',
+            ]);
+        } else {
+            $order->deliveryRequest()->create([
+                'branch_id' => $branch->id,
+                'delivery_address' => 'Fulfillment review address',
+                'delivery_status' => 'delivered',
+            ]);
+        }
 
         return $order->fresh('items');
     }
