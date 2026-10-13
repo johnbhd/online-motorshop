@@ -69,8 +69,10 @@ export type StaffReportsResponse = {
       email: string | null;
     } | null;
     status: string;
+    display_status: string;
     payment_status: string;
     fulfillment_method: string;
+    fulfillment_status: string | null;
     branch: { id: number; name: string } | null;
     item_count: number;
     line_item_count: number;

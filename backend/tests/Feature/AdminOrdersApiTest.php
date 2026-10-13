@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\OrderRequest;
 use App\Models\Payment;
+use App\Models\PickupRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,11 @@ class AdminOrdersApiTest extends TestCase
         $makati = $this->createBranch('Makati');
         $first = $this->createOrder('Mark Reyes', $manila, 'ALD-2026-ADMIN-001', 'pending');
         $second = $this->createOrder('Angela Cruz', $makati, 'ALD-2026-ADMIN-002', 'confirmed');
+        PickupRequest::create([
+            'order_id' => $second->id,
+            'branch_id' => $makati->id,
+            'pickup_status' => 'completed',
+        ]);
         $second->payments()->create([
             'payment_method' => Payment::METHOD_ONLINE_PAYMENT,
             'amount' => 250,
@@ -43,7 +49,9 @@ class AdminOrdersApiTest extends TestCase
             ->assertJsonPath('summary.total', 2)
             ->assertJsonPath('meta.total', 2)
             ->assertJsonPath('meta.last_page', 2)
-            ->assertJsonCount(1, 'orders');
+            ->assertJsonCount(1, 'orders')
+            ->assertJsonPath('orders.0.display_status', 'completed')
+            ->assertJsonPath('orders.0.fulfillment_status', 'completed');
 
         $this->assertSame($second->order_reference, $response->json('orders.0.reference'));
 

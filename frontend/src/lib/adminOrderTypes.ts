@@ -41,6 +41,7 @@ export type AdminOrder = {
   reference: string;
   customer: AdminOrderPerson | null;
   status: string;
+  display_status: string;
   payment_status: string;
   payment_method: string | null;
   fulfillment_method: "pickup" | "delivery" | string;

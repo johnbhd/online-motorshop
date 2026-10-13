@@ -52,6 +52,8 @@ class OrderRequestPresenter
                 'email',
             ]),
             'status' => $order->order_status,
+            'display_status' => $this->customerOrderStatusResolver->resolve($order),
+            'fulfillment_status' => $this->customerOrderStatusResolver->fulfillmentStatus($order),
             'payment_status' => $this->paymentStatus($order),
             'fulfillment_method' => $order->fulfillment_type,
             'branch' => $this->branchPayload($order),
@@ -87,12 +89,11 @@ class OrderRequestPresenter
             'reference' => $order->order_reference,
             'customer' => $order->customer?->only(['id', 'full_name', 'contact_number', 'email']),
             'status' => $order->order_status,
+            'display_status' => $this->customerOrderStatusResolver->resolve($order),
             'payment_status' => $this->paymentStatus($order),
             'payment_method' => $this->latestPayment($order)?->payment_method,
             'fulfillment_method' => $order->fulfillment_type,
-            'fulfillment_status' => $order->fulfillment_type === 'pickup'
-                ? $order->pickupRequest?->pickup_status
-                : $order->deliveryRequest?->delivery_status,
+            'fulfillment_status' => $this->customerOrderStatusResolver->fulfillmentStatus($order),
             'branch' => $this->branchPayload($order),
             'assigned_staff' => $order->assignedStaff?->only(['id', 'name', 'email', 'branch_id']),
             'item_count' => (int) ($order->getAttribute('items_sum_quantity') ?? 0),

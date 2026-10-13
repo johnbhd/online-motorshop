@@ -18,8 +18,10 @@ export type StaffOrderSummary = {
   reference: string;
   customer: StaffOrderCustomer | null;
   status: string;
+  display_status: string;
   payment_status: string;
   fulfillment_method: "pickup" | "delivery" | string;
+  fulfillment_status: string | null;
   branch: StaffOrderBranch | null;
   item_count: number;
   line_item_count: number;

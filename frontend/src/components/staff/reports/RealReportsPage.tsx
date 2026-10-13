@@ -516,7 +516,7 @@ export default function RealReportsPage() {
           <button
             type="button"
             onClick={applyCustomRange}
-            disabled={!hasPendingRange || isLoading}
+            disabled={!hasPendingRange}
             className="min-h-10 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Apply date range
@@ -722,7 +722,7 @@ export default function RealReportsPage() {
                           <Badge>{labelize(order.payment_status)}</Badge>
                         </td>
                         <td className="px-5 py-3.5 text-center">
-                          <Badge>{labelize(order.status)}</Badge>
+                          <Badge>{labelize(order.display_status)}</Badge>
                         </td>
                         <td className="whitespace-nowrap px-5 py-3.5 text-right font-semibold text-slate-700">
                           {formatCurrency(order.total_amount)}

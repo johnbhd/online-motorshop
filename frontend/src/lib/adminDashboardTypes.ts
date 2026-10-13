@@ -37,8 +37,10 @@ export type AdminDashboardRecentOrder = {
   reference: string;
   customer: AdminDashboardCustomer | null;
   status: string;
+  display_status: string;
   payment_status: string;
   fulfillment_method: string;
+  fulfillment_status: string | null;
   branch: {
     id: number;
     name: string;

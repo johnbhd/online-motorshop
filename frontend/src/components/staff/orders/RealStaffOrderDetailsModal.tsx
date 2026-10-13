@@ -236,7 +236,7 @@ export default function RealStaffOrderDetailsModal({
           </div>
 
           <div className="admin-order-modal-header-meta">
-            {order ? <Badge>{toStatusLabel(order.status)}</Badge> : null}
+            {order ? <Badge>{toStatusLabel(order.display_status)}</Badge> : null}
             {order ? <span>Placed {formatDate(order.created_at)}</span> : null}
             <button
               ref={closeButtonRef}
@@ -449,7 +449,7 @@ export default function RealStaffOrderDetailsModal({
                 <dl className="admin-order-modal-detail-grid">
                   <div>
                     <dt>Current Status</dt>
-                    <dd><Badge>{toStatusLabel(order.status)}</Badge></dd>
+                    <dd><Badge>{toStatusLabel(order.display_status)}</Badge></dd>
                   </div>
                   <div>
                     <dt>Assigned Staff</dt>

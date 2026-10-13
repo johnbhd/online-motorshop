@@ -344,7 +344,7 @@ function RecentOrders({
                     {formatLabel(order.fulfillment_method)}
                   </td>
                   <td className="whitespace-nowrap px-5 py-4">
-                    <AdminBadge>{formatLabel(order.status)}</AdminBadge>
+                    <AdminBadge>{formatLabel(order.display_status)}</AdminBadge>
                   </td>
                   <td className="whitespace-nowrap px-5 py-4 text-sm text-slate-500">
                     {formatDateTime(order.created_at)}

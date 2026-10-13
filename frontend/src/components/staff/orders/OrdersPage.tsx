@@ -193,6 +193,8 @@ export default function OrdersPage() {
             ? {
                 ...order,
                 status: updatedOrder.status,
+                display_status: updatedOrder.display_status,
+                fulfillment_status: updatedOrder.fulfillment_status,
                 updated_at: updatedOrder.updated_at,
               }
             : order,
@@ -400,7 +402,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-5 py-3.5 text-center align-middle text-sm text-slate-600">
                         <span className="flex justify-center">
-                          <Badge>{toStatusLabel(order.status)}</Badge>
+                          <Badge>{toStatusLabel(order.display_status)}</Badge>
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-right align-middle text-sm text-slate-600">
@@ -425,7 +427,7 @@ export default function OrdersPage() {
                       <p className="font-bold text-[#0B1930]">{order.reference}</p>
                       <p className="mt-1 text-sm text-slate-600">{customerLabel(order)}</p>
                     </div>
-                    <Badge>{toStatusLabel(order.status)}</Badge>
+                    <Badge>{toStatusLabel(order.display_status)}</Badge>
                   </div>
                   <dl className="grid grid-cols-2 gap-3 text-sm">
                     <div>

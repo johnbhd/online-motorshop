@@ -105,6 +105,29 @@ class StaffOrdersApiTest extends TestCase
             ->assertJsonPath('order.allowed_statuses.0', 'under_review');
     }
 
+    public function test_completed_pickup_is_exposed_as_display_status_without_changing_order_status(): void
+    {
+        $branch = $this->createBranch('Display Status Branch');
+        $product = $this->createProduct('STAFF-STATUS-001', 180.00);
+        $staff = $this->createStaff($branch);
+        $customer = $this->createCustomer('Display Status Customer', '09171112222');
+        $order = $this->createOrder(
+            $customer,
+            $product,
+            'ALD-2026-STATUS-001',
+            $branch,
+            'confirmed',
+        );
+        $order->pickupRequest()->update(['pickup_status' => 'completed']);
+
+        $this->withToken($staff->createToken('staff-display-status-test')->plainTextToken)
+            ->getJson('/api/staff/orders')
+            ->assertOk()
+            ->assertJsonPath('orders.0.status', 'confirmed')
+            ->assertJsonPath('orders.0.display_status', 'completed')
+            ->assertJsonPath('orders.0.fulfillment_status', 'completed');
+    }
+
     public function test_staff_can_update_review_status_without_fulfillment_side_effects(): void
     {
         $branch = $this->createBranch('Status Staff Branch');
