@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class OrderRequest extends Model
@@ -50,6 +51,37 @@ class OrderRequest extends Model
             'delivery_fee' => 'decimal:2',
             'total_amount' => 'decimal:2',
         ];
+    }
+
+    public function scopeSuccessfulFulfillment(Builder $query): Builder
+    {
+        return $query
+            ->whereIn('order_status', ['confirmed', 'completed'])
+            ->where(function (Builder $order): void {
+                $order
+                    ->where(function (Builder $pickup): void {
+                        $pickup
+                            ->where('fulfillment_type', 'pickup')
+                            ->whereHas(
+                                'pickupRequest',
+                                fn (Builder $request): Builder => $request->where(
+                                    'pickup_status',
+                                    'completed',
+                                ),
+                            );
+                    })
+                    ->orWhere(function (Builder $delivery): void {
+                        $delivery
+                            ->where('fulfillment_type', 'delivery')
+                            ->whereHas(
+                                'deliveryRequest',
+                                fn (Builder $request): Builder => $request->where(
+                                    'delivery_status',
+                                    'delivered',
+                                ),
+                            );
+                    });
+            });
     }
 
     public function customer()

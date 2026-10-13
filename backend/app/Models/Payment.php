@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
@@ -51,6 +52,25 @@ class Payment extends Model
             'amount' => 'decimal:2',
             'verified_at' => 'datetime',
         ];
+    }
+
+    public function scopeLatestPerOrder(Builder $query): Builder
+    {
+        return $query->whereNotExists(function ($newerPayment): void {
+            $newerPayment
+                ->selectRaw('1')
+                ->from('payments as newer_payments')
+                ->whereColumn('newer_payments.order_id', 'payments.order_id')
+                ->where(function ($newer): void {
+                    $newer
+                        ->whereColumn('newer_payments.created_at', '>', 'payments.created_at')
+                        ->orWhere(function ($sameTimestamp): void {
+                            $sameTimestamp
+                                ->whereColumn('newer_payments.created_at', 'payments.created_at')
+                                ->whereColumn('newer_payments.id', '>', 'payments.id');
+                        });
+                });
+        });
     }
 
     public function order()

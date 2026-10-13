@@ -83,6 +83,11 @@ class StaffReportsApiTest extends TestCase
             'amount' => 300,
             'payment_status' => Payment::STATUS_PAID,
         ]);
+        $completed->payments()->create([
+            'payment_method' => Payment::METHOD_PAY_AT_PICKUP,
+            'amount' => 300,
+            'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
+        ]);
         $completed->pickupRequest()->create([
             'branch_id' => $branch->id,
             'pickup_status' => 'completed',
@@ -154,15 +159,18 @@ class StaffReportsApiTest extends TestCase
             ->assertJsonPath('summary.completed_orders', 1)
             ->assertJsonPath('summary.in_progress_orders', 1)
             ->assertJsonPath('summary.cancelled_or_rejected_orders', 1)
-            ->assertJsonPath('summary.completed_sales_value', 300)
-            ->assertJsonPath('summary.verified_payments', 1)
-            ->assertJsonPath('summary.payment_attention', 2)
+            ->assertJsonPath('summary.completed_sales_value', 0)
+            ->assertJsonPath('summary.verified_payments', 0)
+            ->assertJsonPath('summary.payment_attention', 3)
             ->assertJsonPath('summary.pickup_orders', 2)
             ->assertJsonPath('summary.delivery_orders', 1)
             ->assertJsonPath('fulfillment.0.orders', 2)
             ->assertJsonPath('fulfillment.0.completed_orders', 1)
             ->assertJsonPath('fulfillment.1.orders', 1)
             ->assertJsonPath('order_statuses.0.value', 1)
+            ->assertJsonPath('payments.statuses.0.value', 1)
+            ->assertJsonPath('payments.statuses.2.value', 2)
+            ->assertJsonPath('payments.statuses.3.value', 0)
             ->assertJsonPath('top_products.0.part_number', 'REPORT-001')
             ->assertJsonPath('top_products.0.units_sold', 2)
             ->assertJsonPath('top_products.0.revenue', 300)

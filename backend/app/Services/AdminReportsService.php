@@ -469,30 +469,18 @@ class AdminReportsService
 
     private function successfulOrderScope(CarbonImmutable $from, CarbonImmutable $to, ?int $branchId): Builder
     {
-        return $this->orderScope($from, $to, $branchId)
-            ->whereNotIn('order_status', ['rejected', 'cancelled'])
-            ->whereHas('payments', fn (Builder $query): Builder => $query->where('payment_status', Payment::STATUS_PAID))
-            ->where(function (Builder $query): void {
-                $query
-                    ->where(function (Builder $pickup): void {
-                        $pickup
-                            ->where('fulfillment_type', 'pickup')
-                            ->whereHas('pickupRequest', fn (Builder $request): Builder => $request->where('pickup_status', 'completed'));
-                    })
-                    ->orWhere(function (Builder $delivery): void {
-                        $delivery
-                            ->where('fulfillment_type', 'delivery')
-                            ->whereHas('deliveryRequest', fn (Builder $request): Builder => $request->where('delivery_status', 'delivered'));
-                    });
-            });
+        return $this->orderScope($from, $to, $branchId)->successfulFulfillment();
     }
 
     private function paymentScope(CarbonImmutable $from, CarbonImmutable $to, ?int $branchId): Builder
     {
-        return $this->archiveService->excludeArchived(Payment::query(), 'payment')->whereHas(
-            'order',
-            fn (Builder $query): Builder => $this->applyOrderWindow($query, $from, $to, $branchId),
-        );
+        return $this->archiveService
+            ->excludeArchived(Payment::query(), 'payment')
+            ->latestPerOrder()
+            ->whereHas(
+                'order',
+                fn (Builder $query): Builder => $this->applyOrderWindow($query, $from, $to, $branchId),
+            );
     }
 
     private function collectedPaymentScope(CarbonImmutable $from, CarbonImmutable $to, ?int $branchId): Builder

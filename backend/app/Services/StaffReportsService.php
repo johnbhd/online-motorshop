@@ -368,55 +368,22 @@ class StaffReportsService
                 ! empty($filters['payment_status']),
                 fn (Builder $query): Builder => $query->whereHas(
                     'payments',
-                    fn (Builder $paymentQuery): Builder => $paymentQuery->where(
-                        'payment_status',
-                        $filters['payment_status'],
-                    ),
+                    fn (Builder $paymentQuery): Builder => $paymentQuery
+                        ->latestPerOrder()
+                        ->where('payment_status', $filters['payment_status']),
                 ),
             );
     }
 
     private function successfulOrderScope(Builder $orders): Builder
     {
-        return (clone $orders)
-            ->where('order_status', 'completed')
-            ->whereHas(
-                'payments',
-                fn (Builder $query): Builder => $query->where(
-                    'payment_status',
-                    Payment::STATUS_PAID,
-                ),
-            )
-            ->where(function (Builder $query): void {
-                $query
-                    ->where(function (Builder $pickup): void {
-                        $pickup
-                            ->where('fulfillment_type', 'pickup')
-                            ->whereHas(
-                                'pickupRequest',
-                                fn (Builder $request): Builder => $request->where(
-                                    'pickup_status',
-                                    'completed',
-                                ),
-                            );
-                    })
-                    ->orWhere(function (Builder $delivery): void {
-                        $delivery
-                            ->where('fulfillment_type', 'delivery')
-                            ->whereHas(
-                                'deliveryRequest',
-                                fn (Builder $request): Builder => $request->where(
-                                    'delivery_status',
-                                    'delivered',
-                                ),
-                            );
-                    });
-            });
+        return (clone $orders)->successfulFulfillment();
     }
 
     private function paymentScope(Builder $orders, ?string $paymentStatus): Builder
     {
         return Payment::query()
+            ->latestPerOrder()
             ->whereIn('order_id', (clone $orders)->select('id'))
             ->when(
                 $paymentStatus !== null && $paymentStatus !== '',
@@ -429,9 +396,7 @@ class StaffReportsService
 
     private function collectedPaymentScope(Builder $successfulOrders): Builder
     {
-        return Payment::query()
-            ->whereIn('order_id', (clone $successfulOrders)->select('id'))
-            ->where('payment_status', Payment::STATUS_PAID);
+        return $this->paymentScope($successfulOrders, Payment::STATUS_PAID);
     }
 
     /** @return array{0: CarbonImmutable, 1: CarbonImmutable} */

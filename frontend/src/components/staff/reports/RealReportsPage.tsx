@@ -312,7 +312,7 @@ export default function RealReportsPage() {
             yAxisID: "orders",
           },
           {
-            label: "Completed sales",
+            label: "Collected revenue",
             data: data.order_trend.map((point) => point.completed_sales),
             borderColor: "#f97316",
             backgroundColor: "rgba(249,115,22,.08)",
@@ -395,6 +395,7 @@ export default function RealReportsPage() {
     setCurrentPage(1);
   };
 
+  const hasPendingRange = draftFrom !== from || draftTo !== to;
   const orders = data?.orders ?? [];
   const noData = data?.summary.order_requests === 0;
 
@@ -515,7 +516,8 @@ export default function RealReportsPage() {
           <button
             type="button"
             onClick={applyCustomRange}
-            className="min-h-10 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600"
+            disabled={!hasPendingRange || isLoading}
+            className="min-h-10 rounded-lg bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Apply date range
           </button>
@@ -527,6 +529,11 @@ export default function RealReportsPage() {
             Reset filters
           </button>
         </div>
+        <p className="mt-3 text-xs text-slate-500" role="status" aria-live="polite">
+          {hasPendingRange
+            ? "Date changes are waiting to be applied. Select Apply date range to refresh the report."
+            : `Report data is filtered from ${from} to ${to}.`}
+        </p>
       </section>
 
       {isLoading ? (
@@ -568,9 +575,9 @@ export default function RealReportsPage() {
               support="All requests in the selected period"
             />
             <MetricCard
-              label="Completed Orders"
+              label="Successful Orders"
               value={numberFormatter.format(data.summary.completed_orders)}
-              support="Paid and fulfillment-completed orders"
+              support="Completed pickup/delivery; payment-independent"
             />
             <MetricCard
               label="In Progress"
@@ -578,9 +585,9 @@ export default function RealReportsPage() {
               support="Requests not yet terminal"
             />
             <MetricCard
-              label="Completed Sales Value"
+              label="Revenue Collected"
               value={formatCurrency(data.summary.completed_sales_value)}
-              support="Paid orders with completed fulfillment"
+              support="Latest payment status: Paid"
             />
           </section>
 
@@ -609,8 +616,8 @@ export default function RealReportsPage() {
 
           <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(20rem,1fr)]">
             <ChartCard
-              title="Orders and completed sales over time"
-              description="The trend uses database order dates and completed paid fulfillment."
+              title="Orders and collected revenue over time"
+              description="Order requests and latest paid-payment revenue by order date."
             >
               {trendChart ? (
                 <ReportChart config={trendChart} label="Orders and completed sales trend" />
@@ -654,13 +661,13 @@ export default function RealReportsPage() {
 
           <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <ChartCard
-              title="Top completed products"
-              description="Historical order-item snapshots from paid, fulfilled orders."
+              title="Top successful products"
+              description="Historical order-item snapshots from completed pickup/delivery fulfillment."
             >
               {data.top_products.length ? (
                 <ProductsTable products={data.top_products} />
               ) : (
-                <p className="text-sm text-slate-500">No completed products in this period.</p>
+                <p className="text-sm text-slate-500">No successful products in this period.</p>
               )}
             </ChartCard>
             <ChartCard title="Payment status" description="Payment statuses in the selected report scope.">
@@ -741,13 +748,13 @@ export default function RealReportsPage() {
           </section>
 
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="font-semibold text-[#0B1930]">Recent completed orders</h2>
+            <h2 className="font-semibold text-[#0B1930]">Recent successful orders</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Paid orders with a completed pickup or delivered Lalamove request.
+              Orders with completed pickup or delivered Lalamove fulfillment; payment status does not affect this count.
             </p>
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-                <caption className="sr-only">Recent completed orders</caption>
+                <caption className="sr-only">Recent successful orders</caption>
                 <thead className="text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-3 py-3">Reference</th>
@@ -769,7 +776,7 @@ export default function RealReportsPage() {
               </table>
               {!data.recent_completed_orders.length ? (
                 <p className="py-5 text-center text-sm text-slate-500">
-                  No completed orders in this period.
+                  No successful orders in this period.
                 </p>
               ) : null}
             </div>

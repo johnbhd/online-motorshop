@@ -98,13 +98,18 @@ class AdminReportsApiTest extends TestCase
             'delivery_status' => 'delivered',
         ]);
 
-        $unpaidCompleted = $this->createOrder($otherGuest, $firstProduct, 'ALD-REPORT-003', $manila, 'completed', 'pickup', 200, '2026-10-07 12:00:00');
-        $unpaidCompleted->payments()->create([
+        $rolledBackCompleted = $this->createOrder($otherGuest, $firstProduct, 'ALD-REPORT-003', $manila, 'completed', 'pickup', 200, '2026-10-07 12:00:00');
+        $rolledBackCompleted->payments()->create([
             'payment_method' => Payment::METHOD_PAY_AT_PICKUP,
             'amount' => 200,
-            'payment_status' => Payment::STATUS_UNPAID,
+            'payment_status' => Payment::STATUS_PAID,
         ]);
-        $unpaidCompleted->pickupRequest()->create([
+        $rolledBackCompleted->payments()->create([
+            'payment_method' => Payment::METHOD_PAY_AT_PICKUP,
+            'amount' => 200,
+            'payment_status' => Payment::STATUS_WAITING_FOR_VERIFICATION,
+        ]);
+        $rolledBackCompleted->pickupRequest()->create([
             'branch_id' => $manila->id,
             'pickup_status' => 'completed',
         ]);
@@ -158,28 +163,31 @@ class AdminReportsApiTest extends TestCase
 
         $response
             ->assertJsonPath('overview.total_orders', 4)
-            ->assertJsonPath('overview.successful_orders', 2)
+            ->assertJsonPath('overview.successful_orders', 3)
             ->assertJsonPath('overview.revenue_collected', 750)
             ->assertJsonPath('overview.paid_orders', 2)
             ->assertJsonPath('overview.average_order_value', 375)
             ->assertJsonPath('fulfillment.0.orders', 3)
-            ->assertJsonPath('fulfillment.0.successful_orders', 1)
+            ->assertJsonPath('fulfillment.0.successful_orders', 2)
             ->assertJsonPath('fulfillment.1.orders', 1)
             ->assertJsonPath('fulfillment.1.successful_orders', 1)
             ->assertJsonPath('payments.methods.0.value', 2)
             ->assertJsonPath('payments.methods.1.value', 2)
+            ->assertJsonPath('payments.statuses.2.value', 2)
+            ->assertJsonPath('payments.statuses.3.value', 2)
             ->assertJsonPath('customers.total', 3)
             ->assertJsonPath('customers.registered', 1)
             ->assertJsonPath('customers.guests', 2)
             ->assertJsonPath('reviews.total', 2)
             ->assertJsonPath('reviews.average_rating', 5)
             ->assertJsonPath('top_products.0.part_number', 'REPORT-001')
-            ->assertJsonPath('top_products.0.units_sold', 3)
-            ->assertJsonPath('top_products.0.revenue', 450)
+            ->assertJsonPath('top_products.0.units_sold', 4)
+            ->assertJsonPath('top_products.0.revenue', 650)
             ->assertJsonPath('branches.0.branch', 'Makati Branch')
             ->assertJsonPath('branches.0.successful_orders', 1)
             ->assertJsonPath('branches.1.branch', 'Manila Branch')
-            ->assertJsonPath('branches.1.orders', 3);
+            ->assertJsonPath('branches.1.orders', 3)
+            ->assertJsonPath('branches.1.successful_orders', 2);
 
         $this->requestAs($admin)
             ->getJson('/api/admin/reports/data?from=2026-10-01&to=2026-10-31&branch_id='.$makati->id)
